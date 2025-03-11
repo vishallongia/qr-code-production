@@ -639,8 +639,9 @@ router.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/" }),
   (req, res) => {
+    console.log(req.user,"wm")
     console.log("i am called automatically");
-    res.redirect("/dashboard");
+    // res.redirect("/dashboard");
   }
 );
 
