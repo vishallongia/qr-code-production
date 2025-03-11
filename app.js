@@ -6,6 +6,9 @@ const indexRouter = require("./routes/index");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const session = require("express-session");
+const passport = require("passport");
+require("./config/passport"); // Load Passport config
 
 connectDB(); //Make Conncetion to Database
 
@@ -13,6 +16,18 @@ connectDB(); //Make Conncetion to Database
 app.use(bodyParser.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 app.use(bodyParser.json()); // For parsing application/json
 app.use(cookieParser());
+
+// Session middleware
+app.use(
+  session({
+    secret: "your_secret_key", // Change this to a strong secret
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Serve static files
 app.use(

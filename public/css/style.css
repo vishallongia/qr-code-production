@@ -105,6 +105,10 @@ body {
   font-size: 15px;
 }
 
+#SignInGoogle {
+  margin-top: 10px;
+}
+
 .lang select:hover {
   transform: scale(1.1);
   box-shadow: var(--link-color);
@@ -325,7 +329,7 @@ body {
     /* Full width on very small screens */
     padding: 15px;
     /* Adjust padding for small screens */
-    min-height: 400px;
+    min-height: 500px;
     /* Maintain minimum height */
   }
 
@@ -361,4 +365,62 @@ body {
     transform: none;
     /* Reset any transformations */
   }
+
+  .auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-flow: column;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .google-box,
+  .magic-link-box {
+    width: 100%;
+  }
+
+}
+
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.auth-box {
+  border-radius: var(--border-radius);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: var(--box-shadow);
+  padding: 10px;
+}
+
+
+
+/* Google Button Styling */
+.google-box,
+.magic-link-box {
+  background-color: #f8f9fa;
+  border: 2px solid var(--submit-btn-bg);
+  color: var(--submit-btn-bg);
+}
+
+.google-box:hover {
+  background-color: var(--submit-btn-bg);
+  color: white;
+}
+
+
+
+.magic-link-box:hover {
+  background-color: var(--submit-btn-bg);
+  color: white;
 }

@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const passport = require("passport");
 const jwt = require("jsonwebtoken");
 const { authMiddleware } = require("../middleware/auth"); // Import the middleware
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
@@ -10,7 +11,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 // const { sendResetPasswordEmail } = require("../public/js/email-service");
-const SendEmail = require("../Messages/SendEmail")
+const SendEmail = require("../Messages/SendEmail");
 const {
   encryptPassword,
   decryptPassword,
@@ -105,7 +106,6 @@ router.get("/update-user-details/:userid?", async (req, res) => {
     if (!user) {
       return res.status(404).send("User not found");
     }
-
 
     user.decryptPassword = decryptPassword(user.userPasswordKey);
     // Render the updateuser page with the user data
@@ -270,7 +270,6 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-
   try {
     // Check if user exists
     const user = await User.findOne({ email });
@@ -317,7 +316,9 @@ router.post("/login", async (req, res) => {
 
     // If user is a demo-user, fetch QRCodeData matching user ID
     if (user.role === "demo-user") {
-      const qrCodeData = await QRCodeData.findOne({ user_id: user._id }).select("_id");
+      const qrCodeData = await QRCodeData.findOne({ user_id: user._id }).select(
+        "_id"
+      );
 
       if (qrCodeData) {
         qrCodeDataId = qrCodeData._id.toString(); // Convert to plain string
@@ -329,7 +330,7 @@ router.post("/login", async (req, res) => {
       token,
       type: "success",
       role: user.role,
-      qrCodeDataId
+      qrCodeDataId,
     });
   } catch (error) {
     console.error("Error during login:", error);
@@ -423,11 +424,10 @@ router.post("/reset-password", async (req, res) => {
     // Send the reset link via email using Brevo
     // await sendResetPasswordEmail(user.email, resetLink);
 
-
     const sender = {
-      email: 'textildruckschweiz.com@gmail.com',
+      email: "textildruckschweiz.com@gmail.com",
       name: `Magic Code - Password Reset`,
-    }
+    };
 
     let content = `
         <!DOCTYPE html>
@@ -490,11 +490,14 @@ router.post("/reset-password", async (req, res) => {
     </body>
     </html>
     
-        `
+        `;
 
-    await SendEmail(sender, user.email, "Password Reset of your Magic Code Account", content)
-
-
+    await SendEmail(
+      sender,
+      user.email,
+      "Password Reset of your Magic Code Account",
+      content
+    );
 
     res.status(200).json({
       message: "Password reset link sent to your email",
@@ -626,6 +629,21 @@ router.post("/register", async (req, res) => {
   }
 });
 
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] }) // ✅ Make sure scope is included
+);
+
+// Google callback route
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { failureRedirect: "/" }),
+  (req, res) => {
+    console.log("i am called automatically");
+    res.redirect("/dashboard");
+  }
+);
+
 // Update User Details Route
 router.post("/change-user-details/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -698,7 +716,6 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
     // Fetch user details using findOne instead of findById
     user = await User.findOne({ _id: userId }).select("-password"); // Exclude password
 
-
     if (!user) {
       return res.status(404).render("dashboard", {
         message: "User not found. Please log in again.",
@@ -731,7 +748,6 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
         type: "hidden",
         activeSection: "generate", // Set active section to 'update' for specific UI handling
         user,
-
       });
     }
 
@@ -746,9 +762,8 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
       activeSection: "generate",
       qrCode: null,
       user,
-      type: "hidden"
+      type: "hidden",
     });
-
   } catch (error) {
     console.error("Error fetching QR code data:", error);
 
@@ -758,10 +773,9 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
         message: "Invalid QR Code ID. Please check and try again.",
         type: "error", // To trigger an error toast or notification
         activeSection: "generate",
-        user
+        user,
       });
     }
-
 
     res.status(500).render("dashboard", {
       message: "An error occurred while fetching your QR codes.",
@@ -772,7 +786,6 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
     });
   }
 });
-
 
 // My Profile Route
 router.get("/myprofile", authMiddleware, async (req, res) => {
@@ -915,15 +928,13 @@ router.post("/change-my-profile", authMiddleware, async (req, res) => {
 
 // Home route
 router.get("/magiccode", authMiddleware, async (req, res) => {
-  let user
+  let user;
   try {
-
     const userId = req.user._id; // Assuming the auth middleware adds the user object to the request
     // Fetch QR code data for the logged-in user
     const qrCodes = await QRCodeData.find({ user_id: userId }).sort({
       createdAt: -1,
     });
-
 
     // Find the user by ID
     user = await User.findById(userId);
@@ -938,7 +949,7 @@ router.get("/magiccode", authMiddleware, async (req, res) => {
         message: "Welcome! Here are your Magic Codes.",
         activeSection: "show",
         user,
-        type: "hidden"
+        type: "hidden",
       });
     } else {
       // No QR codes found for the user
@@ -947,7 +958,7 @@ router.get("/magiccode", authMiddleware, async (req, res) => {
         message: "No Magic Codes found.",
         activeSection: "show",
         user,
-        type: "hidden"
+        type: "hidden",
       });
     }
   } catch (error) {
@@ -957,7 +968,7 @@ router.get("/magiccode", authMiddleware, async (req, res) => {
       message: "An error occurred while fetching your Magic Codes.",
       type: "error", // Send type as 'error' to trigger toast notification
       user,
-      activeSection: "show"
+      activeSection: "show",
     });
   }
 });
@@ -983,8 +994,7 @@ router.post(
       code,
       url,
       text,
-      ColorList
-
+      ColorList,
     } = req.body; // Extract new values from request body
     const user_id = req.user._id;
 
@@ -1100,7 +1110,7 @@ router.post(
         cornerStyle,
         applyGradient,
         logo: logoPath, // Save logo path if provided
-        ColorList
+        ColorList,
       });
       // Save additional media or text file paths if applicable
       if (type === "media") {
@@ -1243,7 +1253,7 @@ router.put(
       dotStyle,
       cornerStyle,
       applyGradient,
-      ColorList
+      ColorList,
     } = req.body; // Get type and URL from request body
     const qrCodeAlphanumeric = req.params.id;
     const user_id = req.user._id;
@@ -1460,7 +1470,9 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
       user.showEditOnScan
     ) {
       return res.redirect(
-        `${req.protocol}://${req.get("host")}/dashboard?magiccode=${codeData._id}`
+        `${req.protocol}://${req.get("host")}/dashboard?magiccode=${
+          codeData._id
+        }`
       ); // Replace with actual dummy link
     }
 
@@ -2209,13 +2221,11 @@ const { type } = require("os");
 //   }
 // );
 
-
 router.post(
   "/create-demo-users",
   upload.fields([{ name: "media-file", maxCount: 1 }]),
   multerErrorHandler,
   async (req, res) => {
-
     let UserArrObj = [];
 
     // let number = "0000001";
@@ -2223,7 +2233,6 @@ router.post(
     let totalNumbers = 100; // Number of iterations
 
     for (let i = 0; i < totalNumbers; i++) {
-
       let fullName = "User";
       let email = `${number}@magic-code.net`;
       let password = number;
@@ -2234,7 +2243,7 @@ router.post(
       let dotStyle = "square";
       let cornerStyle = "square";
       let text = "Magic Code";
-      let url = ""
+      let url = "";
 
       try {
         const session = await mongoose.startSession(); // Start a session
@@ -2337,20 +2346,18 @@ router.post(
         session.endSession();
 
         let uid = newUser._id;
-        let resetLinkValue = encryptPassword(uid.toString())
+        let resetLinkValue = encryptPassword(uid.toString());
         let obj = {
           uid,
           email,
           password,
           code,
-          resetLinkValue
+          resetLinkValue,
         };
 
         UserArrObj.push(obj);
 
         number = String(parseInt(number) - 1).padStart(7, "0");
-
-
       } catch (error) {
         console.error("Error during registration and QR generation:", error);
 
@@ -2363,20 +2370,14 @@ router.post(
         }
         res.status(500).json({ message: "An error occurred", type: "error" });
       }
-
-
     }
 
     res.status(201).json({
       message: UserArrObj,
       type: "success",
     });
-
-
-
   }
 );
-
 
 // console.log(encryptPassword("678bf050c2d23a17d69bd29b"));
 

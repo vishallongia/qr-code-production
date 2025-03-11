@@ -42,6 +42,14 @@
                     </div>
                     <button type="submit" id="LoginBtnText" class="submit-btn">Login</button>
                 </form>
+                <div class="auth-container">
+                    <div class="auth-box google-box" onclick="window.location.href='/google'">
+                        <p>Continue with Google</p>
+                    </div>
+                    <div class="auth-box magic-link-box" onclick="window.location.href='/auth/magic-link'">
+                        <p>Use Magic Link</p>
+                    </div>
+                </div>
                 <p class="toggle-form"> <span id="DontHaveAccountText">Hast du noch kein Account? </span> <a href="#"
                         id="register-toggle">Registrieren</a></p>
                 <p class="toggle-form"> <a href="/forgotpassword/">Forgot
