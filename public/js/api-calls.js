@@ -250,3 +250,48 @@ async function updateDetails(data, userId) {
     throw error; // Propagate error for handling in the calling function
   }
 }
+
+// Handle Magic Link form submission
+async function handleMagicLink(event) {
+  event.preventDefault();
+
+  const email = document.getElementById("EmailText").value;
+  if (!email) {
+    showToast("Please enter your email to receive the magic link.", "error");
+    return false;
+  }
+
+  try {
+    loginBtn.disabled = true;
+    const result = await requestMagicLink(email); // Call the Magic Link API
+    showToast(result.message || "Magic link sent to your email!", "success");
+    loginBtn.disabled = false;
+  } catch (error) {
+    showToast(
+      error.message || "Something went wrong. Please try again.",
+      "error"
+    );
+    loginBtn.disabled = false;
+  }
+}
+
+// Function to request Magic Link
+async function requestMagicLink(email) {
+  try {
+    const response = await fetch("/usemagiclink", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to send magic link!");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error sending magic link:", error);
+    throw error; // Propagate error for handling in the calling function
+  }
+}

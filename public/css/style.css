@@ -297,7 +297,7 @@ body {
   cursor: pointer;
   transition: 0.3s;
   box-shadow: var(--box-shadow);
-  padding: 10px;
+  padding: 8px;
 }
 
 /* Google Button Styling */
