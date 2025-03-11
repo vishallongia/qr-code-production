@@ -634,14 +634,70 @@ router.get(
   passport.authenticate("google", { scope: ["profile", "email"] }) // ✅ Make sure scope is included
 );
 
-// Google callback route
 router.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/" }),
-  (req, res) => {
-    console.log(req.user,"wm")
-    console.log("i am called automatically");
-    // res.redirect("/dashboard");
+  async (req, res) => {
+    try {
+      if (!req.user) {
+        return res
+          .status(401)
+          .json({ message: "Google authentication failed", type: "error" });
+      }
+
+      const { displayName, emails } = req.user;
+      const email = emails[0].value;
+
+      // Check if user already exists
+      let existingUser = await User.findOne({ email });
+
+      if (existingUser) {
+        // Generate JWT token
+        const token = jwt.sign(
+          { userId: existingUser._id, email: existingUser.email },
+          process.env.JWT_SECRET,
+          { expiresIn: process.env.JWT_EXPIRATION }
+        );
+
+        // Set token in cookies
+        res.cookie("token", token, {
+          httpOnly: false,
+          maxAge: Number(process.env.COOKIE_EXPIRATION),
+        });
+
+        return res.redirect(`/dashboard`);
+      }
+
+      // Create new user
+      const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      const encryptedPassword = encryptPassword(randomPassword);
+
+      const newUser = new User({
+        fullName: displayName,
+        email,
+        password: hashedPassword,
+        userPasswordKey: encryptedPassword,
+      });
+      await newUser.save();
+
+      // Generate JWT token for new user
+      const token = jwt.sign(
+        { userId: newUser._id, email: newUser.email },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRATION }
+      );
+
+      res.cookie("token", token, {
+        httpOnly: false,
+        maxAge: Number(process.env.COOKIE_EXPIRATION),
+      });
+
+      res.redirect(`/dashboard`);
+    } catch (error) {
+      console.error("Error during Google authentication:", error);
+      res.status(500).json({ message: "An error occurred", type: "error" });
+    }
   }
 );
 
@@ -1145,12 +1201,15 @@ router.post(
 // Logout route
 router.post("/logout", (req, res) => {
   try {
-    // Clear the token and userId cookies
-    res.clearCookie("token", { httpOnly: false });
-    res.clearCookie("userId", { httpOnly: false });
+    req.logout((err) => {
+      if (err) return next(err);
 
-    // Send a response indicating successful logout
-    res.status(200).json({ message: "Logout successful", type: "success" });
+      // Clear cookies
+      res.clearCookie("token", { httpOnly: false });
+      res.clearCookie("userId", { httpOnly: false });
+
+      res.status(200).json({ message: "Logout successful", type: "success" });
+    });
   } catch (error) {
     console.error("Error during logout:", error);
     res
