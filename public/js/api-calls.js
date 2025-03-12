@@ -265,6 +265,7 @@ async function handleMagicLink(event) {
     loginBtn.disabled = true;
     const result = await requestMagicLink(email); // Call the Magic Link API
     showToast(result.message || "Magic link sent to your email!", "success");
+    document.getElementById("EmailText").value = "";
     loginBtn.disabled = false;
   } catch (error) {
     showToast(

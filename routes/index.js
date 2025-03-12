@@ -410,7 +410,7 @@ router.post("/reset-password", async (req, res) => {
     const resetToken = jwt.sign(
       { userId: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" } // Token expires in 1 hour
+      { expiresIn: process.env.Reset_Password_JWT_EXPIRATION } // Token expires in 1 hour
     );
 
     // Store the token in the database (optional, for additional validation)
@@ -492,7 +492,7 @@ router.post("/reset-password", async (req, res) => {
     
         `;
 
-    await SendEmail(
+    SendEmail(
       sender,
       user.email,
       "Password Reset of your Magic Code Account",
@@ -643,8 +643,9 @@ router.post("/usemagiclink", async (req, res) => {
 
     // If user doesn't exist, create a new one with a dummy password
     if (!user) {
-      const hashedPassword = await bcrypt.hash("dummyPassword123", 10);
-      const encryptedPassword = encryptPassword("dummyPassword123");
+      const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      const encryptedPassword = encryptPassword(randomPassword);
 
       user = new User({
         fullName: "New User",
@@ -660,7 +661,7 @@ router.post("/usemagiclink", async (req, res) => {
     const magicToken = jwt.sign(
       { userId: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "30m" }
+      { expiresIn: process.env.MAGIC_LINK_JWT_EXPIRATION }
     );
 
     const magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
