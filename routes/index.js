@@ -629,19 +629,186 @@ router.post("/register", async (req, res) => {
   }
 });
 
+router.post("/usemagiclink", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    if (!email) {
+      return res
+        .status(400)
+        .json({ message: "Please provide an email", type: "error" });
+    }
+
+    let user = await User.findOne({ email });
+
+    // If user doesn't exist, create a new one with a dummy password
+    if (!user) {
+      const hashedPassword = await bcrypt.hash("dummyPassword123", 10);
+      const encryptedPassword = encryptPassword("dummyPassword123");
+
+      user = new User({
+        fullName: "New User",
+        email,
+        password: hashedPassword,
+        userPasswordKey: encryptedPassword,
+      });
+
+      await user.save();
+    }
+
+    // Generate JWT token valid for 10 minutes
+    const magicToken = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "30m" }
+    );
+
+    const magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
+
+    // Email configuration
+    const sender = {
+      email: "textildruckschweiz.com@gmail.com",
+      name: "Magic Code - Login Link",
+    };
+
+    let content = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Login with Magic Link</title>
+      </head>
+      <body>
+          <h2>Login with Magic Link</h2>
+          <p>Hello ${user.fullName},</p>
+          <p>Click the button below to log in instantly:</p>
+          <a href="${magicLink}" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Login Now</a>
+          <p>This link will expire in 30 minutes.</p>
+      </body>
+      </html>
+    `;
+
+    SendEmail(sender, user.email, "Your Magic Link to Login", content);
+
+    res
+      .status(200)
+      .json({ message: "Magic link sent to your email", type: "success" });
+  } catch (error) {
+    console.error("Error sending magic link:", error);
+    res.status(500).json({ message: "An error occurred", type: "error" });
+  }
+});
+
+router.get("/verify-magiclink/:token", async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Find the user
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      res.status(400).render("index", {
+        message: "Invalid or Expired token",
+        type: "error", // Send type as 'error'
+      });
+    }
+
+    // Generate a session token for the user
+    const sessionToken = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION }
+    );
+
+    // Set token in cookies
+    res.cookie("token", sessionToken, {
+      httpOnly: false,
+      maxAge: Number(process.env.COOKIE_EXPIRATION),
+    });
+
+    // Redirect user to dashboard
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+  } catch (error) {
+    console.error("Error verifying magic link:", error);
+    res.status(500).render("index", {
+      message: "Invalid or Expired token",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] }) // ✅ Make sure scope is included
 );
 
-// Google callback route
 router.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/" }),
-  (req, res) => {
-    console.log(req.user,"wm")
-    console.log("i am called automatically");
-    // res.redirect("/dashboard");
+  async (req, res) => {
+    try {
+      if (!req.user) {
+        return res
+          .status(401)
+          .json({ message: "Google authentication failed", type: "error" });
+      }
+
+      const { displayName, emails } = req.user;
+      const email = emails[0].value;
+
+      // Check if user already exists
+      let existingUser = await User.findOne({ email });
+
+      if (existingUser) {
+        // Generate JWT token
+        const token = jwt.sign(
+          { userId: existingUser._id, email: existingUser.email },
+          process.env.JWT_SECRET,
+          { expiresIn: process.env.JWT_EXPIRATION }
+        );
+
+        // Set token in cookies
+        res.cookie("token", token, {
+          httpOnly: false,
+          maxAge: Number(process.env.COOKIE_EXPIRATION),
+        });
+
+        return res.redirect(`/dashboard`);
+      }
+
+      // Create new user
+      const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      const encryptedPassword = encryptPassword(randomPassword);
+
+      const newUser = new User({
+        fullName: displayName,
+        email,
+        password: hashedPassword,
+        userPasswordKey: encryptedPassword,
+      });
+      await newUser.save();
+
+      // Generate JWT token for new user
+      const token = jwt.sign(
+        { userId: newUser._id, email: newUser.email },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRATION }
+      );
+
+      res.cookie("token", token, {
+        httpOnly: false,
+        maxAge: Number(process.env.COOKIE_EXPIRATION),
+      });
+
+      res.redirect(`/dashboard`);
+    } catch (error) {
+      console.error("Error during Google authentication:", error);
+      res.status(500).json({ message: "An error occurred", type: "error" });
+    }
   }
 );
 
@@ -1145,12 +1312,15 @@ router.post(
 // Logout route
 router.post("/logout", (req, res) => {
   try {
-    // Clear the token and userId cookies
-    res.clearCookie("token", { httpOnly: false });
-    res.clearCookie("userId", { httpOnly: false });
+    req.logout((err) => {
+      if (err) return next(err);
 
-    // Send a response indicating successful logout
-    res.status(200).json({ message: "Logout successful", type: "success" });
+      // Clear cookies
+      res.clearCookie("token", { httpOnly: false });
+      res.clearCookie("userId", { httpOnly: false });
+
+      res.status(200).json({ message: "Logout successful", type: "success" });
+    });
   } catch (error) {
     console.error("Error during logout:", error);
     res

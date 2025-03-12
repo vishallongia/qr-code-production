@@ -12,7 +12,6 @@ const authMiddleware = async (req, res, next) => {
     // Get the token from cookies
     const token = req.cookies.token;
 
-    // Check if token exists
     if (!token && req.path !== "/") {
       return handleAuthError(req, res, "Token is missing. Please log in.");
     }
