@@ -43,11 +43,9 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(
-    45deg,
-    var(--bg-gradient-start),
-    var(--bg-gradient-end)
-  );
+  background: linear-gradient(45deg,
+      var(--bg-gradient-start),
+      var(--bg-gradient-end));
   flex-direction: column;
 }
 
@@ -214,8 +212,8 @@ body {
   transition: 0.5s;
 }
 
-.input-group input:focus ~ i,
-.input-group input:valid ~ i {
+.input-group input:focus~i,
+.input-group input:valid~i {
   color: var(--input-focus-border-color);
 }
 
@@ -424,8 +422,17 @@ body {
   }
 
   .auth-box {
-    padding: 6px 
+    padding: 6px
   }
+
+  .no-hover:hover {
+    background-color: #f8f9fa;
+    color: var(--submit-btn-bg);
+  }
+
+  .hovered {
+    background-color: var(--submit-btn-bg) !important;
+    color: white !important;
+  }
+
 }
-
-
