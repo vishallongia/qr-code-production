@@ -38,13 +38,17 @@ function toggleMagicLink() {
     // Switch back to Password Login
     passwordField.style.display = "flex";
     loginButton.textContent = "Login";
-    loginButton.setAttribute("onclick", "return handleLogin(event)");
+    // loginButton.setAttribute("onclick", "return handleLogin(event)");
+    loginButton.removeAttribute("onclick");
     magicLinkText.textContent = "Use Magic Link";
   } else {
     // Switch to Magic Link Login
     passwordField.style.display = "none";
     loginButton.textContent = "Send Magic Link";
-    loginButton.setAttribute("onclick", "return handleMagicLink(event)");
+    loginButton.setAttribute(
+      "onclick",
+      "return handleMagicLink(event,'EmailText', 'LoginBtnText')"
+    );
     magicLinkText.textContent = "Use Password";
   }
 }

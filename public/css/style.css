@@ -223,7 +223,7 @@ body {
   background: var(--submit-btn-bg);
   color: var(--text-color);
   border: none;
-  border-radius: 30px;
+  border-radius: var(--border-radius);
   cursor: pointer;
   font-size: 1em;
   font-weight: 500;

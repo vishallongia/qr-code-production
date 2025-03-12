@@ -31,25 +31,28 @@
 
             <div class="form-box update">
                 <h2 id="UpdateDetailsText">Update Details</h2>
-                <form id = "UpdateUserDetails" method="POST" onsubmit="return handleUpdateDetails(event)">
-                    <div class="input-group">
+                <form id="UpdateUserDetails" method="POST"
+                    onclick="handleMagicLink(event, 'RegisterEmailText', 'UpdateBtn')">
+                    <!-- <div class="input-group">
                         <i class="fas fa-user"></i>
-                        <input type="text" id="FullNameText" name="fullName" placeholder="Full Name" required value="<%= user.fullName %>">
-                    </div>
+                        <input type="text" id="FullNameText" name="fullName" placeholder="Full Name" required
+                            value="<%= user.fullName %>">
+                    </div> -->
                     <div class="input-group">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="RegisterEmailText" name="email" placeholder="Username" required value="<%= user.email %>">
+                        <input type="email" id="RegisterEmailText" name="email" placeholder="Username" required
+                            value="<%= user.email %>">
                     </div>
-                    <div class="input-group">
+                    <!-- <div class="input-group">
                         <i class="fas fa-lock"></i>
-                        <input type="text" id="RegisterPasswordText" name="password" placeholder="Password" value="<%= user.decryptPassword %>"
-                            required>
-                    </div>
+                        <input type="text" id="RegisterPasswordText" name="password" placeholder="Password"
+                            value="<%= user.decryptPassword %>" required>
+                    </div> -->
                     <!-- <div class="input-group">
                         <i class="fas fa-lock"></i>
                         <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
                     </div> -->
-                    <button type="submit" class="submit-btn" id="UpdateBtn">Update</button>
+                    <button type="submit" class="submit-btn" id="UpdateBtn">Send Magic Link</button>
                 </form>
             </div>
         </div>
