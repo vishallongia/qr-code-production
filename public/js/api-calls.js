@@ -252,26 +252,32 @@ async function updateDetails(data, userId) {
 }
 
 // Handle Magic Link form submission
-async function handleMagicLink(event) {
+async function handleMagicLink(event, emailInputId, buttonId) {
   event.preventDefault();
 
-  const email = document.getElementById("EmailText").value;
+  const email = document.getElementById(emailInputId).value;
+  const button = document.getElementById(buttonId);
+
   if (!email) {
     showToast("Please enter your email to receive the magic link.", "error");
     return false;
   }
 
   try {
-    loginBtn.disabled = true;
+    button.disabled = true;
     const result = await requestMagicLink(email); // Call the Magic Link API
     showToast(result.message || "Magic link sent to your email!", "success");
-    loginBtn.disabled = false;
+    document.getElementById(emailInputId).value = "";
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 1000); // Optional delay to let the toast show up
   } catch (error) {
     showToast(
       error.message || "Something went wrong. Please try again.",
       "error"
     );
-    loginBtn.disabled = false;
+  } finally {
+    button.disabled = false;
   }
 }
 

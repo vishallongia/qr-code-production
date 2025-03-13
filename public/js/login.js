@@ -12,6 +12,19 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     container.classList.remove("active");
   });
+
+  if (window.matchMedia("(max-width: 480px)").matches) {
+    document.querySelectorAll(".google-box, .magic-link-box").forEach((box) => {
+      box.classList.add("no-hover"); // Disable hover effect on mobile
+      box.addEventListener("touchstart", function () {
+        this.classList.add("hovered"); // Apply hover effect on touch
+      });
+
+      box.addEventListener("touchend", function () {
+        setTimeout(() => this.classList.remove("hovered"), 1000); // Remove after 300ms
+      });
+    });
+  }
 });
 
 // Function to toggle Magic Link for both login and register
@@ -47,7 +60,10 @@ function toggleMagicLink(formType) {
     // Switch to Magic Link Login/Register
     passwordField.style.display = "none";
     loginButton.textContent = "Send Magic Link";
-    loginButton.setAttribute("onclick", "return handleMagicLink(event)");
+    loginButton.setAttribute(
+      "onclick",
+      "return handleMagicLink(event,'EmailText', 'LoginBtnText')"
+    );
     magicLinkText.textContent = "Use Password";
   }
 }
