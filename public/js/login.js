@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Function to toggle Magic Link for both login and register
 function toggleMagicLink(formType) {
-  let passwordField, loginButton, magicLinkText;
+  let passwordField, loginButton, magicLinkText, fullNameField;
 
   if (formType === "login") {
     passwordField = document
@@ -43,21 +43,25 @@ function toggleMagicLink(formType) {
       .closest(".input-group");
     loginButton = document.getElementById("RegisterBtnText");
     magicLinkText = document.getElementById("registerMagicLinkText");
+    fullNameField = document
+      .getElementById("FullNameText")
+      .closest(".input-group");
   }
 
   if (passwordField.style.display === "none") {
     // Switch back to Password Login/Register
+    if (fullNameField) {
+      fullNameField.style.display = "flex";
+    }
     passwordField.style.display = "flex";
     loginButton.textContent = formType === "login" ? "Login" : "Register";
-    loginButton.setAttribute(
-      "onclick",
-      formType === "login"
-        ? "return handleLogin(event)"
-        : "return handleRegister(event)"
-    );
+    loginButton.removeAttribute("onclick");
     magicLinkText.textContent = "Use Magic Link";
   } else {
     // Switch to Magic Link Login/Register
+    if (fullNameField) {
+      fullNameField.style.display = "none";
+    }
     passwordField.style.display = "none";
     loginButton.textContent = "Send Magic Link";
     loginButton.setAttribute(

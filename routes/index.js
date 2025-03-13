@@ -630,7 +630,7 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/usemagiclink", async (req, res) => {
-  const { email } = req.body;
+  const { email, encId } = req.body;
 
   try {
     if (!email) {
@@ -639,22 +639,45 @@ router.post("/usemagiclink", async (req, res) => {
         .json({ message: "Please provide an email", type: "error" });
     }
 
-    let user = await User.findOne({ email });
+    let user;
 
-    // If user doesn't exist, create a new one with a dummy password
-    if (!user) {
-      const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
-      const encryptedPassword = encryptPassword(randomPassword);
+    if (encId) {
+      // Decrypt the encrypted ID
+      const decryptedUserId = decryptPassword(encId);
 
-      user = new User({
-        fullName: "New User",
-        email,
-        password: hashedPassword,
-        userPasswordKey: encryptedPassword,
-      });
+      // Find the user using the decrypted ID
+      user = await User.findById(decryptedUserId);
 
-      await user.save();
+      if (user) {
+        // Update email if it's different from the current email
+        if (user.email !== email) {
+          user.email = email;
+          await user.save();
+        }
+      } else {
+        return res
+          .status(404)
+          .json({ message: "User not found", type: "error" });
+      }
+    } else {
+      // If no encrypted ID is provided, proceed with email-based lookup
+      user = await User.findOne({ email });
+
+      // If user doesn't exist, create a new one with a dummy password
+      if (!user) {
+        const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+        const encryptedPassword = encryptPassword(randomPassword);
+
+        user = new User({
+          fullName: "New User",
+          email,
+          password: hashedPassword,
+          userPasswordKey: encryptedPassword,
+        });
+
+        await user.save();
+      }
     }
 
     // Generate JWT token valid for 10 minutes
@@ -673,22 +696,22 @@ router.post("/usemagiclink", async (req, res) => {
     };
 
     let content = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Login with Magic Link</title>
-      </head>
-      <body>
-          <h2>Login with Magic Link</h2>
-          <p>Hello ${user.fullName},</p>
-          <p>Click the button below to log in instantly:</p>
-          <a href="${magicLink}" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Login Now</a>
-          <p>This link will expire in 30 minutes.</p>
-      </body>
-      </html>
-    `;
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Login with Magic Link</title>
+        </head>
+        <body>
+            <h2>Login with Magic Link</h2>
+            <p>Hello ${user.fullName},</p>
+            <p>Click the button below to log in instantly:</p>
+            <a href="${magicLink}" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Login Now</a>
+            <p>This link will expire in 30 minutes.</p>
+        </body>
+        </html>
+      `;
 
     SendEmail(sender, user.email, "Your Magic Link to Login", content);
 

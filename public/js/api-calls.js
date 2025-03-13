@@ -252,7 +252,7 @@ async function updateDetails(data, userId) {
 }
 
 // Handle Magic Link form submission
-async function handleMagicLink(event, emailInputId, buttonId) {
+async function handleMagicLink(event, emailInputId, buttonId, encId = null) {
   event.preventDefault();
 
   const email = document.getElementById(emailInputId).value;
@@ -265,7 +265,7 @@ async function handleMagicLink(event, emailInputId, buttonId) {
 
   try {
     button.disabled = true;
-    const result = await requestMagicLink(email); // Call the Magic Link API
+    const result = await requestMagicLink(email, encId); // Call the Magic Link API
     showToast(result.message || "Magic link sent to your email!", "success");
     document.getElementById(emailInputId).value = "";
     setTimeout(() => {
@@ -282,12 +282,17 @@ async function handleMagicLink(event, emailInputId, buttonId) {
 }
 
 // Function to request Magic Link
-async function requestMagicLink(email) {
+async function requestMagicLink(email, encId) {
   try {
+    const requestBody = { email };
+
+    if (encId) {
+      requestBody.encId = encId; // Add encId if available
+    }
     const response = await fetch("/usemagiclink", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
