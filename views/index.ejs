@@ -46,7 +46,7 @@
                     <div class="auth-box google-box" onclick="window.location.href='/google'">
                         <p>Continue with Google</p>
                     </div>
-                    <div class="auth-box magic-link-box" onclick="toggleMagicLink()">
+                    <div class="auth-box magic-link-box" onclick="toggleMagicLink('login')">
                         <p id="magicLinkText">Use Magic Link</p>
                     </div>
                 </div>
@@ -77,6 +77,14 @@
                     </div> -->
                     <button type="submit" class="submit-btn" id="RegisterBtnText">Register</button>
                 </form>
+                <div class="auth-container">
+                    <div class="auth-box google-box" onclick="window.location.href='/google'">
+                        <p>Continue with Google</p>
+                    </div>
+                    <div class="auth-box magic-link-box" onclick="toggleMagicLink('register')">
+                        <p id="registerMagicLinkText">Use Magic Link</p>
+                    </div>
+                </div>
                 <p class="toggle-form"> <span id="AlreadyHaveAccountText">Already have an account? </span>&nbsp;<a
                         href="#" id="login-toggle">Login</a></p>
             </div>
