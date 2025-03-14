@@ -1187,12 +1187,13 @@ router.post(
       url,
       text,
       ColorList,
+      logoImageValue,
     } = req.body; // Extract new values from request body
     const user_id = req.user._id;
 
     // Handle media and text file uploads
     let mediaFilePath;
-    let logoPath = process.env.STATIC_LOGO;
+    let logoPath = `/images/logo${logoImageValue}.jpg`;
 
     try {
       // Check if user exists
@@ -1449,9 +1450,11 @@ router.put(
       cornerStyle,
       applyGradient,
       ColorList,
+      logoImageValue
     } = req.body; // Get type and URL from request body
     const qrCodeAlphanumeric = req.params.id;
     const user_id = req.user._id;
+    let logoPath = `/images/logo${logoImageValue}.jpg`;
 
     try {
       // Check if user exists
@@ -1602,6 +1605,7 @@ router.put(
       qrCode.applyGradient = applyGradient; // Assign applyGradient
       qrCode.text = text;
       qrCode.ColorList = ColorList;
+      qrCode.logo = logoPath
 
       // Save the updated QR code data (keep the same QR image)
       await qrCode.save();

@@ -8,7 +8,7 @@ const showSection = document.getElementById("show-section");
 const qrType = document.getElementById("qr-type");
 const inputFields = document.getElementById("input-fields");
 const languageSwitcher = document.getElementById("languageSwitcher");
-let CurrentQR = ""
+let CurrentQR = "";
 // Toggle the menu open and close
 menuToggle.addEventListener("click", () => {
   sideMenu.classList.add("active");
@@ -46,17 +46,14 @@ menuItems.forEach((item) => {
     localStorage.setItem("activeTab", item.dataset.section);
 
     // Show or hide sections based on selected tab
-    console.log(item.dataset.section, "wm")
+    console.log(item.dataset.section, "wm");
     if (item.dataset.section === "generate") {
       window.location.href = "/dashboard";
-    }
-    else if (item.dataset.section === "profile") {
+    } else if (item.dataset.section === "profile") {
       window.location.href = "/myprofile";
-    }
-    else if (item.dataset.section === "usercontrol") {
+    } else if (item.dataset.section === "usercontrol") {
       window.location.href = "/usercontrol";
-    }
-    else {
+    } else {
       window.location.href = "/magiccode";
     }
 
@@ -172,6 +169,7 @@ function generateQRCodeFe(isUpdate = false, logo) {
   const cornerStyle = document.getElementById("corner-style").value;
   const gradient = document.getElementById("gradient").value;
   const logoFile = document.getElementById("logo").files[0];
+  const logoImageValue = document.getElementById("QRLogo").value;
 
   let dotColor = { color: qrColor };
   if (gradient === "linear") {
@@ -196,7 +194,7 @@ function generateQRCodeFe(isUpdate = false, logo) {
     };
   }
 
-  let logoUrl = `${window.location.protocol}//${window.location.host}/images/logo.jpg`; // Here you need to provide static logo
+  let logoUrl = `${window.location.protocol}//${window.location.host}/images/logo${logoImageValue}.jpg`; // Here you need to provide static logo
   if (logo && isUpdate) {
     logoUrl = `${window.location.protocol}//${window.location.host}/${logo}`;
     updateQRCodeFe(qrText, dotColor, bgColor, dotStyle, cornerStyle, logoUrl);
@@ -204,7 +202,7 @@ function generateQRCodeFe(isUpdate = false, logo) {
   if (logoFile) {
     const reader = new FileReader();
     reader.onload = function (event) {
-      logoUrl = event.target.result;
+      // logoUrl = event.target.result;
       updateQRCodeFe(qrText, dotColor, bgColor, dotStyle, cornerStyle, logoUrl);
     };
     reader.readAsDataURL(logoFile);
@@ -244,9 +242,9 @@ function updateQRCodeFe(
 
 // Function to toggle generate-section inside modal
 function showGenerateSection(qr) {
-  console.log(qr)
+  console.log(qr);
 
-  CurrentQR = qr
+  CurrentQR = qr;
   document.getElementById("qr-name").value = qr.qrName;
 
   // document.getElementById("bg-color").value = getColorHex("blue");
@@ -259,9 +257,14 @@ function showGenerateSection(qr) {
   document.getElementById("qr-type").value = qr.type;
   document.getElementById("qr-code-key").value = qr.code;
   const logo = qr.logo;
+  const logoValue = logo.match(/logo(\d+)/)[1];
+  document.getElementById("QRLogo").value = logoValue;
+
   updateInputFields();
 
-  let radio = document.querySelector(`input[name="ColorList"][value="${qr.ColorList}"]`);
+  let radio = document.querySelector(
+    `input[name="ColorList"][value="${qr.ColorList}"]`
+  );
   if (radio) {
     radio.checked = true;
   }
@@ -366,7 +369,7 @@ const colorHexMap = {
   yellow: "#FEFE00",
   white: "#FFFFFF",
   black: "#000000",
-  turquoise: "#4CCED1"
+  turquoise: "#4CCED1",
 };
 
 function getColorHex(color) {
@@ -385,7 +388,7 @@ const hexColorMap = {
   "#FEFE00": "yellow",
   "#FFFFFF": "white",
   "#000000": "black",
-  "#4CCED1": "turquoise"
+  "#4CCED1": "turquoise",
 };
 
 function getColorName(hex) {
@@ -393,23 +396,59 @@ function getColorName(hex) {
   return hexColorMap[hex] || "Invalid hex code";
 }
 
-
-
 let colorOptions1 = {
-  "white": ["black", "green", "pink", "blue", "orange", "cyan", "yellow", "turquoise"],
-  "black": ["white", "pink", "orange", "yellow", "turquoise"],
-  "magenta": ["white", "cyan", "yellow", "turquoise"],
-  "violet": ["white", "cyan", "yellow", "turquoise"],
-  "green": ["white", "cyan", "yellow", "turquoise"],
-  "pink": ["white", "blue", "orange", "cyan", "yellow", "turquoise"],
-  "blue": ["white", "orange", "cyan", "yellow", "turquoise"],
-  "red": ["pink", "orange", "cyan", "yellow", "turquoise", "white"],
-  "orange": ["white", "pink", "cyan", "turquoise"],
-  "cyan": ["white", "black", "violet", "green", "pink", "blue", "orange", "yellow", "turquoise"],
-  "yellow": ["white", "black", "violet", "green", "pink", "blue", "orange", "cyan", "turquoise"],
-  "turquoise": ["white", "black", "violet", "green", "pink", "blue", "orange", "cyan", "yellow"]
-}
-
+  white: [
+    "black",
+    "green",
+    "pink",
+    "blue",
+    "orange",
+    "cyan",
+    "yellow",
+    "turquoise",
+  ],
+  black: ["white", "pink", "orange", "yellow", "turquoise"],
+  magenta: ["white", "cyan", "yellow", "turquoise"],
+  violet: ["white", "cyan", "yellow", "turquoise"],
+  green: ["white", "cyan", "yellow", "turquoise"],
+  pink: ["white", "blue", "orange", "cyan", "yellow", "turquoise"],
+  blue: ["white", "orange", "cyan", "yellow", "turquoise"],
+  red: ["pink", "orange", "cyan", "yellow", "turquoise", "white"],
+  orange: ["white", "pink", "cyan", "turquoise"],
+  cyan: [
+    "white",
+    "black",
+    "violet",
+    "green",
+    "pink",
+    "blue",
+    "orange",
+    "yellow",
+    "turquoise",
+  ],
+  yellow: [
+    "white",
+    "black",
+    "violet",
+    "green",
+    "pink",
+    "blue",
+    "orange",
+    "cyan",
+    "turquoise",
+  ],
+  turquoise: [
+    "white",
+    "black",
+    "violet",
+    "green",
+    "pink",
+    "blue",
+    "orange",
+    "cyan",
+    "yellow",
+  ],
+};
 
 let colorOptions2 = {
   white: ["black"],
@@ -422,28 +461,26 @@ let colorOptions2 = {
   orange: ["white"],
   cyan: ["white"],
   yellow: ["black"],
-  turquoise: ["white"]
+  turquoise: ["white"],
 };
-let List = colorOptions1
+let List = colorOptions1;
 
-let fgSelect = document.getElementById("FgColorsDiv")
-let bgSelect = document.getElementById("bgColor")
+let fgSelect = document.getElementById("FgColorsDiv");
+let bgSelect = document.getElementById("bgColor");
 
 function populateFgColors() {
-  let fgSelect = document.getElementById("FgColorsDiv")
-  fgSelect.innerHTML = ""
+  let fgSelect = document.getElementById("FgColorsDiv");
+  fgSelect.innerHTML = "";
 
-
-  Object.keys(List).forEach(color => {
-
-    let colorValueHex = getColorHex(color)
+  Object.keys(List).forEach((color) => {
+    let colorValueHex = getColorHex(color);
     let content = `
     <div class="color-box" style="background-color: ${colorValueHex};" data-color="${colorValueHex}">
    <input type="radio" name="color" id="${color}" value="${colorValueHex}">
     <label for="${color}"></label>
   <span class="color-name" id="FG${color}">${color}</span>
 </div>
-   `
+   `;
 
     fgSelect.innerHTML += content;
   });
@@ -453,29 +490,28 @@ function populateFgColors() {
 function updateBgColors() {
   bgSelect.innerHTML = "";
   let selectedFg = document.querySelector('input[name="color"]:checked').value;
-  selectedFg = getColorName(selectedFg)
+  selectedFg = getColorName(selectedFg);
   let optionsList = List[selectedFg] || [];
 
-  let BgColorDiv = document.getElementById("BgColorDiv")
-  BgColorDiv.innerHTML = ``
-  let content = ""
+  let BgColorDiv = document.getElementById("BgColorDiv");
+  BgColorDiv.innerHTML = ``;
+  let content = "";
   for (let i = 0; i < optionsList.length; i++) {
     let color = optionsList[i];
-    let colorValueHex = getColorHex(color)
+    let colorValueHex = getColorHex(color);
     content += `
      <div class="color-boxBG" style="background-color: ${colorValueHex};" data-color="${colorValueHex}">
     <input type="radio" name="bgcolor" id="BG-${color}" value="${colorValueHex}">
      <label for="BG-${color}"></label>
    <span class="color-name" id="BG${color}">${color}</span>
 </div>
-    `
-
+    `;
   }
-  BgColorDiv.innerHTML = content
+  BgColorDiv.innerHTML = content;
 
-  SelectRadioFOrBGColors()
+  SelectRadioFOrBGColors();
 
-  optionsList.forEach(color => {
+  optionsList.forEach((color) => {
     let option = document.createElement("option");
     option.value = color;
     option.textContent = color;
@@ -484,27 +520,27 @@ function updateBgColors() {
 }
 
 function updatePreview() {
-
   // let fgSelected = document.getElementById("fgColor").value
   // let bgSelected = document.getElementById("bgColor").value
 
   try {
-    document.getElementById("languageSwitcher").click()
+    document.getElementById("languageSwitcher").click();
 
-    let fgSelected = document.querySelector('input[name="color"]:checked').value;
-    let bgSelected = document.querySelector('input[name="bgcolor"]:checked').value;
+    let fgSelected = document.querySelector(
+      'input[name="color"]:checked'
+    ).value;
+    let bgSelected = document.querySelector(
+      'input[name="bgcolor"]:checked'
+    ).value;
 
-
-    document.getElementById("qr-color").value = fgSelected
-    document.getElementById("bg-color").value = bgSelected
+    document.getElementById("qr-color").value = fgSelected;
+    document.getElementById("bg-color").value = bgSelected;
   } catch (error) {
     console.log(error);
   }
-
 }
 
 function updateColorsSelection() {
-
   const fgColor = document.getElementById("qr-color").value;
   const bgColor = document.getElementById("bg-color").value;
 
@@ -512,63 +548,64 @@ function updateColorsSelection() {
   // updateBgColors()
   // document.getElementById("bgColor").value = getColorName(bgColor)
 
-  let FGradio = document.querySelector(`input[name="color"][value="${fgColor}"]`);
-    if (FGradio) {
-      FGradio.checked = true;
-      FGradio.classList.add("selected");
-    }
-
-
-
+  let FGradio = document.querySelector(
+    `input[name="color"][value="${fgColor}"]`
+  );
+  if (FGradio) {
+    FGradio.checked = true;
+    FGradio.classList.add("selected");
+  }
 }
 
 function UpdateColorListAccord() {
-  let selected = CurrentQR.ColorList
+  let selected = CurrentQR.ColorList;
   if (selected == "first") {
-    List = colorOptions1
+    List = colorOptions1;
   }
 
   if (selected == "second") {
-    List = colorOptions2
+    List = colorOptions2;
   }
-  populateFgColors()
+  populateFgColors();
 }
 
 // populateFgColors();
 document.addEventListener("DOMContentLoaded", function () {
-  UpdateColorListAccord()
+  UpdateColorListAccord();
   // updateColorsSelection()
 });
 
 function ChangeLists() {
-  let selected = document.querySelector('input[name="ColorList"]:checked').value;
+  let selected = document.querySelector(
+    'input[name="ColorList"]:checked'
+  ).value;
 
   if (selected == "first") {
-    List = colorOptions1
+    List = colorOptions1;
   }
 
   if (selected == "second") {
-    List = colorOptions2
+    List = colorOptions2;
   }
-  populateFgColors()
-  SelectRadioFOrFGColors()
+  populateFgColors();
+  SelectRadioFOrFGColors();
   // updateBgColors();
-  document.getElementById("languageSwitcher").click()
+  document.getElementById("languageSwitcher").click();
   // SelectRadioFOrBGColors()
   // updatePreview()
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  SelectRadioFOrFGColors()
+  SelectRadioFOrFGColors();
 });
 
 function SelectRadioFOrFGColors() {
   const colorBoxes = document.querySelectorAll(".color-box");
 
-  colorBoxes.forEach(box => {
+  colorBoxes.forEach((box) => {
     box.addEventListener("click", () => {
       // Remove active state from all boxes
-      colorBoxes.forEach(b => {
+      colorBoxes.forEach((b) => {
         b.classList.remove("selected");
         b.querySelector("label").style.boxShadow = "none"; // Reset previous shadow
         b.querySelector("label").style.border = "3px solid transparent"; // Reset border
@@ -578,22 +615,22 @@ function SelectRadioFOrFGColors() {
       const input = box.querySelector("input");
       input.checked = true;
       box.classList.add("selected");
-      updateBgColors()
+      updateBgColors();
       // Apply shadow and border based on color
       const color = box.dataset.color;
       // box.querySelector("label").style.boxShadow = `0px 0px 15px 5px ${color}`;
       box.querySelector("label").style.border = `3px solid ${color}`;
-      updatePreview()
+      updatePreview();
     });
   });
 }
 function SelectRadioFOrBGColors() {
   const colorBoxes = document.querySelectorAll(".color-boxBG");
 
-  colorBoxes.forEach(box => {
+  colorBoxes.forEach((box) => {
     box.addEventListener("click", () => {
       // Remove active state from all boxes
-      colorBoxes.forEach(b => {
+      colorBoxes.forEach((b) => {
         b.classList.remove("selected");
         b.querySelector("label").style.boxShadow = "none"; // Reset previous shadow
         b.querySelector("label").style.border = "3px solid transparent"; // Reset border
@@ -608,7 +645,7 @@ function SelectRadioFOrBGColors() {
       // box.querySelector("label").style.boxShadow = `0px 0px 15px 5px ${color}`;
       box.querySelector("label").style.border = `3px solid ${color}`;
 
-      updatePreview()
+      updatePreview();
     });
   });
 }

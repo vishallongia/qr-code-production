@@ -117,11 +117,11 @@
         function showQrCodes(qrCodes) {
             qrCodes.forEach((qrCodeData) => {
                 const qrContainer = document.getElementById(`qr-container-${qrCodeData._id}`);
-                let logo = "/images/logo.jpg"
+                // let logo = "/images/logo.jpg"
                 let logoUrl;
-                if (logo) {
-                    logoUrl = `${window.location.protocol}//${window.location.host}/${logo}`;
-                }
+                // if (logo) {
+                    logoUrl = `${window.location.protocol}//${window.location.host}/${qrCodeData.logo}`;
+                // }
            
 
                 if (qrContainer) {
