@@ -19,6 +19,7 @@ submitBtnGenerate.addEventListener("click", async (event) => {
   const applyGradient = document.getElementById("gradient").value;
   const Logo = document.getElementById("logo").files[0];
   const code = document.getElementById("qr-code-key").value;
+  const logoImageValue = document.getElementById("QRLogo").value;
 
   const formData = new FormData(); // Create a FormData object
   const type = qrDataType.value; // Get the selected type
@@ -34,8 +35,11 @@ submitBtnGenerate.addEventListener("click", async (event) => {
   formData.append("applyGradient", applyGradient);
   formData.append("qrName", qrName);
   formData.append("code", code);
+  formData.append("logoImageValue", logoImageValue);
 
-  const selected = document.querySelector('input[name="ColorList"]:checked').value;
+  const selected = document.querySelector(
+    'input[name="ColorList"]:checked'
+  ).value;
   formData.append("ColorList", selected);
 
   // Append the logo file if it exists
@@ -44,17 +48,15 @@ submitBtnGenerate.addEventListener("click", async (event) => {
   }
 
   if (!qrName) {
-
-    let lang = document.getElementById("languageSwitcher").value
-    let msg = "Please enter Magic Code name"
+    let lang = document.getElementById("languageSwitcher").value;
+    let msg = "Please enter Magic Code name";
     if (lang == "en") {
-      msg = "Please enter Magic Code name"
+      msg = "Please enter Magic Code name";
     } else if (lang == "de") {
-      msg = "Bitte Magic Code Namen angeben"
+      msg = "Bitte Magic Code Namen angeben";
     } else if (lang == "hu") {
-      msg = "Add meg a Magic Code nevét"
+      msg = "Add meg a Magic Code nevét";
     }
-
 
     showToast(msg, "error");
     return; // Stop further processing if file is not attached
@@ -152,7 +154,7 @@ async function generateQRCode(formData) {
 // Handle form submission
 submitBtnUpdate.addEventListener("click", async (event) => {
   event.preventDefault(); // Prevent default form submission
-  generateQRCodeFe(true);
+ 
   // const qrName = document.getElementById("qr-name-update").value;
   // const backgroundColor = document.getElementById("bg-color-update").value;
   // const dotStyle = document.getElementById("dot-style-update").value;
@@ -169,9 +171,13 @@ submitBtnUpdate.addEventListener("click", async (event) => {
   // const Logo = document.getElementById("logo").files[0];
   const code = document.getElementById("qr-code-key").value;
   const logoFileInput = document.getElementById("logo"); //logo file input
+  const logoImageValue = document.getElementById("QRLogo").value;
+  const logo = `images/logo${logoImageValue}.jpg`
 
   const formData = new FormData(); // Create a FormData object
   const type = qrDataType.value; // Get the selected type
+
+  generateQRCodeFe(true,logo);
 
   // Append type and other form data
   formData.append("type", type);
@@ -181,8 +187,11 @@ submitBtnUpdate.addEventListener("click", async (event) => {
   formData.append("cornerStyle", cornerStyle);
   formData.append("applyGradient", applyGradient);
   formData.append("qrDotColor", qrDotColor);
+  formData.append("logoImageValue", logoImageValue);
 
-  const selected = document.querySelector('input[name="ColorList"]:checked').value;
+  const selected = document.querySelector(
+    'input[name="ColorList"]:checked'
+  ).value;
   formData.append("ColorList", selected);
 
   // formData.append("logo", logoFileInput.files[0]);

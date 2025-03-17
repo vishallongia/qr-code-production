@@ -160,6 +160,9 @@ body {
   transform: translateX(0);
   opacity: 1;
   transition-delay: 0.25s;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .form-container.active .form-box.login {
