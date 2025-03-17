@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/css/dashboard.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+
 </head>
 
 <body class="<%= (user && user.role === 'admin') ? 'admin-body' : 'regular-body' %>">
@@ -31,19 +32,37 @@
                         <button class="menu-toggle">☰</button>
                         <div class="side-menu">
                             <button class="menu-close">×</button>
-                            <div class="menu-item active" data-section="show" id="myQRCodes">Show my QR Codes</div>
-                            <div class="menu-item" data-section="profile" id="profile">Profile</div>
-                            <div class="menu-item" data-section="usercontrol" id="usercontrol">User Control
+                            <div class="menu-item" data-section="show" id="myQRCodes"><img src="/logo.jpeg"
+                                    alt="Create QR Code" class="menu-icon" />
+                                <span class="menu-text">Show my QR Codes</span>
+                            </div>
+                            <div class="menu-item" data-section="profile" id="profile"><img src="/logo.jpeg"
+                                    alt="Create QR Code" class="menu-icon" />
+                                <span class="menu-text">Profile</span>
+                            </div>
+                            <div class="menu-item" data-section="usercontrol" id="usercontrol"><img src="/logo.jpeg"
+                                    alt="Create QR Code" class="menu-icon" />
+                                <span class="menu-text">User Control</span>
                             </div>
                             <% } else { %>
                                 <button class="menu-toggle">☰</button>
                                 <div class="side-menu">
                                     <button class="menu-close">×</button>
-                                    <div class="menu-item active" data-section="generate" id="CreateQRCode">Create QR
-                                        Code</div>
-                                    <div class="menu-item" data-section="show" id="myQRCodes">Show my QR Codes</div>
-                                    <div class="menu-item" data-section="profile" id="profile">Profile</div>
-                                    <div class="menu-item" data-section="usercontrol" id="usercontrol">User Control
+                                    <div class="menu-item active" data-section="generate" id="CreateQRCode">
+                                        <img src="/logo.jpeg" alt="Create QR Code" class="menu-icon" />
+                                        <span class="menu-text">Create QR Code</span>
+                                    </div>
+                                    <div class="menu-item" data-section="show" id="myQRCodes"><img src="/logo.jpeg"
+                                            alt="Create QR Code" class="menu-icon" />
+                                        <span class="menu-text">Show my QR Codes</span>
+                                    </div>
+                                    <div class="menu-item" data-section="profile" id="profile"><img src="/logo.jpeg"
+                                            alt="Create QR Code" class="menu-icon" />
+                                        <span class="menu-text">Profile</span>
+                                    </div>
+                                    <div class="menu-item" data-section="usercontrol" id="usercontrol"><img
+                                            src="/logo.jpeg" alt="Create QR Code" class="menu-icon" />
+                                        <span class="menu-text">User Control</span>
                                     </div>
                                     <% } %>
                                 </div>
@@ -89,13 +108,11 @@
                                                         <label for="qr-code-key">Code</label>
                                                         <input type="text" id="qr-code-key" placeholder="Code">
                                                     </div>
-                                                    <div class="input-group"
-                                                        style="display: none;">
+                                                    <div class="input-group" style="display: none;">
                                                         <label for="qr-color" id="CodeColorLang">Code Color:</label>
                                                         <input type="color" id="qr-color" value="#000000">
                                                     </div>
-                                                    <div class="input-group"
-                                                        style="display: none;">
+                                                    <div class="input-group" style="display: none;">
                                                         <label for="bg-color" id="BackgroundColorLang">Background
                                                             Color:</label>
                                                         <input type="color" id="bg-color" value="#ffffff">
@@ -105,11 +122,16 @@
                                                         style="<%= user.role === 'demo-user' ? 'display: none;' : '' %>">
 
                                                         <div class="radio-group">
-                                                            <input type="radio" id="first" name="ColorList" value="first" checked onchange="ChangeLists()" onclick="ChangeLists()">
+                                                            <input type="radio" id="first" name="ColorList"
+                                                                value="first" checked onchange="ChangeLists()"
+                                                                onclick="ChangeLists()">
                                                             <label for="first" id="KeepBGText">Keep Background</label>
-                                                    
-                                                            <input type="radio" id="second" name="ColorList" value="second" onchange="ChangeLists()" onclick="ChangeLists()">
-                                                            <label for="second" id="RemoveBGText">Remove Background</label>
+
+                                                            <input type="radio" id="second" name="ColorList"
+                                                                value="second" onchange="ChangeLists()"
+                                                                onclick="ChangeLists()">
+                                                            <label for="second" id="RemoveBGText">Remove
+                                                                Background</label>
                                                         </div>
 
                                                         <div class="LabelsName" id="ForegroundColorText">
@@ -117,74 +139,97 @@
                                                         </div>
 
                                                         <div class="container" id="FgColorsDiv">
-                                                            <div class="color-box" style="background-color: #ff0093;" data-color="#ff0093">
-                                                                <input type="radio" name="color" id="magenta" value="#ff0093">
+                                                            <div class="color-box" style="background-color: #ff0093;"
+                                                                data-color="#ff0093">
+                                                                <input type="radio" name="color" id="magenta"
+                                                                    value="#ff0093">
                                                                 <label for="magenta"></label>
                                                                 <span class="color-name">MAGENTA</span>
                                                             </div>
-                                                            
-                                                            <div class="color-box" style="background-color: #835ec7;" data-color="#835ec7">
-                                                                <input type="radio" name="color" id="violet" value="#835ec7">
+
+                                                            <div class="color-box" style="background-color: #835ec7;"
+                                                                data-color="#835ec7">
+                                                                <input type="radio" name="color" id="violet"
+                                                                    value="#835ec7">
                                                                 <label for="violet"></label>
                                                                 <span class="color-name">VIOLET</span>
                                                             </div>
-                                                        
-                                                            <div class="color-box" style="background-color: #00b760;" data-color="#00b760">
-                                                                <input type="radio" name="color" id="grun" value="#00b760">
+
+                                                            <div class="color-box" style="background-color: #00b760;"
+                                                                data-color="#00b760">
+                                                                <input type="radio" name="color" id="grun"
+                                                                    value="#00b760">
                                                                 <label for="grun"></label>
                                                                 <span class="color-name">GRÜN</span>
                                                             </div>
-                                                        
-                                                            <div class="color-box" style="background-color: #fc70ba;" data-color="#fc70ba">
-                                                                <input type="radio" name="color" id="pink" value="#fc70ba">
+
+                                                            <div class="color-box" style="background-color: #fc70ba;"
+                                                                data-color="#fc70ba">
+                                                                <input type="radio" name="color" id="pink"
+                                                                    value="#fc70ba">
                                                                 <label for="pink"></label>
                                                                 <span class="color-name">PINK</span>
                                                             </div>
-                                                        
-                                                            <div class="color-box" style="background-color: #1c00ff;" data-color="#1c00ff">
-                                                                <input type="radio" name="color" id="blau" value="#1c00ff">
+
+                                                            <div class="color-box" style="background-color: #1c00ff;"
+                                                                data-color="#1c00ff">
+                                                                <input type="radio" name="color" id="blau"
+                                                                    value="#1c00ff">
                                                                 <label for="blau"></label>
                                                                 <span class="color-name">BLAU</span>
                                                             </div>
-                                                        
-                                                            <div class="color-box" style="background-color: #ff0000;" data-color="#ff0000">
-                                                                <input type="radio" name="color" id="rot" value="#ff0000">
+
+                                                            <div class="color-box" style="background-color: #ff0000;"
+                                                                data-color="#ff0000">
+                                                                <input type="radio" name="color" id="rot"
+                                                                    value="#ff0000">
                                                                 <label for="rot"></label>
                                                                 <span class="color-name">ROT</span>
                                                             </div>
-                                                        
-                                                            <div class="color-box" style="background-color: #ffc62c;" data-color="#ffc62c">
-                                                                <input type="radio" name="color" id="orange" value="#ffc62c">
+
+                                                            <div class="color-box" style="background-color: #ffc62c;"
+                                                                data-color="#ffc62c">
+                                                                <input type="radio" name="color" id="orange"
+                                                                    value="#ffc62c">
                                                                 <label for="orange"></label>
                                                                 <span class="color-name">ORANGE</span>
                                                             </div>
-                                                        
-                                                            <div class="color-box" style="background-color: #00aeef;" data-color="#00aeef">
-                                                                <input type="radio" name="color" id="cyan" value="#00aeef">
+
+                                                            <div class="color-box" style="background-color: #00aeef;"
+                                                                data-color="#00aeef">
+                                                                <input type="radio" name="color" id="cyan"
+                                                                    value="#00aeef">
                                                                 <label for="cyan"></label>
                                                                 <span class="color-name">CYAN</span>
                                                             </div>
-                                                        
-                                                            <div class="color-box" style="background-color: #fefe00;" data-color="#fefe00">
-                                                                <input type="radio" name="color" id="gelb" value="#fefe00">
+
+                                                            <div class="color-box" style="background-color: #fefe00;"
+                                                                data-color="#fefe00">
+                                                                <input type="radio" name="color" id="gelb"
+                                                                    value="#fefe00">
                                                                 <label for="gelb"></label>
                                                                 <span class="color-name">GELB</span>
                                                             </div>
-                                                        
-                                                            <div class="color-box" style="background-color: #ffffff; border: 1px solid #ccc;" data-color="#ffffff">
-                                                                <input type="radio" name="color" id="weiss" value="#ffffff">
+
+                                                            <div class="color-box"
+                                                                style="background-color: #ffffff; border: 1px solid #ccc;"
+                                                                data-color="#ffffff">
+                                                                <input type="radio" name="color" id="weiss"
+                                                                    value="#ffffff">
                                                                 <label for="weiss"></label>
                                                                 <span class="color-name">WEISS</span>
                                                             </div>
-                                                        
-                                                        
-                                                            <div class="color-box" style="background-color: #4cced1;" data-color="#4cced1">
-                                                                <input type="radio" name="color" id="turquoise" value="#4cced1">
+
+
+                                                            <div class="color-box" style="background-color: #4cced1;"
+                                                                data-color="#4cced1">
+                                                                <input type="radio" name="color" id="turquoise"
+                                                                    value="#4cced1">
                                                                 <label for="turquoise"></label>
                                                                 <span class="color-name">TURQUOISE</span>
                                                             </div>
                                                         </div>
-                                                        
+
                                                         <div class="LabelsName" id="BackgroundColorText">
                                                             Background Color:
                                                         </div>
@@ -196,16 +241,18 @@
                                                         <div class="dropdown-container" style="display: none;">
                                                             <label for="fgColor">Foreground Color:</label>
                                                             <div>
-                                                                <select id="fgColor" onchange="updateBgColors(); updatePreview();" onclick="updateBgColors(); updatePreview();">
+                                                                <select id="fgColor"
+                                                                    onchange="updateBgColors(); updatePreview();"
+                                                                    onclick="updateBgColors(); updatePreview();">
                                                                 </select>
                                                             </div>
-                                                            
+
                                                             <label for="bgColor">Background Color:</label>
                                                             <div>
-                                                                <select id="bgColor" onchange="updatePreview()" >
+                                                                <select id="bgColor" onchange="updatePreview()">
                                                                 </select>
                                                             </div>
-                                                    
+
                                                         </div>
                                                     </div>
 
@@ -257,11 +304,12 @@
                                                         onclick="downloadQRCode()">VibeCode
                                                         herunterladen</button>
 
-                                                        <div>
-                                                            <button class="submit-btn" id="PrintMyQR" onclick="PrintMyQR()">PRINT 
-                                                                MY MAGIC
-                                                                 CODE</button>
-                                                         </div>
+                                                    <div>
+                                                        <button class="submit-btn" id="PrintMyQR"
+                                                            onclick="PrintMyQR()">PRINT
+                                                            MY MAGIC
+                                                            CODE</button>
+                                                    </div>
                                                     <div id="qr-code"></div>
                                                 </div>
                                                 <% } %>
@@ -312,25 +360,25 @@
                                                     showGenerateSection(qr);
         <% } %>
                                             </script>
-                                            <script src="/js/translations.js"></script>
+                                            <!-- <script src="/js/translations.js"></script> -->
                                             <script>
-                                                    function PrintMyQR(){
+                                                    function PrintMyQR() {
                                                         window.open('https://textildruck-schweiz.com/products/magic-code', '_blank');
                                                     }
-                                                    function OpenSite() {
-                                                        let lang = document.getElementById("languageSwitcher").value
-                                                        if (lang == "hu") {
-                    window.open('https://magicprints.studio/', '_blank')
-                } else {
-                    window.open('https://textildruck-schweiz.com/', '_blank')
-                }
+                                                function OpenSite() {
+                                                    let lang = document.getElementById("languageSwitcher").value
+                                                    if (lang == "hu") {
+                                                        window.open('https://magicprints.studio/', '_blank')
+                                                    } else {
+                                                        window.open('https://textildruck-schweiz.com/', '_blank')
                                                     }
+                                                }
                                             </script>
-                                           <script>
+                                            <script>
                                             <% if (typeof message !== 'undefined' && message && type !== 'none' && type !== 'hidden') { %>
-                                                showToast("<%= message %>", "<%= type || 'success' %>");
+                                                    showToast("<%= message %>", "<%= type || 'success' %>");
                                             <% } %>
-                                        </script>
+                                            </script>
 
 
 </body>

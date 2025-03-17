@@ -2451,7 +2451,6 @@ router.post(
         const existingUser = await User.findOne({ email }).session(session);
         if (existingUser) {
           await session.abortTransaction(); // Abort if user exists
-          console.log(email);
           return res
             .status(400)
             .json({ message: "Email already in use", type: "error" });

@@ -50,14 +50,51 @@
 }
 
 .side-menu {
-  width: 200px;
+  width: 100px; /* Initial collapsed width */
   background-color: var(--primary-bg-color);
   color: var(--primary-text-color);
   padding: var(--padding-lg);
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease-in-out;
+  align-items: flex-start;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth modern transition */
   position: relative;
+  overflow: hidden;
+}
+
+.side-menu.expanded {
+  width: 260px; /* Expanded width */
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  opacity: 1;
+}
+
+.menu-icon {
+  width: 45px; /* Adjust size */
+  height: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease-in-out;
+}
+
+.menu-text {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.side-menu.expanded .menu-text {
+  opacity: 1;
+  width: auto;
+}
+
+.side-menu.active .menu-text {
+  opacity: 1;
+  width: auto;
 }
 
 #qr-code {
@@ -81,12 +118,12 @@
 
 .menu-close {
   position: absolute;
-  top: var(--padding-md);
-  right: var(--padding-md);
+  top: 0px;
+  right: 2px;
   background-color: transparent;
   color: var(--primary-text-color);
   border: none;
-  font-size: 20px;
+  font-size: 30px;
   cursor: pointer;
   display: none;
 }
@@ -101,6 +138,7 @@
 .menu-item:hover,
 .menu-item.active {
   background-color: var(--secondary-bg-color);
+  width: 100%;
 }
 
 .main-content {
@@ -240,14 +278,21 @@ textarea {
 
   .side-menu {
     position: fixed;
-    left: -200px;
+    width: 260px;
+    left: -260px;
     top: 0;
     bottom: 0;
+    background-color: var(--primary-bg-color);
+    color: var(--primary-text-color);
+    padding: var(--padding-lg);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Smooth bounce effect */
     z-index: 1000;
   }
 
   .side-menu.active {
-    transform: translateX(200px);
+    transform: translateX(260px);
   }
 
   .menu-toggle {
@@ -350,7 +395,7 @@ canvas {
 /* Breakpoints to adjust canvas max-width */
 @media (min-width: 768px) {
   canvas {
-    max-width: 200px;
+    max-width: 260px;
     /* Medium screens (e.g., tablet) */
   }
 

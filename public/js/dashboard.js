@@ -18,9 +18,23 @@ menuClose.addEventListener("click", () => {
   sideMenu.classList.remove("active");
 });
 
+
+document.addEventListener("DOMContentLoaded", function () {
+
+ 
+});
+
 // Set active tab based on localStorage on page load
 document.addEventListener("DOMContentLoaded", () => {
   const activeTab = localStorage.getItem("activeTab");
+
+  sideMenu.addEventListener("mouseenter", function () {
+    sideMenu.classList.add("expanded");
+});
+
+sideMenu.addEventListener("mouseleave", function () {
+    sideMenu.classList.remove("expanded");
+});
 
   if (activeTab) {
     // Find the corresponding menu item and section based on the saved tab
@@ -45,8 +59,7 @@ menuItems.forEach((item) => {
     // Save the active tab in localStorage
     localStorage.setItem("activeTab", item.dataset.section);
 
-    // Show or hide sections based on selected tab
-    console.log(item.dataset.section, "wm");
+
     if (item.dataset.section === "generate") {
       window.location.href = "/dashboard";
     } else if (item.dataset.section === "profile") {
@@ -256,9 +269,13 @@ function showGenerateSection(qr) {
   document.getElementById("gradient").value = qr.applyGradient;
   document.getElementById("qr-type").value = qr.type;
   document.getElementById("qr-code-key").value = qr.code;
-  const logo = qr.logo;
-  const logoValue = logo.match(/logo(\d+)/)[1];
-  document.getElementById("QRLogo").value = logoValue;
+  const logo = qr.logo || "/images/logo.jpg"; // Default if logo is missing
+
+  if (logo !== "/images/logo.jpg") {
+    const match = logo.match(/logo(\d+)/);
+    const logoValue = match ? match[1] : ""; // Extracted number or empty string
+    document.getElementById("QRLogo").value = logoValue;
+  } 
 
   updateInputFields();
 
