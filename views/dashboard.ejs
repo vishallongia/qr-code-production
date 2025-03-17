@@ -357,7 +357,8 @@
         <% if (activeSection === 'generate' && qrCode) { %>
             // Pass qrCode data to the JavaScript function if available and activeSection is 'generate'
             const qr = <%- JSON.stringify(qrCode) %>;
-                                                    showGenerateSection(qr);
+            const user = <%- JSON.stringify(user) %>;
+                                                    showGenerateSection(qr,user);
         <% } %>
                                             </script>
                                             <!-- <script src="/js/translations.js"></script> -->

@@ -18,11 +18,7 @@ menuClose.addEventListener("click", () => {
   sideMenu.classList.remove("active");
 });
 
-
-document.addEventListener("DOMContentLoaded", function () {
-
- 
-});
+document.addEventListener("DOMContentLoaded", function () {});
 
 // Set active tab based on localStorage on page load
 document.addEventListener("DOMContentLoaded", () => {
@@ -30,11 +26,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   sideMenu.addEventListener("mouseenter", function () {
     sideMenu.classList.add("expanded");
-});
+  });
 
-sideMenu.addEventListener("mouseleave", function () {
+  sideMenu.addEventListener("mouseleave", function () {
     sideMenu.classList.remove("expanded");
-});
+  });
 
   if (activeTab) {
     // Find the corresponding menu item and section based on the saved tab
@@ -58,7 +54,6 @@ menuItems.forEach((item) => {
 
     // Save the active tab in localStorage
     localStorage.setItem("activeTab", item.dataset.section);
-
 
     if (item.dataset.section === "generate") {
       window.location.href = "/dashboard";
@@ -255,8 +250,6 @@ function updateQRCodeFe(
 
 // Function to toggle generate-section inside modal
 function showGenerateSection(qr) {
-  console.log(qr);
-
   CurrentQR = qr;
   document.getElementById("qr-name").value = qr.qrName;
 
@@ -275,7 +268,15 @@ function showGenerateSection(qr) {
     const match = logo.match(/logo(\d+)/);
     const logoValue = match ? match[1] : ""; // Extracted number or empty string
     document.getElementById("QRLogo").value = logoValue;
-  } 
+  }
+  if (user.role === "demo-user") {
+    const qrLogoSelect = document.getElementById("QRLogo");
+    qrLogoSelect.value = ""; // Empty the dropdown value
+    const inputGroup = qrLogoSelect.closest(".input-group"); // Find the closest input-group
+    if (inputGroup) {
+      inputGroup.style.display = "none"; // Hide the input group
+    }
+  }
 
   updateInputFields();
 
