@@ -360,8 +360,8 @@ function showGenerateSection(qr) {
   if (document.getElementById("qr-type").value === "text") {
     document.getElementById("text-file").value = qr.text;
   }
-  document.getElementById("submit-btn-update").style.display = "block";
-  document.getElementById("downloadQRCode").style.display = "block";
+  document.getElementById("submit-btn-update").style.display = "flex";
+  document.getElementById("downloadQRCode").style.display = "flex";
   document.getElementById("qr-code").style.display = "block";
   document.getElementById("submit-btn-generate").style.display = "none";
 }

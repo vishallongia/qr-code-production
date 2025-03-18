@@ -294,21 +294,31 @@
                                                     <!-- Submit Button Added Here -->
 
 
-                                                    <button class="submit-btn" id="submit-btn-generate">VibeCode
-                                                        erstellen</button>
-                                                    <button class="submit-btn" id="submit-btn-update">Inhalt des
-                                                        VibeCodes
-                                                        ändern</button>
+                                                    <button class="submit-btn" id="submit-btn-generate"> <img
+                                                            src="/logo.jpeg" alt="Icon" class="btn-icon" />
+                                                        <span class="btn-text">VibeCode erstellen</span></button>
+                                                    <button class="submit-btn" id="submit-btn-update">
+                                                        <img src=" /logo.jpeg" alt="Icon" class="btn-icon" />
+                                                        <span class="btn-text"> Inhalt des
+                                                            VibeCodes
+                                                            ändern</span>
+                                                    </button>
+                                                    </button>
 
                                                     <button class="submit-btn" id="downloadQRCode"
-                                                        onclick="downloadQRCode()">VibeCode
-                                                        herunterladen</button>
+                                                        onclick="downloadQRCode()">
+                                                        <img src="/logo.jpeg" alt="Icon" class="btn-icon" />
+                                                        <span class="btn-text"> VibeCode
+                                                            herunterladen</span>
+                                                    </button>
 
                                                     <div>
-                                                        <button class="submit-btn" id="PrintMyQR"
-                                                            onclick="PrintMyQR()">PRINT
-                                                            MY MAGIC
-                                                            CODE</button>
+                                                        <button class="submit-btn" id="PrintMyQR" onclick="PrintMyQR()">
+                                                            <img src=" /logo.jpeg" alt="Icon" class="btn-icon" />
+                                                            <span class="btn-text"> Inhalt des
+                                                                VibeCodes
+                                                                ändern</span>
+                                                        </button>
                                                     </div>
                                                     <div id="qr-code"></div>
                                                 </div>
@@ -357,11 +367,11 @@
         <% if (activeSection === 'generate' && qrCode) { %>
             // Pass qrCode data to the JavaScript function if available and activeSection is 'generate'
             const qr = <%- JSON.stringify(qrCode) %>;
-            const user = <%- JSON.stringify(user) %>;
-                                                    showGenerateSection(qr,user);
+                                                    const user = <%- JSON.stringify(user) %>;
+                                                    showGenerateSection(qr, user);
         <% } %>
                                             </script>
-                                            <!-- <script src="/js/translations.js"></script> -->
+                                            <script src="/js/translations.js"></script>
                                             <script>
                                                     function PrintMyQR() {
                                                         window.open('https://textildruck-schweiz.com/products/magic-code', '_blank');

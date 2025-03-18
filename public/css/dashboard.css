@@ -15,6 +15,8 @@
   --font-size: 16px;
   --bg-gradient-start: #e0f7fa;
   --bg-gradient-end: #ffe0b2;
+  --padding-btn-icon-md : 8px;
+  --padding-btn-icon-lg: 6px;
 }
 
 * {
@@ -73,6 +75,7 @@
   padding: 10px;
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
   opacity: 1;
+  height: 70px;
 }
 
 .menu-icon {
@@ -80,6 +83,12 @@
   height: auto;
   object-fit: contain;
   transition: transform 0.3s ease-in-out;
+}
+
+.btn-icon {
+  width: 45px; /* Adjust size */
+  height: auto;
+  object-fit: contain;
 }
 
 .menu-text {
@@ -233,6 +242,7 @@ textarea {
   transition: background-color 0.3s;
   right: 10%;
   width: fit-content;
+  margin : 0 !important
 }
 
 
@@ -355,7 +365,7 @@ textarea {
 .submit-btn {
   background-color: var(--accent-color);
   color: var(--primary-text-color);
-  padding: var(--padding-md) var(--padding-lg);
+  padding: var(--padding-btn-icon-md) var(--padding-btn-icon-lg);
   border: none;
   border: 2px solid grey;
   border-radius: var(--border-radius);
@@ -364,6 +374,9 @@ textarea {
   transition: background-color 0.3s;
   width: 100%;
   margin-bottom: var(--padding-sm);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .submit-btn:hover {
