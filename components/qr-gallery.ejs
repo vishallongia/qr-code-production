@@ -119,10 +119,15 @@
                 const qrContainer = document.getElementById(`qr-container-${qrCodeData._id}`);
                 // let logo = "/images/logo.jpg"
                 let logoUrl;
-                // if (logo) {
+                if (qrCodeData.logo) {
+                    // if (logo) {
                     logoUrl = `${window.location.protocol}//${window.location.host}/${qrCodeData.logo}`;
-                // }
-           
+                    // }
+                }
+                else {
+                    logoUrl = `${window.location.protocol}//${window.location.host}/images/logo.jpg`
+                }
+
 
                 if (qrContainer) {
                     const qrCode = new QRCodeStyling({

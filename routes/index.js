@@ -86,13 +86,14 @@ router.get(
       )
         .sort({ email: -1 }) // Sort numerically
         .limit(1);
-      let startNumber;
+      // Determine the next user number
+      let startNumber = "0000001"; // Default if no users exist
       if (largestUser) {
         startNumber = String(
           parseInt(largestUser.email.split("@")[0], 10) + 1
         ).padStart(7, "0");
       }
-      res.render("generateusers",{startNumber}); // Send type as 'success'
+      res.render("generateusers", { startNumber }); // Send type as 'success'
     } catch (error) {
       console.error("Error generating QR code:", error);
       res.status(500).render("index", {
@@ -420,15 +421,25 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
     // Calculate the number of users to skip
     const skip = (currentPage - 1) * recordsPerPage;
 
-    // Fetch users and count their QR codes in a single query
     const users = await User.aggregate([
       { $match: { role: { $ne: "admin" } } }, // Exclude admin users
       {
         $lookup: {
-          from: "qrcodedatas", // Collection name for QR code data
-          localField: "_id", // Field in User model
-          foreignField: "user_id", // Field in QRCodeData model
-          as: "qrData", // Name of the joined field
+          from: "qrcodedatas",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $eq: ["$user_id", "$$userId"] }, // Count QR codes the user created
+                    { $in: ["$$userId", { $ifNull: ["$assignedTo", []] }] }, // Count QR codes assigned to them
+                  ],
+                },
+              },
+            },
+          ],
+          as: "qrData",
         },
       },
       {
@@ -439,13 +450,12 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
           role: 1,
           isActive: 1,
           userPasswordKey: 1,
-          qrCount: { $size: "$qrData" }, // Count of QR codes
+          qrCount: { $size: "$qrData" }, // Total count (created + assigned)
         },
       },
     ])
       .skip(skip)
       .limit(recordsPerPage);
-
     // Decrypt passwords only for the users on the current page
     users.forEach((user) => {
       if (user.userPasswordKey) {
