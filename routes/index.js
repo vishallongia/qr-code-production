@@ -10,6 +10,7 @@ const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necess
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const ExcelJS = require("exceljs");
 // const { sendResetPasswordEmail } = require("../public/js/email-service");
 const SendEmail = require("../Messages/SendEmail");
 const {
@@ -73,6 +74,23 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
+// Home route
+router.get(
+  "/admindashboard/generateusers",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      res.render("generateusers"); // Send type as 'success'
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      res.status(500).render("index", {
+        message: "Failed to generate QR code",
+        type: "error", // Send type as 'error'
+      });
+    }
+  }
+);
+
 // Forgot password page
 router.get("/forgotpassword/:token?", async (req, res) => {
   try {
@@ -118,6 +136,180 @@ router.get("/update-user-details/:userid?", async (req, res) => {
       message: error.message,
       type: "error", // Send type as 'error'
     });
+  }
+});
+
+router.get("/assign-qr-code/:qrCodeId?", async (req, res) => {
+  try {
+    const { qrCodeId } = req.params;
+
+    // Check if qrCodeId exists in the request parameters
+    if (!qrCodeId) {
+      return res.status(400).send("QR Code ID is required");
+    }
+
+    // Decrypt the qr ID using the decryptPassword function
+    const decryptedQrId = decryptPassword(qrCodeId.toString());
+    // Find the QR code by its ID using findOne
+    const qrCode = await QRCodeData.findOne({ _id: decryptedQrId });
+
+    // Check if QR code exists
+    if (!qrCode) {
+      return res.status(404).send("QR Code not found");
+    }
+
+    // Render the assign QR code page with the QR code data
+    res.render("assignqrcode", {
+      qrCode, // Send the QR code data to the EJS template
+    });
+  } catch (error) {
+    console.error("Error generating assign QR code page", error);
+    res.status(500).render("index", {
+      message: error.message,
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+//Assignment of QRCode
+router.post("/assign-qr-code", async (req, res) => {
+  const { email, encId } = req.body;
+
+  try {
+    if (!email) {
+      return res
+        .status(400)
+        .json({ message: "Please provide an email", type: "error" });
+    }
+
+    // Decrypt the encrypted QR code ID (encId)
+    const decryptedQrCodeId = decryptPassword(encId);
+
+    // Find the QR code using the decrypted QR code ID
+    const qrCodeData = await QRCodeData.findById(decryptedQrCodeId);
+
+    if (!qrCodeData) {
+      return res
+        .status(404)
+        .json({ message: "QR Code not found", type: "error" });
+    }
+
+    let user;
+
+    // Find the user by email
+    user = await User.findOne({ email });
+
+    if (!user) {
+      // Create a new user if the user does not exist
+      const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      const encryptedPassword = encryptPassword(randomPassword);
+
+      user = new User({
+        fullName: "New User",
+        email,
+        password: hashedPassword,
+        userPasswordKey: encryptedPassword,
+      });
+
+      await user.save();
+    }
+
+    // Add the user ID to the 'assignedTo' array if it's not already there
+    if (!qrCodeData.assignedTo.includes(user._id)) {
+      qrCodeData.assignedTo.push(user._id);
+      await qrCodeData.save();
+    }
+
+    // Generate JWT token valid for 10 minutes
+    const magicToken = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.MAGIC_LINK_JWT_EXPIRATION }
+    );
+
+    const magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
+
+    // Email configuration
+    const sender = {
+      email: "textildruckschweiz.com@gmail.com",
+      name: "Magic Code - Login Link",
+    };
+
+    const content = `
+        <!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login with Magic Link</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+        }
+        p {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .btn {
+            display: inline-block;
+            background: #007bff;
+            color: #ffffff;
+            padding: 12px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Login with Magic Link</h2>
+        <p>Hi ${user.fullName},</p>
+        <p>Use the magic link below to securely log in to your account. This link will expire in 30 minutes.</p>
+        <a href="${magicLink}" class="btn">Login Now</a>
+        <p>If you did not request this login, please ignore this email.</p>
+        <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
+    </div>
+</body>
+</html>
+    `;
+
+    // Send the magic link email
+    SendEmail(sender, user.email, "Your Magic Link to Login", content);
+
+    //Clear cookies (if needed)
+    res.clearCookie("token", { httpOnly: false });
+    res.clearCookie("userId", { httpOnly: false });
+
+    res
+      .status(200)
+      .json({ message: "Magic link sent to your email", type: "success" });
+  } catch (error) {
+    console.error("Error processing magic link:", error);
+    res.status(500).json({ message: "An error occurred", type: "error" });
   }
 });
 
@@ -263,6 +455,149 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
       message: "Failed to load Admin Dashboard",
       type: "error", // Send type as 'error'
     });
+  }
+});
+
+router.get(
+  "/admindashboard/demo-user-dashboard",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      // Get current page from query params, default to 1 if not provided
+      const currentPage = parseInt(req.query.page) || 1;
+      const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+
+      // Fetch total number of demo-users to calculate total pages
+      const totalUsers = await User.countDocuments({ role: "demo-user" });
+
+      // Calculate total pages (ceil to the nearest whole number)
+      const totalPages = Math.ceil(totalUsers / recordsPerPage);
+
+      // Calculate the number of users to skip
+      const skip = (currentPage - 1) * recordsPerPage;
+
+      // Fetch demo-users and count their QR codes in a single query
+      const users = await User.aggregate([
+        { $match: { role: "demo-user" } }, // Filter for demo-user role
+        {
+          $lookup: {
+            from: "qrcodedatas", // Collection name for QR code data
+            localField: "_id", // Field in User model
+            foreignField: "user_id", // Field in QRCodeData model
+            as: "qrData", // Name of the joined field
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            fullName: 1,
+            email: 1,
+            role: 1,
+            isActive: 1,
+            userPasswordKey: 1,
+            qrCount: { $size: "$qrData" }, // Count of QR codes
+            qrData: { $arrayElemAt: ["$qrData", 0] }, // Get the first (and only) QR code
+          },
+        },
+      ])
+        .skip(skip)
+        .limit(recordsPerPage);
+
+      // Decrypt passwords only for the users on the current page
+      users.forEach((user) => {
+        if (user.userPasswordKey) {
+          user.userPasswordKey = decryptPassword(user.userPasswordKey); // Decrypt the password
+        }
+        user.encryptedId = encryptPassword(user._id.toString()); // Encrypt the ObjectId string
+
+        if (user.qrData && user.qrData._id) {
+          // Encrypt the QR code ID
+          user.encryptedQrId = encryptPassword(user.qrData._id.toString());
+          user.code = user.qrData.code;
+        }
+      });
+
+      // Render the dashboard with the demo-users data and pagination info
+      res.render("demouserdashboard", {
+        users,
+        currentPage,
+        totalPages,
+        totalUsers,
+        FRONTEND_URL: process.env.FRONTEND_URL,
+      });
+    } catch (error) {
+      console.error("Error loading Demo User Dashboard:", error);
+      res.status(500).render("index", {
+        message: "Failed to load Demo User Dashboard",
+        type: "error", // Send type as 'error'
+      });
+    }
+  }
+);
+
+//Export Demo Users
+router.get("/admindashboard/export-users", authMiddleware, async (req, res) => {
+  try {
+    const users = await User.aggregate([
+      { $match: { role: "demo-user" } }, // Filter for demo-user role
+      {
+        $lookup: {
+          from: "qrcodedatas",
+          localField: "_id",
+          foreignField: "user_id",
+          as: "qrData",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          fullName: 1,
+          email: 1,
+          role: 1,
+          isActive: 1,
+          userPasswordKey: 1,
+          qrCount: { $size: "$qrData" },
+          qrCode: { $arrayElemAt: ["$qrData.code", 0] }, // Get the first QR codeF
+        },
+      },
+    ]);
+
+    users.forEach((user) => {
+      if (user.userPasswordKey) {
+        user.userPasswordKey = decryptPassword(user.userPasswordKey);
+      }
+      if (user.qrCode) {
+        user.qrCodeLink = `${process.env.FRONTEND_URL}/${user.qrCode}`;
+      }
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Users");
+    worksheet.columns = [
+      { header: "Full Name", key: "fullName", width: 20 },
+      { header: "Email", key: "email", width: 25 },
+      { header: "Password", key: "userPasswordKey", width: 20 },
+      { header: "QR Count", key: "qrCount", width: 10 },
+      { header: "Active", key: "isActive", width: 10 },
+      { header: "Code", key: "qrCode", width: 10 },
+      { header: "Link", key: "qrCodeLink", width: 30 },
+    ];
+
+    users.forEach((user) => {
+      worksheet.addRow(user);
+    });
+
+    res.setHeader("Content-Disposition", "attachment; filename=users.xlsx");
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error("Error exporting users:", error);
+    res.status(500).json({ message: "Failed to export users", type: "error" });
   }
 });
 
@@ -697,23 +1032,70 @@ router.post("/usemagiclink", async (req, res) => {
 
     let content = `
         <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Login with Magic Link</title>
-        </head>
-        <body>
-            <h2>Login with Magic Link</h2>
-            <p>Hello ${user.fullName},</p>
-            <p>Click the button below to log in instantly:</p>
-            <a href="${magicLink}" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Login Now</a>
-            <p>This link will expire in 30 minutes.</p>
-        </body>
-        </html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login with Magic Link</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+        }
+        p {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .btn {
+            display: inline-block;
+            background: #007bff;
+            color: #ffffff;
+            padding: 12px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Login with Magic Link</h2>
+        <p>Hi ${user.fullName},</p>
+        <p>Use the magic link below to securely log in to your account. This link will expire in 30 minutes.</p>
+        <a href="${magicLink}" class="btn">Login Now</a>
+        <p>If you did not request this login, please ignore this email.</p>
+        <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
+    </div>
+</body>
+</html>
+
       `;
 
     SendEmail(sender, user.email, "Your Magic Link to Login", content);
+    // Clear cookies
+    res.clearCookie("token", { httpOnly: false });
+    res.clearCookie("userId", { httpOnly: false });
 
     res
       .status(200)
@@ -921,7 +1303,10 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
       // Fetch the specific QR code by ID and ensure it belongs to the logged-in user
       const qrCode = await QRCodeData.findOne({
         _id: magiccode,
-        user_id: userId,
+        $or: [
+          { user_id: userId },
+          { assignedTo: userId }, // Check if userId exists in the assigned_to array
+        ],
       });
 
       if (!qrCode) {
@@ -1123,10 +1508,13 @@ router.get("/magiccode", authMiddleware, async (req, res) => {
   let user;
   try {
     const userId = req.user._id; // Assuming the auth middleware adds the user object to the request
-    // Fetch QR code data for the logged-in user
-    const qrCodes = await QRCodeData.find({ user_id: userId }).sort({
-      createdAt: -1,
-    });
+    // Query for QR codes where the user either created them or is assigned to them
+    const qrCodes = await QRCodeData.find({
+      $or: [
+        { user_id: userId }, // QR codes created by the user
+        { assignedTo: userId }, // QR codes assigned to the user
+      ],
+    }).sort({ createdAt: -1 });
 
     // Find the user by ID
     user = await User.findById(userId);
@@ -1325,6 +1713,15 @@ router.post(
           url,
           qr_image: qrCode.qr_image, // The stored URL path to the QR image
           code, // Return the generated code in the response
+          qrName,
+          qrDotColor,
+          backgroundColor,
+          dotStyle,
+          cornerStyle,
+          applyGradient,
+          logo: logoPath,
+          ColorList,
+          createdAt: qrCode.createdAt, // Include creation timestamp
         },
       });
     } catch (error) {
@@ -1450,7 +1847,7 @@ router.put(
       cornerStyle,
       applyGradient,
       ColorList,
-      logoImageValue
+      logoImageValue,
     } = req.body; // Get type and URL from request body
     const qrCodeAlphanumeric = req.params.id;
     const user_id = req.user._id;
@@ -1471,7 +1868,10 @@ router.put(
       // Fetch the existing QR code by ID
       const qrCode = await QRCodeData.findOne({
         code: qrCodeAlphanumeric,
-        user_id,
+        $or: [
+          { user_id },
+          { assignedTo: user_id }, // Check if userId exists in the assigned_to array
+        ],
       });
 
       // Store existing file paths for deletion later if necessary
@@ -1484,12 +1884,14 @@ router.put(
           .json({ message: "Magic Code not found", type: "error" });
       }
 
-      if (qrCode.user_id.toString() !== user_id.toString()) {
+      if (
+        qrCode.user_id.toString() !== user_id.toString() &&
+        !qrCode.assignedTo.some((id) => id.toString() === user_id.toString())
+      ) {
         return res
           .status(403)
           .json({ message: "Unauthorized access", type: "error" });
       }
-
       // Handle updates based on the type
       if (type === "url") {
         if (!newUrl) {
@@ -1605,7 +2007,7 @@ router.put(
       qrCode.applyGradient = applyGradient; // Assign applyGradient
       qrCode.text = text;
       qrCode.ColorList = ColorList;
-      qrCode.logo = logoPath
+      qrCode.logo = logoPath;
 
       // Save the updated QR code data (keep the same QR image)
       await qrCode.save();
@@ -1626,7 +2028,8 @@ router.put(
           dotStyle: qrCode.dotStyle, // Include updated dotStyle
           cornerStyle: qrCode.cornerStyle, // Include updated cornerStyle
           applyGradient: qrCode.applyGradient, // Include updated applyGradient
-          logo: qrCode.logo, // Include updated logo path
+          logo: qrCode.logo, // Include updated logo path,
+          createdAt: qrCode.createdAt, // Include creation timestamp
         },
       });
     } catch (error) {
@@ -2420,7 +2823,7 @@ const { type } = require("os");
 //   }
 // );
 
-router.post(
+/*router.post(
   "/create-demo-users",
   upload.fields([{ name: "media-file", maxCount: 1 }]),
   multerErrorHandler,
@@ -2428,8 +2831,8 @@ router.post(
     let UserArrObj = [];
 
     // let number = "0000001";
-    let number = "8999997";
-    let totalNumbers = 100; // Number of iterations
+    let number = "9000000";
+    let totalNumbers = 200; // Number of iterations
 
     for (let i = 0; i < totalNumbers; i++) {
       let fullName = "User";
@@ -2439,8 +2842,8 @@ router.post(
       let type = "text";
       let qrDotColor = "#000000";
       let backgroundColor = "#FFFFFF";
-      let dotStyle = "square";
-      let cornerStyle = "square";
+      let dotStyle = "rounded";
+      let cornerStyle = "dot";
       let text = "Magic Code";
       let url = "";
 
@@ -2575,8 +2978,290 @@ router.post(
       type: "success",
     });
   }
+);*/
+
+// New APi Changes as provided
+
+router.post(
+  "/create-demo-users",
+  upload.fields([{ name: "media-file", maxCount: 1 }]),
+  multerErrorHandler,
+  async (req, res) => {
+    let UserArrObj = [];
+    let { totalNumbers } = req.body; // Get the number of users to create
+
+    totalNumbers = parseInt(totalNumbers, 10) || 1; // Default to 1 if not provided
+    let startNumber = "0000001"; // Starting point
+
+    // Get the largest existing user number
+    const largestUser = await User.findOne(
+      { email: { $regex: /^[0-9]+@magic-code\.net$/ } } // Filter only relevant emails
+    )
+      .sort({ email: -1 }) // Sort numerically
+      .limit(1);
+
+    if (largestUser) {
+      startNumber = String(
+        parseInt(largestUser.email.split("@")[0], 10) + 1
+      ).padStart(7, "0");
+    }
+    const session = await mongoose.startSession(); // Start a session
+    session.startTransaction(); // Start a transaction
+    try {
+      for (let i = 0; i < totalNumbers; i++) {
+        let fullName = "User";
+        let email = `${startNumber}@magic-code.net`;
+        let password = startNumber;
+        let qrName = "My Magic Code";
+        let type = "url";
+        let qrDotColor = "#000000";
+        let backgroundColor = "#FFFFFF";
+        let dotStyle = "rounded";
+        let cornerStyle = "dot";
+        let text = "";
+        let url = "";
+
+        const existingUser = await User.findOne({ email }).session(session);
+        if (existingUser) {
+          await session.abortTransaction();
+          return res
+            .status(400)
+            .json({ message: "Email already in use", type: "error" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const encryptedPassword = encryptPassword(password);
+        const newUser = new User({
+          fullName,
+          email,
+          password: hashedPassword,
+          role: "demo-user",
+          isActive: true,
+          userPasswordKey: encryptedPassword,
+        });
+
+        await newUser.save({ session });
+
+        const code = generateCode();
+
+        const qrCodeId = new mongoose.Types.ObjectId(); // Generate _id manually
+
+        let qrCode = new QRCodeData({
+          _id: qrCodeId, // Assign generated _id
+          user_id: newUser._id,
+          type,
+          url: `${process.env.FRONTEND_URL}/assign-qr-code/${encryptPassword(
+            qrCodeId.toString()
+          )}`,
+          text,
+          code,
+          qrName,
+          qrDotColor,
+          backgroundColor,
+          dotStyle,
+          cornerStyle,
+          applyGradient: "none",
+          logo: process.env.STATIC_LOGO,
+        });
+
+        // Save only once
+        await qrCode.save({ session });
+
+        UserArrObj.push({
+          uid: newUser._id,
+          email,
+          password,
+          code,
+          resetLinkValue: `${
+            process.env.FRONTEND_URL
+          }/assign-qr-code/${encryptPassword(qrCode._id.toString())}`,
+          qrCode,
+        });
+
+        // Increment number
+        startNumber = String(parseInt(startNumber, 10) + 1).padStart(7, "0");
+      }
+      await session.commitTransaction();
+      session.endSession();
+    } catch (error) {
+      console.error("Error during registration:", error);
+      // Check if session is defined before using it
+      // Check if session exists and is still active before aborting
+      if (session && session.inTransaction()) {
+        await session.abortTransaction();
+        session.endSession();
+      }
+      return res.status(500).json({
+        message: "Something went wrong please try again later",
+        type: "error",
+      });
+    }
+    res.status(201).json({
+      message: "Demo users successfully registered",
+      data: UserArrObj,
+      type: "success",
+    });
+  }
 );
 
-// console.log(encryptPassword("678bf050c2d23a17d69bd29b"));
+// router.post(
+//   "/create-demo-users",
+//   upload.fields([{ name: "media-file", maxCount: 1 }]),
+//   multerErrorHandler,
+//   async (req, res) => {
+//     let UserArrObj = [];
+
+//     // let number = "0000001";
+//     let number = "9004800";
+//     // let totalNumbers = 200; // Number of iterations
+//     let totalNumbers = 1; // Number of iterations
+
+//     for (let i = 0; i < totalNumbers; i++) {
+//       let fullName = "User";
+//       let email = `${number}@magic-code.net`;
+//       let password = number;
+//       let qrName = "My Magic Code";
+//       let type = "url";
+//       let qrDotColor = "#000000";
+//       let backgroundColor = "#FFFFFF";
+//       let dotStyle = "rounded";
+//       let cornerStyle = "dot";
+//       let text = "";
+//       let url = "";
+
+//       try {
+//         const session = await mongoose.startSession(); // Start a session
+//         session.startTransaction(); // Start a transaction
+
+//         const existingUser = await User.findOne({ email }).session(session);
+//         if (existingUser) {
+//           await session.abortTransaction(); // Abort if user exists
+//           return res
+//             .status(400)
+//             .json({ message: "Email already in use", type: "error" });
+//         }
+
+//         const hashedPassword = await bcrypt.hash(password, 10);
+//         const encryptedPassword = encryptPassword(password);
+//         const newUser = new User({
+//           fullName,
+//           email,
+//           password: hashedPassword,
+//           role: "demo-user",
+//           isActive: true,
+//           userPasswordKey: encryptedPassword,
+//         });
+
+//         // Save new user
+//         await newUser.save({ session });
+
+//         // Generate a 6-character alphanumeric code
+//         const code = generateCode();
+
+//         // Handle media and text file uploads
+//         let mediaFilePath;
+//         let logoPath = process.env.STATIC_LOGO;
+
+//         if (type === "media") {
+//           // Check if media file is attached
+//           if (!req.files["media-file"]) {
+//             await session.abortTransaction(); // Abort if no media file
+//             return res
+//               .status(400)
+//               .json({ message: "Media file not attached", type: "error" });
+//           }
+//           const mediaFile = req.files["media-file"][0];
+
+//           // Validate media file size
+//           if (mediaFile.size > MAX_FILE_SIZE) {
+//             await session.abortTransaction(); // Abort if file size is too large
+//             return res.status(400).json({
+//               message: "Media file size should not exceed 50 MB",
+//               type: "error",
+//             });
+//           }
+//           mediaFilePath = mediaFile.path;
+//         } else if (type === "text") {
+//           if (!text) {
+//             await session.abortTransaction(); // Abort if text is missing
+//             return res
+//               .status(400)
+//               .json({ message: "Text is missing", type: "error" });
+//           }
+//         } else if (type === "url") {
+//           // if (!url || !/^https?:\/\//i.test(url)) {
+//           //   await session.abortTransaction(); // Abort if URL is invalid
+//           //   return res.status(400).json({
+//           //     message:
+//           //       "The URL must be valid and start with 'http://' or 'https://'.",
+//           //     type: "error",
+//           //   });
+//           // }
+//         }
+
+//         let uid = newUser._id;
+//         let resetLink = encryptPassword(uid.toString());
+//         resetLink = `http://localhost:3000/update-user-details/${resetLink}`;
+//         let qrCode;
+//         if (qrName && type) {
+//           qrCode = new QRCodeData({
+//             user_id: newUser._id,
+//             type,
+//             url: resetLink,
+//             text,
+//             code,
+//             qrName,
+//             qrDotColor,
+//             backgroundColor,
+//             dotStyle,
+//             cornerStyle,
+//             applyGradient: "none",
+//             logo: logoPath,
+//           });
+
+//           if (type === "media") {
+//             qrCode.media_url = mediaFilePath; // Save media file path
+//           }
+//         }
+
+//         // Save qrCode
+//         await qrCode.save({ session });
+
+//         // If both save operations are successful, commit the transaction
+//         await session.commitTransaction();
+//         session.endSession();
+
+//         let resetLinkValue = encryptPassword(uid.toString());
+//         let obj = {
+//           uid,
+//           email,
+//           password,
+//           code,
+//           resetLinkValue,
+//         };
+
+//         UserArrObj.push(obj);
+
+//         number = String(parseInt(number) - 1).padStart(7, "0");
+//       } catch (error) {
+//         console.error("Error during registration and QR generation:", error);
+
+//         if (session.inTransaction()) {
+//           await session.abortTransaction(); // Rollback transaction if an error occurred
+//           res.status(500).json({
+//             message: "Something went wrong with transaction",
+//             type: "error",
+//           });
+//         }
+//         res.status(500).json({ message: "An error occurred", type: "error" });
+//       }
+//     }
+
+//     res.status(201).json({
+//       message: UserArrObj,
+//       type: "success",
+//     });
+//   }
+// );
 
 module.exports = router;

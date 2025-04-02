@@ -306,3 +306,49 @@ async function requestMagicLink(email, encId) {
     throw error; // Propagate error for handling in the calling function
   }
 }
+
+// Function to export users
+async function exportUsers(event) {
+  event.preventDefault();
+  const button = event.target.closest("button");
+  const loaderOverlay = document.querySelector(".fullscreen-loader");
+
+  // Disable button & show fullscreen loader
+  button.disabled = true;
+  button.style.opacity = "0.5"; // Reduce opacity for disabled effect
+  loaderOverlay.style.display = "flex"; // Show fullscreen loader
+
+  try {
+    const response = await fetch("/admindashboard/export-users", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      showToast(errorData.message, "error"); // Show error toast with message
+      throw new Error(errorData.message);
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "users.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast("Users exported successfully!", "success"); // Show success message
+  } catch (error) {
+    console.error("Error exporting users:", error);
+    showToast(error.message || "An error occurred. Please try again.", "error"); // Show error message
+  } finally {
+    // Hide loader & enable button after operation
+    loaderOverlay.style.display = "none"; // Hide fullscreen loader
+    button.disabled = false;
+    button.style.opacity = "1"; // Restore button opacity
+  }
+}

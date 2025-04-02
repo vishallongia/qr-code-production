@@ -48,22 +48,27 @@ const qrCodeSchema = new mongoose.Schema(
     },
     cornerStyle: {
       type: String,
-      required: true,  // Make it optional
-      default: "square" // Default value if not provided
+      required: true, // Make it optional
+      default: "square", // Default value if not provided
     },
     applyGradient: {
       type: String,
-      required: false,  // Make it optional
-      default: "none"   // Default value if not provided
-    }, 
+      required: false, // Make it optional
+      default: "none", // Default value if not provided
+    },
     logo: {
       type: String,
     },
     ColorList: {
       type: String,
-      required: true,  // Make it optional
-      default: "first" // Default value if not provided
-    }
+      required: true, // Make it optional
+      default: "first", // Default value if not provided
+    },
+    assignedTo: {
+      type: [mongoose.Schema.Types.ObjectId], // Array of ObjectIds
+      ref: "User", // Reference to the User schema
+      required: false, // Not mandatory
+    },
   },
   { timestamps: true }
 );

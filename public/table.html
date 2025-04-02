@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Table</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>UID</th>
+                <th>Email</th>
+                <th>Password</th>
+                <th>Code</th>
+                <th>Code Image</th>
+                <th>Reset QR</th>
+                <th>Reset Link</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody">
+        </tbody>
+    </table>
+
+    <script>
+        const users =  [
+    {
+      "uid": "67deff3b4ee5459b159f20c6",
+      "email": "9000000@code.net",
+      "password": "9000000",
+      "code": "sNtqSL",
+      "resetLinkValue": "fcb415jhjh0dc03366a19ca5d002:538ac152f8c15230dc50a916d59f3355b37cb2b57f842936:586bbc5a772581a764e178473b21df28"
+    }
+  ]
+  
+        const tableBody = document.getElementById("userTableBody");
+
+        users.forEach(user => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${user.uid}</td>
+                <td>${user.email}</td>
+                <td>${user.password}</td>
+                <td>${user.code}</td>
+                <td>https://analog-magic-code.netlify.app/?code=${user.code}</td>
+                <td>https://analog-magic-code.netlify.app/resetpw/?link=https://magic-code.net/update-user-details/${user.resetLinkValue}</td>
+                <td>https://magic-code.net/update-user-details/${user.resetLinkValue}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    </script>
+</body>
+</html>

@@ -107,7 +107,14 @@ submitBtnGenerate.addEventListener("click", async (event) => {
   try {
     const result = await generateQRCode(formData); // Call the function to generate the QR code
     // form.reset(); // Reset the form after successful submission
+    document.getElementById("qrCodePrintData").value = JSON.stringify(
+      Object.fromEntries(
+        Object.entries(result.qrCode).filter(([_, value]) => value !== null)
+      )
+    );
+
     showToast(result.message, "success"); // Show success message
+    document.getElementById("PrintMyQR").style.visibility = "visible"; // Makes it visible again
     // window.location.reload();
   } catch (error) {
     showToast(error.message || "Error generating QR code.", "error"); // Show error message
@@ -127,7 +134,6 @@ async function generateQRCode(formData) {
     });
 
     const result = await response.json();
-    console.log(result);
 
     if (!response.ok) {
       throw new Error(result.message || "QR Code generation failed!");
@@ -135,8 +141,8 @@ async function generateQRCode(formData) {
       document.getElementById("qr-code").style.display = "block"; // Show the element
       submitBtnGenerate.disabled = false;
       submitBtnGenerate.style.display = "none";
-      submitBtnUpdate.style.display = "block";
-      downloadQrButton.style.display = "block";
+      submitBtnUpdate.style.display = "flex";
+      downloadQrButton.style.display = "flex";
       loader.style.display = "none";
       generatedSection.style.display = "block";
     }
@@ -154,7 +160,7 @@ async function generateQRCode(formData) {
 // Handle form submission
 submitBtnUpdate.addEventListener("click", async (event) => {
   event.preventDefault(); // Prevent default form submission
- 
+
   // const qrName = document.getElementById("qr-name-update").value;
   // const backgroundColor = document.getElementById("bg-color-update").value;
   // const dotStyle = document.getElementById("dot-style-update").value;
@@ -172,12 +178,12 @@ submitBtnUpdate.addEventListener("click", async (event) => {
   const code = document.getElementById("qr-code-key").value;
   const logoFileInput = document.getElementById("logo"); //logo file input
   const logoImageValue = document.getElementById("QRLogo").value;
-  const logo = `images/logo${logoImageValue}.jpg`
+  const logo = `images/logo${logoImageValue}.jpg`;
 
   const formData = new FormData(); // Create a FormData object
   const type = qrDataType.value; // Get the selected type
 
-  generateQRCodeFe(true,logo);
+  generateQRCodeFe(true, logo);
 
   // Append type and other form data
   formData.append("type", type);
@@ -258,6 +264,12 @@ submitBtnUpdate.addEventListener("click", async (event) => {
     generatedSection.style.display = "block";
 
     showToast(result.message, "success");
+    document.getElementById("qrCodePrintData").value = JSON.stringify(
+      Object.fromEntries(
+        Object.entries(result.qrCode).filter(([_, value]) => value !== null)
+      )
+    );
+
     // window.location.reload();
   } catch (error) {
     loader.style.display = "none";

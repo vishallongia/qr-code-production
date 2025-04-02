@@ -5,6 +5,9 @@ const adminRoutes = {
   "/admindashboard": true,
   "/admindashboard/qr/:userId": true,
   "/admindashboard/toggle-status": true,
+  "admindashboard/demo-user-dashboard": true,
+  "admindashboard/export-users": true,
+  "/admindashboard/generateusers": true,
 };
 
 const authMiddleware = async (req, res, next) => {

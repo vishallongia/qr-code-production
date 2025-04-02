@@ -41,6 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+  const urlParams = new URLSearchParams(window.location.search);
+  if (!urlParams.has("magiccode")) {
+    document.getElementById("qrCodePrintData").value = "";
+  }
 });
 
 // Event listener for menu items
@@ -252,6 +256,12 @@ function updateQRCodeFe(
 function showGenerateSection(qr) {
   CurrentQR = qr;
   document.getElementById("qr-name").value = qr.qrName;
+  document.getElementById("PrintMyQR").style.visibility = "visible"; // Makes it visible again
+  document.getElementById("qrCodePrintData").value = JSON.stringify(
+    Object.fromEntries(
+      Object.entries(qr).filter(([_, value]) => value !== null)
+    )
+  );
 
   // document.getElementById("bg-color").value = getColorHex("blue");
   // document.getElementById("qr-color").value = getColorHex("white");
@@ -667,3 +677,14 @@ function SelectRadioFOrBGColors() {
     });
   });
 }
+
+document.getElementById("PrintMyQR").addEventListener("click", function() {
+  const hiddenInput = document.getElementById("qrCodePrintData").value;
+  
+  try {
+    const jsonData = JSON.parse(hiddenInput);
+    console.log(jsonData);
+  } catch (error) {
+    console.error("Invalid JSON data:", error);
+  }
+});
