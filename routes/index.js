@@ -334,7 +334,12 @@ router.get("/admindashboard/qr/:userId", authMiddleware, async (req, res) => {
 
   try {
     // Count total QR codes for the given user
-    const totalQRCodes = await QRCodeData.countDocuments({ user_id: userId });
+    const totalQRCodes = await QRCodeData.countDocuments({
+      $or: [
+        { user_id: userId }, // QR codes created by the user
+        { assignedTo: { $in: [userId] } }, // QR codes assigned to the user (array check)f
+      ],
+    });
 
     // Calculate total pages
     const totalPages = Math.ceil(totalQRCodes / recordsPerPage);
@@ -346,7 +351,7 @@ router.get("/admindashboard/qr/:userId", authMiddleware, async (req, res) => {
     const qrDetails = await QRCodeData.find({
       $or: [
         { user_id: userId }, // QR codes created by the user
-        { assignedTo: { $in: [userId] } }, // QR codes assigned to the user
+        { assignedTo: { $in: [userId] } }, // QR codes assigned to the user (array check)f
       ],
     })
       .select("qrName type code url")
@@ -362,7 +367,7 @@ router.get("/admindashboard/qr/:userId", authMiddleware, async (req, res) => {
         totalPages: 1,
       });
     }
-
+    console.log(currentPage, totalPages);
     // Render the QR details view with pagination
     res.render("usersqr", {
       message: "QR details fetched successfully",
@@ -1332,7 +1337,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
         _id: magiccode,
         $or: [
           { user_id: userId },
-          { assignedTo: userId }, // Check if userId exists in the assigned_to array
+          { assignedTo: { $in: [userId] } }, // Check if userId exists in the assigned_to array
         ],
       });
 
@@ -1539,7 +1544,7 @@ router.get("/magiccode", authMiddleware, async (req, res) => {
     const qrCodes = await QRCodeData.find({
       $or: [
         { user_id: userId }, // QR codes created by the user
-        { assignedTo: userId }, // QR codes assigned to the user
+        { assignedTo: { $in: [userId] } }, // QR codes assigned to the user
       ],
     }).sort({ createdAt: -1 });
 
@@ -1897,7 +1902,7 @@ router.put(
         code: qrCodeAlphanumeric,
         $or: [
           { user_id },
-          { assignedTo: user_id }, // Check if userId exists in the assigned_to array
+          { assignedTo: { $in: [user_id] } }, // Check if userId exists in the assigned_to array
         ],
       });
 
