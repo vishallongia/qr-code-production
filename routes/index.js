@@ -80,7 +80,19 @@ router.get(
   authMiddleware,
   async (req, res) => {
     try {
-      res.render("generateusers"); // Send type as 'success'
+      // Get the largest existing user number
+      const largestUser = await User.findOne(
+        { email: { $regex: /^[0-9]+@magic-code\.net$/ } } // Filter only relevant emails
+      )
+        .sort({ email: -1 }) // Sort numerically
+        .limit(1);
+      let startNumber;
+      if (largestUser) {
+        startNumber = String(
+          parseInt(largestUser.email.split("@")[0], 10) + 1
+        ).padStart(7, "0");
+      }
+      res.render("generateusers",{startNumber}); // Send type as 'success'
     } catch (error) {
       console.error("Error generating QR code:", error);
       res.status(500).render("index", {
