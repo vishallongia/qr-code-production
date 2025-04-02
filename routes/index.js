@@ -342,8 +342,13 @@ router.get("/admindashboard/qr/:userId", authMiddleware, async (req, res) => {
     // Calculate records to skip
     const skip = (currentPage - 1) * recordsPerPage;
 
-    // Fetch paginated QR details for the user
-    const qrDetails = await QRCodeData.find({ user_id: userId })
+    // Fetch paginated QR details for the user (created by or assigned to them)
+    const qrDetails = await QRCodeData.find({
+      $or: [
+        { user_id: userId }, // QR codes created by the user
+        { assignedTo: { $in: [userId] } }, // QR codes assigned to the user
+      ],
+    })
       .select("qrName type code url")
       .skip(skip)
       .limit(recordsPerPage);
