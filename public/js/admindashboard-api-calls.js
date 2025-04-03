@@ -132,6 +132,13 @@ function appendUsersToCards(usersData) {
 
     // Append the users as cards
     usersToDisplay.forEach((user) => {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const caption = document.createElement("div");
+      caption.classList.add("card-caption");
+      caption.innerText = `${user.password}`;
+
       const card = document.createElement("div");
       card.classList.add("card");
 
@@ -147,22 +154,15 @@ function appendUsersToCards(usersData) {
       downloadButton.onclick = () => downloadQRCodeShowed(user.qrCode._id);
 
       card.innerHTML = `
-        <p><strong>Code:</strong> ${user.code}</p>
-        ${
-          /*<p><strong>Email:</strong> ${user.email}</p>
-        <p><strong>Password:</strong> ${user.password}</p>
-        <p><strong>Reset Link:</strong> 
-          <a href="${user.resetLinkValue}" target="_blank">
-            ${user.resetLinkValue}
-          </a>*/ ""
-        }
-        </p>
-      `;
+      <p><strong>Code:</strong> ${user.code}</p>
+      <p></p>
+    `;
 
-      // Append the QR container before the rest of the content
       card.prepend(qrContainer);
       card.appendChild(downloadButton);
-      container.appendChild(card);
+      wrapper.appendChild(caption);
+      wrapper.appendChild(card);
+      container.appendChild(wrapper);
 
       // Generate QR code for each user
       generateQRCode(user.qrCode, qrContainer);
@@ -186,8 +186,8 @@ function appendUsersToCards(usersData) {
     }
 
     const qrCode = new QRCodeStyling({
-      width: 300, // Adjust size as needed
-      height: 300,
+      width: 3000, // Adjust size as needed
+      height: 3000,
       type: "canvas",
       data: `${window.location.protocol}//${window.location.host}/${qrCodeData.code}`, // Use the provided URL
       dotsOptions: {
