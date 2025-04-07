@@ -2,7 +2,6 @@ const exportButton = document.getElementById("generateduserexcelbutton");
 const resetGeneratedUserButton = document.getElementById("resetgeneratedusser");
 const assignedemail = document.getElementById("assignedemail");
 const assignBtn = document.getElementById("assignedemailbutton");
-const qrCodesMap = {};
 document.querySelectorAll(".toggle-checkbox").forEach((checkbox) => {
   checkbox.addEventListener("change", async function () {
     const userId = this.getAttribute("data-user-id");
@@ -132,13 +131,6 @@ function appendUsersToCards(usersData) {
 
     // Append the users as cards
     usersToDisplay.forEach((user) => {
-      const wrapper = document.createElement("div");
-      wrapper.style.position = "relative";
-
-      const caption = document.createElement("div");
-      caption.classList.add("card-caption");
-      caption.innerText = `${user.password}`;
-
       const card = document.createElement("div");
       card.classList.add("card");
 
@@ -146,23 +138,20 @@ function appendUsersToCards(usersData) {
       const qrContainer = document.createElement("div");
       qrContainer.id = `qr-container-${user.qrCode._id}`;
 
-      // Create the download button
-      const downloadButton = document.createElement("button");
-      downloadButton.classList.add("btn");
-      downloadButton.title = "Download";
-      downloadButton.innerHTML = `<i class="fas fa-download"></i>`;
-      downloadButton.onclick = () => downloadQRCodeShowed(user.qrCode._id);
-
       card.innerHTML = `
-      <p><strong>Code:</strong> ${user.code}</p>
-      <p></p>
-    `;
+        <p><strong>Code:</strong> ${user.code}</p>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Password:</strong> ${user.password}</p>
+        <p><strong>Reset Link:</strong> 
+          <a href="${user.resetLinkValue}" target="_blank">
+            ${user.resetLinkValue}
+          </a>
+        </p>
+      `;
 
+      // Append the QR container before the rest of the content
       card.prepend(qrContainer);
-      card.appendChild(downloadButton);
-      wrapper.appendChild(caption);
-      wrapper.appendChild(card);
-      container.appendChild(wrapper);
+      container.appendChild(card);
 
       // Generate QR code for each user
       generateQRCode(user.qrCode, qrContainer);
@@ -176,20 +165,11 @@ function appendUsersToCards(usersData) {
   function generateQRCode(qrCodeData, qrContainer) {
     if (!qrContainer) return;
 
-    let logoUrl;
-    if (qrCodeData.logo) {
-      // if (logo) {
-      logoUrl = `${window.location.protocol}//${window.location.host}/${qrCodeData.logo}`;
-      // }
-    } else {
-      logoUrl = `${window.location.protocol}//${window.location.host}/images/logo.jpg`;
-    }
-
     const qrCode = new QRCodeStyling({
-      width: 3000, // Adjust size as needed
-      height: 3000,
+      width: 300, // Adjust size as needed
+      height: 300,
       type: "canvas",
-      data: `${window.location.protocol}//${window.location.host}/${qrCodeData.code}`, // Use the provided URL
+      data: qrCodeData.url, // Use the provided URL
       dotsOptions: {
         color: qrCodeData.qrDotColor || "#000000",
         type: qrCodeData.dotStyle || "square",
@@ -200,17 +180,10 @@ function appendUsersToCards(usersData) {
       cornersSquareOptions: {
         type: qrCodeData.cornerStyle || "square",
       },
-      image: logoUrl ? logoUrl : "", // Use logo image if provided
-      imageOptions: {
-        crossOrigin: "anonymous",
-        margin: 10,
-      },
     });
 
     // Append QR Code to the container
     qrCode.append(qrContainer);
-    // Store each QRCodeStyling instance in a dictionary for downloading later
-    qrCodesMap[qrCodeData._id] = qrCode;
   }
 
   // Function to update pagination links without page reload
@@ -351,19 +324,5 @@ async function assignQrCode(data) {
   } catch (error) {
     console.error("Error:", error);
     throw error;
-  }
-}
-
-function downloadQRCodeShowed(qrCodeId) {
-  const qrCode = qrCodesMap[qrCodeId];
-  if (qrCode) {
-    qrCode.download({
-      name: "qr-code",
-      extension: "png",
-      width: 16000,
-      height: 16000,
-    }); // High resolution download
-  } else {
-    console.error(`QR Code with ID ${qrCodeId} not found.`);
   }
 }
