@@ -12,6 +12,9 @@ require("./config/passport"); // Load Passport config
 
 connectDB(); //Make Conncetion to Database
 
+// Serve static files from the root directory
+app.use(express.static(__dirname));
+
 // Middleware for parsing request bodies
 app.use(bodyParser.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 app.use(bodyParser.json()); // For parsing application/json
