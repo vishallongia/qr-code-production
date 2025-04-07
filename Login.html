@@ -170,9 +170,69 @@
     font-weight: 600;
     text-decoration: none;
   }
+
+  .top-right-options {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 10;
+  }
+
+  .language-selector {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.125rem;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .language-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-top: 8px;
+    list-style: none;
+    padding: 8px 0;
+    display: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .language-dropdown li {
+    padding: 8px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .language-dropdown li:hover {
+    background-color: #f0f0f0;
+  }
+
+  .language-selector.active .language-dropdown {
+    display: block;
+  }
 </style>
 
 <body>
+  <div class="top-right-options">
+    <div class="language-selector">
+      <span class="selected-lang">Eng</span>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+
+      <ul class="language-dropdown">
+        <li data-lang="Eng">English</li>
+        <li data-lang="Hin">Hindi</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="container">
     <form class="login-box">
       <h2>Login to Magic Code</h2>
@@ -209,5 +269,30 @@
     </form>
   </div>
 </body>
+<script>
+  const langSelector = document.querySelector('.language-selector');
+  const selectedLang = document.querySelector('.selected-lang');
+  const dropdownItems = document.querySelectorAll('.language-dropdown li');
+
+  langSelector.addEventListener('click', () => {
+    langSelector.classList.toggle('active');
+  });
+
+  dropdownItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      const lang = e.target.getAttribute('data-lang');
+      selectedLang.textContent = lang;
+      langSelector.classList.remove('active');
+    });
+  });
+
+  // Optional: Click outside to close dropdown
+  document.addEventListener('click', (e) => {
+    if (!langSelector.contains(e.target)) {
+      langSelector.classList.remove('active');
+    }
+  });
+</script>
+
 
 </html>
