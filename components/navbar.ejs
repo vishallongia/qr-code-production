@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Navbar</title>
+    <!-- Link Bootstrap CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <style>
+        .custom-btn {
+            border: 2px solid #4db6ac;
+            color: #4db6ac;
+            margin-left: 10px;
+        }
+
+        .custom-btn:hover {
+            background-color: #4db6ac;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admindashboard">Admin</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
+                aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                    <!-- <a class="nav-link active" aria-current="page" href="#">Home</a> -->
+                    <!-- <a class="nav-link" href="#">Features</a> -->
+                    <a class="nav-link" href="/admindashboard/generateusers">Create Analog Codes</a>
+                    <a class="nav-link" href="/admindashboard/demo-user-dashboard">Analog Codes</a>
+                    <!-- <a class="nav-link disabled" aria-disabled="true">Disabled</a> -->
+                </div>
+                <!-- Align the logout button to the right -->
+                <div class="d-flex ms-auto flex-column flex-md-row gap-2 mt-2  w-md-60">
+                    <button class="btn custom-btn" id="UpdateProfile" onclick="handleProfileUpdate()">
+                        <i class="fa-solid fa-user"></i> Update My Profile
+                    </button>
+                    <button class="btn custom-btn" id="LongOutLang" onclick="return handleLogout(event)">
+                        <i class="fa-solid fa-right-from-bracket"></i> Log Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Link Bootstrap JS -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/api-calls.js"></script> <!-- Add this script to ensure API calls are loaded -->
+    <script>
+        function handleProfileUpdate() {
+            window.location.href = "/myprofile"; // Navigate to /myprofile
+        }
+    </script>
+</body>
+
+</html>

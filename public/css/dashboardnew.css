@@ -1,0 +1,266 @@
+:root {
+    --blue: rgba(26, 1, 97, 1);
+    --greygrey-2: rgba(201, 201, 202, 1);
+    --greygrey-6: rgba(30, 29, 33, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: white;
+}
+
+.container {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+/* Header Styles */
+.header {
+    height: 72px;
+    background-color: #f4f2f7;
+    border-bottom: 1px solid white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo {
+    width: 60px;
+    height: 40px;
+    object-fit: cover;
+}
+
+.company-name {
+    font-weight: 600;
+    color: var(--greygrey-6);
+    font-size: 14px;
+}
+
+.language-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid var(--greygrey-2);
+    background: white;
+    border-radius: 4px;
+    font-size: 18px;
+    color: var(--greygrey-6);
+    cursor: pointer;
+}
+
+/* Main Container */
+.main-container {
+    display: flex;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 272px;
+    height: calc(100vh - 72px);
+    background-color: #f4f2f7;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: sticky;
+    top: 0px;
+}
+
+.nav-menu {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 10px;
+    border: none;
+    background: none;
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--blue);
+    font-size: 16px;
+}
+
+.nav-item img {
+    width: 32px;
+    height: 32px;
+}
+
+.nav-item.active {
+    background-color: rgba(26, 1, 97, 0.05);
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px;
+    border: none;
+    background: none;
+    border-top: 1px solid white;
+    cursor: pointer;
+    color: var(--greygrey-6);
+    font-size: 18px;
+}
+
+/* Main Content Styles */
+.main-content {
+    flex: 1;
+    padding: 28px;
+}
+
+.content-wrapper {
+    max-width: 552px;
+}
+
+h1 {
+    font-weight: 600;
+    color: var(--greygrey-6);
+    font-size: 20px;
+    margin-bottom: 24px;
+}
+
+.create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+label {
+    color: #333333;
+    font-size: 16px;
+}
+
+input,
+select {
+    padding: 8px 16px;
+    border: 1px solid #c4c3c3;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+input::placeholder,
+select {
+    color: rgba(51, 51, 51, 0.4);
+}
+
+.button-group {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-outline {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--blue);
+    background: none;
+    border-radius: 4px;
+    color: var(--blue);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-outline:not(.active) {
+    border-color: rgba(51, 51, 51, 0.75);
+    color: rgba(51, 51, 51, 0.75);
+    opacity: 0.4;
+}
+
+.upload-box {
+    border: 1px dashed rgba(32, 32, 32, 0.75);
+    border-radius: 8px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    background: white;
+}
+
+.upload-box img {
+    width: 32px;
+    height: 32px;
+}
+
+.upload-box p {
+    font-size: 14px;
+    color: #b7b7b7;
+}
+
+.browse-text {
+    color: var(--blue);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.color-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.color-option {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    position: relative;
+    cursor: pointer;
+}
+
+.color-option img {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+}
+
+.color-option .tick {
+    width: 32px;
+    height: 32px;
+    position: absolute;
+    top: 8px;
+    left: 8px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.action-buttons .btn-outline {
+    padding: 12px;
+}
+
+.action-buttons img {
+    width: 32px;
+    height: 32px;
+}
