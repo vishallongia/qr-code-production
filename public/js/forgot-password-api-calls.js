@@ -9,6 +9,8 @@ const updatePasswordHeadingText = document.getElementById(
 );
 const resetpasswordinfotext = document.getElementById("resetpasswordinfotext");
 const emailElement = document.getElementById("forgotpasswordemail");
+const forgotPasswordForm = document.getElementById("forgotPasswordForm");
+const updatePasswordForm = document.getElementById("updatePasswordForm");
 
 // Attach the function to the form's submit event
 document
@@ -165,6 +167,8 @@ function checkRoute() {
       forgotPasswordHeadingText.style.display = "none"; // Hide forget password text
       updatePasswordHeadingText.style.display = "block"; // Hide forget password text
       resetpasswordinfotext.style.display = "none"; //Reset Password info text
+      forgotPasswordForm.style.display = "none";
+      updatePasswordForm.style.display = "block";
     } else {
       // If no token, show the email input section
       emailSection.style.display = "block";
@@ -172,6 +176,8 @@ function checkRoute() {
       updatePasswordHeadingText.style.display = "none"; // Hide forget password text
       forgotPasswordHeadingText.style.display = "show"; // Hide forget password text
       resetpasswordinfotext.style.display = "show"; //Reset Password info text
+      forgotPasswordForm.style.display = "block";
+      updatePasswordForm.style.display = "none";
     }
   }
 }

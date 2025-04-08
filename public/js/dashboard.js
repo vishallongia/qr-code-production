@@ -480,6 +480,10 @@ let colorOptions1 = {
 
 let colorOptions2 = {
   white: ["black"],
+<<<<<<< HEAD
+=======
+  black: ["white"],
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
   magenta: ["white"],
   violet: ["white"],
   green: ["white"],
@@ -678,11 +682,33 @@ function SelectRadioFOrBGColors() {
   });
 }
 
+<<<<<<< HEAD
 document.getElementById("PrintMyQR").addEventListener("click", function() {
   const hiddenInput = document.getElementById("qrCodePrintData").value;
   
   try {
     const jsonData = JSON.parse(hiddenInput);
+=======
+document.getElementById("PrintMyQR").addEventListener("click", function () {
+  const hiddenInput = document.getElementById("qrCodePrintData").value;
+
+  try {
+    const jsonData = JSON.parse(hiddenInput);
+
+    let fgColor = jsonData.qrDotColor
+    let bgColor = jsonData.backgroundColor
+
+    fgColor = fgColor.replace("#", ""); 
+    bgColor = bgColor.replace("#", ""); 
+
+    const urlToPass = `https://analog-magic-code.netlify.app/magic-code-image/?code=${jsonData.code}&qrColor=%23${fgColor}&qrBgColor=%23${bgColor}`;
+    const encodedURL = encodeURIComponent(urlToPass);
+
+    const finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
+    console.log(finalURL);
+    window.open(finalURL, '_blank');
+
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
     console.log(jsonData);
   } catch (error) {
     console.error("Invalid JSON data:", error);

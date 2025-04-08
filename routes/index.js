@@ -64,10 +64,30 @@ function generateUniqueId() {
 // Home route
 router.get("/", authMiddleware, async (req, res) => {
   try {
+<<<<<<< HEAD
     res.render("index"); // Send type as 'success'
   } catch (error) {
     console.error("Error generating QR code:", error);
     res.status(500).render("index", {
+=======
+    res.render("login"); // Send type as 'success'
+  } catch (error) {
+    console.error("Error generating QR code:", error);
+    res.status(500).render("index", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+// Register route
+router.get("/register", async (req, res) => {
+  try {
+    res.render("register"); // Send type as 'success'
+  } catch (error) {
+    console.error("Error generating QR code:", error);
+    res.status(500).render("login", {
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
       message: "Failed to generate QR code",
       type: "error", // Send type as 'error'
     });
@@ -107,10 +127,17 @@ router.get(
 // Forgot password page
 router.get("/forgotpassword/:token?", async (req, res) => {
   try {
+<<<<<<< HEAD
     res.render("forgotpassword"); // Send type as 'success'
   } catch (error) {
     console.error("Error generating forgotpassword page:", error);
     res.status(500).render("index", {
+=======
+    res.render("forgotpasswordnew"); // Send type as 'success'
+  } catch (error) {
+    console.error("Error generating forgotpassword page:", error);
+    res.status(500).render("login", {
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
       message: "Error generating forgotpassword page:",
       type: "error", // Send type as 'error'
     });
@@ -599,7 +626,11 @@ router.get("/admindashboard/export-users", authMiddleware, async (req, res) => {
         user.userPasswordKey = decryptPassword(user.userPasswordKey);
       }
       if (user.qrCode) {
+<<<<<<< HEAD
         user.qrCodeLink = `${process.env.FRONTEND_URL}/${user.qrCode}`;
+=======
+        user.qrCodeLink = `https://analog-magic-code.netlify.app/?code=${user.qrCode}`;
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
       }
     });
 
