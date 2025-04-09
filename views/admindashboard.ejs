@@ -24,7 +24,11 @@
                         <span>Name</span>
                         <span>Email</span>
                         <span>Password</span>
+<<<<<<< HEAD
+                        <span>Update Details</span>
+=======
                         <!-- <span>Update Details</span> -->
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
                         <span>QR Count</span>
                         <span>QR's</span>
                         <span>Active</span>
@@ -41,11 +45,19 @@
                                 <span>
                                     <%= user.userPasswordKey %>
                                 </span>
+<<<<<<< HEAD
+                                <span>
+                                    <a href="/update-user-details/<%= user.encryptedId %>" id="Update-Details-Link">
+                                        <button class="view-qr-btn" data-user-id="<%= user._id %>">Update Details</button>
+                                    </a>
+                                </span>
+=======
                                 <!-- <span style="display: none;">
                                     <a href="/update-user-details/<%= user.encryptedId %>" id="Update-Details-Link">
                                         <button class="view-qr-btn" data-user-id="<%= user._id %>">Update Details</button>
                                     </a>
                                 </span> -->
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
                                 <span style="display: flex; justify-content: center;">
                                     <%= user.qrCount %>
                                 </span>

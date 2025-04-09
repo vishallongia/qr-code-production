@@ -480,7 +480,10 @@ let colorOptions1 = {
 
 let colorOptions2 = {
   white: ["black"],
+<<<<<<< HEAD
+=======
   black: ["white"],
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
   magenta: ["white"],
   violet: ["white"],
   green: ["white"],
@@ -679,6 +682,13 @@ function SelectRadioFOrBGColors() {
   });
 }
 
+<<<<<<< HEAD
+document.getElementById("PrintMyQR").addEventListener("click", function() {
+  const hiddenInput = document.getElementById("qrCodePrintData").value;
+  
+  try {
+    const jsonData = JSON.parse(hiddenInput);
+=======
 document.getElementById("PrintMyQR").addEventListener("click", function () {
   const hiddenInput = document.getElementById("qrCodePrintData").value;
 
@@ -698,6 +708,7 @@ document.getElementById("PrintMyQR").addEventListener("click", function () {
     console.log(finalURL);
     window.open(finalURL, '_blank');
 
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
     console.log(jsonData);
   } catch (error) {
     console.error("Invalid JSON data:", error);

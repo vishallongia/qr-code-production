@@ -23,18 +23,31 @@
                 <div class="export-container">
                     <button class="view-qr-btn export-btn" onclick="return exportUsers(event)">
                         <i class="fas fa-file-excel"></i> Export User
+<<<<<<< HEAD
+                        <span class="tooltip-custom">Export Demo Users</span>
+                    </button>
+                </div>
+
+                <h2>Demo User List</h2>
+=======
                         <span class="tooltip-custom">Export Analog Codes</span>
                     </button>
                 </div>
 
                 <h2>Analog User List</h2>
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
                 <div class="list-wrapper">
                     <div class="list-header">
                         <span>Name</span>
                         <span>Email</span>
                         <span>Password</span>
+<<<<<<< HEAD
+                        <span>Update Details</span>
+                        <span>Code</span>
+=======
                         <!-- <span>Update Details</span> -->
                         <span>QR Code Link</span>
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
                         <span>Assign</span>
                         <span>QR Count</span>
                         <span>QR's</span>
@@ -52,17 +65,27 @@
                                 <span>
                                     <%= user.userPasswordKey %>
                                 </span>
+<<<<<<< HEAD
+                                <span>
+=======
                                 <!-- <span>
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
                                     <a href="/update-user-details/<%= user.encryptedId %>" id="Update-Details-Link">
                                         <button class="view-qr-btn" data-user-id="<%= user._id %>">Update
                                             Details</button>
                                     </a>
+<<<<<<< HEAD
+                                </span>
+                                <span>
+                                    <%= user.code %>
+=======
                                 </span> -->
                                 <span>
                                     <a href="https://analog-magic-code.netlify.app/?code=<%= user.code %>" target="_blank">
                                         <button class="view-qr-btn">Open</button>
                                     </a>
                                     
+>>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
                                 </span>
                                 <span>
                                     <a href="/assign-qr-code/<%= user.encryptedQrId %>" id="Update-Details-Link">
