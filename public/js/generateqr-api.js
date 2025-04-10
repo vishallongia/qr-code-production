@@ -11,6 +11,7 @@ submitBtnGenerate.addEventListener("click", async (event) => {
 
   generateQRCodeFe();
 
+  document.getElementById("text-file").value = "Enter text here";
   const qrName = document.getElementById("qr-name").value;
   const qrDotColor = document.getElementById("qr-color").value;
   const backgroundColor = document.getElementById("bg-color").value;
@@ -310,5 +311,5 @@ submitBtnUpdate.addEventListener("click", async (event) => {
     generatedSection.style.display = "block";
     showToast(error.message || "Error updating QR code.", "error");
   }
-  generateQRCodeFe(true, logo);
+  // generateQRCodeFe(true, logo);
 });
