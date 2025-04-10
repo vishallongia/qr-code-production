@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Magic Code Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/css?family=Poppins:500,400,600" rel="stylesheet">
+    <link href="/css/showandupdateqr.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container" id="showandupdateqr\">
+        <!-- QR Code Card -->
+        <div class="card qr-card">
+            <div class="card-content">
+                <div class="title">MAGIC CODE 1</div>
+                <img class="qr-code" alt="QR Code" src="/rectangle-3463279.png" />
+                <div class="action-icons">
+                    <button class="icon-button">
+                        <img src="/vuesax-linear-edit.svg" alt="Edit" />
+                    </button>
+                    <button class="icon-button">
+                        <img src="/vuesax-linear-export.svg" alt="Share" />
+                    </button>
+                    <button class="icon-button">
+                        <img src="/vuesax-linear-trash.svg" alt="Delete" />
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <div class="action-card active">
+                <img class="action-icon" alt="Create" src="/icons-create-1.png" />
+                <div class="action-text">Change<br>Content</div>
+            </div>
+            <div class="action-card">
+                <img class="action-icon" alt="Color" src="/icons-create-1-1.png" />
+                <div class="action-text">Change<br>Color</div>
+            </div>
+            <div class="action-card">
+                <img class="action-icon large" alt="Print" src="/icons-create-1-2.png" />
+                <div class="action-text">Print<br>Magic Code</div>
+            </div>
+        </div>
+
+        <!-- Content Section -->
+        <div class="content-section">
+            <h2>Magic Code Content</h2>
+
+            <!-- Content Type Selection -->
+            <div class="content-types">
+                <button class="content-type-button">Link</button>
+                <button class="content-type-button">Text</button>
+                <button class="content-type-button active">Photo</button>
+                <button class="content-type-button">Video</button>
+            </div>
+
+            <!-- Photo Upload Section -->
+            <div class="upload-section">
+                <label>Insert Photo</label>
+                <div class="upload-card">
+                    <img src="/vuesax-linear-frame.svg" alt="Upload" class="upload-icon" />
+                    <div class="upload-text">
+                        <span class="text-muted">Drag & Drop or</span>
+                        <span class="text-link">Browse</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <button class="save-button">Save Content</button>
+        </div>
+    </div>
+</body>
+</html>

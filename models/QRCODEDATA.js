@@ -61,7 +61,7 @@ const qrCodeSchema = new mongoose.Schema(
     },
     ColorList: {
       type: String,
-      required: true, // Make it optional
+      // required: true, // Make it optional
       default: "first", // Default value if not provided
     },
     assignedTo: {

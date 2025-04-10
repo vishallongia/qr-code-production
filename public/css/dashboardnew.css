@@ -30,6 +30,9 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 0 16px;
+    position: sticky;
+    top: 0px;
+    z-index: 1;
 }
 
 .logo-container {
@@ -77,7 +80,8 @@ body {
     flex-direction: column;
     justify-content: space-between;
     position: sticky;
-    top: 0px;
+    top: 72px;
+
 }
 
 .nav-menu {
@@ -264,3 +268,207 @@ select {
     width: 32px;
     height: 32px;
 }
+
+.color-option.selected {
+    border: 3px solid #000 !important;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+}
+
+canvas {
+    max-width: 250px;
+}
+
+.color-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.color-group label {
+    font-size: 16px;
+    color: #333333;
+    line-height: 24px;
+}
+
+.color-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.color-option {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+}
+
+.color-option.selected .selected-icon {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    top: 8px;
+    left: 8px;
+}
+
+
+:root {
+    --blue: rgba(26, 1, 97, 1);
+    --grey: rgba(243, 243, 245, 1);
+    --greygrey-6: rgba(30, 29, 33, 1);
+}
+
+
+
+.container-print {
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+h1 {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+    color: var(--greygrey-6);
+}
+
+.print-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.option-card {
+    border-radius: 12px;
+    border: 1px solid rgba(51, 51, 51, 0.2);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.option-card:hover {
+    border-color: rgba(51, 51, 51, 0.4);
+}
+
+.option-card.selected {
+    background-color: rgba(26, 1, 97, 0.16);
+    border: 2px solid var(--blue);
+}
+
+.option-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.option-icon {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.option-title {
+    font-size: 14px;
+    color: rgba(51, 51, 51, 0.75);
+}
+
+.selected .option-title {
+    color: var(--blue);
+    font-weight: 500;
+}
+
+.preview-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #E5E7EB;
+    overflow: hidden;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.preview-content {
+    padding: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.preview-image {
+    width: 172px;
+    height: 172px;
+    border-radius: 8px;
+    background-image: url('/rectangle-3463279.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.print-button {
+    width: 100%;
+    height: 48px;
+    background-color: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.print-button:hover {
+    background-color: rgba(26, 1, 97, 0.9);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #D1D5DB;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #9CA3AF;
+}
+
+.loader-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8); /* Slightly dimmed background */
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+  
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #6c63ff; /* Customize color */
+    border-top: 5px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  

@@ -32,16 +32,16 @@
                         <button class="menu-toggle">☰</button>
                         <div class="side-menu">
                             <button class="menu-close">×</button>
-                            <div class="menu-item" data-section="show" id="myQRCodes"><img src="/images/ICONS FOLDER.png"
-                                    alt="Create QR Code" class="menu-icon" />
+                            <div class="menu-item" data-section="show" id="myQRCodes"><img
+                                    src="/images/ICONS FOLDER.png" alt="Create QR Code" class="menu-icon" />
                                 <span class="menu-text">Show my QR Codes</span>
                             </div>
-                            <div class="menu-item" data-section="profile" id="profile"><img src="/images/ICONS CHANGE CREDENTIALS.png"
-                                    alt="Create QR Code" class="menu-icon" />
+                            <div class="menu-item" data-section="profile" id="profile"><img
+                                    src="/images/ICONS CHANGE CREDENTIALS.png" alt="Create QR Code" class="menu-icon" />
                                 <span class="menu-text">Profile</span>
                             </div>
-                            <div class="menu-item" data-section="usercontrol" id="usercontrol"><img src="/images/ICONS WHAT TO SHOW ME-.png"
-                                    alt="Create QR Code" class="menu-icon" />
+                            <div class="menu-item" data-section="usercontrol" id="usercontrol"><img
+                                    src="/images/ICONS WHAT TO SHOW ME-.png" alt="Create QR Code" class="menu-icon" />
                                 <span class="menu-text">User Control</span>
                             </div>
                             <% } else { %>
@@ -52,16 +52,18 @@
                                         <img src="/images/ICONS CREATE.png" alt="Create QR Code" class="menu-icon" />
                                         <span class="menu-text">Create QR Code</span>
                                     </div>
-                                    <div class="menu-item" data-section="show" id="myQRCodes"><img src="/images/ICONS FOLDER.png"
-                                            alt="Create QR Code" class="menu-icon" />
+                                    <div class="menu-item" data-section="show" id="myQRCodes"><img
+                                            src="/images/ICONS FOLDER.png" alt="Create QR Code" class="menu-icon" />
                                         <span class="menu-text">Show my QR Codes</span>
                                     </div>
-                                    <div class="menu-item" data-section="profile" id="profile"><img src="/images/ICONS CHANGE CREDENTIALS.png"
-                                            alt="Create QR Code" class="menu-icon" />
+                                    <div class="menu-item" data-section="profile" id="profile"><img
+                                            src="/images/ICONS CHANGE CREDENTIALS.png" alt="Create QR Code"
+                                            class="menu-icon" />
                                         <span class="menu-text">Profile</span>
                                     </div>
                                     <div class="menu-item" data-section="usercontrol" id="usercontrol"><img
-                                            src="/images/ICONS WHAT TO SHOW ME-.png" alt="Create QR Code" class="menu-icon" />
+                                            src="/images/ICONS WHAT TO SHOW ME-.png" alt="Create QR Code"
+                                            class="menu-icon" />
                                         <span class="menu-text">User Control</span>
                                     </div>
                                     <% } %>
@@ -99,7 +101,7 @@
                                                             <option value="3">Logo3</option>
                                                         </select>
                                                     </div>
-                                                    <input type="hidden"  id="qrCodePrintData">
+                                                    <input type="hidden" id="qrCodePrintData">
                                                     <div id="input-fields"></div>
                                                     <div class="input-group" style="display: none;">
                                                         <label for="qr-text">Text or URL:</label>
@@ -301,44 +303,50 @@
                                                             <img src="/images/ICONS DOWNLOAD.png" alt="Icon 2" class="image-box">
                                                             <img src="/images/ICONS PRINT.png" alt="Icon 3" class="image-box">
                                                         </div> -->
-                                                    
+
                                                         <!-- Content that appears on hover -->
                                                         <div>
-                                                        <!-- <div class="hover-content"> -->
+                                                            <!-- <div class="hover-content"> -->
 
                                                             <button class="submit-btn" id="submit-btn-generate"> <img
-                                                                src="/images/ICONS CREATE.png" alt="Icon" class="btn-icon" />
-                                                            <span class="btn-text">VibeCode erstellen</span></button>
-    
-                                                            
-                                                        <button class="submit-btn" id="submit-btn-update">
-                                                            <img src="/images/ICONS CONTEXT.png" alt="Icon" class="btn-icon" />
-                                                            <span class="btn-text"> Inhalt des
-                                                                VibeCodes
-                                                                ändern</span>
-                                                        </button>
-                                                        
-    
-                                                        <button class="submit-btn" id="downloadQRCode"
-                                                            onclick="downloadQRCode()">
-                                                            <img src="/images/ICONS DOWNLOAD.png" alt="Icon" class="btn-icon" />
-                                                            <span class="btn-text"> VibeCode
-                                                                herunterladen</span>
-                                                        </button>
-    
-                                                        <div>
-                                                            <button class="submit-btn" id="PrintMyQR" style="visibility: hidden;" onclick="PrintMyQR()">
-                                                                <img src="/images/ICONS PRINT.png" alt="Icon" class="btn-icon" />
+                                                                    src="/images/ICONS CREATE.png" alt="Icon"
+                                                                    class="btn-icon" />
+                                                                <span class="btn-text">VibeCode
+                                                                    erstellen</span></button>
+
+
+                                                            <button class="submit-btn" id="submit-btn-update">
+                                                                <img src="/images/ICONS CONTEXT.png" alt="Icon"
+                                                                    class="btn-icon" />
                                                                 <span class="btn-text"> Inhalt des
                                                                     VibeCodes
                                                                     ändern</span>
                                                             </button>
-                                                        </div>
+
+
+                                                            <button class="submit-btn" id="downloadQRCode"
+                                                                onclick="downloadQRCode()">
+                                                                <img src="/images/ICONS DOWNLOAD.png" alt="Icon"
+                                                                    class="btn-icon" />
+                                                                <span class="btn-text"> VibeCode
+                                                                    herunterladen</span>
+                                                            </button>
+
+                                                            <div>
+                                                                <button class="submit-btn" id="PrintMyQR"
+                                                                    style="visibility: hidden;" onclick="PrintMyQR()">
+                                                                    <img src="/images/ICONS PRINT.png" alt="Icon"
+                                                                        class="btn-icon" />
+                                                                    <span class="btn-text"> Inhalt des
+                                                                        VibeCodes
+                                                                        ändern</span>
+                                                                </button>
+                                                            </div>
 
                                                         </div>
                                                     </div>
 
-                                                    
+
                                                     <div id="qr-code"></div>
                                                 </div>
                                                 <% } %>
@@ -392,24 +400,18 @@
                                             </script>
                                             <script src="/js/translations.js"></script>
                                             <script>
-<<<<<<< HEAD
-                                                    function PrintMyQR() {
-                                                        window.open('https://textildruck-schweiz.com/products/magic-code', '_blank');
-                                                    }
-=======
->>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
-                                                function OpenSite() {
-                                                    let lang = document.getElementById("languageSwitcher").value
-                                                    if (lang == "hu") {
-                                                        window.open('https://magicprints.studio/', '_blank')
-                                                    } else {
-                                                        window.open('https://textildruck-schweiz.com/', '_blank')
-                                                    }
-                                                }
+            function OpenSite() {
+                let lang = document.getElementById("languageSwitcher").value
+                if (lang == "hu") {
+                    window.open('https://magicprints.studio/', '_blank')
+                } else {
+                    window.open('https://textildruck-schweiz.com/', '_blank')
+                }
+            }
                                             </script>
                                             <script>
-                                            <% if (typeof message !== 'undefined' && message && type !== 'none' && type !== 'hidden') { %>
-                                                    showToast("<%= message %>", "<%= type || 'success' %>");
+                                                    <% if (typeof message !== 'undefined' && message && type !== 'none' && type !== 'hidden') { %>
+                                                        showToast("<%= message %>", "<%= type || 'success' %>");
                                             <% } %>
                                             </script>
 

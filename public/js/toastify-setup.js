@@ -1,7 +1,7 @@
 // toastify-setup.js
 
 // Function to show toast messages
-function  showToast(message, type = "success") {
+function showToast(message, type = "success") {
   const backgroundColors = {
     success: "linear-gradient(to right, #00b09b, #96c93d)",
     error: "linear-gradient(to right, #ff4e50, #fc913a)",
@@ -15,6 +15,9 @@ function  showToast(message, type = "success") {
     position: "right", // `left`, `center` or `right`
     backgroundColor: backgroundColors[type] || backgroundColors.success,
     close: true, // Show close button
+    style: {
+      zIndex: 2,
+    },
     onClick: function () {}, // Callback after click
   }).showToast();
 }

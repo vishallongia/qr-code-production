@@ -1,7 +1,7 @@
 const qrDataType = document.getElementById("qr-type");
 const submitBtnGenerate = document.getElementById("submit-btn-generate"); // Get the submit button
 const submitBtnUpdate = document.getElementById("submit-btn-update");
-const loader = document.getElementById("loader"); // Get the loader element
+// const loader = document.getElementById("loader")// Get the loader element
 const generatedSection = document.getElementById("generate-section");
 const downloadQrButton = document.getElementById("downloadQRCode");
 const maxSize = 50 * 1024 * 1024; // Max Size of media file 50 MB in bytes
@@ -37,10 +37,10 @@ submitBtnGenerate.addEventListener("click", async (event) => {
   formData.append("code", code);
   formData.append("logoImageValue", logoImageValue);
 
-  const selected = document.querySelector(
-    'input[name="ColorList"]:checked'
-  ).value;
-  formData.append("ColorList", selected);
+  // const selected = document.querySelector(
+  //   'input[name="ColorList"]:checked'
+  // ).value;
+  // formData.append("ColorList", selected);
 
   // Append the logo file if it exists
   if (Logo) {
@@ -48,7 +48,7 @@ submitBtnGenerate.addEventListener("click", async (event) => {
   }
 
   if (!qrName) {
-    let lang = document.getElementById("languageSwitcher").value;
+    let lang = document.getElementById("languageSwitcher").value || "en";
     let msg = "Please enter Magic Code name";
     if (lang == "en") {
       msg = "Please enter Magic Code name";
@@ -107,14 +107,20 @@ submitBtnGenerate.addEventListener("click", async (event) => {
   try {
     const result = await generateQRCode(formData); // Call the function to generate the QR code
     // form.reset(); // Reset the form after successful submission
-    document.getElementById("qrCodePrintData").value = JSON.stringify(
-      Object.fromEntries(
-        Object.entries(result.qrCode).filter(([_, value]) => value !== null)
-      )
-    );
-
+    // document.getElementById("qrCodePrintData").value = JSON.stringify(
+    //   Object.fromEntries(
+    //     Object.entries(result.qrCode).filter(([_, value]) => value !== null)
+    //   )
+    // );
     showToast(result.message, "success"); // Show success message
-    document.getElementById("PrintMyQR").style.visibility = "visible"; // Makes it visible again
+
+    setTimeout(() => {
+      window.location.href = `/dashboard?magiccode=${result.qrCode.id}`;
+    }, 1000); // Optional delay to let the toast show up
+    // document.getElementById("PrintMyQR").style.visibility = "visible"; // Makes it visible again
+    // document.getElementById("generateqrsection").style.display = "none"; // Makes it visible again
+    // document.getElementById("showandupdateqr").style.display = "block"; // Makes it visible again
+
     // window.location.reload();
   } catch (error) {
     showToast(error.message || "Error generating QR code.", "error"); // Show error message
@@ -125,8 +131,8 @@ submitBtnGenerate.addEventListener("click", async (event) => {
 async function generateQRCode(formData) {
   try {
     document.querySelector(".submit-btn").disabled = true;
-    generatedSection.style.display = "none";
-    loader.style.display = "block";
+    // generatedSection.style.display = "none";
+    toggleLoaderVisibility(true);
 
     const response = await fetch("/generate", {
       method: "POST",
@@ -138,18 +144,18 @@ async function generateQRCode(formData) {
     if (!response.ok) {
       throw new Error(result.message || "QR Code generation failed!");
     } else {
-      document.getElementById("qr-code").style.display = "block"; // Show the element
+      // document.getElementById("qr-code").style.display = "block"; // Show the element
       submitBtnGenerate.disabled = false;
-      submitBtnGenerate.style.display = "none";
-      submitBtnUpdate.style.display = "flex";
-      downloadQrButton.style.display = "flex";
-      loader.style.display = "none";
-      generatedSection.style.display = "block";
+      // submitBtnGenerate.style.display = "none";
+      // submitBtnUpdate.style.display = "flex";
+      // downloadQrButton.style.display = "flex";
+      toggleLoaderVisibility(false);
+      // generatedSection.style.display = "block";
     }
 
     return result; // Return the result for further handling
   } catch (error) {
-    loader.style.display = "none";
+    toggleLoaderVisibility(false);
     generatedSection.style.display = "block";
     console.error("Error:", error);
     document.querySelector(".submit-btn").disabled = false;
@@ -167,6 +173,36 @@ submitBtnUpdate.addEventListener("click", async (event) => {
   // const cornerStyle = document.getElementById("corner-style-update").value;
   // const applyGradient = document.getElementById("gradient-update").value;
   // const qrDotColor = document.getElementById("qr-dot-color-update").value;
+  document.getElementById("bg-color").value = "#ffffff";
+  const activeBtn = document.querySelector(".content-type-button.active");
+
+  let type;
+
+  if (activeBtn) {
+    const typeText = activeBtn.textContent.trim().toLowerCase();
+
+    if (typeText === "link") {
+      type = "url";
+    } else if (typeText === "text") {
+      type = "text";
+    } else if (typeText === "photo/video") {
+      type = "media";
+    }
+  }
+
+  // Foreground color
+  const activeFg = document.querySelector(
+    "#foreground-color-grid-update .color-option.active"
+  );
+  const fgColorRgb = window.getComputedStyle(activeFg).backgroundColor;
+  const fgColorHex = rgbToHex(fgColorRgb);
+
+  // Background color
+  const activeBg = document.querySelector(
+    "#background-color-grid-update .color-option.active"
+  );
+  const bgColorRgb = window.getComputedStyle(activeBg).backgroundColor;
+  const bgColorHex = rgbToHex(bgColorRgb);
 
   const qrName = document.getElementById("qr-name").value;
   const qrDotColor = document.getElementById("qr-color").value;
@@ -181,29 +217,26 @@ submitBtnUpdate.addEventListener("click", async (event) => {
   const logo = `images/logo${logoImageValue}.jpg`;
 
   const formData = new FormData(); // Create a FormData object
-  const type = qrDataType.value; // Get the selected type
-
-  generateQRCodeFe(true, logo);
 
   // Append type and other form data
   formData.append("type", type);
   formData.append("qrName", qrName);
-  formData.append("backgroundColor", backgroundColor);
+  formData.append("backgroundColor", bgColorHex);
   formData.append("dotStyle", dotStyle);
   formData.append("cornerStyle", cornerStyle);
   formData.append("applyGradient", applyGradient);
-  formData.append("qrDotColor", qrDotColor);
+  formData.append("qrDotColor", fgColorHex);
   formData.append("logoImageValue", logoImageValue);
 
-  const selected = document.querySelector(
-    'input[name="ColorList"]:checked'
-  ).value;
-  formData.append("ColorList", selected);
+  // const selected = document.querySelector(
+  //   'input[name="ColorList"]:checked'
+  // ).value;
+  // formData.append("ColorList", selected);
 
   // formData.append("logo", logoFileInput.files[0]);
 
   if (type === "media") {
-    const mediaFileInput = document.getElementById("media-file");
+    const mediaFileInput = document.getElementById("media-file-update");
 
     // Check if a file is attached
     if (mediaFileInput.files.length > 0) {
@@ -222,7 +255,7 @@ submitBtnUpdate.addEventListener("click", async (event) => {
       return; // Stop further processing if no file is attached
     }
   } else if (type === "text") {
-    const text = document.getElementById("text-file");
+    const text = document.getElementById("text-file-update");
     if (text.value) {
       formData.append("text", text.value);
     } else {
@@ -230,7 +263,7 @@ submitBtnUpdate.addEventListener("click", async (event) => {
       return;
     }
   } else if (type === "url") {
-    const urlInput = document.getElementById("url");
+    const urlInput = document.getElementById("url-update");
     if (urlInput.value) {
       // Check if the URL does NOT start with 'http://' or 'https://'
       if (!/^https?:\/\//i.test(urlInput.value)) {
@@ -247,8 +280,8 @@ submitBtnUpdate.addEventListener("click", async (event) => {
   try {
     // Get the QR Code ID dynamically (you may need to replace `qrCodeId` with the actual value)
     const qrCodeId = code; // Replace with actual QR code ID
-    generatedSection.style.display = "none";
-    loader.style.display = "block";
+    // generatedSection.style.display = "none";
+    toggleLoaderVisibility(true);
 
     // Send a PUT request to update the QR code
     const response = await fetch(`/update/${qrCodeId}`, {
@@ -260,20 +293,22 @@ submitBtnUpdate.addEventListener("click", async (event) => {
     if (!response.ok) {
       throw new Error(result.message || "Error updating QR code.");
     }
-    loader.style.display = "none";
-    generatedSection.style.display = "block";
+
+    // generatedSection.style.display = "block";
 
     showToast(result.message, "success");
-    document.getElementById("qrCodePrintData").value = JSON.stringify(
-      Object.fromEntries(
-        Object.entries(result.qrCode).filter(([_, value]) => value !== null)
-      )
-    );
+    // document.getElementById("qrCodePrintData").value = JSON.stringify(
+    //   Object.fromEntries(
+    //     Object.entries(result.qrCode).filter(([_, value]) => value !== null)
+    //   )
+    // );
 
-    // window.location.reload();
+    window.location.reload();
+    toggleLoaderVisibility(false);
   } catch (error) {
-    loader.style.display = "none";
+    toggleLoaderVisibility(false);
     generatedSection.style.display = "block";
     showToast(error.message || "Error updating QR code.", "error");
   }
+  generateQRCodeFe(true, logo);
 });

@@ -87,6 +87,19 @@ router.get("/register", async (req, res) => {
   }
 });
 
+// Register route
+router.get("/new", async (req, res) => {
+  try {
+    res.render("dashboardnew"); // Send type as 'success'
+  } catch (error) {
+    console.error("Error generating QR code:", error);
+    res.status(500).render("login", {
+      message: "Failed to generate QR code",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
 // Home route
 router.get(
   "/admindashboard/generateusers",
@@ -1364,7 +1377,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
         });
       }
       // If QR code is found, render dashboard with this QR code for editing
-      return res.render("dashboard", {
+      return res.render("dashboardnew", {
         qrCode, // Pass the specific QR code for editing
         message: "Edit your QR code.",
         type: "hidden",
@@ -1374,12 +1387,12 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
     }
 
     // Handle demo user redirect
-    if (user.role === "demo-user") {
+    if (user.role === "demo-user") { 
       return res.redirect("/magiccode");
     }
 
     // Default case: Show dashboard without a specific QR code
-    res.render("dashboard", {
+    res.render("dashboardnew", {
       message: "Welcome! Here are your QR codes.",
       activeSection: "generate",
       qrCode: null,
