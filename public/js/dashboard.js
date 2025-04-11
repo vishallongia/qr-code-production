@@ -315,8 +315,8 @@ function updateQRCodeFe(
   isUpdate
 ) {
   qrCode = new QRCodeStyling({
-    width: 16000,
-    height: 16000,
+    width: 3000,
+    height: 3000,
     type: "canvas",
     data: "https://example.com",
     dotsOptions: {
@@ -515,9 +515,9 @@ function showGenerateSection(qr, user) {
     document.getElementById("text-file-update").value = qr.text;
   }
   // document.getElementById("submit-btn-update").style.display = "block";
-  document.getElementById("downloadQRCode").style.display = "flex";
-  document.getElementById("qr-code").style.display = "block";
-  document.getElementById("submit-btn-generate").style.display = "none";
+  // document.getElementById("downloadQRCode").style.display = "flex";
+  // document.getElementById("qr-code").style.display = "block";
+  // document.getElementById("submit-btn-generate").style.display = "none";
 }
 
 function downloadQRCode() {
