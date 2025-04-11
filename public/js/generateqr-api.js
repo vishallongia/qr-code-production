@@ -6,127 +6,129 @@ const generatedSection = document.getElementById("generate-section");
 const downloadQrButton = document.getElementById("downloadQRCode");
 const maxSize = 50 * 1024 * 1024; // Max Size of media file 50 MB in bytes
 
-submitBtnGenerate.addEventListener("click", async (event) => {
-  event.preventDefault(); // Prevent the default form submission
+if (!urlParams.has("magiccode")) {
+  submitBtnGenerate.addEventListener("click", async (event) => {
+    event.preventDefault(); // Prevent the default form submission
 
-  generateQRCodeFe();
+    generateQRCodeFe();
 
-  document.getElementById("text-file").value = "Enter text here";
-  const qrName = document.getElementById("qr-name").value;
-  const qrDotColor = document.getElementById("qr-color").value;
-  const backgroundColor = document.getElementById("bg-color").value;
-  const dotStyle = document.getElementById("dot-style").value;
-  const cornerStyle = document.getElementById("corner-style").value;
-  const applyGradient = document.getElementById("gradient").value;
-  const Logo = document.getElementById("logo").files[0];
-  const code = document.getElementById("qr-code-key").value;
-  const logoImageValue = document.getElementById("QRLogo").value;
+    document.getElementById("text-file").value = "Enter text here";
+    const qrName = document.getElementById("qr-name").value;
+    const qrDotColor = document.getElementById("qr-color").value;
+    const backgroundColor = document.getElementById("bg-color").value;
+    const dotStyle = document.getElementById("dot-style").value;
+    const cornerStyle = document.getElementById("corner-style").value;
+    const applyGradient = document.getElementById("gradient").value;
+    const Logo = document.getElementById("logo").files[0];
+    const code = document.getElementById("qr-code-key").value;
+    const logoImageValue = document.getElementById("QRLogo").value;
 
-  const formData = new FormData(); // Create a FormData object
-  const type = qrDataType.value; // Get the selected type
+    const formData = new FormData(); // Create a FormData object
+    const type = qrDataType.value; // Get the selected type
 
-  // Append user ID and type to the FormData object
-  formData.append("type", type);
+    // Append user ID and type to the FormData object
+    formData.append("type", type);
 
-  // Append QR settings to the FormData object
-  formData.append("qrDotColor", qrDotColor);
-  formData.append("backgroundColor", backgroundColor);
-  formData.append("dotStyle", dotStyle);
-  formData.append("cornerStyle", cornerStyle);
-  formData.append("applyGradient", applyGradient);
-  formData.append("qrName", qrName);
-  formData.append("code", code);
-  formData.append("logoImageValue", logoImageValue);
+    // Append QR settings to the FormData object
+    formData.append("qrDotColor", qrDotColor);
+    formData.append("backgroundColor", backgroundColor);
+    formData.append("dotStyle", dotStyle);
+    formData.append("cornerStyle", cornerStyle);
+    formData.append("applyGradient", applyGradient);
+    formData.append("qrName", qrName);
+    formData.append("code", code);
+    formData.append("logoImageValue", logoImageValue);
 
-  // const selected = document.querySelector(
-  //   'input[name="ColorList"]:checked'
-  // ).value;
-  // formData.append("ColorList", selected);
+    // const selected = document.querySelector(
+    //   'input[name="ColorList"]:checked'
+    // ).value;
+    // formData.append("ColorList", selected);
 
-  // Append the logo file if it exists
-  if (Logo) {
-    formData.append("logo", Logo);
-  }
-
-  if (!qrName) {
-    let lang = document.getElementById("languageSwitcher").value || "en";
-    let msg = "Please enter Magic Code name";
-    if (lang == "en") {
-      msg = "Please enter Magic Code name";
-    } else if (lang == "de") {
-      msg = "Bitte Magic Code Namen angeben";
-    } else if (lang == "hu") {
-      msg = "Add meg a Magic Code nevét";
+    // Append the logo file if it exists
+    if (Logo) {
+      formData.append("logo", Logo);
     }
 
-    showToast(msg, "error");
-    return; // Stop further processing if file is not attached
-  }
-
-  // Append the input file or URL based on the selected QR type
-  if (type === "media") {
-    const mediaFileInput = document.getElementById("media-file");
-
-    // Check if a file is attached
-    if (mediaFileInput.files.length > 0) {
-      const file = mediaFileInput.files[0];
-
-      // Validate the file size
-      if (file.size > maxSize) {
-        showToast("Media File size should not exceed 50 MB.", "error");
-        return; // Stop further processing if file is too large
+    if (!qrName) {
+      let lang = document.getElementById("languageSwitcher").value || "en";
+      let msg = "Please enter Magic Code name";
+      if (lang == "en") {
+        msg = "Please enter Magic Code name";
+      } else if (lang == "de") {
+        msg = "Bitte Magic Code Namen angeben";
+      } else if (lang == "hu") {
+        msg = "Add meg a Magic Code nevét";
       }
 
-      formData.append("media-file", file); // Append the media file if validation passes
-    } else {
-      showToast("Please attach a media file.", "error");
-      return; // Stop further processing if no file is attached
+      showToast(msg, "error");
+      return; // Stop further processing if file is not attached
     }
-  } else if (type === "text") {
-    const text = document.getElementById("text-file");
-    if (text.value) {
-      formData.append("text", text.value); // Append the text file
-    } else {
-      showToast("Please provide text.", "error");
-      return;
-    }
-  } else if (type === "url") {
-    const urlInput = document.getElementById("url");
-    if (urlInput.value) {
-      //Check if the URL does NOT start with 'http://' or 'https://'
-      if (!/^https?:\/\//i.test(urlInput.value)) {
-        showToast("URL must begin with 'http://' or 'https://'.", "error");
+
+    // Append the input file or URL based on the selected QR type
+    if (type === "media") {
+      const mediaFileInput = document.getElementById("media-file");
+
+      // Check if a file is attached
+      if (mediaFileInput.files.length > 0) {
+        const file = mediaFileInput.files[0];
+
+        // Validate the file size
+        if (file.size > maxSize) {
+          showToast("Media File size should not exceed 50 MB.", "error");
+          return; // Stop further processing if file is too large
+        }
+
+        formData.append("media-file", file); // Append the media file if validation passes
+      } else {
+        showToast("Please attach a media file.", "error");
+        return; // Stop further processing if no file is attached
+      }
+    } else if (type === "text") {
+      const text = document.getElementById("text-file");
+      if (text.value) {
+        formData.append("text", text.value); // Append the text file
+      } else {
+        showToast("Please provide text.", "error");
         return;
       }
-      formData.append("url", urlInput.value); // Append the URL if it has the correct format
-    } else {
-      showToast("Please provide a URL.", "error");
-      return;
+    } else if (type === "url") {
+      const urlInput = document.getElementById("url");
+      if (urlInput.value) {
+        //Check if the URL does NOT start with 'http://' or 'https://'
+        if (!/^https?:\/\//i.test(urlInput.value)) {
+          showToast("URL must begin with 'http://' or 'https://'.", "error");
+          return;
+        }
+        formData.append("url", urlInput.value); // Append the URL if it has the correct format
+      } else {
+        showToast("Please provide a URL.", "error");
+        return;
+      }
     }
-  }
 
-  try {
-    const result = await generateQRCode(formData); // Call the function to generate the QR code
-    // form.reset(); // Reset the form after successful submission
-    // document.getElementById("qrCodePrintData").value = JSON.stringify(
-    //   Object.fromEntries(
-    //     Object.entries(result.qrCode).filter(([_, value]) => value !== null)
-    //   )
-    // );
-    showToast(result.message, "success"); // Show success message
+    try {
+      const result = await generateQRCode(formData); // Call the function to generate the QR code
+      // form.reset(); // Reset the form after successful submission
+      // document.getElementById("qrCodePrintData").value = JSON.stringify(
+      //   Object.fromEntries(
+      //     Object.entries(result.qrCode).filter(([_, value]) => value !== null)
+      //   )
+      // );
+      showToast(result.message, "success"); // Show success message
 
-    setTimeout(() => {
-      window.location.href = `/dashboard?magiccode=${result.qrCode.id}`;
-    }, 1000); // Optional delay to let the toast show up
-    // document.getElementById("PrintMyQR").style.visibility = "visible"; // Makes it visible again
-    // document.getElementById("generateqrsection").style.display = "none"; // Makes it visible again
-    // document.getElementById("showandupdateqr").style.display = "block"; // Makes it visible again
+      setTimeout(() => {
+        window.location.href = `/dashboard?magiccode=${result.qrCode.id}`;
+      }, 1000); // Optional delay to let the toast show up
+      // document.getElementById("PrintMyQR").style.visibility = "visible"; // Makes it visible again
+      // document.getElementById("generateqrsection").style.display = "none"; // Makes it visible again
+      // document.getElementById("showandupdateqr").style.display = "block"; // Makes it visible again
 
-    // window.location.reload();
-  } catch (error) {
-    showToast(error.message || "Error generating QR code.", "error"); // Show error message
-  }
-});
+      // window.location.reload();
+    } catch (error) {
+      showToast(error.message || "Error generating QR code.", "error"); // Show error message
+    }
+  });
+}
 
 // Function to generate the QR code
 async function generateQRCode(formData) {
@@ -192,18 +194,26 @@ submitBtnUpdate.addEventListener("click", async (event) => {
   }
 
   // Foreground color
-  const activeFg = document.querySelector(
+  let activeFg = document.querySelector(
     "#foreground-color-grid-update .color-option.active"
   );
-  const fgColorRgb = window.getComputedStyle(activeFg).backgroundColor;
-  const fgColorHex = rgbToHex(fgColorRgb);
+  let fgColorHex = "#000000"; // Default to black
+
+  if (activeFg) {
+    const fgColorRgb = window.getComputedStyle(activeFg).backgroundColor;
+    fgColorHex = rgbToHex(fgColorRgb);
+  }
 
   // Background color
-  const activeBg = document.querySelector(
+  let activeBg = document.querySelector(
     "#background-color-grid-update .color-option.active"
   );
-  const bgColorRgb = window.getComputedStyle(activeBg).backgroundColor;
-  const bgColorHex = rgbToHex(bgColorRgb);
+  let bgColorHex = "#ffffff"; // Default to white
+
+  if (activeBg) {
+    const bgColorRgb = window.getComputedStyle(activeBg).backgroundColor;
+    bgColorHex = rgbToHex(bgColorRgb);
+  }
 
   const qrName = document.getElementById("qr-name").value;
   const qrDotColor = document.getElementById("qr-color").value;

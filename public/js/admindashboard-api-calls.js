@@ -199,13 +199,6 @@ function appendUsersToCards(usersData) {
   function generateQRCode(qrCodeData, qrContainer) {
     if (!qrContainer) return;
 
-<<<<<<< HEAD
-    const qrCode = new QRCodeStyling({
-      width: 300, // Adjust size as needed
-      height: 300,
-      type: "canvas",
-      data: qrCodeData.url, // Use the provided URL
-=======
     let logoUrl;
     if (qrCodeData.logo) {
       // if (logo) {
@@ -220,7 +213,6 @@ function appendUsersToCards(usersData) {
       height: 3000,
       type: "canvas",
       data: `${window.location.protocol}//${window.location.host}/${qrCodeData.code}`, // Use the provided URL
->>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
       dotsOptions: {
         color: qrCodeData.qrDotColor || "#000000",
         type: qrCodeData.dotStyle || "square",

@@ -9,6 +9,7 @@ const qrType = document.getElementById("qr-type");
 const inputFields = document.getElementById("input-fields");
 const languageSwitcher = document.getElementById("languageSwitcher");
 let CurrentQR = "";
+let qrCode;
 // Toggle the menu open and close
 // menuToggle.addEventListener("click", () => {
 //   sideMenu.classList.add("active");
@@ -91,7 +92,12 @@ function rgbToHex(rgb) {
       .join("")
   );
 }
-qrType.addEventListener("change", updateInputFields);
+const urlParams = new URLSearchParams(window.location.search);
+
+if (!urlParams.has("magiccode")) {
+  qrType.addEventListener("change", updateInputFields);
+  updateInputFields();
+}
 
 function updateInputFields() {
   inputFields.innerHTML = "";
@@ -182,7 +188,7 @@ function createInput(type, id, labelText, labelID) {
   return div;
 }
 
-updateInputFields();
+// updateInputFields();
 
 // QR Code generation functions
 function generateAlphanumericCode(length = 6) {
@@ -194,22 +200,22 @@ function generateAlphanumericCode(length = 6) {
   return code;
 }
 
-const qrCode = new QRCodeStyling({
-  width: 3000,
-  height: 3000,
-  type: "canvas",
-  data: "https://example.com",
-  dotsOptions: {
-    color: "#000000",
-    type: "square",
-  },
-  backgroundOptions: {
-    color: "#ffffff",
-  },
-  cornersSquareOptions: {
-    type: "square",
-  },
-});
+// const qrCode = new QRCodeStyling({
+//   width: 3000,
+//   height: 3000,
+//   type: "canvas",
+//   data: "https://example.com",
+//   dotsOptions: {
+//     color: "#000000",
+//     type: "square",
+//   },
+//   backgroundOptions: {
+//     color: "#ffffff",
+//   },
+//   cornersSquareOptions: {
+//     type: "square",
+//   },
+// });
 
 // qrCode.append(document.getElementById("qr-code"));
 
@@ -261,17 +267,41 @@ function generateQRCodeFe(isUpdate = false, logo) {
   let logoUrl = `${window.location.protocol}//${window.location.host}/images/logo${logoImageValue}.jpg`; // Here you need to provide static logo
   if (logo && isUpdate) {
     logoUrl = `${window.location.protocol}//${window.location.host}/${logo}`;
-    updateQRCodeFe(qrText, dotColor, bgColor, dotStyle, cornerStyle, logoUrl);
+    updateQRCodeFe(
+      qrText,
+      dotColor,
+      bgColor,
+      dotStyle,
+      cornerStyle,
+      logoUrl,
+      isUpdate
+    );
   }
   if (logoFile) {
     const reader = new FileReader();
     reader.onload = function (event) {
       // logoUrl = event.target.result;
-      updateQRCodeFe(qrText, dotColor, bgColor, dotStyle, cornerStyle, logoUrl);
+      updateQRCodeFe(
+        qrText,
+        dotColor,
+        bgColor,
+        dotStyle,
+        cornerStyle,
+        logoUrl,
+        isUpdate
+      );
     };
     reader.readAsDataURL(logoFile);
   } else {
-    updateQRCodeFe(qrText, dotColor, bgColor, dotStyle, cornerStyle, logoUrl);
+    updateQRCodeFe(
+      qrText,
+      dotColor,
+      bgColor,
+      dotStyle,
+      cornerStyle,
+      logoUrl,
+      isUpdate
+    );
   }
 }
 
@@ -281,11 +311,12 @@ function updateQRCodeFe(
   bgColor,
   dotStyle,
   cornerStyle,
-  logoUrl
+  logoUrl,
+  isUpdate
 ) {
-  const qrCode = new QRCodeStyling({
-    width: 3000,
-    height: 3000,
+  qrCode = new QRCodeStyling({
+    width: 16000,
+    height: 16000,
     type: "canvas",
     data: "https://example.com",
     dotsOptions: {
@@ -318,18 +349,29 @@ function updateQRCodeFe(
       margin: 10,
     },
   });
-  // Clear the content of qrCode before appending
-  document.getElementById("qr-code").innerHTML = "";
+  if (isUpdate) {
+    // Clear the content of qrCode before appending
+    document.getElementById("qr-code").innerHTML = "";
+  }
 
   // Now append the new content
   qrCode.append(document.getElementById("qr-code"));
+}
+
+function downloadQRCode() {
+  qrCode.download({
+    name: "qr-code",
+    extension: "png",
+    width: 16000,
+    height: 16000,
+  }); // High resolution download
 }
 
 // Function to toggle generate-section inside modal
 function showGenerateSection(qr, user) {
   CurrentQR = qr;
   document.getElementById("qr-name").value = qr.qrName;
-  document.getElementById("PrintMyQR").style.visibility = "visible"; // Makes it visible again
+  // document.getElementById("PrintMyQR").style.visibility = "visible"; // Makes it visible again
   // document.getElementById("qrCodePrintData").value = JSON.stringify(
   //   Object.fromEntries(
   //     Object.entries(qr).filter(([_, value]) => value !== null)
@@ -385,7 +427,7 @@ function showGenerateSection(qr, user) {
     }
   }
 
-  updateInputFields();
+  // updateInputFields();
 
   let radio = document.querySelector(
     `input[name="ColorList"][value="${qr.ColorList}"]`
@@ -454,22 +496,22 @@ function showGenerateSection(qr, user) {
         const fileList = new DataTransfer();
         fileList.items.add(file);
 
-        // Populate the input with the files
-        inputElement.files = fileList.files; // Set the files property
+        // // Populate the input with the files
+        // inputElement.files = fileList.files; // Set the files property
         inputElementUpdate.files = fileList.files; // Set the files property
 
-        // Optional: If you want to keep track of the blob URL, you can store it
-        inputElement.dataset.fileBlob = URL.createObjectURL(blob);
+        // // Optional: If you want to keep track of the blob URL, you can store it
+        // inputElement.dataset.fileBlob = URL.createObjectURL(blob);
         inputElementUpdate.dataset.fileBlob = URL.createObjectURL(blob);
       })
       .catch((error) => console.error("Error fetching image:", error));
   }
   if (document.getElementById("qr-type").value === "url") {
-    document.getElementById("url").value = qr.url;
+    // document.getElementById("url").value = qr.url;
     document.getElementById("url-update").value = qr.url;
   }
   if (document.getElementById("qr-type").value === "text") {
-    document.getElementById("text-file").value = qr.text;
+    // document.getElementById("text-file").value = qr.text;
     document.getElementById("text-file-update").value = qr.text;
   }
   // document.getElementById("submit-btn-update").style.display = "block";
@@ -781,15 +823,15 @@ function downloadQRCode() {
 //   });
 // }
 
-document.getElementById("PrintMyQR").addEventListener("click", function () {
-  const hiddenInput = document.getElementById("qrCodePrintData").value;
+// document.getElementById("PrintMyQR").addEventListener("click", function () {
+//   const hiddenInput = document.getElementById("qrCodePrintData").value;
 
-  try {
-    const jsonData = JSON.parse(hiddenInput);
-  } catch (error) {
-    console.error("Invalid JSON data:", error);
-  }
-});
+//   try {
+//     const jsonData = JSON.parse(hiddenInput);
+//   } catch (error) {
+//     console.error("Invalid JSON data:", error);
+//   }
+// });
 
 document.addEventListener("DOMContentLoaded", function () {
   const fgColorInput = document.getElementById("qr-color");

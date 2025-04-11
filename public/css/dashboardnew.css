@@ -338,10 +338,10 @@ select {
     height: 32px;
 }
 
-.color-option.selected {
+/* .color-option.selected {
     border: 3px solid #000 !important;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
-}
+} */
 
 canvas {
     max-width: 250px;
@@ -543,19 +543,19 @@ h1 {
     }
 }
 
-/* Fade-in effect */
-.fade-in {
-    opacity: 0;
-    animation: fadeIn 1s forwards;
-    /* 1s duration, adjust as needed */
-}
-
 @keyframes fadeIn {
-    to {
-        opacity: 1;
+    from {
+      opacity: 0;
     }
-}
-
+  
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .fade-in {
+    animation: fadeIn 1.0s ease-in-out;
+  }
 textarea {
     height: 120px;
     padding: 10px 14px;

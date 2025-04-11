@@ -12,7 +12,7 @@
 </head>
 
 <body>
-    <div class="qr-page" id="showandupdateqr" style="display: none;">
+    <div class="qr-page" id="showandupdateqr">
         <div class="container">
             <!-- QR Code Card -->
             <div class="card qr-card">
@@ -22,7 +22,7 @@
                         <!-- <button class="icon-button">
                             <img src="/vuesax-linear-edit.svg" alt="Edit" />
                         </button> -->
-                        <button class="icon-button">
+                        <button class="icon-button" onclick="downloadQRCode()">
                             <img src="/frame.svg" alt="Share" />
                         </button>
                         <!-- <button class="icon-button">
@@ -208,14 +208,13 @@
 
         const submitButton = document.getElementById("submit-btn-update");
 
+        const actionCards = document.querySelectorAll(".action-buttons .action-card");
+
         contentSections.forEach(section => {
             section.style.display = "none";
         });
 
-        const actionCards = document.querySelectorAll(".action-buttons .action-card");
-
         actionCards.forEach((card, index) => {
-            console.log(card, index)
             card.addEventListener("click", function () {
                 actionCards.forEach(c => c.classList.remove("active"));
                 card.classList.add("active");
@@ -225,7 +224,6 @@
                 });
 
                 if (contentSections[index]) {
-
                     if (index === 1) {
                         contentSections[index].style.display = "flex";
                         contentSections[index].style.flexFlow = "column";
@@ -233,27 +231,83 @@
                     }
                     if (index === 2) {
                         contentSections[index].style.display = "block";
-                        // Optional: Reset styles in case they were set previously
                         contentSections[index].style.flexFlow = "";
                         contentSections[index].style.gap = "";
                     } else {
                         contentSections[index].style.display = "flex";
-                        // Optional: Reset styles in case they were set previously
                         contentSections[index].style.flexFlow = "column";
                         contentSections[index].style.gap = "24px";
                     }
-                    // Show the save button after a content section is displayed
                     submitButton.style.display = "block";
 
+                    // Call the input check on tab switch
+                    checkAndUpdateActiveContentType();
                 }
             });
         });
-    });
 
+        // ---------- Input Check Logic for content-type-buttons ----------
+
+        const contentTypeButtons = document.querySelectorAll(".content-type-button");
+        const urlInput = document.getElementById("url-update");
+        const textInput = document.getElementById("text-file-update");
+        const mediaInput = document.getElementById("media-file-update");
+
+        function setActiveButton(type) {
+            contentTypeButtons.forEach(btn => {
+                if (btn.textContent === type) {
+                    if (!btn.classList.contains("active")) {
+                        btn.classList.add("active");
+                        btn.click(); // Trigger the click
+                    }
+                } else {
+                    btn.classList.remove("active");
+                }
+            });
+        }
+
+        function checkAndUpdateActiveContentType() {
+            const activeBtn = document.querySelector(".content-type-button.active");
+            let isEmpty = false;
+
+            if (activeBtn) {
+                if (activeBtn.textContent === "Link") {
+                    isEmpty = !urlInput.value.trim();
+                } else if (activeBtn.textContent === "Text") {
+                    isEmpty = !textInput.value.trim();
+                } else if (activeBtn.textContent === "Photo/Video") {
+                    isEmpty = mediaInput.files.length === 0;
+                }
+
+                if (isEmpty) {
+                    activeBtn.classList.remove("active");
+                }
+            }
+
+            // Reassign active class if any input has value
+            if (urlInput.value.trim()) {
+                setActiveButton("Link");
+            } else if (textInput.value.trim()) {
+                setActiveButton("Text");
+            } else if (mediaInput.files.length > 0) {
+                setActiveButton("Photo/Video");
+            }
+        }
+
+        // Input listeners for auto-switching active buttons
+        urlInput.addEventListener("input", checkAndUpdateActiveContentType);
+        textInput.addEventListener("input", checkAndUpdateActiveContentType);
+        mediaInput.addEventListener("change", checkAndUpdateActiveContentType);
+
+        // Optional: initial check on page load
+        checkAndUpdateActiveContentType();
+    });
 </script>
 
+
+
 <script>
-    <% if (activeSection === 'generate' && qrCode) { %>
+    <% if (activeSection === 'update' && qrCode) { %>
         const qr = <%- JSON.stringify(qrCode) %>;
         const user = <%- JSON.stringify(user) %>;
         showGenerateSection(qr, user);
@@ -314,6 +368,5 @@
                 }
             });
         });
-
 </script>
 <html>

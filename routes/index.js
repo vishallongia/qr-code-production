@@ -1381,7 +1381,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
         qrCode, // Pass the specific QR code for editing
         message: "Edit your QR code.",
         type: "hidden",
-        activeSection: "generate", // Set active section to 'update' for specific UI handling
+        activeSection: "update", // Set active section to 'update' for specific UI handling
         user,
       });
     }
