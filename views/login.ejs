@@ -5,11 +5,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login to Magic Code</title>
+  <link href="/css/login.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 <style>
-  :root {
+  /* :root {
     --main-bg: #f5f3f9;
     --text-dark: #1e1e1e;
     --input-border: #C4C4C4;
@@ -179,64 +180,46 @@
     z-index: 10;
   }
 
-  .language-selector {
+  .language-select-wrapper {
     position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
     font-size: 1.125rem;
     color: var(--muted);
-    cursor: pointer;
-    user-select: none;
   }
 
-  .language-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: #fff;
+  .language-selector-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 8px 40px 8px 16px;
+    font-size: 1.125rem;
     border: 1px solid #ccc;
     border-radius: 6px;
-    margin-top: 8px;
-    list-style: none;
-    padding: 8px 0;
-    display: none;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  }
-
-  .language-dropdown li {
-    padding: 8px 16px;
+    background: #fff url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;
+    background-size: 16px;
     cursor: pointer;
-    white-space: nowrap;
+    color: #333;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   }
 
-  .language-dropdown li:hover {
-    background-color: #f0f0f0;
-  }
-
-  .language-selector.active .language-dropdown {
-    display: block;
-  }
+  .language-selector-select:focus {
+    outline: none;
+    border-color: #999;
+  } */
 </style>
 
 <body>
   <div class="top-right-options">
-    <div class="language-selector">
-      <span class="selected-lang">Eng</span>
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="6 9 12 15 18 9"></polyline>
-      </svg>
-
-      <ul class="language-dropdown">
-        <li data-lang="Eng">English</li>
-        <li data-lang="Hin">Hindi</li>
-      </ul>
+    <div class="language-select-wrapper">
+      <select id="languageSwitcher" class="language-selector-select">
+        <option value="en">English</option>
+        <option value="de">Deutsch (German)</option>
+      </select>
     </div>
   </div>
 
   <div class="container">
     <form class="login-box" method="POST" action="/login" onsubmit="return handleLogin(event)">
-      <h2>Login to Magic Code</h2>
+      <h2 id="LoginText">Login to Magic Code</h2>
 
       <input type="email" name="email" placeholder="Enter email address..." id="EmailText" required />
       <div class="password-wrapper">
@@ -265,9 +248,10 @@
         Magic Link (No
         password Needed)</button>
 
-      <p class="signup-text">
-        Don’t have an account?
-        <a href="/register">Signup</a>
+      <p class="signup-text" >
+        <span id="DontHaveAccountText">
+          Don’t have an account?</span>
+        <a href="/register" id="register-toggle">Signup</a>
       </p>
     </form>
   </div>
@@ -306,6 +290,7 @@
     showToast("<%= message %>", "<%= type || 'success' %>");
   <% } %>
 </script>
+<script src="/js/translations.js"></script>
 
 
 </html>

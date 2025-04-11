@@ -1,10 +1,10 @@
 {
   "en": {
-    "LoginText": "Login",
+    "LoginText": "Login to Magic Code",
     "EmailText": "Email",
     "PasswordText": "Password ",
     "LoginBtnText": "Login",
-    "DontHaveAccountText": "Don't have an account yet?",
+    "DontHaveAccountText": "Don’t have an account?",
     "register-toggle": "Register",
     "FullNameText": "Full Name",
     "RegisterText": "Register",
@@ -73,11 +73,11 @@
     "RemoveBGText":"Remove Background"
   },
   "de": {
-    "LoginText": "Einloggen",
+    "DontHaveAccountText" : "Sie haben noch kein Konto? Anmelden",
+    "LoginText": "Melden Sie sich bei Magic Code an",
     "EmailText": "E-Mail",
     "PasswordText": "Passwort ",
     "LoginBtnText": "Einloggen",
-    "DontHaveAccountText": "Sie haben noch kein Konto?",
     "register-toggle": "Registrieren",
     "FullNameText": "Name und Vorname",
     "RegisterText": "Registrieren",
