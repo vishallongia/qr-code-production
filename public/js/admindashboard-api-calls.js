@@ -135,8 +135,6 @@ function appendUsersToCards(usersData) {
 
     // Append the users as cards
     usersToDisplay.forEach((user) => {
-<<<<<<< HEAD
-=======
       const wrapper = document.createElement("div");
       wrapper.style.position = "relative";
 
@@ -144,7 +142,6 @@ function appendUsersToCards(usersData) {
       caption.classList.add("card-caption");
       caption.innerText = `${user.password}`;
 
->>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
       const card = document.createElement("div");
       card.classList.add("card");
 
@@ -152,22 +149,6 @@ function appendUsersToCards(usersData) {
       const qrContainer = document.createElement("div");
       qrContainer.id = `qr-container-${user.qrCode._id}`;
 
-<<<<<<< HEAD
-      card.innerHTML = `
-        <p><strong>Code:</strong> ${user.code}</p>
-        <p><strong>Email:</strong> ${user.email}</p>
-        <p><strong>Password:</strong> ${user.password}</p>
-        <p><strong>Reset Link:</strong> 
-          <a href="${user.resetLinkValue}" target="_blank">
-            ${user.resetLinkValue}
-          </a>
-        </p>
-      `;
-
-      // Append the QR container before the rest of the content
-      card.prepend(qrContainer);
-      container.appendChild(card);
-=======
       // Create the download button
       const downloadButton = document.createElement("button");
       downloadButton.classList.add("btn");
@@ -185,7 +166,6 @@ function appendUsersToCards(usersData) {
       wrapper.appendChild(caption);
       wrapper.appendChild(card);
       container.appendChild(wrapper);
->>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
 
       // Generate QR code for each user
       generateQRCode(user.qrCode, qrContainer);
@@ -223,23 +203,17 @@ function appendUsersToCards(usersData) {
       cornersSquareOptions: {
         type: qrCodeData.cornerStyle || "square",
       },
-<<<<<<< HEAD
-=======
       image: logoUrl ? logoUrl : "", // Use logo image if provided
       imageOptions: {
         crossOrigin: "anonymous",
         margin: 10,
       },
->>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
     });
 
     // Append QR Code to the container
     qrCode.append(qrContainer);
-<<<<<<< HEAD
-=======
     // Store each QRCodeStyling instance in a dictionary for downloading later
     qrCodesMap[qrCodeData._id] = qrCode;
->>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
   }
 
   // Function to update pagination links without page reload
@@ -291,13 +265,6 @@ function appendUsersToCards(usersData) {
 // Export to Excel Function
 function exportToExcel() {
   const users = getUsersFromLocalStorage();
-<<<<<<< HEAD
-  let csvContent =
-    "data:text/csv;charset=utf-8," + "Email,Code,Password,Reset Link\n";
-  users.forEach((user) => {
-    let formattedPassword = `" \t${user.password}"`; // Add tab space to preserve leading zeros
-    csvContent += `${user.email},${user.code},${formattedPassword},${user.resetLinkValue}\n\n`;
-=======
   
 
   let csvContent =
@@ -306,7 +273,6 @@ function exportToExcel() {
     let formattedPassword = `" \t${user.password}"`; // Add tab space to preserve leading zeros
     let link = `https://analog-magic-code.netlify.app/?code=${user.code}`
     csvContent += `${user.email},${user.code},${formattedPassword},${link}\n\n`;
->>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
   });
 
   const encodedUri = encodeURI(csvContent);
@@ -393,8 +359,6 @@ async function assignQrCode(data) {
     throw error;
   }
 }
-<<<<<<< HEAD
-=======
 
 function downloadQRCodeShowed(qrCodeId) {
   const qrCode = qrCodesMap[qrCodeId];
@@ -409,4 +373,3 @@ function downloadQRCodeShowed(qrCodeId) {
     console.error(`QR Code with ID ${qrCodeId} not found.`);
   }
 }
->>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441

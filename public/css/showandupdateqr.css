@@ -81,7 +81,8 @@
     gap: 8px;
 }
 
-.qr-page .action-card {
+.qr-page .action-card,
+.qr-page .action-child-card {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -93,7 +94,8 @@
     opacity: 0.75;
 }
 
-.qr-page .action-card.active {
+
+.qr-page .action-card.active,.qr-page .action-child-card.active {
     background: rgba(26, 1, 97, 0.15);
     border-color: var(--blue);
     opacity: 1;

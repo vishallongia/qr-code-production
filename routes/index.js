@@ -1436,10 +1436,10 @@ router.get("/myprofile", authMiddleware, async (req, res) => {
     const decryptedPasswordKey = decryptPassword(user.userPasswordKey);
     user.userPasswordKey = decryptedPasswordKey; // Add decrypted key
 
-    res.render("dashboard", { user, activeSection: "profile" });
+    res.render("dashboardnew", { user, activeSection: "profile" });
   } catch (error) {
     console.error("Error retrieving profile:", error);
-    res.status(500).render("dashboard", {
+    res.status(500).render("dashboardnew", {
       message: error.message,
       type: "error", // Send type as 'error'
       activeSection: "profile",
@@ -1582,7 +1582,7 @@ router.get("/magiccode", authMiddleware, async (req, res) => {
     }
     if (qrCodes.length > 0) {
       // QR codes found for the user
-      res.render("dashboard", {
+      res.render("dashboardnew", {
         qrCodes, // Pass the QR codes to the template
         message: "Welcome! Here are your Magic Codes.",
         activeSection: "show",
@@ -1591,7 +1591,7 @@ router.get("/magiccode", authMiddleware, async (req, res) => {
       });
     } else {
       // No QR codes found for the user
-      res.render("dashboard", {
+      res.render("dashboardnew", {
         qrCodes: [], // Pass an empty array for QR codes
         message: "No Magic Codes found.",
         activeSection: "show",

@@ -222,10 +222,12 @@ function generateAlphanumericCode(length = 6) {
 function generateQRCodeFe(isUpdate = false, logo) {
   let alphanumericCode;
   let qrText;
+  let qrName;
   if (isUpdate) {
     alphanumericCode = document.getElementById("qr-code-key").value;
     qrText = `${window.location.protocol}//${window.location.host}/${alphanumericCode}`;
     document.getElementById("qr-text").value = `${qrText}`;
+    qrName = document.getElementById("qr-name").value;
   } else {
     alphanumericCode = generateAlphanumericCode();
     qrText = `${window.location.protocol}//${window.location.host}/${alphanumericCode}`;
@@ -274,7 +276,8 @@ function generateQRCodeFe(isUpdate = false, logo) {
       dotStyle,
       cornerStyle,
       logoUrl,
-      isUpdate
+      isUpdate,
+      qrName
     );
   }
   if (logoFile) {
@@ -288,7 +291,8 @@ function generateQRCodeFe(isUpdate = false, logo) {
         dotStyle,
         cornerStyle,
         logoUrl,
-        isUpdate
+        isUpdate,
+        qrName
       );
     };
     reader.readAsDataURL(logoFile);
@@ -300,7 +304,8 @@ function generateQRCodeFe(isUpdate = false, logo) {
       dotStyle,
       cornerStyle,
       logoUrl,
-      isUpdate
+      isUpdate,
+      qrName
     );
   }
 }
@@ -312,7 +317,8 @@ function updateQRCodeFe(
   dotStyle,
   cornerStyle,
   logoUrl,
-  isUpdate
+  isUpdate,
+  qrName
 ) {
   qrCode = new QRCodeStyling({
     width: 3000,
@@ -352,6 +358,19 @@ function updateQRCodeFe(
   if (isUpdate) {
     // Clear the content of qrCode before appending
     document.getElementById("qr-code").innerHTML = "";
+  }
+
+  // Inside your updateQRCodeFe function, before qrCode.append():
+  if (qrName) {
+    const nameElement = document.createElement("div");
+    nameElement.textContent = qrName;
+    nameElement.style.textAlign = "center";
+    nameElement.style.marginBottom = "16px"; // gap between name and QR
+    nameElement.style.fontSize = "20px";
+    nameElement.style.color = "black";
+
+    const qrContainer = document.getElementById("qr-code");
+    qrContainer.appendChild(nameElement);
   }
 
   // Now append the new content
@@ -1254,6 +1273,38 @@ bgOptions.forEach((opt) => {
 
 keepBgBtn.addEventListener("click", () => toggleBackground(true));
 removeBgBtn.addEventListener("click", () => toggleBackground(false));
+
+// Change of print tab code
+document.addEventListener("DOMContentLoaded", () => {
+  const actionCards = document.querySelectorAll(".action-child-card");
+  const previewCards = document.querySelectorAll(".preview-card");
+
+  actionCards.forEach((card) => {
+    card.addEventListener("click", () => {
+      // Activate clicked card
+      actionCards.forEach((c) => c.classList.remove("active"));
+      card.classList.add("active");
+
+      const previewType = card.getAttribute("data-preview");
+
+      // Show only matching preview
+      previewCards.forEach((preview) => {
+        const type = preview.getAttribute("data-type");
+        preview.style.display = type === previewType ? "block" : "none";
+      });
+    });
+  });
+
+  // Initialize by showing only active preview
+  const activeCard = document.querySelector(".action-child-card.active");
+  if (activeCard) {
+    const previewType = activeCard.getAttribute("data-preview");
+    previewCards.forEach((preview) => {
+      const type = preview.getAttribute("data-type");
+      preview.style.display = type === previewType ? "block" : "none";
+    });
+  }
+});
 
 // Example usage:
 // applySettings({ keepBackground: true, foregroundColor: '#ffffff', backgroundColor: '#000000' });
