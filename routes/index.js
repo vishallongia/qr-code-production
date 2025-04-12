@@ -1458,10 +1458,10 @@ router.get("/usercontrol", authMiddleware, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found", type: "error" });
     }
-    res.render("dashboard", { user, activeSection: "usercontrol" });
+    res.render("dashboardnew", { user, activeSection: "usercontrol" });
   } catch (error) {
     console.error("Error retrieving profile:", error);
-    res.status(500).render("dashboard", {
+    res.status(500).render("dashboardnew", {
       message: error.message,
       type: "error", // Send type as 'error'
       activeSection: "profile",

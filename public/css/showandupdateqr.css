@@ -95,7 +95,8 @@
 }
 
 
-.qr-page .action-card.active,.qr-page .action-child-card.active {
+.qr-page .action-card.active,
+.qr-page .action-child-card.active {
     background: rgba(26, 1, 97, 0.15);
     border-color: var(--blue);
     opacity: 1;
@@ -237,4 +238,128 @@ select {
     outline-offset: 2px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
     border-radius: 5px;
+}
+
+
+@media (max-width: 768px) {
+    .qr-page .container {
+        width: 100%;
+        margin-left: 0;
+        padding: 0 16px;
+    }
+
+    .qr-page .content-types,
+    .qr-page .action-buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .qr-page .qr-card {
+        padding: 16px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .qr-page .card-content {
+        padding-top: 12px;
+    }
+
+    .qr-page .content-type-button {
+        font-size: 14px;
+        height: 42px;
+    }
+
+    .qr-page .upload-card {
+        padding: 16px;
+    }
+
+    .qr-page .qr-code {
+        width: 140px;
+        height: 140px;
+    }
+
+    .qr-page .action-icons {
+        gap: 16px;
+    }
+
+    .qr-page .save-button {
+        height: 44px;
+        font-size: 14px;
+    }
+
+    .qr-page .title {
+        font-size: 14px;
+    }
+
+    .qr-page h2 {
+        font-size: 18px;
+    }
+
+    .qr-page .icon-button img {
+        width: 18px;
+        height: 18px;
+    }
+
+    .qr-page .action-card,
+    .qr-page .action-child-card {
+        gap: 8px;
+        padding: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        display: block;
+    }
+
+    canvas {
+        max-width: 180px;
+    }
+
+    .qr-page .container {
+        padding: 0 12px;
+    }
+
+    .qr-page .qr-card {
+        gap: 12px;
+    }
+
+    .qr-page .qr-code {
+        width: 120px;
+        height: 120px;
+    }
+
+    .qr-page .save-button {
+        font-size: 13px;
+        height: 42px;
+    }
+
+    .qr-page .content-type-button {
+        font-size: 13px;
+        height: 40px;
+    }
+
+    .qr-page h2 {
+        font-size: 16px;
+    }
+
+    .qr-page .title {
+        font-size: 13px;
+    }
+
+    .qr-page .upload-text {
+        font-size: 13px;
+    }
+
+    .qr-page .upload-card {
+        padding: 12px;
+    }
+
+    .qr-page .action-icons {
+        gap: 12px;
+    }
 }

@@ -1,0 +1,171 @@
+@import url("https://fonts.googleapis.com/css?family=Poppins:400,600");
+
+:root {
+    --blue: rgba(26, 1, 97, 1);
+    --grey-6: rgba(30, 29, 33, 1);
+    --border-color: #c4c3c3;
+}
+
+.container-custom-profile {
+    width: 552px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 20px;
+}
+
+h1 {
+    font-weight: 600;
+    color: var(--grey-6);
+    font-size: 1.25rem;
+    line-height: 1.25;
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+}
+
+.form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+label {
+    font-weight: 400;
+    color: var(--grey-6);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+input {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    font-size: 1rem;
+    line-height: 2;
+    outline: none;
+}
+
+.password-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.password-text {
+    font-weight: 400;
+    color: var(--grey-6);
+    font-size: 1rem;
+    line-height: 2;
+}
+
+.container-custom-profile button {
+    height: 48px;
+    background-color: var(--blue);
+    border: none;
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 1rem;
+    line-height: 2;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    width: 100%;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.fa-eye {
+    cursor: pointer;
+}
+
+#editBtn {
+    margin-bottom: 16px;
+}
+
+
+@media (max-width: 768px) {
+    .container-custom-profile {
+        width: 100%;
+        padding: 16px;
+        gap: 1.25rem;
+    }
+
+    h1 {
+        font-size: 1.125rem;
+    }
+
+    label,
+    .password-text,
+    input {
+        font-size: 0.95rem;
+    }
+
+    .form-container,
+    .form-fields,
+    .form-group {
+        gap: 1.25rem;
+    }
+
+    .container-custom-profile button {
+        font-size: 0.95rem;
+        height: 44px;
+    }
+
+    .password-field {
+        padding: 0 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        display: block;
+    }
+    .container-custom-profile {
+        padding: 12px;
+        gap: 1rem;
+    }
+
+    h1 {
+        font-size: 1rem;
+    }
+
+    label,
+    .password-text,
+    input {
+        font-size: 0.9rem;
+    }
+
+    .form-container,
+    .form-fields,
+    .form-group {
+        gap: 1rem;
+    }
+
+    .container-custom-profile button {
+        font-size: 0.9rem;
+        height: 42px;
+    }
+
+    .password-field {
+        padding: 0 0.5rem;
+    }
+}

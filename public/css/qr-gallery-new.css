@@ -1,0 +1,152 @@
+@import url("https://fonts.googleapis.com/css?family=Poppins:500");
+
+:root {
+    --grey: rgba(243, 243, 245, 1);
+    --greygrey-6: rgba(30, 29, 33, 1);
+    --shadow-1: 0px 0px 23px 0px rgba(0, 0, 0, 0.07);
+}
+
+/* body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Poppins', sans-serif;
+        } */
+
+.container-qr-custom {
+    max-width: 1104px;
+    margin: 0 auto;
+    padding: 20px
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+    margin-top: 24px;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-1);
+    min-height: 200px;
+    /* instead of fixed height */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* distribute content vertically */
+    align-items: center;
+    padding: 20px;
+    gap: 8px;
+}
+
+
+.card-title {
+    color: var(--greygrey-6);
+    font-size: 16px;
+    font-weight: 500;
+    margin-top: 7px;
+}
+
+.qr-code {
+    width: 120px;
+    height: 120px;
+    margin: auto 0;
+}
+
+.button-group {
+    display: flex;
+    gap: 24px;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-button img {
+    width: 20px;
+    height: 20px;
+}
+
+#showqrcards canvas {
+    max-width: 120px;
+}
+
+
+@media (max-width: 1024px) {
+    .grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .card {
+        padding: 12px;
+        display: flex;
+        /* Remove flex layout */
+        justify-content: center;
+    }
+
+    .card-title {
+        font-size: 14px;
+        margin-top: 8px;
+    }
+
+    .button-group {
+        flex-direction: row;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 10px;
+        /* Spacing between buttons and QR code */
+    }
+
+    .qr-code {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+    }
+
+    .icon-button img {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        display: block;
+    }
+
+    #showqrcards canvas {
+        max-width: 90px;
+    }
+
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .qr-code {
+        width: 90px;
+        height: 90px;
+    }
+
+    .button-group {
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    .container-qr-custom {
+        padding: 10px;
+    }
+}
