@@ -57,8 +57,9 @@
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-    .qr-page .container {
-        padding: 16px;
+    .main-container {
+        display: block;
+        height: 100vh;
     }
 
     .qr-page .content-section h2 {
@@ -72,12 +73,13 @@
 }
 
 @media (max-width: 480px) {
-    .qr-page {
-        padding: 12px;
+
+    .main-container {
+        display: block;
+        height: 100vh;
     }
 
     .qr-page .container {
-        padding: 12px;
         border-radius: 12px;
     }
 
