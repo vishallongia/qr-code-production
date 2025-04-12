@@ -73,7 +73,7 @@ function handleAuthError(req, res, message) {
   const acceptHeader = req.headers.accept || ""; // Ensure this doesn't break if accept header is missing
   if (acceptHeader.includes("text/html")) {
     // If it's an SSR request, render the login page (or another appropriate page)
-    return res.status(401).render("index", responseMessage);
+    return res.status(401).render("login", responseMessage);
   } else {
     // If it's an API request, respond with JSON
     return res.status(401).json(responseMessage);
