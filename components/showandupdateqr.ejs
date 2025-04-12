@@ -180,10 +180,12 @@
                             </div>
 
                             <!-- Preview Card -->
-                            <div class="card preview-card" data-type="garment" style="text-align: center; margin-top: 24px; ">
+                            <div class="card preview-card" data-type="garment"
+                                style="text-align: center; margin-top: 24px; ">
                                 <img src="/print1.png" alt="QR Code Preview" class="qr-image" style="width: 170px;">
                             </div>
-                            <div class="card preview-card" data-type="sticker" style="text-align: center; margin-top: 24px; ">
+                            <div class="card preview-card" data-type="sticker"
+                                style="text-align: center; margin-top: 24px; ">
                                 <img src="/print2.png" alt="QR Code Preview" class="qr-image" style="width: 170px;">
                             </div>
                         </div>
@@ -245,12 +247,13 @@
             });
         });
 
-        // ---------- Input Check Logic for content-type-buttons ----------
-
         const contentTypeButtons = document.querySelectorAll(".content-type-button");
         const urlInput = document.getElementById("url-update");
         const textInput = document.getElementById("text-file-update");
         const mediaInput = document.getElementById("media-file-update");
+
+        let initialActiveType = null;
+        let lastUserIntentType = null;
 
         function setActiveButton(type) {
             contentTypeButtons.forEach(btn => {
@@ -263,44 +266,68 @@
                     btn.classList.remove("active");
                 }
             });
+
+            if (!initialActiveType) {
+                initialActiveType = type;
+            }
         }
 
         function checkAndUpdateActiveContentType() {
-            const activeBtn = document.querySelector(".content-type-button.active");
-            let isEmpty = false;
+            const hasLink = !!urlInput.value.trim();
+            const hasText = !!textInput.value.trim();
+            const hasMedia = mediaInput.files.length > 0;
 
-            if (activeBtn) {
-                if (activeBtn.textContent === "Link") {
-                    isEmpty = !urlInput.value.trim();
-                } else if (activeBtn.textContent === "Text") {
-                    isEmpty = !textInput.value.trim();
-                } else if (activeBtn.textContent === "Photo/Video") {
-                    isEmpty = mediaInput.files.length === 0;
-                }
+            const inputStatus = {
+                "Link": hasLink,
+                "Text": hasText,
+                "Photo/Video": hasMedia
+            };
 
-                if (isEmpty) {
-                    activeBtn.classList.remove("active");
-                }
+            const activeType = document.querySelector(".content-type-button.active")?.textContent;
+
+            // If user has explicitly selected a type (via click), honor it if it has value
+            if (lastUserIntentType && inputStatus[lastUserIntentType]) {
+                setActiveButton(lastUserIntentType);
+                return;
             }
 
-            // Reassign active class if any input has value
-            if (urlInput.value.trim()) {
-                setActiveButton("Link");
-            } else if (textInput.value.trim()) {
-                setActiveButton("Text");
-            } else if (mediaInput.files.length > 0) {
+            // If initial type has value, stick to it
+            if (initialActiveType && inputStatus[initialActiveType]) {
+                setActiveButton(initialActiveType);
+                return;
+            }
+
+            // Fallback - pick any filled input
+            if (hasMedia) {
                 setActiveButton("Photo/Video");
+            } else if (hasText) {
+                setActiveButton("Text");
+            } else if (hasLink) {
+                setActiveButton("Link");
+            } else {
+                contentTypeButtons.forEach(btn => btn.classList.remove("active"));
+                initialActiveType = null;
             }
         }
 
-        // Input listeners for auto-switching active buttons
+        // Track user intent when they click a button
+        contentTypeButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                lastUserIntentType = btn.textContent;
+                checkAndUpdateActiveContentType();
+            });
+        });
+
+        // Input listeners
         urlInput.addEventListener("input", checkAndUpdateActiveContentType);
         textInput.addEventListener("input", checkAndUpdateActiveContentType);
         mediaInput.addEventListener("change", checkAndUpdateActiveContentType);
 
-        // Optional: initial check on page load
+        // Initial check
         checkAndUpdateActiveContentType();
+
     });
+
 </script>
 
 
@@ -364,6 +391,18 @@
             contentTypeButtons.forEach(btn => {
                 if (btn.classList.contains("active")) {
                     btn.click();  // Trigger click on the active button
+                }
+            });
+
+            const mediaInput = document.getElementById("media-file-update");
+            const uploadText = document.querySelector("#media-section .upload-box p");
+
+            mediaInput.addEventListener("change", function () {
+                if (this.files.length > 0) {
+                    const fileName = this.files[0].name;
+                    uploadText.innerHTML = `Selected: <strong>${fileName}</strong>`;
+                } else {
+                    uploadText.innerHTML = `Drag & Drop or <span class="browse-text">Browse</span>`;
                 }
             });
         });

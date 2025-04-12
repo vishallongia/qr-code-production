@@ -519,6 +519,10 @@ function showGenerateSection(qr, user) {
         // inputElement.files = fileList.files; // Set the files property
         inputElementUpdate.files = fileList.files; // Set the files property
 
+        // Show filename in upload box
+        const uploadText = document.querySelector(".upload-box p");
+        uploadText.innerHTML = `Selected: <strong>${normalizedFileName}</strong>`;
+
         // // Optional: If you want to keep track of the blob URL, you can store it
         // inputElement.dataset.fileBlob = URL.createObjectURL(blob);
         inputElementUpdate.dataset.fileBlob = URL.createObjectURL(blob);
