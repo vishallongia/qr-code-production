@@ -67,7 +67,7 @@ router.get("/", authMiddleware, async (req, res) => {
     res.render("login"); // Send type as 'success'
   } catch (error) {
     console.error("Error generating QR code:", error);
-    res.status(500).render("index", {
+    res.status(500).render("login", {
       message: "Failed to load login page",
       type: "error", // Send type as 'error'
     });
@@ -122,7 +122,7 @@ router.get(
       res.render("generateusers", { startNumber }); // Send type as 'success'
     } catch (error) {
       console.error("Error generating QR code:", error);
-      res.status(500).render("index", {
+      res.status(500).render("login", {
         message: "Failed to generate QR code",
         type: "error", // Send type as 'error'
       });
@@ -171,7 +171,7 @@ router.get("/update-user-details/:userid?", async (req, res) => {
     });
   } catch (error) {
     console.error("Error generating update user page", error);
-    res.status(500).render("index", {
+    res.status(500).render("login", {
       message: error.message,
       type: "error", // Send type as 'error'
     });
@@ -203,7 +203,7 @@ router.get("/assign-qr-code/:qrCodeId?", async (req, res) => {
     });
   } catch (error) {
     console.error("Error generating assign QR code page", error);
-    res.status(500).render("index", {
+    res.status(500).render("login", {
       message: error.message,
       type: "error", // Send type as 'error'
     });
@@ -509,7 +509,7 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
     });
   } catch (error) {
     console.error("Error loading Admin Dashboard:", error);
-    res.status(500).render("index", {
+    res.status(500).render("login", {
       message: "Failed to load Admin Dashboard",
       type: "error", // Send type as 'error'
     });
@@ -585,7 +585,7 @@ router.get(
       });
     } catch (error) {
       console.error("Error loading Demo User Dashboard:", error);
-      res.status(500).render("index", {
+      res.status(500).render("login", {
         message: "Failed to load Demo User Dashboard",
         type: "error", // Send type as 'error'
       });
@@ -1174,7 +1174,7 @@ router.get("/verify-magiclink/:token", async (req, res) => {
     // Find the user
     const user = await User.findById(decoded.userId);
     if (!user) {
-      res.status(400).render("index", {
+      res.status(400).render("login", {
         message: "Invalid or Expired token",
         type: "error", // Send type as 'error'
       });
@@ -1197,7 +1197,7 @@ router.get("/verify-magiclink/:token", async (req, res) => {
     res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
   } catch (error) {
     console.error("Error verifying magic link:", error);
-    res.status(500).render("index", {
+    res.status(500).render("login", {
       message: "Invalid or Expired token",
       type: "error", // Send type as 'error'
     });
@@ -1368,7 +1368,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
       });
 
       if (!qrCode) {
-        return res.status(404).render("dashboard", {
+        return res.status(404).render("dashboardnew", {
           qrCode: null, // No QR code found
           message: "Invalid QR Code ID. Please check and try again.",
           type: "error", // To trigger an error toast or notification
@@ -1403,7 +1403,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
     console.error("Error fetching QR code data:", error);
 
     if (error.name === "CastError") {
-      return res.status(404).render("dashboard", {
+      return res.status(404).render("dashboardnew", {
         qrCode: null, // No QR code found
         message: "Invalid QR Code ID. Please check and try again.",
         type: "error", // To trigger an error toast or notification
@@ -1412,7 +1412,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
       });
     }
 
-    res.status(500).render("dashboard", {
+    res.status(500).render("dashboardnew", {
       message: "An error occurred while fetching your QR codes.",
       type: "error", // Send type as 'error' to trigger toast notification
       user,
@@ -1601,7 +1601,7 @@ router.get("/magiccode", authMiddleware, async (req, res) => {
     }
   } catch (error) {
     console.error("Error fetching Magic Code data:", error);
-    res.status(500).render("dashboard", {
+    res.status(500).render("dashboardnew", {
       qrCodes: [],
       message: "An error occurred while fetching your Magic Codes.",
       type: "error", // Send type as 'error' to trigger toast notification
@@ -2171,7 +2171,7 @@ router.get("/newqr", async (req, res) => {
     res.render("qr"); // Send type as 'success'
   } catch (error) {
     console.error("Error generating Magic Code:", error);
-    res.status(500).render("index", {
+    res.status(500).render("login", {
       message: "Failed to generate Magic Code",
       type: "error", // Send type as 'error'
     });
