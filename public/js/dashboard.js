@@ -1248,6 +1248,7 @@ function handleConflicts() {
     ? hexToRgb(currentBg)
     : currentBg.toLowerCase();
 
+  const keepBgBtn = document.getElementById("keep-background-update");
   // // Show all color options initially
   // fgOptions.forEach((opt) => (opt.style.display = "block"));
   // bgOptions.forEach((opt) => (opt.style.display = "block"));
@@ -1282,7 +1283,7 @@ function handleConflicts() {
   }
 
   // If background is black, hide black foreground option
-  if (bg === blackRgb) {
+  if (bg === blackRgb && keepBgBtn.classList.contains("active")) {
     fgOptions.forEach((opt) => {
       if (opt.style.backgroundColor.toLowerCase() === blackRgb) {
         opt.style.display = "none";
@@ -1297,7 +1298,7 @@ function handleConflicts() {
   }
 
   // If background is white, hide white foreground option
-  if (bg === whiteRgb) {
+  if (bg === whiteRgb && keepBgBtn.classList.contains("active")) {
     fgOptions.forEach((opt) => {
       if (opt.style.backgroundColor.toLowerCase() === whiteRgb) {
         opt.style.display = "none";
@@ -1355,8 +1356,27 @@ function toggleBackground(keep) {
     keepBgBtn.classList.remove("active");
     // Don't update body background color here
     // document.body.style.backgroundColor = "transparent";
+
     document.getElementById("background-color-grid-update").style.display =
       "none";
+    // Remove All active classes from bg-options
+    const bgColorGrid = document.querySelector("#background-color-grid-update");
+    const activeBgOptions = bgColorGrid.querySelectorAll(
+      ".color-option.active"
+    );
+
+    activeBgOptions.forEach((el) => {
+      el.classList.remove("active");
+    });
+    // Show All fg colors
+    const fgColorGrid = document.querySelector("#foreground-color-grid-update");
+    const fgOptions = fgColorGrid.querySelectorAll(".color-option");
+
+    fgOptions.forEach((opt) => {
+      if (opt.style.display === "none") {
+        opt.style.display = "block";
+      }
+    });
   }
 }
 
