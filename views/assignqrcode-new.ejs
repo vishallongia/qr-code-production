@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login to Magic Code</title>
+    <link href="/css/forgotpasswordnew.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</head>
+<style>
+
+</style>
+
+<body>
+    <div class="top-right-options">
+        <div class="language-select-wrapper">
+            <select id="languageSwitcher" class="language-selector-select">
+                <option value="en">English</option>
+                <option value="de">Deutsch (German)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="container">
+        <form class="login-box" id="forgotPasswordForm">
+            <h2 id="assignqrheadingtext">Assign Magic Sticker to yourself</h2>
+            <!-- <p class="forgot-password-info-text" id="resetpasswordinfotext">Enter your email and we will send you a
+                verification code to get back
+                into your account
+            <p> -->
+
+            <input type="email" id="assignedemail" name="email" placeholder="Enter email address..." required />
+
+
+            <button class="login-btn" type="submit" id="assignedemailbutton"
+                onclick="return handleAssignQrCode(event)">Send Magic Link</button>
+
+            <!-- <div class="divider"><span>OR</span></div> -->
+        </form>
+
+
+    </div>
+</body>
+
+<script src="/js/admindashboard-api-calls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+<script>
+    const langSelector = document.querySelector('.language-selector');
+    const selectedLang = document.querySelector('.selected-lang');
+    const dropdownItems = document.querySelectorAll('.language-dropdown li');
+
+    langSelector.addEventListener('click', () => {
+        langSelector.classList.toggle('active');
+    });
+
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const lang = e.target.getAttribute('data-lang');
+            selectedLang.textContent = lang;
+            langSelector.classList.remove('active');
+        });
+    });
+
+
+
+    // Optional: Click outside to close dropdown
+    document.addEventListener('click', (e) => {
+        if (!langSelector.contains(e.target)) {
+            langSelector.classList.remove('active');
+        }
+    });
+
+    // Check if there's a message passed from the server
+    <% if (typeof message !== 'undefined' && message) { %>
+        showToast("<%= message %>", "<%= type || 'success' %>");
+    <% } %>
+</script>
+<script>
+    const langSelector = document.querySelector('.language-selector');
+    const selectedLang = document.querySelector('.selected-lang');
+    const dropdownItems = document.querySelectorAll('.language-dropdown li');
+
+    langSelector.addEventListener('click', () => {
+        langSelector.classList.toggle('active');
+    });
+
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const lang = e.target.getAttribute('data-lang');
+            selectedLang.textContent = lang;
+            langSelector.classList.remove('active');
+        });
+    });
+
+    // Optional: Click outside to close dropdown
+    document.addEventListener('click', (e) => {
+        if (!langSelector.contains(e.target)) {
+            langSelector.classList.remove('active');
+        }
+    });
+</script>
+<script src="/js/translations.js"></script>
+
+
+
+</html>

@@ -10,6 +10,83 @@ const inputFields = document.getElementById("input-fields");
 const languageSwitcher = document.getElementById("languageSwitcher");
 let CurrentQR = "";
 let qrCode;
+
+const colorHexMap = {
+  magenta: "#FF0093",
+  violet: "#835EC7",
+  green: "#00B760",
+  pink: "#FC70BA",
+  blue: "#1C00FF",
+  red: "#FF0000",
+  orange: "#FFC62C",
+  cyan: "#00AEEF",
+  yellow: "#FEFE00",
+  white: "#FFFFFF",
+  black: "#000000",
+  turquoise: "#4CCED1",
+};
+
+const colorOptions1 = {
+  white: [
+    "black",
+    "green",
+    "pink",
+    "blue",
+    "orange",
+    "cyan",
+    "yellow",
+    "turquoise",
+  ],
+  black: ["white", "pink", "orange", "yellow", "turquoise"],
+  magenta: ["white", "cyan", "yellow", "turquoise"],
+  violet: ["white", "cyan", "yellow", "turquoise"],
+  green: ["white", "cyan", "yellow", "turquoise"],
+  pink: ["white", "blue", "orange", "cyan", "yellow", "turquoise"],
+  blue: ["white", "orange", "cyan", "yellow", "turquoise"],
+  red: ["pink", "orange", "cyan", "yellow", "turquoise", "white"],
+  orange: ["white", "pink", "cyan", "turquoise"],
+  cyan: [
+    "white",
+    "black",
+    "violet",
+    "green",
+    "pink",
+    "blue",
+    "orange",
+    "yellow",
+    "turquoise",
+  ],
+  yellow: [
+    "white",
+    "black",
+    "violet",
+    "green",
+    "pink",
+    "blue",
+    "orange",
+    "cyan",
+    "turquoise",
+  ],
+  turquoise: [
+    "white",
+    "black",
+    "violet",
+    "green",
+    "pink",
+    "blue",
+    "orange",
+    "cyan",
+    "yellow",
+  ],
+};
+
+function hexToRgb(hex) {
+  const bigint = parseInt(hex.replace("#", ""), 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgb(${r}, ${g}, ${b})`;
+}
 // Toggle the menu open and close
 // menuToggle.addEventListener("click", () => {
 //   sideMenu.classList.add("active");
@@ -856,203 +933,203 @@ function downloadQRCode() {
 //   }
 // });
 
-document.addEventListener("DOMContentLoaded", function () {
-  const fgColorInput = document.getElementById("qr-color");
-  const bgColorInput = document.getElementById("bg-color");
+// document.addEventListener("DOMContentLoaded", function () {
+//   const fgColorInput = document.getElementById("qr-color");
+//   const bgColorInput = document.getElementById("bg-color");
 
-  const fgColorSection = document.querySelectorAll(
-    ".form-group .color-grid"
-  )[0];
-  const bgColorSection = document.querySelectorAll(
-    ".form-group .color-grid"
-  )[1];
+//   const fgColorSection = document.querySelectorAll(
+//     ".form-group .color-grid"
+//   )[0];
+//   const bgColorSection = document.querySelectorAll(
+//     ".form-group .color-grid"
+//   )[1];
 
-  const fgColorOptions = fgColorSection.querySelectorAll(".color-option");
-  const bgColorOptions = bgColorSection.querySelectorAll(".color-option");
+//   const fgColorOptions = fgColorSection.querySelectorAll(".color-option");
+//   const bgColorOptions = bgColorSection.querySelectorAll(".color-option");
 
-  const keepBgBtn = document.querySelector(
-    ".button-group .btn-outline:nth-child(1)"
-  );
-  const removeBgBtn = document.querySelector(
-    ".button-group .btn-outline:nth-child(2)"
-  );
+//   const keepBgBtn = document.querySelector(
+//     ".button-group .btn-outline:nth-child(1)"
+//   );
+//   const removeBgBtn = document.querySelector(
+//     ".button-group .btn-outline:nth-child(2)"
+//   );
 
-  function rgbToHex(rgb) {
-    const match = rgb.match(/\d+/g);
-    if (!match) return rgb;
-    return (
-      "#" +
-      match
-        .map((x) => {
-          const hex = parseInt(x).toString(16);
-          return hex.length === 1 ? "0" + hex : hex;
-        })
-        .join("")
-    );
-  }
+//   function rgbToHex(rgb) {
+//     const match = rgb.match(/\d+/g);
+//     if (!match) return rgb;
+//     return (
+//       "#" +
+//       match
+//         .map((x) => {
+//           const hex = parseInt(x).toString(16);
+//           return hex.length === 1 ? "0" + hex : hex;
+//         })
+//         .join("")
+//     );
+//   }
 
-  function isBlack(color) {
-    const hex = rgbToHex(color).toLowerCase();
-    return hex === "#000000";
-  }
+//   function isBlack(color) {
+//     const hex = rgbToHex(color).toLowerCase();
+//     return hex === "#000000";
+//   }
 
-  function isWhite(color) {
-    const hex = rgbToHex(color).toLowerCase();
-    return hex === "#ffffff";
-  }
+//   function isWhite(color) {
+//     const hex = rgbToHex(color).toLowerCase();
+//     return hex === "#ffffff";
+//   }
 
-  function filterColor(oppositeOptions, currentColor) {
-    const currentHex = rgbToHex(currentColor).toLowerCase();
+//   function filterColor(oppositeOptions, currentColor) {
+//     const currentHex = rgbToHex(currentColor).toLowerCase();
 
-    oppositeOptions.forEach((opt) => {
-      const color = window.getComputedStyle(opt).backgroundColor;
-      const hex = rgbToHex(color).toLowerCase();
+//     oppositeOptions.forEach((opt) => {
+//       const color = window.getComputedStyle(opt).backgroundColor;
+//       const hex = rgbToHex(color).toLowerCase();
 
-      if (hex === currentHex) {
-        opt.style.display = "none"; // hide matching color
-      } else {
-        opt.style.display = "block"; // show others
-      }
-    });
-  }
+//       if (hex === currentHex) {
+//         opt.style.display = "none"; // hide matching color
+//       } else {
+//         opt.style.display = "block"; // show others
+//       }
+//     });
+//   }
 
-  function selectColor(optionList, clickedOption, input, oppositeOptions) {
-    optionList.forEach((opt) => opt.classList.remove("selected"));
-    clickedOption.classList.add("selected");
+//   function selectColor(optionList, clickedOption, input, oppositeOptions) {
+//     optionList.forEach((opt) => opt.classList.remove("selected"));
+//     clickedOption.classList.add("selected");
 
-    const color = window.getComputedStyle(clickedOption).backgroundColor;
-    const hexColor = rgbToHex(color);
+//     const color = window.getComputedStyle(clickedOption).backgroundColor;
+//     const hexColor = rgbToHex(color);
 
-    input.value = hexColor;
-    input.dispatchEvent(new Event("input"));
+//     input.value = hexColor;
+//     input.dispatchEvent(new Event("input"));
 
-    filterColor(oppositeOptions, color);
-  }
+//     filterColor(oppositeOptions, color);
+//   }
 
-  fgColorOptions.forEach((option) => {
-    option.addEventListener("click", () => {
-      selectColor(fgColorOptions, option, fgColorInput, bgColorOptions);
-    });
-  });
+//   // fgColorOptions.forEach((option) => {
+//   //   option.addEventListener("click", () => {
+//   //     selectColor(fgColorOptions, option, fgColorInput, bgColorOptions);
+//   //   });
+//   // });
 
-  bgColorOptions.forEach((option) => {
-    option.addEventListener("click", () => {
-      selectColor(bgColorOptions, option, bgColorInput, fgColorOptions);
-    });
-  });
+//   bgColorOptions.forEach((option) => {
+//     option.addEventListener("click", () => {
+//       selectColor(bgColorOptions, option, bgColorInput, fgColorOptions);
+//     });
+//   });
 
-  // bgColorOptions.forEach((option) => {
-  //   option.addEventListener("click", () => {
-  //     selectColor(
-  //       bgColorOptions,
-  //       option,
-  //       bgColorInput,
-  //       fgColorOptions,
-  //       "black"
-  //     );
-  //   });
-  // });
+//   // bgColorOptions.forEach((option) => {
+//   //   option.addEventListener("click", () => {
+//   //     selectColor(
+//   //       bgColorOptions,
+//   //       option,
+//   //       bgColorInput,
+//   //       fgColorOptions,
+//   //       "black"
+//   //     );
+//   //   });
+//   // });
 
-  keepBgBtn.addEventListener("click", () => {
-    keepBgBtn.classList.add("active");
-    removeBgBtn.classList.remove("active");
-    bgColorSection.style.display = "flex";
-  });
+//   keepBgBtn.addEventListener("click", () => {
+//     keepBgBtn.classList.add("active");
+//     removeBgBtn.classList.remove("active");
+//     bgColorSection.style.display = "flex";
+//   });
 
-  removeBgBtn.addEventListener("click", () => {
-    removeBgBtn.classList.add("active");
-    keepBgBtn.classList.remove("active");
-    bgColorSection.style.display = "none";
-    bgColorInput.value = "#ffffff"; // still safe default
-    bgColorInput.dispatchEvent(new Event("input"));
-  });
+//   removeBgBtn.addEventListener("click", () => {
+//     removeBgBtn.classList.add("active");
+//     keepBgBtn.classList.remove("active");
+//     bgColorSection.style.display = "none";
+//     bgColorInput.value = "#ffffff"; // still safe default
+//     bgColorInput.dispatchEvent(new Event("input"));
+//   });
 
-  // Default on load (optional)
-  const fgSelected = fgColorSection.querySelector(".color-option.selected");
-  const bgSelected = bgColorSection.querySelector(".color-option.selected");
+//   // Default on load (optional)
+//   const fgSelected = fgColorSection.querySelector(".color-option.selected");
+//   const bgSelected = bgColorSection.querySelector(".color-option.selected");
 
-  if (fgSelected) {
-    fgColorInput.value = rgbToHex(
-      window.getComputedStyle(fgSelected).backgroundColor
-    );
-  }
+//   if (fgSelected) {
+//     fgColorInput.value = rgbToHex(
+//       window.getComputedStyle(fgSelected).backgroundColor
+//     );
+//   }
 
-  if (bgSelected) {
-    bgColorInput.value = rgbToHex(
-      window.getComputedStyle(bgSelected).backgroundColor
-    );
-  }
+//   if (bgSelected) {
+//     bgColorInput.value = rgbToHex(
+//       window.getComputedStyle(bgSelected).backgroundColor
+//     );
+//   }
 
-  // 👇 NEW: Handle manual input color change - FG
-  fgColorInput.addEventListener("input", () => {
-    const selectedColor = fgColorInput.value.toLowerCase();
-    let matched = false;
-    fgColorOptions.forEach((opt) => {
-      const color = rgbToHex(
-        window.getComputedStyle(opt).backgroundColor
-      ).toLowerCase();
-      if (color === selectedColor) {
-        fgColorOptions.forEach((o) => o.classList.remove("selected"));
-        opt.classList.add("selected");
-        matched = true;
-      }
-    });
-    if (!matched) {
-      fgColorOptions.forEach((o) => o.classList.remove("selected"));
-    }
-    filterColor(bgColorOptions, selectedColor);
-  });
+//   // 👇 NEW: Handle manual input color change - FG
+//   fgColorInput.addEventListener("input", () => {
+//     const selectedColor = fgColorInput.value.toLowerCase();
+//     let matched = false;
+//     fgColorOptions.forEach((opt) => {
+//       const color = rgbToHex(
+//         window.getComputedStyle(opt).backgroundColor
+//       ).toLowerCase();
+//       if (color === selectedColor) {
+//         fgColorOptions.forEach((o) => o.classList.remove("selected"));
+//         opt.classList.add("selected");
+//         matched = true;
+//       }
+//     });
+//     if (!matched) {
+//       fgColorOptions.forEach((o) => o.classList.remove("selected"));
+//     }
+//     filterColor(bgColorOptions, selectedColor);
+//   });
 
-  // 👇 NEW: Handle manual input color change - BG
-  bgColorInput.addEventListener("input", () => {
-    const selectedColor = bgColorInput.value.toLowerCase();
-    let matched = false;
-    bgColorOptions.forEach((opt) => {
-      const color = rgbToHex(
-        window.getComputedStyle(opt).backgroundColor
-      ).toLowerCase();
-      if (color === selectedColor) {
-        bgColorOptions.forEach((o) => o.classList.remove("selected"));
-        opt.classList.add("selected");
-        matched = true;
-      }
-    });
-    if (!matched) {
-      bgColorOptions.forEach((o) => o.classList.remove("selected"));
-    }
-    filterColor(fgColorOptions, selectedColor);
-  });
+//   // 👇 NEW: Handle manual input color change - BG
+//   bgColorInput.addEventListener("input", () => {
+//     const selectedColor = bgColorInput.value.toLowerCase();
+//     let matched = false;
+//     bgColorOptions.forEach((opt) => {
+//       const color = rgbToHex(
+//         window.getComputedStyle(opt).backgroundColor
+//       ).toLowerCase();
+//       if (color === selectedColor) {
+//         bgColorOptions.forEach((o) => o.classList.remove("selected"));
+//         opt.classList.add("selected");
+//         matched = true;
+//       }
+//     });
+//     if (!matched) {
+//       bgColorOptions.forEach((o) => o.classList.remove("selected"));
+//     }
+//     filterColor(fgColorOptions, selectedColor);
+//   });
 
-  filterColor(bgColorOptions, "#000000"); // Hide black from background
+//   filterColor(bgColorOptions, "#000000"); // Hide black from background
 
-  // ✅ Set default white background color visually & logically
-  const whiteBgOption = Array.from(bgColorOptions).find((opt) => {
-    const color = rgbToHex(
-      window.getComputedStyle(opt).backgroundColor
-    ).toLowerCase();
-    return color === "#ffffff";
-  });
+//   // ✅ Set default white background color visually & logically
+//   const whiteBgOption = Array.from(bgColorOptions).find((opt) => {
+//     const color = rgbToHex(
+//       window.getComputedStyle(opt).backgroundColor
+//     ).toLowerCase();
+//     return color === "#ffffff";
+//   });
 
-  if (whiteBgOption) {
-    whiteBgOption.classList.add("selected");
-    bgColorInput.value = "#ffffff";
-    bgColorInput.dispatchEvent(new Event("input"));
-  }
+//   if (whiteBgOption) {
+//     whiteBgOption.classList.add("selected");
+//     bgColorInput.value = "#ffffff";
+//     bgColorInput.dispatchEvent(new Event("input"));
+//   }
 
-  // ✅ Set default black foreground color visually & logically
-  const blackFgOption = Array.from(fgColorOptions).find((opt) => {
-    const color = rgbToHex(
-      window.getComputedStyle(opt).backgroundColor
-    ).toLowerCase();
-    return color === "#000000";
-  });
+//   // ✅ Set default black foreground color visually & logically
+//   const blackFgOption = Array.from(fgColorOptions).find((opt) => {
+//     const color = rgbToHex(
+//       window.getComputedStyle(opt).backgroundColor
+//     ).toLowerCase();
+//     return color === "#000000";
+//   });
 
-  if (blackFgOption) {
-    blackFgOption.classList.add("selected");
-    fgColorInput.value = "#000000";
-    fgColorInput.dispatchEvent(new Event("input"));
-  }
-});
+//   if (blackFgOption) {
+//     blackFgOption.classList.add("selected");
+//     fgColorInput.value = "#000000";
+//     fgColorInput.dispatchEvent(new Event("input"));
+//   }
+// });
 
 document.addEventListener("DOMContentLoaded", function () {
   const keepBtn = document.getElementById("keep-background-update");
@@ -1128,6 +1205,39 @@ function hexToRgb(hex) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+// Main function: Filter background options based on selected foreground color
+function filterBackgroundOptionsByForeground(fgColor) {
+  const fgHex = rgbToHex(fgColor).toUpperCase();
+
+  // Find the corresponding name for the foreground color
+  let fgName = null;
+  for (let [name, hex] of Object.entries(colorHexMap)) {
+    if (hex.toUpperCase() === fgHex) {
+      fgName = name;
+      break;
+    }
+  }
+
+  // Hide all options by default
+  bgOptions.forEach((opt) => (opt.style.display = "none"));
+
+  if (fgName && colorOptions1[fgName]) {
+    const allowed = colorOptions1[fgName];
+    bgOptions.forEach((opt) => {
+      const bgRgb = opt.style.backgroundColor;
+      const bgHex = rgbToHex(bgRgb).toUpperCase();
+
+      for (let allowedName of allowed) {
+        const allowedHex = colorHexMap[allowedName].toUpperCase();
+        if (bgHex === allowedHex) {
+          opt.style.display = "block";
+          break;
+        }
+      }
+    });
+  }
+}
+
 // Function to handle color conflicts
 function handleConflicts() {
   // Convert currentFg and currentBg to RGB format if they are in hex
@@ -1138,9 +1248,9 @@ function handleConflicts() {
     ? hexToRgb(currentBg)
     : currentBg.toLowerCase();
 
-  // Show all color options initially
-  fgOptions.forEach((opt) => (opt.style.display = "block"));
-  bgOptions.forEach((opt) => (opt.style.display = "block"));
+  // // Show all color options initially
+  // fgOptions.forEach((opt) => (opt.style.display = "block"));
+  // bgOptions.forEach((opt) => (opt.style.display = "block"));
 
   // Define RGB values for black and white
   const blackRgb = "rgb(0, 0, 0)";
@@ -1207,11 +1317,13 @@ function handleConflicts() {
 }
 
 // Handle color selection
-function selectColor(type, color) {
+function selectColorForUpdation(type, color) {
   if (type === "fg") {
     currentFg = color;
     setActive(fgOptions, color);
-    document.body.style.color = color;
+    // document.body.style.color = color;
+    // 🟡 Add this line
+    filterBackgroundOptionsByForeground(color);
   } else {
     currentBg = color;
     setActive(bgOptions, color);
@@ -1253,25 +1365,27 @@ function applySettings(keepBackground, foregroundColor, backgroundColor) {
     ? hexToRgb(backgroundColor)
     : backgroundColor;
 
-  selectColor("fg", fgColor);
+  selectColorForUpdation("fg", fgColor);
 
   if (keepBackground) {
-    selectColor("bg", bgColor);
+    selectColorForUpdation("bg", bgColor);
   }
+  console.log(fgColor, "check it ");
+  filterBackgroundOptionsByForeground(fgColor);
 }
 
 // Event listeners
 fgOptions.forEach((opt) => {
   opt.addEventListener("click", () => {
     const color = window.getComputedStyle(opt).backgroundColor;
-    selectColor("fg", color);
+    selectColorForUpdation("fg", color);
   });
 });
 
 bgOptions.forEach((opt) => {
   opt.addEventListener("click", () => {
     const color = window.getComputedStyle(opt).backgroundColor;
-    selectColor("bg", color);
+    selectColorForUpdation("bg", color);
   });
 });
 
@@ -1315,3 +1429,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Example usage:
 // applySettings({ keepBackground: true, foregroundColor: '#ffffff', backgroundColor: '#000000' });
+
+document.getElementById("PrintMyQR").addEventListener("click", function () {
+  const hiddenInput = document.getElementById("qrCodePrintData").value;
+
+  try {
+    const jsonData = JSON.parse(hiddenInput);
+
+    let fgColor = jsonData.qrDotColor;
+    let bgColor = jsonData.backgroundColor;
+
+    fgColor = fgColor.replace("#", "");
+    bgColor = bgColor.replace("#", "");
+
+    const urlToPass = `https://analog-magic-code.netlify.app/magic-code-image/?code=${jsonData.code}&qrColor=%23${fgColor}&qrBgColor=%23${bgColor}`;
+    const encodedURL = encodeURIComponent(urlToPass);
+
+    const finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
+    console.log(finalURL);
+    window.open(finalURL, "_blank");
+
+    console.log(jsonData);
+  } catch (error) {
+    console.error("Invalid JSON data:", error);
+  }
+});

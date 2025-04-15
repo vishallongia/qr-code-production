@@ -156,23 +156,33 @@
                                 <% } %>
                                     <!-- Main Content -->
                                     <% if (activeSection==='generate' ) { %>
-                                        <div id="show-section" class="fade-in">
+
+                                        <div id="show-section-create-qr" class="fade-in">
+                                            <div>
+                                                <span style="font-family: Poppins;
+                                            font-weight: 600;
+                                            font-size: 20px;
+                                            line-height: 20px;">My Magic Codes</span>
+                                            </div>
+
                                             <div class="new-section-qr" id="new-section-qr">
 
-                                                <div class="header-custom">Create New Magic Code</div>
+                                                <!-- <div class="header-custom">Create New Magic Code</div> -->
                                                 <div class="form-group">
-                                                    <label>MAGIC CODE Name</label>
-                                                    <input type="text" id="qr-name"
-                                                        placeholder="Enter MAGIC CODE name...">
+                                                    <!-- <label>MAGIC CODE Name</label> -->
+                                                    <input type="text" id="qr-name" placeholder="Add magic code name..."
+                                                        style="border: none; text-align: center;">
                                                 </div>
 
                                                 <div class="qr-container">
                                                     <div class="qr-icon"></div>
-                                                    <img src="https://cdn-icons-png.flaticon.com/512/1146/1146890.png"
-                                                        alt="wand" class="wand" />
+                                                    <img src="/images/ICONS CREATE.png" alt="wand" class="wand" />
+
+                                                </div>
+                                                <div style="width: 100%; display: flex; justify-content: center;">
+                                                    <button class="save-btn" id="submit-btn-generate">Save</button>
                                                 </div>
 
-                                                <button class="save-btn" id="submit-btn-generate">Save</button>
                                             </div>
                                         </div>
                                         <% } %>
@@ -423,6 +433,31 @@
     // Run on window resize
     window.addEventListener('resize', updateLanguageOptions);
 </script>
+<script>
+    const langSelector = document.querySelector('.language-selector');
+    const selectedLang = document.querySelector('.selected-lang');
+    const dropdownItems = document.querySelectorAll('.language-dropdown li');
+
+    langSelector.addEventListener('click', () => {
+        langSelector.classList.toggle('active');
+    });
+
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const lang = e.target.getAttribute('data-lang');
+            selectedLang.textContent = lang;
+            langSelector.classList.remove('active');
+        });
+    });
+
+    // Optional: Click outside to close dropdown
+    document.addEventListener('click', (e) => {
+        if (!langSelector.contains(e.target)) {
+            langSelector.classList.remove('active');
+        }
+    });
+</script>
+<script src="/js/translations.js"></script>
 
 
 

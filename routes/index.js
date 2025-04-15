@@ -198,7 +198,7 @@ router.get("/assign-qr-code/:qrCodeId?", async (req, res) => {
     }
 
     // Render the assign QR code page with the QR code data
-    res.render("assignqrcode", {
+    res.render("assignqrcode-new", {
       qrCode, // Send the QR code data to the EJS template
     });
   } catch (error) {

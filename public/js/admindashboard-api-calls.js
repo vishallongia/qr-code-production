@@ -2,10 +2,7 @@ const exportButton = document.getElementById("generateduserexcelbutton");
 const resetGeneratedUserButton = document.getElementById("resetgeneratedusser");
 const assignedemail = document.getElementById("assignedemail");
 const assignBtn = document.getElementById("assignedemailbutton");
-<<<<<<< HEAD
-=======
 const qrCodesMap = {};
->>>>>>> 053e77c6c994652e9895eff93d5666e0d5dce441
 document.querySelectorAll(".toggle-checkbox").forEach((checkbox) => {
   checkbox.addEventListener("change", async function () {
     const userId = this.getAttribute("data-user-id");

@@ -1,0 +1,11 @@
+{
+    "watch": [
+        "views/**/*.ejs",
+        "partials/**/*.ejs",
+        "public/**/*.js",
+        "routes/**/*.js",
+        "models/**/*.js"
+    ],
+    "ext": "js,ejs",
+    "exec": "node app.js"
+}

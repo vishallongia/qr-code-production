@@ -12,6 +12,8 @@
 </head>
 
 <body>
+    <input type="hidden" id="qrCodePrintData" name="qrCodePrintData" 
+    value='<%- JSON.stringify(qrCode).replace(/'/g, "&#39;") %>'>
     <div id="show-section" class="fade-in">
         <div class="qr-page" id="showandupdateqr">
             <div class="container">
@@ -23,9 +25,9 @@
                             <!-- <button class="icon-button">
                             <img src="/vuesax-linear-edit.svg" alt="Edit" />
                         </button> -->
-                            <button class="icon-button" onclick="downloadQRCode()">
+                            <!-- <button class="icon-button" onclick="downloadQRCode()">
                                 <img src="/frame.svg" alt="Share" />
-                            </button>
+                            </button> -->
                             <!-- <button class="icon-button">
                             <img src="/vuesax-linear-trash.svg" alt="Delete" />
                         </button> -->
@@ -36,15 +38,15 @@
                 <!-- Action Buttons -->
                 <div class="action-buttons">
                     <div class="action-card">
-                        <img class="action-icon" alt="Create" src="/icons-create-1.png" />
-                        <div class="action-text">Change<br>Content</div>
+                        <img class="action-icon" alt="Create" src="/images/ICONS CONTEXT.png" />
+                        <div class="action-text">Change Magic Code <br> Content</div>
                     </div>
                     <div class="action-card">
-                        <img class="action-icon" alt="Color" src="/icons-create-1-1.png" />
-                        <div class="action-text">Change<br>Color</div>
+                        <img class="action-icon" alt="Color" src="/images/edit-color.png" />
+                        <div class="action-text">Change Magic Code <br> Color</div>
                     </div>
                     <div class="action-card">
-                        <img class="action-icon large" alt="Print" src="/icons-create-1-2.png" />
+                        <img class="action-icon large" alt="Print" src="/images/ICONS PRINT.png" />
                         <div class="action-text">Print<br>Magic Code</div>
                     </div>
                 </div>
@@ -119,7 +121,7 @@
                             </div>
                             <div class="color-option" style="background-color: #ffffff; border: 1px solid #ccc;"
                                 id="fg-color-white-update"></div>
-                            <div class="color-option" style="background-color: #d13737" id="fg-color-red-update"></div>
+                            <!-- <div class="color-option" style="background-color: #d13737" id="fg-color-red-update"></div>
                             <div class="color-option" style="background-color: #c2d137" id="fg-color-lime-update"></div>
                             <div class="color-option" style="background-color: #3751d1" id="fg-color-blue-update"></div>
                             <div class="color-option" style="background-color: #d1376d" id="fg-color-pink-update"></div>
@@ -131,7 +133,20 @@
                             <div class="color-option" style="background-color: #d16337" id="fg-color-orange-update">
                             </div>
                             <div class="color-option" style="background-color: #5137d1" id="fg-color-indigo-update">
-                            </div>
+                            </div> -->
+                            <!-- Real Colors -->
+                            <div class="color-option" style="background-color: #FF0093" id="fg-color-magenta"></div>
+                            <div class="color-option" style="background-color: #835EC7" id="fg-color-violet"></div>
+                            <div class="color-option" style="background-color: #00B760" id="fg-color-green"></div>
+                            <div class="color-option" style="background-color: #FC70BA" id="fg-color-pink"></div>
+                            <div class="color-option" style="background-color: #1C00FF" id="fg-color-blue"></div>
+                            <div class="color-option" style="background-color: #FF0000" id="fg-color-red"></div>
+                            <div class="color-option" style="background-color: #FFC62C" id="fg-color-orange"></div>
+                            <div class="color-option" style="background-color: #00AEEF" id="fg-color-cyan"></div>
+                            <div class="color-option" style="background-color: #FEFE00" id="fg-color-yellow"></div>
+                            <div class="color-option" style="background-color: #4CCED1" id="fg-color-turquoise"></div>
+                            <!-- <div class="color-option" style="background-color: #5137d1" id="fg-color-indigo"></div> -->
+
                         </div>
                     </div>
 
@@ -142,7 +157,7 @@
                             </div>
                             <div class="color-option" style="background-color: #ffffff; border: 1px solid #ccc;"
                                 id="bg-color-white-update"></div>
-                            <div class="color-option" style="background-color: #d13737" id="bg-color-red-update"></div>
+                            <!-- <div class="color-option" style="background-color: #d13737" id="bg-color-red-update"></div>
                             <div class="color-option" style="background-color: #c2d137" id="bg-color-lime-update"></div>
                             <div class="color-option" style="background-color: #3751d1" id="bg-color-blue-update"></div>
                             <div class="color-option" style="background-color: #d1376d" id="bg-color-pink-update"></div>
@@ -154,7 +169,20 @@
                             <div class="color-option" style="background-color: #d16337" id="bg-color-orange-update">
                             </div>
                             <div class="color-option" style="background-color: #5137d1" id="bg-color-indigo-update">
-                            </div>
+                            </div> -->
+                            <!-- Real Colors -->
+                            <div class="color-option" style="background-color: #FF0093" id="fg-color-magenta"></div>
+                            <div class="color-option" style="background-color: #835EC7" id="fg-color-violet"></div>
+                            <div class="color-option" style="background-color: #00B760" id="fg-color-green"></div>
+                            <div class="color-option" style="background-color: #FC70BA" id="fg-color-pink"></div>
+                            <div class="color-option" style="background-color: #1C00FF" id="fg-color-blue"></div>
+                            <div class="color-option" style="background-color: #FF0000" id="fg-color-red"></div>
+                            <div class="color-option" style="background-color: #FFC62C" id="fg-color-orange"></div>
+                            <div class="color-option" style="background-color: #00AEEF" id="fg-color-cyan"></div>
+                            <div class="color-option" style="background-color: #FEFE00" id="fg-color-yellow"></div>
+                            <div class="color-option" style="background-color: #4CCED1" id="fg-color-turquoise"></div>
+                            <!-- <div class="color-option" style="background-color: #5137d1" id="fg-color-indigo"></div> -->
+
                         </div>
                     </div>
 
@@ -170,12 +198,12 @@
                         <div class="content">
                             <div class="action-buttons">
                                 <div class="action-child-card active" data-preview="garment">
-                                    <img class="action-icon" alt="Create" src="/icons-create-1.png" />
-                                    <div class="action-text">On<br>Garment</div>
+                                    <div class="action-text">On Garment</div>
+                                    <img class="action-icon" alt="Create" src="/images/ICONS T-SHIRT STICKERS.png" />
                                 </div>
                                 <div class="action-child-card" data-preview="sticker">
-                                    <img class="action-icon" alt="Color" src="/icons-create-1-1.png" />
-                                    <div class="action-text">As<br>Sticker</div>
+                                    <div class="action-text">As Sticker</div>
+                                    <img class="action-icon" alt="Color" src="/images/ICONS PRINT.png" />
                                 </div>
                             </div>
 
@@ -193,6 +221,7 @@
                 </div>
                 <!-- Save Button -->
                 <button class="save-button" id="submit-btn-update" style="display:none;">Save Content</button>
+                <button class="save-button" id="PrintMyQR" style="display:none;">Print</button>
             </div>
         </div>
     </div>
@@ -208,6 +237,7 @@
         ];
 
         const submitButton = document.getElementById("submit-btn-update");
+        const printMyQrButton = document.getElementById("PrintMyQR");
 
         const actionCards = document.querySelectorAll(".action-buttons .action-card");
 
@@ -226,20 +256,28 @@
 
                 if (contentSections[index]) {
                     if (index === 1) {
+                        console.log(index, "1111")
                         contentSections[index].style.display = "flex";
                         contentSections[index].style.flexFlow = "column";
                         contentSections[index].style.gap = "24px";
+                        submitButton.style.display = "block";
+                        printMyQrButton.style.display = "none"
                     }
                     if (index === 2) {
                         contentSections[index].style.display = "block";
                         contentSections[index].style.flexFlow = "";
                         contentSections[index].style.gap = "";
+                        submitButton.style.display = "none";
+                        printMyQrButton.style.display = "block"
+
                     } else {
                         contentSections[index].style.display = "flex";
                         contentSections[index].style.flexFlow = "column";
                         contentSections[index].style.gap = "24px";
+                        submitButton.style.display = "block";
+                        printMyQrButton.style.display = "none"
                     }
-                    submitButton.style.display = "block";
+
 
                     // Call the input check on tab switch
                     checkAndUpdateActiveContentType();
