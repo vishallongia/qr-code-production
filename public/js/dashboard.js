@@ -1288,6 +1288,12 @@ function handleConflicts() {
         opt.style.display = "none";
       }
     });
+  } else {
+    fgOptions.forEach((opt) => {
+      if (opt.style.backgroundColor.toLowerCase() === blackRgb) {
+        opt.style.display = "block";
+      }
+    });
   }
 
   // If background is white, hide white foreground option
@@ -1327,6 +1333,7 @@ function selectColorForUpdation(type, color) {
   } else {
     currentBg = color;
     setActive(bgOptions, color);
+
     // Don't update the body background color here
     // document.body.style.backgroundColor = color;
   }

@@ -215,6 +215,18 @@ submitBtnUpdate.addEventListener("click", async (event) => {
     bgColorHex = rgbToHex(bgColorRgb);
   }
 
+  
+  // Ensure foreground and background are not the same
+  if (fgColorHex.toLowerCase() === bgColorHex.toLowerCase()) {
+    // If both are white, set background to black
+    if (fgColorHex.toLowerCase() === "#ffffff") {
+      bgColorHex = "#000000";
+    } else {
+      // Otherwise, invert the background color (optional enhancement)
+      bgColorHex = "#ffffff";
+    }
+  }
+
   const qrName = document.getElementById("qr-name").value;
   const qrDotColor = document.getElementById("qr-color").value;
   const backgroundColor = document.getElementById("bg-color").value;
