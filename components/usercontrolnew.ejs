@@ -16,21 +16,26 @@
 
     <div class="container-user-control">
         <div class="content-section">
-            <h2>QR Update Control</h2>
+            <h2>When Scanning My Magic Code</h2>
 
-            <div class="toggle-group" style="display: flex; flex-direction: column; gap: 16px;">
-                <!-- Hidden checkbox, still synced with user data -->
-                <input type="checkbox" id="qr-update-toggle" style="display: none;" <%=user.showEditOnScan ? 'checked'
-                    : '' %> >
+            <div class="modern-radio-group">
+                <input type="radio" id="show-edit" name="qr-update-option" value="ShowEdit"
+                    <%=user.showEditOnScan===true ? 'checked' : '' %>
+                onchange="SetUserControl()">
+                <label for="show-edit">Show Content Change</label>
 
-                <!-- Dropdown to toggle control -->
-                <select id="qr-update-select" class="content-type-button" onchange="SetUserControl()">
-                    <option value="ShowEdit" id="ShowEdit" <%=user.showEditOnScan ? 'selected' : '' %>>Show Content
-                        Change</option>
-                    <option value="ShowContent" id="ShowContent" <%=!user.showEditOnScan ? 'selected' : '' %>>Show
-                        Content</option>
-                </select>
+                <input type="radio" id="show-content" name="qr-update-option" value="ShowContent"
+                    <%=user.showEditOnScan===false ? 'checked' : '' %>
+                onchange="SetUserControl()">
+                <label for="show-content">Show Content</label>
+
+                <input type="radio" id="emergency" name="qr-update-option" value="Emergency">
+                <label for="emergency">Emergency</label>
             </div>
+
+
+
+
         </div>
     </div>
 

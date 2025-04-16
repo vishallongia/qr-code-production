@@ -45,7 +45,7 @@
                         <img class="action-icon" alt="Color" src="/images/edit-color.png" />
                         <div class="action-text">Change Magic Code <br> Color</div>
                     </div>
-                    <div class="action-card">
+                    <div class="action-card" id="print-magic-code-parent-tab">
                         <img class="action-icon large" alt="Print" src="/images/ICONS PRINT.png" />
                         <div class="action-text">Print<br>Magic Code</div>
                     </div>
@@ -201,10 +201,18 @@
                                     <div class="action-text">On Garment</div>
                                     <img class="action-icon" alt="Create" src="/images/ICONS T-SHIRT STICKERS.png" />
                                 </div>
+
                                 <div class="action-child-card" data-preview="sticker">
                                     <div class="action-text">As Sticker</div>
                                     <img class="action-icon" alt="Color" src="/images/ICONS PRINT.png" />
                                 </div>
+
+                                <div class="action-child-card" data-preview="tattoo">
+                                    <div class="action-text">As Tattoo</div>
+                                    <img class="action-icon" alt="Color" src="/images/ICONS PRINT.png" />
+                                </div>
+
+
                             </div>
 
                             <!-- Preview Card -->
@@ -216,12 +224,20 @@
                                 style="text-align: center; margin-top: 24px; ">
                                 <img src="/print2.png" alt="QR Code Preview" class="qr-image" style="width: 170px;">
                             </div>
+
+                            <div class="card preview-card" data-type="tattoo"
+                                style="text-align: center; margin-top: 24px; ">
+                                <img src="/images/MAGIC TATTOOS PRODUCT PAGE.png" alt="QR Code Preview" class="qr-image" style="width: 170px;">
+                            </div>
+
                         </div>
                     </div>
                 </div>
                 <!-- Save Button -->
                 <button class="save-button" id="submit-btn-update" style="display:none;">Save Content</button>
                 <button class="save-button" id="PrintMyQR" style="display:none;">Print</button>
+                <button class="save-button" id="PrintMyQRAsSticker" style="display:none;">Print As Sticker</button>
+                <button class="save-button" id="PrintMyQRAsTattoo" style="display:none;">Print As Tattoo</button>
             </div>
         </div>
     </div>
@@ -253,6 +269,8 @@
                 contentSections.forEach(section => {
                     section.style.display = "none";
                 });
+
+
 
                 if (contentSections[index]) {
                     if (index === 1) {
@@ -299,6 +317,7 @@
                     if (!btn.classList.contains("active")) {
                         btn.classList.add("active");
                         btn.click(); // Trigger the click
+
                     }
                 } else {
                     btn.classList.remove("active");

@@ -1419,35 +1419,50 @@ bgOptions.forEach((opt) => {
 keepBgBtn.addEventListener("click", () => toggleBackground(true));
 removeBgBtn.addEventListener("click", () => toggleBackground(false));
 
-// Change of print tab code
 document.addEventListener("DOMContentLoaded", () => {
   const actionCards = document.querySelectorAll(".action-child-card");
   const previewCards = document.querySelectorAll(".preview-card");
+  const printCard = document.getElementById("print-magic-code-parent-tab");
+  const isActiveParentTab = printCard?.classList.contains("active");
+  console.log(isActiveParentTab)
 
-  actionCards.forEach((card) => {
-    card.addEventListener("click", () => {
-      // Activate clicked card
-      actionCards.forEach((c) => c.classList.remove("active"));
-      card.classList.add("active");
+  const printGarmentBtn = document.getElementById("PrintMyQR");
+  const printStickerBtn = document.getElementById("PrintMyQRAsSticker");
+  const printTattooBtn = document.getElementById("PrintMyQRAsTattoo");
 
-      const previewType = card.getAttribute("data-preview");
-
-      // Show only matching preview
-      previewCards.forEach((preview) => {
-        const type = preview.getAttribute("data-type");
-        preview.style.display = type === previewType ? "block" : "none";
-      });
-    });
-  });
-
-  // Initialize by showing only active preview
-  const activeCard = document.querySelector(".action-child-card.active");
-  if (activeCard) {
-    const previewType = activeCard.getAttribute("data-preview");
+  function updatePreviewAndButtons(previewType) {
+    // Show matching preview
     previewCards.forEach((preview) => {
       const type = preview.getAttribute("data-type");
       preview.style.display = type === previewType ? "block" : "none";
     });
+
+    if (isActiveParentTab) {
+      // Show correct print button
+      printGarmentBtn.style.display =
+        previewType === "garment" ? "block" : "none";
+      printStickerBtn.style.display =
+        previewType === "sticker" ? "block" : "none";
+      printTattooBtn.style.display =
+        previewType === "tattoo" ? "block" : "none";
+    }
+  }
+
+  actionCards.forEach((card) => {
+    card.addEventListener("click", () => {
+      actionCards.forEach((c) => c.classList.remove("active"));
+      card.classList.add("active");
+
+      const previewType = card.getAttribute("data-preview");
+      updatePreviewAndButtons(previewType);
+    });
+  });
+
+  // Initialize on load
+  const activeCard = document.querySelector(".action-child-card.active");
+  if (activeCard) {
+    const previewType = activeCard.getAttribute("data-preview");
+    updatePreviewAndButtons(previewType);
   }
 });
 
@@ -1460,6 +1475,10 @@ document.addEventListener("DOMContentLoaded", () => {
 document.getElementById("PrintMyQR").addEventListener("click", function () {
   const hiddenInput = document.getElementById("qrCodePrintData").value;
 
+  let type = document
+    .querySelectorAll(".action-child-card.active")[0]
+    .getAttribute("data-preview");
+  // console.log(type);
   try {
     const jsonData = JSON.parse(hiddenInput);
 
@@ -1472,7 +1491,16 @@ document.getElementById("PrintMyQR").addEventListener("click", function () {
     const urlToPass = `https://analog-magic-code.netlify.app/magic-code-image/?code=${jsonData.code}&qrColor=%23${fgColor}&qrBgColor=%23${bgColor}`;
     const encodedURL = encodeURIComponent(urlToPass);
 
-    const finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
+    let finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
+
+    if (type == "sticker") {
+      finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker?image=${encodedURL}`;
+    }
+
+    if (type == "tattoo") {
+      finalURL = `https://textildruck-schweiz.com/products/magic-tattoo?image=${encodedURL}`;
+    }
+
     console.log(finalURL);
     window.open(finalURL, "_blank");
 
@@ -1481,3 +1509,83 @@ document.getElementById("PrintMyQR").addEventListener("click", function () {
     console.error("Invalid JSON data:", error);
   }
 });
+
+document
+  .getElementById("PrintMyQRAsSticker")
+  .addEventListener("click", function () {
+    const hiddenInput = document.getElementById("qrCodePrintData").value;
+
+    let type = document
+      .querySelectorAll(".action-child-card.active")[0]
+      .getAttribute("data-preview");
+    // console.log(type);
+    try {
+      const jsonData = JSON.parse(hiddenInput);
+
+      let fgColor = jsonData.qrDotColor;
+      let bgColor = jsonData.backgroundColor;
+
+      fgColor = fgColor.replace("#", "");
+      bgColor = bgColor.replace("#", "");
+
+      const urlToPass = `https://analog-magic-code.netlify.app/magic-code-image/?code=${jsonData.code}&qrColor=%23${fgColor}&qrBgColor=%23${bgColor}`;
+      const encodedURL = encodeURIComponent(urlToPass);
+
+      let finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
+
+      if (type == "sticker") {
+        finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker?image=${encodedURL}`;
+      }
+
+      if (type == "tattoo") {
+        finalURL = `https://textildruck-schweiz.com/products/magic-tattoo?image=${encodedURL}`;
+      }
+
+      console.log(finalURL);
+      window.open(finalURL, "_blank");
+
+      console.log(jsonData);
+    } catch (error) {
+      console.error("Invalid JSON data:", error);
+    }
+  });
+
+document
+  .getElementById("PrintMyQRAsTattoo")
+  .addEventListener("click", function () {
+    const hiddenInput = document.getElementById("qrCodePrintData").value;
+
+    let type = document
+      .querySelectorAll(".action-child-card.active")[0]
+      .getAttribute("data-preview");
+    // console.log(type);
+    try {
+      const jsonData = JSON.parse(hiddenInput);
+
+      let fgColor = jsonData.qrDotColor;
+      let bgColor = jsonData.backgroundColor;
+
+      fgColor = fgColor.replace("#", "");
+      bgColor = bgColor.replace("#", "");
+
+      const urlToPass = `https://analog-magic-code.netlify.app/magic-code-image/?code=${jsonData.code}&qrColor=%23${fgColor}&qrBgColor=%23${bgColor}`;
+      const encodedURL = encodeURIComponent(urlToPass);
+
+      let finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
+
+      if (type == "sticker") {
+        finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker?image=${encodedURL}`;
+      }
+
+      if (type == "tattoo") {
+        finalURL = `https://textildruck-schweiz.com/products/magic-tattoo?image=${encodedURL}`;
+      }
+
+      console.log(finalURL);
+      window.open(finalURL, "_blank");
+
+      console.log(jsonData);
+    } catch (error) {
+      console.error("Invalid JSON data:", error);
+    }
+  });
