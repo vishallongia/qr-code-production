@@ -1422,9 +1422,6 @@ removeBgBtn.addEventListener("click", () => toggleBackground(false));
 document.addEventListener("DOMContentLoaded", () => {
   const actionCards = document.querySelectorAll(".action-child-card");
   const previewCards = document.querySelectorAll(".preview-card");
-  const printCard = document.getElementById("print-magic-code-parent-tab");
-  const isActiveParentTab = printCard?.classList.contains("active");
-  console.log(isActiveParentTab)
 
   const printGarmentBtn = document.getElementById("PrintMyQR");
   const printStickerBtn = document.getElementById("PrintMyQRAsSticker");
@@ -1432,6 +1429,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updatePreviewAndButtons(previewType) {
     // Show matching preview
+    const printCard = document.getElementById("print-magic-code-parent-tab");
+    const isActiveParentTab = printCard?.classList.contains("active");
     previewCards.forEach((preview) => {
       const type = preview.getAttribute("data-type");
       preview.style.display = type === previewType ? "block" : "none";
