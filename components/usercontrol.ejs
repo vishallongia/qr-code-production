@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/usercontrol.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <title>QR Update Toggle</title>
+</head>
+
+<body>
+    <div id="qr-toggle-container">
+        <div id="qr-toggle-section">
+            <div class="toggle-group">
+                <!-- <label for="qr-update-toggle">Show edit option on scanning QR:</label> -->
+                <input style="display: none;" type="checkbox" id="qr-update-toggle"  <%= user.showEditOnScan ? 'checked' : '' %> >
+
+                <div>
+                    <select name="" id="qr-update-select" onchange="SetUserControl()">
+                        <option value="ShowEdit" id="ShowEdit">Show Content Change</option>
+                        <option value="ShowContent" id="ShowContent">Show Content</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+<script src="/js/usercontrol.js"></script>
+
+
+
+
+</html>

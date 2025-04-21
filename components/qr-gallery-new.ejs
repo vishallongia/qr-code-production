@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Magic Code Cards</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="/css/qr-gallery-new.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container-qr-custom">
+        <span style="font-family: Poppins;
+        font-weight: 600;
+        font-size: 20px;
+        line-height: 20px;">My Magic Codes</span>
+
+        <div class="grid">
+            <% if (qrCodes.length> 0) { %>
+                <% qrCodes.forEach(function(qrCode) { %>
+                    <div class="card" id="showqrcards">
+                        <p class="card-title">
+                            <%= qrCode.qrName %>
+                        </p>
+                        <div class="qr-code" id="qr-container-<%= qrCode._id %>"></div>
+                        <div class="button-group">
+                            <button class="icon-button" title="Edit" style="position: relative;top: 3px;">
+                                <a href="/dashboard?magiccode=<%= qrCode._id %>">
+                                    <img src="/vuesax-linear-edit.svg" alt="Edit">
+                                </a>
+                            </button>
+                            <!-- <button class="icon-button" title="Download"
+                                onclick="downloadQRCodeShowed('<%= qrCode._id %>')">
+                                <img src="/vuesax-linear-frame.svg" alt="Download">
+                            </button> -->
+                            <button class="icon-button" title="Delete" onclick="deleteQRCode('<%= qrCode._id %>')">
+                                <img src="/vuesax-linear-trash.svg" alt="Delete">
+                            </button>
+                        </div>
+                    </div>
+                    <% }) %>
+                        <% } else { %>
+                            <p id="NoQR">No QR codes found.</p>
+                            <% } %>
+        </div>
+    </div>
+
+    <script src="/js/api-calls.js"></script>
+    <script src="/js/qr-gallery.js"></script>
+    <script>
+        const qrCodesMap = {};
+
+        function showQrCodes(qrCodes) {
+            qrCodes.forEach((qrCodeData) => {
+                const qrContainer = document.getElementById(`qr-container-${qrCodeData._id}`);
+                let logoUrl = qrCodeData.logo ? `${window.location.protocol}//${window.location.host}/${qrCodeData.logo}` : "";
+
+                if (qrContainer) {
+                    const qrCode = new QRCodeStyling({
+                        width: 3000,
+                        height: 3000,
+                        type: "canvas",
+                        data: `${window.location.protocol}//${window.location.host}/${qrCodeData.code}`,
+                        dotsOptions: {
+                            color: qrCodeData.qrDotColor || "#000000",
+                            type: qrCodeData.dotStyle || "square",
+                            gradient: qrCodeData.applyGradient === "linear" ? {
+                                type: "linear",
+                                colorStops: [
+                                    { offset: 0, color: "#ff0000" },
+                                    { offset: 1, color: qrCodeData.qrDotColor || "#000000" }
+                                ]
+                            } : qrCodeData.applyGradient === "radial" ? {
+                                type: "radial",
+                                colorStops: [
+                                    { offset: 0, color: "#ff0000" },
+                                    { offset: 1, color: qrCodeData.qrDotColor || "#000000" }
+                                ]
+                            } : null
+                        },
+                        backgroundOptions: {
+                            color: qrCodeData.backgroundColor || "#ffffff"
+                        },
+                        cornersSquareOptions: {
+                            type: qrCodeData.cornerStyle || "square"
+                        },
+                        image: logoUrl,
+                        imageOptions: {
+                            crossOrigin: "anonymous",
+                            margin: 10
+                        }
+                    });
+
+                    qrCode.append(qrContainer);
+                    qrCodesMap[qrCodeData._id] = qrCode;
+                }
+            });
+        }
+
+        function downloadQRCodeShowed(qrCodeId) {
+            const qrCode = qrCodesMap[qrCodeId];
+            if (qrCode) {
+                qrCode.download({ name: "qr-code", extension: "png", width: 1600, height: 1600 });
+            }
+        }
+
+        // Initialize QR codes
+        const qrCodesFromServer = <%- JSON.stringify(qrCodes) %>;
+        showQrCodes(qrCodesFromServer);
+    </script>
+</body>
+
+
+</html>

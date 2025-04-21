@@ -1,0 +1,369 @@
+.qr-page {
+    --blue: rgba(26, 1, 97, 1);
+    --grey: rgba(243, 243, 245, 1);
+    --greygrey-6: rgba(30, 29, 33, 1);
+    --shadow-1: 0px 0px 23px 0px rgba(0, 0, 0, 0.07);
+}
+
+.qr-page *,
+.qr-page *::before,
+.qr-page *::after {
+    /* margin: 0;
+    padding: 0; */
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.qr-page body,
+.qr-page {
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.qr-page .container {
+    width: 552px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-left: 24px;
+}
+
+.qr-page .card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-1);
+}
+
+.qr-page .qr-card {
+    padding: 6px 102px;
+}
+
+.qr-page .card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    padding-top: 6px;
+}
+
+.qr-page .title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--greygrey-6);
+    text-align: center;
+}
+
+.qr-page .qr-code {
+    width: 172px;
+    height: 172px;
+}
+
+.qr-page .action-icons {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.qr-page .icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.qr-page .icon-button img {
+    width: 20px;
+    height: 20px;
+}
+
+.qr-page .action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.qr-page .action-card,
+.qr-page .action-child-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border: 1px solid rgba(51, 51, 51, 0.75);
+    border-radius: 8px;
+    opacity: 0.75;
+}
+
+.action-child-card{
+    cursor: pointer;
+}
+
+
+.qr-page .action-card.active,
+.qr-page .action-child-card.active {
+    background: rgba(26, 1, 97, 0.15);
+    border-color: var(--blue);
+    opacity: 1;
+}
+
+.qr-page .action-icon {
+    width: 50px;
+    height: 50px;
+}
+
+.qr-page .action-icon.large {
+    width: 42px;
+}
+
+.qr-page .action-text {
+    font-size: 12px;
+    text-align: center;
+    line-height: 18px;
+    color: rgba(51, 51, 51, 0.75);
+}
+
+.qr-page .action-card.active .action-text {
+    color: var(--blue);
+}
+
+.qr-page .content-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.qr-page h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--greygrey-6);
+}
+
+.qr-page .content-types {
+    display: flex;
+    gap: 8px;
+}
+
+.qr-page .content-type-button {
+    flex: 1;
+    height: 48px;
+    border: 1px solid #c4c3c3;
+    border-radius: 58px;
+    background: none;
+    color: var(--greygrey-6);
+    font-size: 16px;
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+.qr-page .content-type-button.active {
+    background: rgba(26, 1, 97, 0.15);
+    border-color: var(--blue);
+    color: var(--blue);
+    opacity: 1;
+}
+
+.qr-page .upload-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.qr-page .upload-section label {
+    font-size: 16px;
+    color: #333333;
+}
+
+.qr-page .upload-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 16px;
+    border: 1px dashed rgba(32, 32, 32, 0.75);
+    border-radius: 8px;
+}
+
+.qr-page .upload-icon {
+    width: 32px;
+    height: 32px;
+}
+
+.qr-page .upload-text {
+    font-size: 14px;
+    text-align: center;
+}
+
+.qr-page .text-muted {
+    color: #b7b7b7;
+}
+
+.qr-page .text-link {
+    color: var(--blue);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.qr-page .save-button {
+    height: 48px;
+    width: 100%;
+    background: var(--blue);
+    border: 1px solid var(--blue);
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.qr-page .save-button:hover {
+    opacity: 0.9;
+}
+
+canvas {
+    max-width: 250px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+input,
+select {
+    padding: 8px 16px;
+    border: 1px solid #c4c3c3;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.color-option.active {
+    outline: 3px solid #000;
+    /* Black border on selected */
+    outline-offset: 2px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+    border-radius: 5px;
+}
+
+
+@media (max-width: 768px) {
+    .qr-page .container {
+        width: 100%;
+        margin-left: 0;
+        padding: 0 16px;
+    }
+
+    .qr-page .content-types,
+    .qr-page .action-buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .qr-page .qr-card {
+        padding: 16px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .qr-page .card-content {
+        padding-top: 12px;
+    }
+
+    .qr-page .content-type-button {
+        font-size: 14px;
+        height: 42px;
+    }
+
+    .qr-page .upload-card {
+        padding: 16px;
+    }
+
+    .qr-page .qr-code {
+        width: 140px;
+        height: 140px;
+    }
+
+    .qr-page .action-icons {
+        gap: 16px;
+    }
+
+    .qr-page .save-button {
+        height: 44px;
+        font-size: 14px;
+    }
+
+    .qr-page .title {
+        font-size: 14px;
+    }
+
+    .qr-page h2 {
+        font-size: 18px;
+    }
+
+    .qr-page .icon-button img {
+        width: 18px;
+        height: 18px;
+    }
+
+    .qr-page .action-card,
+    .qr-page .action-child-card {
+        gap: 8px;
+        padding: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        display: block;
+    }
+
+    canvas {
+        max-width: 180px;
+    }
+
+    .qr-page .container {
+        padding: 0 12px;
+    }
+
+    .qr-page .qr-card {
+        gap: 12px;
+    }
+
+    .qr-page .qr-code {
+        width: 120px;
+        height: 120px;
+    }
+
+    .qr-page .save-button {
+        font-size: 13px;
+        height: 42px;
+    }
+
+    .qr-page .content-type-button {
+        font-size: 13px;
+        height: 40px;
+    }
+
+    .qr-page h2 {
+        font-size: 16px;
+    }
+
+    .qr-page .title {
+        font-size: 13px;
+    }
+
+    .qr-page .upload-text {
+        font-size: 13px;
+    }
+
+    .qr-page .upload-card {
+        padding: 12px;
+    }
+
+    .qr-page .action-icons {
+        gap: 12px;
+    }
+}

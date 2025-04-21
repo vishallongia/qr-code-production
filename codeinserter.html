@@ -1,0 +1,234 @@
+<script>
+    const params = new URLSearchParams(window.location.search);
+    let PageUrlGarment = "https://textildruck-schweiz.com/products/magic-code"
+    let PageUrlSticker = "https://textildruck-schweiz.com/products/magic-safety-sticker"
+    let PageUrlTattoo = "https://textildruck-schweiz.com/products/magic-tattoo"
+    let CurrentPageUrl = window.location.href.split('?')[0]
+
+    if (CurrentPageUrl == PageUrlGarment || CurrentPageUrl == PageUrlSticker || CurrentPageUrl == PageUrlTattoo) {
+
+        try {
+            let TextBoxDiv = document.getElementById("shopify-block-AZW1FNFMyZkFIRVdJM__globo_product_option_app_block_UATxMx")
+            TextBoxDiv.style.display = "none"
+            
+        } catch (error) {
+            
+        }
+
+        document.querySelectorAll(".gpo-container")[0].style.display = "none"
+
+        let TextArea = document.getElementById("textarea-1")
+
+        let ImageLink = params.get('image')
+
+        TextArea.value = ImageLink
+        TextArea.dispatchEvent(new Event('input', { bubbles: true }));
+        TextArea.dispatchEvent(new Event('change', { bubbles: true }));
+
+
+
+        function loadQrCodeStyling(callback) {
+            let script = document.createElement("script");
+            script.src = "https://cdn.jsdelivr.net/npm/qr-code-styling/lib/qr-code-styling.min.js";
+            script.onload = callback;
+            document.head.appendChild(script);
+        }
+
+        loadQrCodeStyling(() => {
+            let targetElement = document.getElementById("price-template--25185158824276__main");
+
+            if(CurrentPageUrl == PageUrlSticker){
+                targetElement = document.getElementById("price-template--24536859640148__main");
+            }
+
+            if(CurrentPageUrl == PageUrlTattoo){
+                targetElement = document.getElementById("price-template--24536859640148__main");
+            }
+
+
+            if (targetElement) {
+                let qrDiv = document.createElement("div");
+                targetElement.insertAdjacentElement("afterend", qrDiv);
+
+                // Get the current page URL
+                const currentUrl = window.location.href;
+
+                // Extract 'image' parameter
+                const mainUrlParams = new URL(currentUrl).searchParams;
+                const imageUrl = mainUrlParams.get("image");
+                let imageParams = "";
+
+                if (imageUrl) {
+                    imageParams = getQueryParams(imageUrl);
+                } else {
+                    return;
+                }
+
+                const qrCode = new QRCodeStyling({
+                    width: 150,
+                    height: 150,
+                    data: `https://magic-code.net/${imageParams.code}`,
+                    image: 'https://analog-magic-code.netlify.app/logo.png',
+                    dotsOptions: {
+                        color: imageParams.qrColor,
+                        type: 'rounded'
+                    },
+                    cornersSquareOptions: {
+                        type: 'dot'
+                    },
+                    backgroundOptions: {
+                        color: imageParams.qrBgColor
+                    },
+                    imageOptions: {
+                        crossOrigin: 'anonymous',
+                        margin: 10,
+                        widthRatio: 0.3
+                    }
+                });
+
+                qrCode.append(qrDiv);
+
+                // Create and append the link below the QR code
+                let linkElement = document.createElement("a");
+                linkElement.href = imageUrl;
+                linkElement.textContent = "My Magic Code";
+                linkElement.style.display = "block";
+                linkElement.style.marginTop = "10px";
+                linkElement.style.textDecoration = "underline";
+                linkElement.style.color = "blue";
+                linkElement.target = "_blank"; // Open in a new tab
+
+                qrDiv.appendChild(linkElement);
+            }
+        });
+
+        function getQueryParams(url) {
+            const params = {};
+            const urlObj = new URL(url);
+            urlObj.searchParams.forEach((value, key) => {
+                params[key] = value;
+            });
+            return params;
+        }
+
+
+
+    }
+
+
+
+
+
+
+</script>
+
+
+
+
+<!-- Old -->
+
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    let PageUrl = "https://textildruck-schweiz.com/products/magic-code"
+    let CurrentPageUrl = window.location.href.split('?')[0]
+
+    if(CurrentPageUrl==PageUrl){
+        let TextBoxDiv = document.getElementById("shopify-block-AZW1FNFMyZkFIRVdJM__globo_product_option_app_block_UATxMx")
+        let TextArea = document.getElementById("textarea-1")
+
+        TextBoxDiv.style.display = "none"
+
+        let ImageLink = params.get('image')
+
+        TextArea.value = ImageLink 
+        TextArea.dispatchEvent(new Event('input', { bubbles: true }));
+        TextArea.dispatchEvent(new Event('change', { bubbles: true }));
+
+
+
+ function loadQrCodeStyling(callback) {
+        let script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/qr-code-styling/lib/qr-code-styling.min.js";
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
+
+    loadQrCodeStyling(() => {
+        let targetElement = document.getElementById("price-template--25185158824276__main");
+
+        if (targetElement) {
+            let qrDiv = document.createElement("div");
+            targetElement.insertAdjacentElement("afterend", qrDiv);
+
+            // Get the current page URL
+            const currentUrl = window.location.href;
+
+            // Extract 'image' parameter
+            const mainUrlParams = new URL(currentUrl).searchParams;
+            const imageUrl = mainUrlParams.get("image");
+            let imageParams = "";
+
+            if (imageUrl) {
+                imageParams = getQueryParams(imageUrl);
+            } else {
+                return;
+            }
+
+            const qrCode = new QRCodeStyling({
+                width: 150,
+                height: 150,
+                data: `https://magic-code.net/${imageParams.code}`,
+                image: 'https://analog-magic-code.netlify.app/logo.png',
+                dotsOptions: {
+                    color: imageParams.qrColor,
+                    type: 'rounded'
+                },
+                cornersSquareOptions: {
+                    type: 'dot'
+                },
+                backgroundOptions: {
+                    color: imageParams.qrBgColor
+                },
+                imageOptions: {
+                    crossOrigin: 'anonymous',
+                    margin: 10,
+                    widthRatio: 0.3
+                }
+            });
+
+            qrCode.append(qrDiv);
+
+            // Create and append the link below the QR code
+            let linkElement = document.createElement("a");
+            linkElement.href = imageUrl;
+            linkElement.textContent = "My Magic Code";
+            linkElement.style.display = "block";
+            linkElement.style.marginTop = "10px";
+            linkElement.style.textDecoration = "underline";
+            linkElement.style.color = "blue";
+            linkElement.target = "_blank"; // Open in a new tab
+
+            qrDiv.appendChild(linkElement);
+        }
+    });
+
+    function getQueryParams(url) {
+        const params = {};
+        const urlObj = new URL(url);
+        urlObj.searchParams.forEach((value, key) => {
+            params[key] = value;
+        });
+        return params;
+    }
+
+
+
+    }
+
+
+
+
+
+
+</script>

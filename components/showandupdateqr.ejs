@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Magic Code Creator</title>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:400,600" rel="stylesheet">
+    <link href="/css/showandupdateqr.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</head>
+
+<body>
+    <input type="hidden" id="qrCodePrintData" name="qrCodePrintData" 
+    value='<%- JSON.stringify(qrCode).replace(/'/g, "&#39;") %>'>
+    <div id="show-section" class="fade-in">
+        <div class="qr-page" id="showandupdateqr">
+            <div class="container">
+                <!-- QR Code Card -->
+                <div class="card qr-card">
+                    <div class="card-content">
+                        <div id="qr-code"></div>
+                        <div class="action-icons">
+                            <!-- <button class="icon-button">
+                            <img src="/vuesax-linear-edit.svg" alt="Edit" />
+                        </button> -->
+                            <!-- <button class="icon-button" onclick="downloadQRCode()">
+                                <img src="/frame.svg" alt="Share" />
+                            </button> -->
+                            <!-- <button class="icon-button">
+                            <img src="/vuesax-linear-trash.svg" alt="Delete" />
+                        </button> -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <div class="action-card">
+                        <img class="action-icon" alt="Create" src="/images/ICONS CONTEXT.png" />
+                        <div class="action-text">Change Magic Code <br> Content</div>
+                    </div>
+                    <div class="action-card">
+                        <img class="action-icon" alt="Color" src="/images/edit-color.png" />
+                        <div class="action-text">Change Magic Code <br> Color</div>
+                    </div>
+                    <div class="action-card" id="print-magic-code-parent-tab">
+                        <img class="action-icon large" alt="Print" src="/images/ICONS PRINT.png" />
+                        <div class="action-text">Print<br>Magic Code</div>
+                    </div>
+                </div>
+
+                <!-- Content Section -->
+                <div class="content-section" id="content-section-1">
+                    <h2>Magic Code Content</h2>
+
+                    <!-- Content Type Selection -->
+                    <div class="content-types">
+                        <button class="content-type-button">Link</button>
+                        <button class="content-type-button">Text</button>
+                        <button class="content-type-button">Photo/Video</button>
+                    </div>
+                    <div id="media-section">
+                        <div class="form-group">
+                            <label for="media-file-update">Upload Your File</label>
+                            <div class="upload-box" onclick="document.getElementById('media-file-update').click();">
+                                <img src="/vuesax-linear-export.svg" alt="Upload icon">
+                                <p>Drag & Drop or <span class="browse-text">Browse</span></p>
+                            </div>
+                            <input type="file" id="media-file-update" name="MediaLang" style="display:none;">
+                        </div>
+                    </div>
+
+                    <div id="text-section">
+                        <div class="form-group">
+                            <label for="text-file-update">Enter Your Text</label>
+                            <textarea id="text-file-update" name="TextLang" placeholder="Write your text here"
+                                class="input-group"></textarea>
+                        </div>
+                    </div>
+
+                    <div id="url-section">
+                        <div class="form-group">
+                            <label for="url-update">Enter Link URL</label>
+                            <input type="text" id="url-update" name="UrlLang" placeholder="Paste your link here"
+                                class="input-group">
+                        </div>
+                    </div>
+
+
+
+                    <!-- Photo Upload Section -->
+                    <!-- <div class="upload-section">
+                    <label>Insert Photo</label>
+                    <div class="upload-card">
+                        <img src="/vuesax-linear-frame.svg" alt="Upload" class="upload-icon" />
+                        <div class="upload-text">
+                            <span class="text-muted">Drag & Drop or</span>
+                            <span class="text-link">Browse</span>
+                        </div>
+                    </div>
+                </div> -->
+                </div>
+
+                <div id="content-section-2">
+                    <div class="form-group" id="background-setting-update">
+                        <label for="background-options-update">Background</label>
+                        <div class="button-group" id="background-options-update">
+                            <button type="button" class="btn-outline active" id="keep-background-update">Keep
+                                Background</button>
+                            <button type="button" class="btn-outline" id="remove-background-update">Remove
+                                Background</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="foreground-color-setting-update">
+                        <label for="foreground-color-grid-update">Foreground Color</label>
+                        <div class="color-grid" id="foreground-color-grid-update">
+                            <div class="color-option" style="background-color: #000000" id="fg-color-black-update">
+                            </div>
+                            <div class="color-option" style="background-color: #ffffff; border: 1px solid #ccc;"
+                                id="fg-color-white-update"></div>
+                            <!-- <div class="color-option" style="background-color: #d13737" id="fg-color-red-update"></div>
+                            <div class="color-option" style="background-color: #c2d137" id="fg-color-lime-update"></div>
+                            <div class="color-option" style="background-color: #3751d1" id="fg-color-blue-update"></div>
+                            <div class="color-option" style="background-color: #d1376d" id="fg-color-pink-update"></div>
+                            <div class="color-option" style="background-color: #37d149" id="fg-color-green-update">
+                            </div>
+                            <div class="color-option" style="background-color: #37c7d1" id="fg-color-cyan-update"></div>
+                            <div class="color-option" style="background-color: #cc37d1" id="fg-color-purple-update">
+                            </div>
+                            <div class="color-option" style="background-color: #d16337" id="fg-color-orange-update">
+                            </div>
+                            <div class="color-option" style="background-color: #5137d1" id="fg-color-indigo-update">
+                            </div> -->
+                            <!-- Real Colors -->
+                            <div class="color-option" style="background-color: #FF0093" id="fg-color-magenta"></div>
+                            <div class="color-option" style="background-color: #835EC7" id="fg-color-violet"></div>
+                            <div class="color-option" style="background-color: #00B760" id="fg-color-green"></div>
+                            <div class="color-option" style="background-color: #FC70BA" id="fg-color-pink"></div>
+                            <div class="color-option" style="background-color: #1C00FF" id="fg-color-blue"></div>
+                            <div class="color-option" style="background-color: #FF0000" id="fg-color-red"></div>
+                            <div class="color-option" style="background-color: #FFC62C" id="fg-color-orange"></div>
+                            <div class="color-option" style="background-color: #00AEEF" id="fg-color-cyan"></div>
+                            <div class="color-option" style="background-color: #FEFE00" id="fg-color-yellow"></div>
+                            <div class="color-option" style="background-color: #4CCED1" id="fg-color-turquoise"></div>
+                            <!-- <div class="color-option" style="background-color: #5137d1" id="fg-color-indigo"></div> -->
+
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="background-color-setting-update">
+                        <label for="background-color-grid-update">Background Color</label>
+                        <div class="color-grid" id="background-color-grid-update">
+                            <div class="color-option" style="background-color: #000000" id="bg-color-black-update">
+                            </div>
+                            <div class="color-option" style="background-color: #ffffff; border: 1px solid #ccc;"
+                                id="bg-color-white-update"></div>
+                            <!-- <div class="color-option" style="background-color: #d13737" id="bg-color-red-update"></div>
+                            <div class="color-option" style="background-color: #c2d137" id="bg-color-lime-update"></div>
+                            <div class="color-option" style="background-color: #3751d1" id="bg-color-blue-update"></div>
+                            <div class="color-option" style="background-color: #d1376d" id="bg-color-pink-update"></div>
+                            <div class="color-option" style="background-color: #37d149" id="bg-color-green-update">
+                            </div>
+                            <div class="color-option" style="background-color: #37c7d1" id="bg-color-cyan-update"></div>
+                            <div class="color-option" style="background-color: #cc37d1" id="bg-color-purple-update">
+                            </div>
+                            <div class="color-option" style="background-color: #d16337" id="bg-color-orange-update">
+                            </div>
+                            <div class="color-option" style="background-color: #5137d1" id="bg-color-indigo-update">
+                            </div> -->
+                            <!-- Real Colors -->
+                            <div class="color-option" style="background-color: #FF0093" id="fg-color-magenta"></div>
+                            <div class="color-option" style="background-color: #835EC7" id="fg-color-violet"></div>
+                            <div class="color-option" style="background-color: #00B760" id="fg-color-green"></div>
+                            <div class="color-option" style="background-color: #FC70BA" id="fg-color-pink"></div>
+                            <div class="color-option" style="background-color: #1C00FF" id="fg-color-blue"></div>
+                            <div class="color-option" style="background-color: #FF0000" id="fg-color-red"></div>
+                            <div class="color-option" style="background-color: #FFC62C" id="fg-color-orange"></div>
+                            <div class="color-option" style="background-color: #00AEEF" id="fg-color-cyan"></div>
+                            <div class="color-option" style="background-color: #FEFE00" id="fg-color-yellow"></div>
+                            <div class="color-option" style="background-color: #4CCED1" id="fg-color-turquoise"></div>
+                            <!-- <div class="color-option" style="background-color: #5137d1" id="fg-color-indigo"></div> -->
+
+                        </div>
+                    </div>
+
+                    <!-- Preview Card -->
+                    <div class="card preview-card" style="text-align: center;">
+                        <img src="/tshirt.png" alt="QR Code Preview" class="qr-image">
+                    </div>
+                </div>
+                <div id="content-section-3">
+                    <div class="container-print">
+                        <h1>Print Magic Code</h1>
+
+                        <div class="content">
+                            <div class="action-buttons">
+                                <div class="action-child-card active" data-preview="garment">
+                                    <div class="action-text">On Garment</div>
+                                    <img class="action-icon" alt="Create" src="/images/ICONS T-SHIRT STICKERS.png" />
+                                </div>
+
+                                <div class="action-child-card" data-preview="sticker">
+                                    <div class="action-text">As Sticker</div>
+                                    <img class="action-icon" alt="Color" src="/images/ICONS PRINT.png" />
+                                </div>
+
+                                <div class="action-child-card" data-preview="tattoo">
+                                    <div class="action-text">As Tattoo</div>
+                                    <img class="action-icon" alt="Color" src="/images/ICONS PRINT.png" />
+                                </div>
+
+
+                            </div>
+
+                            <!-- Preview Card -->
+                            <div class="card preview-card" data-type="garment"
+                                style="text-align: center; margin-top: 24px; ">
+                                <img src="/print1.png" alt="QR Code Preview" class="qr-image" style="width: 170px;">
+                            </div>
+                            <div class="card preview-card" data-type="sticker"
+                                style="text-align: center; margin-top: 24px; ">
+                                <img src="/print2.png" alt="QR Code Preview" class="qr-image" style="width: 170px;">
+                            </div>
+
+                            <div class="card preview-card" data-type="tattoo"
+                                style="text-align: center; margin-top: 24px; ">
+                                <img src="/images/MAGIC TATTOOS PRODUCT PAGE.png" alt="QR Code Preview" class="qr-image" style="width: 170px;">
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- Save Button -->
+                <button class="save-button" id="submit-btn-update" style="display:none;">Save Content</button>
+                <button class="save-button" id="PrintMyQR" style="display:none;">Print</button>
+                <button class="save-button" id="PrintMyQRAsSticker" style="display:none;">Print As Sticker</button>
+                <button class="save-button" id="PrintMyQRAsTattoo" style="display:none;">Print As Tattoo</button>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="/js/dashboard.js"></script>
+<script src="/js/generateqr-api.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const contentSections = [
+            document.getElementById("content-section-1"),
+            document.getElementById("content-section-2"),
+            document.getElementById("content-section-3")
+        ];
+
+        const submitButton = document.getElementById("submit-btn-update");
+        const printMyQrButton = document.getElementById("PrintMyQR");
+
+        const actionCards = document.querySelectorAll(".action-buttons .action-card");
+
+        contentSections.forEach(section => {
+            section.style.display = "none";
+        });
+
+        actionCards.forEach((card, index) => {
+            card.addEventListener("click", function () {
+                actionCards.forEach(c => c.classList.remove("active"));
+                card.classList.add("active");
+
+                contentSections.forEach(section => {
+                    section.style.display = "none";
+                });
+
+
+
+                if (contentSections[index]) {
+                    if (index === 1) {
+                        console.log(index, "1111")
+                        contentSections[index].style.display = "flex";
+                        contentSections[index].style.flexFlow = "column";
+                        contentSections[index].style.gap = "24px";
+                        submitButton.style.display = "block";
+                        printMyQrButton.style.display = "none"
+                    }
+                    if (index === 2) {
+                        contentSections[index].style.display = "block";
+                        contentSections[index].style.flexFlow = "";
+                        contentSections[index].style.gap = "";
+                        submitButton.style.display = "none";
+                        printMyQrButton.style.display = "block"
+
+                    } else {
+                        contentSections[index].style.display = "flex";
+                        contentSections[index].style.flexFlow = "column";
+                        contentSections[index].style.gap = "24px";
+                        submitButton.style.display = "block";
+                        printMyQrButton.style.display = "none"
+                    }
+
+
+                    // Call the input check on tab switch
+                    checkAndUpdateActiveContentType();
+                }
+            });
+        });
+
+        const contentTypeButtons = document.querySelectorAll(".content-type-button");
+        const urlInput = document.getElementById("url-update");
+        const textInput = document.getElementById("text-file-update");
+        const mediaInput = document.getElementById("media-file-update");
+
+        let initialActiveType = null;
+        let lastUserIntentType = null;
+
+        function setActiveButton(type) {
+            contentTypeButtons.forEach(btn => {
+                if (btn.textContent === type) {
+                    if (!btn.classList.contains("active")) {
+                        btn.classList.add("active");
+                        btn.click(); // Trigger the click
+
+                    }
+                } else {
+                    btn.classList.remove("active");
+                }
+            });
+
+            if (!initialActiveType) {
+                initialActiveType = type;
+            }
+        }
+
+        function checkAndUpdateActiveContentType() {
+            const hasLink = !!urlInput.value.trim();
+            const hasText = !!textInput.value.trim();
+            const hasMedia = mediaInput.files.length > 0;
+
+            const inputStatus = {
+                "Link": hasLink,
+                "Text": hasText,
+                "Photo/Video": hasMedia
+            };
+
+            const activeType = document.querySelector(".content-type-button.active")?.textContent;
+
+            // If user has explicitly selected a type (via click), honor it if it has value
+            if (lastUserIntentType && inputStatus[lastUserIntentType]) {
+                setActiveButton(lastUserIntentType);
+                return;
+            }
+
+            // If initial type has value, stick to it
+            if (initialActiveType && inputStatus[initialActiveType]) {
+                setActiveButton(initialActiveType);
+                return;
+            }
+
+            // Fallback - pick any filled input
+            if (hasMedia) {
+                setActiveButton("Photo/Video");
+            } else if (hasText) {
+                setActiveButton("Text");
+            } else if (hasLink) {
+                setActiveButton("Link");
+            } else {
+                contentTypeButtons.forEach(btn => btn.classList.remove("active"));
+                initialActiveType = null;
+            }
+        }
+
+        // Track user intent when they click a button
+        contentTypeButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                lastUserIntentType = btn.textContent;
+                checkAndUpdateActiveContentType();
+            });
+        });
+
+        // Input listeners
+        urlInput.addEventListener("input", checkAndUpdateActiveContentType);
+        textInput.addEventListener("input", checkAndUpdateActiveContentType);
+        mediaInput.addEventListener("change", checkAndUpdateActiveContentType);
+
+        // Initial check
+        checkAndUpdateActiveContentType();
+
+    });
+
+</script>
+
+
+
+<script>
+    <% if (activeSection === 'update' && qrCode) { %>
+        const qr = <%- JSON.stringify(qrCode) %>;
+        const user = <%- JSON.stringify(user) %>;
+        showGenerateSection(qr, user);
+    <% } %>
+</script>
+
+<script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const contentTypeButtons = document.querySelectorAll(".content-type-button");
+            const mediaSection = document.getElementById("media-section");
+            const textSection = document.getElementById("text-section");
+            const urlSection = document.getElementById("url-section");
+
+            // Initially hide all sections
+            mediaSection.style.display = "none";
+            textSection.style.display = "none";
+            urlSection.style.display = "none";
+
+            // Function to hide all sections
+            function hideAllSections() {
+                mediaSection.style.display = "none";
+                textSection.style.display = "none";
+                urlSection.style.display = "none";
+            }
+
+            // Function to show the corresponding section
+            function showSection(section) {
+                hideAllSections();
+                section.style.display = "block";
+            }
+
+            // Handle content type button click
+            contentTypeButtons.forEach(btn => {
+                btn.addEventListener("click", function () {
+                    // Remove active class from all buttons
+                    contentTypeButtons.forEach(b => b.classList.remove("active"));
+
+                    // Add active class to the clicked button
+                    this.classList.add("active");
+
+                    const type = this.textContent.trim().toLowerCase();
+
+                    // Show the corresponding section based on the clicked button
+                    if (type === "photo/video") {
+                        showSection(mediaSection);
+                    } else if (type === "text") {
+                        showSection(textSection);
+                    } else if (type === "link") {
+                        showSection(urlSection);
+                    }
+                });
+            });
+
+            // Check if any button already has the active class and trigger a click event
+            contentTypeButtons.forEach(btn => {
+                if (btn.classList.contains("active")) {
+                    btn.click();  // Trigger click on the active button
+                }
+            });
+
+            const mediaInput = document.getElementById("media-file-update");
+            const uploadText = document.querySelector("#media-section .upload-box p");
+
+            mediaInput.addEventListener("change", function () {
+                if (this.files.length > 0) {
+                    const fileName = this.files[0].name;
+                    uploadText.innerHTML = `Selected: <strong>${fileName}</strong>`;
+                } else {
+                    uploadText.innerHTML = `Drag & Drop or <span class="browse-text">Browse</span>`;
+                }
+            });
+        });
+</script>
+<html>

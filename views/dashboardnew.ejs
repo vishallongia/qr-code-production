@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Magic Code Creator</title>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:400,600" rel="stylesheet">
+    <link href="/css/dashboardnew.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+
+    <link rel="manifest" href="/manifest.json">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/service-worker.js');
+            });
+        }
+    </script>
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="loader-overlay" id="loader">
+            <div class="spinner"></div>
+        </div>
+        <!-- Popup HTML -->
+        <div id="theme-popup-activate-qr" class="popup-overlay" style="display: none;">
+            <div class="popup-content">
+                <p>This is a themed popup message!</p>
+                <form>
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label>Enter Magic Code Name</label>
+                        <input type="text" id="qr-name-activation" placeholder="Enter Magic Code Name...">
+                    </div>
+                    <button id="popup-ok-btn">Activate</button>
+                </form>
+            </div>
+        </div>
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-container">
+                <img class="logo" alt="Logo" src="/image-1.png">
+                <div class="company-name">TextileDruck-Schweiz</div>
+            </div>
+            <div class="top-right-options">
+                <div class="language-select-wrapper">
+                    <select id="languageSwitcher" class="language-selector-select">
+                        <option value="en">English</option>
+                        <option value="de">Deutsch (German)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="hamburger" onclick="toggleSidebar()">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </header>
+
+        <!-- hidden input values -->
+        <div class="input-group" style="display: none;">
+            <label for="qr-color" id="CodeColorLang">Code Color:</label>
+            <input type="color" id="qr-color" value="#000000">
+        </div>
+        <div class="input-group" style="display: none;">
+            <label for="bg-color" id="BackgroundColorLang">Background
+                Color:</label>
+            <input type="color" id="bg-color" value="#ffffff">
+        </div>
+        <div class="input-group" style="display: none;">
+            <label for="qr-code-key">Code</label>
+            <input type="text" id="qr-code-key" placeholder="Code">
+        </div>
+        <div class="input-group" style="display: none;">
+            <label for="qr-color" id="CodeColorLang">Code Color:</label>
+            <input type="color" id="qr-color" value="#000000">
+        </div>
+        <div class="input-group" style="display: none;">
+            <label for="dot-style">Dot Style:</label>
+            <select id="dot-style">
+                <option value="square">Square</option>
+                <option value="rounded" selected>Rounded</option>
+                <option value="dots">Dots</option>
+                <option value="classy">Classy</option>
+                <option value="hexagon">Hexagon</option>
+                <option value="star">Star</option>
+                <option value="circle">Circle</option>
+            </select>
+        </div>
+
+        <div class="input-group" style="display: none;">
+            <label for="corner-style">Corner Style:</label>
+            <select id="corner-style">
+                <option value="square">Square</option>
+                <option value="dot" selected>Dot</option>
+                <option value="extra-rounded">Extra Rounded</option>
+                <option value="triangle">Triangle</option>
+                <option value="diamond">Diamond</option>
+            </select>
+        </div>
+        <div class="input-group" style="display: none;">
+            <label for="gradient">Apply Gradient:</label>
+            <select id="gradient">
+                <option value="none">None</option>
+                <option value="linear">Linear</option>
+                <option value="radial">Radial</option>
+            </select>
+        </div>
+        <div class="input-group" style="display: none;">
+            <label for="logo" id="AddLogoLang">Logo hinzufügen
+                (optional):</label>
+            <input type="file" id="logo" accept="image/*">
+        </div>
+
+        <div class="input-group" style="display: none;">
+            <label for="qr-text">Text or URL:</label>
+            <input type="text" id="qr-text" placeholder="Enter text or URL">
+        </div>
+
+        <div class="input-group" style="display: none;">
+            <label for="qr-type" id="QRLogoLabel">Logo</label>
+            <select id="QRLogo">
+                <option value="1">Logo1</option>
+                <option value="2">Logo2</option>
+                <option value="3">Logo3</option>
+            </select>
+        </div>
+
+
+        <div class="main-container">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <nav class="nav-menu">
+                    <button class="nav-item active" data-link="/dashboard">
+                        <img src="/icons-create-1.png" alt="Create icon">
+                        <span>Create MAGIC CODE</span>
+                    </button>
+                    <button class="nav-item" data-link="/magiccode">
+                        <img src="/icons-create-1-1.png" alt="My codes icon">
+                        <span>My MAGIC CODEs</span>
+                    </button>
+                    <button class="nav-item" data-link="/myprofile">
+                        <img src="/icons-create-1-2.png" alt="Profile icon">
+                        <span>My Profile</span>
+                    </button>
+                    <button class="nav-item" data-link="/usercontrol">
+                        <img src="/icons-create-1-3.png" alt="Scan icon">
+                        <span>Magic Code Control</span>
+                    </button>
+
+                    <button class="nav-item" data-link="#" id="installBtn">
+                        <img src="/icons-create-1-3.png" alt="Scan icon">
+                        <span>Install App</span>
+                    </button>
+                </nav>
+                <button class="logout-btn" onclick="return handleLogout(event)">
+                    <img src="/vuesax-linear-logout.svg" alt="Logout icon">
+                    <span>Log Out</span>
+                </button>
+            </aside>
+
+            <script>
+                let deferredPrompt = null;
+                const installBtn = document.getElementById('installBtn');
+
+                // Always show the install button
+                installBtn.style.display = 'flex';
+
+                // Catch the prompt and store it
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    deferredPrompt = e;
+                });
+
+                // Handle install button click
+                installBtn.addEventListener('click', () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === 'accepted') {
+                                console.log('User accepted the install');
+                            } else {
+                                console.log('User dismissed the install');
+                            }
+                            deferredPrompt = null;
+                        });
+                    } else {
+                        alert('App is already installed or not installable at this time.');
+                    }
+                });
+            </script>
+
+            <% if (activeSection==='show' ) { %>
+                <!-- Include the header partial -->
+                <div id="show-section" class="fade-in">
+                    <%- include('../components/qr-gallery-new'); -%>
+                </div>
+                <% } %>
+                    <% if (activeSection==='profile' ) { %>
+                        <!-- Include the header partial -->
+                        <div id="show-section" class="fade-in">
+                            <%- include('../components/profile-new'); -%>
+                        </div>
+                        <% } %>
+
+                            <% if (activeSection==='usercontrol' ) { %>
+                                <!-- Include the header partial -->
+                                <div id="show-section" class="fade-in">
+                                    <%- include('../components/usercontrolnew'); -%>
+                                </div>
+                                <% } %>
+                                    <!-- Main Content -->
+                                    <% if (activeSection==='generate' ) { %>
+
+                                        <div id="show-section-create-qr" class="fade-in">
+                                            <div>
+                                                <span style="font-family: Poppins;
+                                            font-weight: 600;
+                                            font-size: 20px;
+                                            line-height: 20px;">Create Magic Code</span>
+                                            </div>
+
+                                            <div class="new-section-qr" id="new-section-qr">
+
+                                                <!-- <div class="header-custom">Create New Magic Code</div> -->
+                                                <div class="form-group">
+                                                    <!-- <label>MAGIC CODE Name</label> -->
+                                                    <input type="text" id="qr-name" placeholder="Add magic code name..."
+                                                        style="border: none; text-align: center;">
+                                                </div>
+
+                                                <div class="qr-container">
+                                                    <div class="qr-icon"></div>
+                                                    <img src="/images/ICONS CREATE.png" alt="wand" class="wand" />
+
+                                                </div>
+                                                <div style="width: 100%; display: flex; justify-content: center;">
+                                                    <button class="save-btn" id="submit-btn-generate">Save</button>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <% } %>
+                                            <% if (activeSection==='generate' ) { %>
+                                                <main class="main-content" id="generateqrsection"
+                                                    style="display: none;">
+
+                                                    <div class="content-wrapper">
+                                                        <h1>Create MAGIC CODE</h1>
+
+                                                        <form class="create-form">
+                                                            <!-- <div class="form-group">
+                            <label>MAGIC CODE Name</label>
+                            <input type="text" id="qr-name" placeholder="Enter MAGIC CODE name...">
+                        </div> -->
+
+                                                            <div class="form-group">
+                                                                <label>MAGIC CODE Content</label>
+                                                                <select id="qr-type">
+                                                                    <option id="MediaLangPhoto" value="media">
+                                                                        Photo/Video
+                                                                    </option>
+                                                                    <option id="TextLangChoose" value="text" selected>
+                                                                        Text
+                                                                    </option>
+                                                                    <option id="LinkLangChoose" value="url">Link
+                                                                    </option>
+                                                                </select>
+                                                            </div>
+
+                                                            <div id="input-fields"></div>
+
+                                                            <!-- <div class="form-group">
+                            <label>Upload Your File</label>
+                            <div class="upload-box">
+                                <img src="/vuesax-linear-export.svg" alt="Upload icon">
+                                <p>Drag & Drop or <span class="browse-text">Browse</span></p>
+                            </div>
+                        </div> -->
+
+                                                            <div class="form-group">
+                                                                <label>Background</label>
+                                                                <div class="button-group">
+                                                                    <button type="button"
+                                                                        class="btn-outline active">Keep
+                                                                        Background</button>
+                                                                    <button type="button" class="btn-outline">Remove
+                                                                        Background</button>
+                                                                </div>
+                                                            </div>
+
+
+
+                                                            <div class="form-group">
+                                                                <label>Foreground Color</label>
+                                                                <div class="color-grid">
+                                                                    <!-- <div class="color-option selected">
+                                    <img src="/image.png" alt="Color">
+                                    <img src="/tick-circle.png" alt="Selected" class="tick">
+                                </div> -->
+                                                                    <div class="color-option"
+                                                                        style="background-color: #000000">
+                                                                    </div>
+                                                                    <!-- Black -->
+                                                                    <div class="color-option"
+                                                                        style="background-color: #ffffff; border: 1px solid #ccc;">
+                                                                    </div> <!-- White -->
+                                                                    <div class="color-option"
+                                                                        style="background-color: #d13737">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #c2d137">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #3751d1">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #d1376d">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #37d149">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #37c7d1">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #cc37d1">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #d16337">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #5137d1">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="form-group">
+                                                                <label>Background Color</label>
+                                                                <div class="color-grid">
+                                                                    <!-- <div class="color-option selected">
+                                    <img src="/image-2.png" alt="Color">
+                                    <img src="/tick-circle-1.png" alt="Selected" class="tick">
+                                </div> -->
+                                                                    <div class="color-option"
+                                                                        style="background-color: #000000">
+                                                                    </div>
+                                                                    <!-- Black -->
+                                                                    <div class="color-option"
+                                                                        style="background-color: #ffffff; border: 1px solid #ccc;">
+                                                                    </div> <!-- White -->
+                                                                    <div class="color-option"
+                                                                        style="background-color: #d13737">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #c2d137">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #3751d1">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #d1376d">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #37d149">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #37c7d1">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #cc37d1">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #d16337">
+                                                                    </div>
+                                                                    <div class="color-option"
+                                                                        style="background-color: #5137d1">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="action-buttons">
+                                                                <button type="button"
+                                                                    class="btn-outline active submit-btn">
+                                                                    <img src="/icons-create-1-4.png" alt="Create icon">
+                                                                    Create MAGIC CODE
+                                                                </button>
+                                                                <button type="button" class="btn-outline" id="PrintMyQR"
+                                                                    style="display: none;">
+                                                                    <img src="/icons-create-1-5.png" alt="Print icon">
+                                                                    Print Magic Code
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </main>
+                                                <% } %>
+
+                                                    <% if (activeSection==='update' ) { %>
+                                                        <div id="show-section" class="fade-in">
+                                                            <div class="form-group" style="display: none;">
+                                                                <label>MAGIC CODE Name</label>
+                                                                <input type="text" id="qr-name"
+                                                                    placeholder="Enter MAGIC CODE name...">
+                                                            </div>
+                                                            <div class="form-group" style="display: none;">
+                                                                <label>MAGIC CODE Content</label>
+                                                                <select id="qr-type">
+                                                                    <option id="MediaLangPhoto" value="media">
+                                                                        Photo/Video
+                                                                    </option>
+                                                                    <option id="TextLangChoose" value="text" selected>
+                                                                        Text
+                                                                    </option>
+                                                                    <option id="LinkLangChoose" value="url">Link
+                                                                    </option>
+                                                                </select>
+                                                            </div>
+                                                            <%- include('../components/showandupdateqr', { qrCode:
+                                                                qrCode, user: user, activeSection: activeSection }) %>
+                                                                <% } %>
+                                                        </div>
+
+
+        </div>
+    </div>
+</body>
+<script src="/js/loadertoggler.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+<script src="/js/generateqr-api.js"></script>
+<script src="/js/api-calls.js"></script>
+<script>
+    const navItems = document.querySelectorAll(".nav-item");
+
+    // Restore active item from localStorage
+    const currentPath = localStorage.getItem("activeNavPath");
+    if (currentPath) {
+        navItems.forEach(item => {
+            item.classList.toggle("active", item.dataset.link === currentPath);
+        });
+    }
+
+    navItems.forEach(item => {
+        item.addEventListener("click", () => {
+            const path = item.dataset.link;
+
+            // Save active path to localStorage
+            localStorage.setItem("activeNavPath", path);
+
+            // Redirect
+            window.location.href = path;
+        });
+    });
+</script>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        sidebar.classList.toggle('active');
+    }
+
+
+    document.addEventListener('click', function (event) {
+        const sidebar = document.querySelector('.sidebar');
+        const hamburger = document.querySelector('.hamburger');
+        if (
+            sidebar.classList.contains('active') &&
+            !sidebar.contains(event.target) &&
+            !hamburger.contains(event.target)
+        ) {
+            sidebar.classList.remove('active');
+        }
+    });
+    function updateLanguageOptions() {
+        const isMobile = window.innerWidth <= 768;
+        const languageSelect = document.getElementById('languageSwitcher');
+        if (languageSelect) {
+            languageSelect.options[0].text = isMobile ? 'En' : 'English';
+            languageSelect.options[1].text = isMobile ? 'De' : 'Deutsch (German)';
+        }
+    }
+
+    // Run on page load
+    window.addEventListener('load', updateLanguageOptions);
+
+    // Run on window resize
+    window.addEventListener('resize', updateLanguageOptions);
+</script>
+<script>
+    const langSelector = document.querySelector('.language-selector');
+    const selectedLang = document.querySelector('.selected-lang');
+    const dropdownItems = document.querySelectorAll('.language-dropdown li');
+
+    langSelector.addEventListener('click', () => {
+        langSelector.classList.toggle('active');
+    });
+
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const lang = e.target.getAttribute('data-lang');
+            selectedLang.textContent = lang;
+            langSelector.classList.remove('active');
+        });
+    });
+
+    // Optional: Click outside to close dropdown
+    document.addEventListener('click', (e) => {
+        if (!langSelector.contains(e.target)) {
+            langSelector.classList.remove('active');
+        }
+    });
+</script>
+<script>
+    <% if (typeof message !== 'undefined' && message && type !== 'none' && type !== 'hidden') { %>
+        showToast("<%= message %>", "<%= type || 'success' %>");
+<% } %>
+</script>
+<script src="/js/translations.js"></script>
+
+
+
+</html>

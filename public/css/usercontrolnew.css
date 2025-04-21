@@ -1,0 +1,129 @@
+.qr-page {
+    --blue: rgba(26, 1, 97, 1);
+    --greygrey-6: rgba(30, 29, 33, 1);
+    --shadow-1: 0px 0px 23px 0px rgba(0, 0, 0, 0.07);
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f9f9;
+    min-height: 100vh;
+}
+
+.container-user-control {
+    padding: 20px
+}
+
+
+/* Container */
+.qr-page .container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-1);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Section title */
+.qr-page .content-section h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--greygrey-6);
+    margin-bottom: 8px;
+}
+
+/* Toggle group */
+.qr-page .toggle-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Select dropdown */
+.qr-page #qr-update-select {
+    height: 48px;
+    padding: 0 16px;
+    font-size: 16px;
+    border: 1px solid #c4c3c3;
+    border-radius: 58px;
+    background: none;
+    color: var(--greygrey-6);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.qr-page #qr-update-select:focus {
+    outline: none;
+    border-color: var(--blue);
+    background: rgba(26, 1, 97, 0.08);
+}
+
+.modern-radio-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.modern-radio-group input[type="radio"] {
+    display: none;
+}
+
+.modern-radio-group label {
+    padding: 10px 20px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #333;
+    background-color: #f1f1f1;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.modern-radio-group input[type="radio"]:checked + label {
+    background: var(--blue);
+    color: #fff;
+    border-color: var(--blue);
+    font-weight: 600;
+}
+
+.modern-radio-group label:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .main-container {
+        display: block;
+        height: 100vh;
+    }
+
+    .qr-page .content-section h2 {
+        font-size: 18px;
+        text-align: center;
+    }
+
+    .qr-page #qr-update-select {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .main-container {
+        display: block;
+        height: 100vh;
+    }
+
+    .qr-page .container {
+        border-radius: 12px;
+    }
+
+    .qr-page #qr-update-select {
+        font-size: 15px;
+        height: 44px;
+    }
+}

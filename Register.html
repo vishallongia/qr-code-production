@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login to Magic Code</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <style>
+    :root {
+      --main-bg: #f5f3f9;
+      --text-dark: #1e1e1e;
+      --input-border: #c4c4c4;
+      --primary: #18024b;
+      --muted: #888;
+      --divider: #e0e0e0;
+      --btn-light: #f3f3f5;
+      --options-color: rgba(33, 33, 33, 0.75);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Poppins", sans-serif;
+      font-weight: 400;
+    }
+
+    body {
+      background: var(--main-bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 650px;
+      padding: 20px;
+      position: relative;
+      top: 64px;
+    }
+
+    .login-box {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 40px;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .login-box input[type="email"],
+    .login-box input[type="password"],
+    .login-box input[type="text"] {
+      width: 100%;
+      padding: 16px 24px;
+      margin-bottom: 16px;
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper .toggle-password {
+      position: absolute;
+      right: 16px;
+      top: 40%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: rgba(113, 113, 115, 1);
+    }
+
+    .options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: var(--options-color);
+    }
+
+    .options a {
+      color: var(--options-color);
+      text-decoration: none;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 16px 24px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 25px;
+      cursor: pointer;
+    }
+
+    .divider {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      background: var(--divider);
+      position: absolute;
+      top: 50%;
+      width: 40%;
+    }
+
+    .divider::before {
+      left: 0;
+    }
+
+    .divider::after {
+      right: 0;
+    }
+
+    .divider span {
+      background: white;
+      padding: 0 10px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .google-btn,
+    .magic-link-btn {
+      width: 100%;
+      padding: 16px 24px;
+      margin-bottom: 14px;
+      background-color: var(--btn-light);
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .signup-text {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+      margin-top: 10px;
+    }
+
+    .signup-text a {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .top-right-options {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      z-index: 1;
+    }
+
+    .language-selector {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.125rem;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .language-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-top: 8px;
+      list-style: none;
+      padding: 8px 0;
+      display: none;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .language-dropdown li {
+      padding: 8px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .language-dropdown li:hover {
+      background-color: #f0f0f0;
+    }
+
+    .language-selector.active .language-dropdown {
+      display: block;
+    }
+  </style>
+
+  <body>
+    <div class="top-right-options">
+      <div class="language-selector">
+        <span class="selected-lang">Eng</span>
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+
+        <ul class="language-dropdown">
+          <li data-lang="Eng">English</li>
+          <li data-lang="Hin">Hindi</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container">
+      <form class="login-box">
+        <h2>Register to Magic Code</h2>
+        <input type="text" placeholder="Enter Full Name..." required />
+        <input type="email" placeholder="Enter email address..." required />
+        <div class="password-wrapper">
+          <input type="password" placeholder="Enter password..." required />
+          <span class="toggle-password">
+            <!-- Eye Slash Icon SVG -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M2 2L22 22M12 5C16.42 5 20.17 7.91 22 12C21.34 13.52 20.34 14.88 19.07 15.97M9.88 9.88C9.34 10.42 9 11.17 9 12C9 13.66 10.34 15 12 15C12.83 15 13.58 14.66 14.12 14.12M17 17C15.44 18.24 13.52 19 11.5 19C7.5 19 4.03 16.36 2.5 12.5C3.41 10.03 5.2 7.98 7.47 6.74"
+                stroke="rgba(113, 113, 115, 1)"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+        </div>
+
+        <div class="options">
+          <label><input type="checkbox" /> Remember me</label>
+          <a href="#">Forgot Password?</a>
+        </div>
+
+        <button class="login-btn">Sign Up</button>
+
+        <div class="divider"><span>OR</span></div>
+
+        <button class="google-btn">Register With Google</button>
+        <button class="magic-link-btn">
+          Register With Magic Link (No password Needed)
+        </button>
+
+        <p class="signup-text">
+          Don’t have an account?
+          <a href="#">Signup</a>
+        </p>
+      </form>
+    </div>
+  </body>
+  <script>
+    const langSelector = document.querySelector(".language-selector");
+    const selectedLang = document.querySelector(".selected-lang");
+    const dropdownItems = document.querySelectorAll(".language-dropdown li");
+
+    langSelector.addEventListener("click", () => {
+      langSelector.classList.toggle("active");
+    });
+
+    dropdownItems.forEach((item) => {
+      item.addEventListener("click", (e) => {
+        const lang = e.target.getAttribute("data-lang");
+        selectedLang.textContent = lang;
+        langSelector.classList.remove("active");
+      });
+    });
+
+    // Optional: Click outside to close dropdown
+    document.addEventListener("click", (e) => {
+      if (!langSelector.contains(e.target)) {
+        langSelector.classList.remove("active");
+      }
+    });
+  </script>
+</html>

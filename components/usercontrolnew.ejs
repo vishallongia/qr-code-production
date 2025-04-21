@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" class="qr-page">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Update Toggle</title>
+
+    <!-- External Styles -->
+    <link rel="stylesheet" href="/css/usercontrolnew.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</head>
+
+<body class="qr-page">
+
+    <div class="container-user-control">
+        <div class="content-section">
+            <h2>When Scanning My Magic Code</h2>
+
+            <div class="modern-radio-group">
+                <input type="radio" id="show-edit" name="qr-update-option" value="ShowEdit"
+                    <%=user.showEditOnScan===true ? 'checked' : '' %>
+                onchange="SetUserControl()">
+                <label for="show-edit">Show Content Change</label>
+
+                <input type="radio" id="show-content" name="qr-update-option" value="ShowContent"
+                    <%=user.showEditOnScan===false ? 'checked' : '' %>
+                onchange="SetUserControl()">
+                <label for="show-content">Show Content</label>
+
+                <input type="radio" id="emergency" name="qr-update-option" value="Emergency">
+                <label for="emergency">Emergency</label>
+            </div>
+
+
+
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+    <script src="/js/toastify-setup.js"></script>
+    <script src="/js/usercontrol.js"></script>
+
+</body>
+
+</html>
