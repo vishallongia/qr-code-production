@@ -2193,7 +2193,7 @@ router.put(
 );
 
 // Route to handle alphanumeric codes
-router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
+router.get("/:alphanumericCode([a-zA-Z0-9]{7})", async (req, res) => {
   try {
     const { alphanumericCode } = req.params; // Get alphanumericCode from the URL
 
