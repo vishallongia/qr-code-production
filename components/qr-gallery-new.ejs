@@ -22,7 +22,8 @@
                         <p class="card-title">
                             <%= qrCode.qrName %>
                         </p>
-                        <div class="qr-code" id="qr-container-<%= qrCode._id %>"></div>
+                        <a class="qr-code" id="qr-container-<%= qrCode._id %>"
+                            href="/dashboard?magiccode=<%= qrCode._id %>"></a>
                         <div class="button-group">
                             <button class="icon-button" title="Edit" style="position: relative;top: 3px;">
                                 <a href="/dashboard?magiccode=<%= qrCode._id %>">
@@ -51,6 +52,7 @@
         const qrCodesMap = {};
 
         function showQrCodes(qrCodes) {
+            console.log(qrCodes)
             qrCodes.forEach((qrCodeData) => {
                 const qrContainer = document.getElementById(`qr-container-${qrCodeData._id}`);
                 let logoUrl = qrCodeData.logo ? `${window.location.protocol}//${window.location.host}/${qrCodeData.logo}` : "";
@@ -93,6 +95,68 @@
 
                     qrCode.append(qrContainer);
                     qrCodesMap[qrCodeData._id] = qrCode;
+
+                    // Add small green dot if isQrActivated is true
+                    // Check if the QR code is activated
+                    if (qrCodeData.isQrActivated) {
+
+                        // Check if the card exists
+                        const card = document.getElementById(`showqrcards`);
+
+                        if (card) {
+                            // Create a new div element for the status dot
+                            const statusDot = document.createElement("div");
+
+                            // Set base styles for the dot
+                            statusDot.style.position = "absolute";
+                            statusDot.style.top = "10px";
+                            statusDot.style.right = "10px";
+                            statusDot.style.width = "12px";
+                            statusDot.style.height = "12px";
+                            statusDot.style.borderRadius = "50%";
+                            statusDot.style.background = qrCodeData.isQrActivated
+                                ? "linear-gradient(135deg, #00c853, #00e676)" // green for active
+                                : "linear-gradient(135deg, #d32f2f, #ff5252)"; // red for expired
+                            statusDot.style.boxShadow = "0 0 5px rgba(0, 0, 0, 0.3)";
+                            statusDot.style.cursor = "pointer";
+                            statusDot.style.zIndex = "10";
+
+                            // Create a tooltip
+                            const tooltip = document.createElement("div");
+                            tooltip.innerText = qrCodeData.isQrActivated ? "QR is Active" : "QR is Expired";
+
+                            // Tooltip styling
+                            tooltip.style.position = "absolute";
+                            tooltip.style.top = "30px"; // slightly below the dot
+                            tooltip.style.right = "0px";
+                            tooltip.style.padding = "6px 10px";
+                            tooltip.style.fontSize = "11px";
+                            tooltip.style.background = "rgba(0, 0, 0, 0.8)";
+                            tooltip.style.color = "#fff";
+                            tooltip.style.borderRadius = "6px";
+                            tooltip.style.whiteSpace = "nowrap";
+                            tooltip.style.boxShadow = "0 0 8px rgba(0,0,0,0.3)";
+                            tooltip.style.opacity = "0"; // hidden by default
+                            tooltip.style.pointerEvents = "none"; // not block mouse
+                            tooltip.style.transition = "opacity 0.3s ease";
+
+                            // Show tooltip on hover
+                            statusDot.addEventListener("mouseenter", () => {
+                                tooltip.style.opacity = "1";
+                            });
+
+                            statusDot.addEventListener("mouseleave", () => {
+                                tooltip.style.opacity = "0";
+                            });
+
+                            // Make sure the card is positioned relatively
+                            card.style.position = "relative";
+
+                            // Append the dot and tooltip inside the card
+                            card.appendChild(statusDot);
+                            card.appendChild(tooltip);
+                        }
+                    }
                 }
             });
         }

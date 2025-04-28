@@ -5,10 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text Message</title>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="manifest" href="/site.webmanifest">
+
+    <link rel="manifest" href="/manifest.json">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/service-worker.js');
+            });
+        }
+    </script>
+
     <style>
         /* General Reset */
         * {
@@ -52,7 +59,8 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 20px;
-            flex: 1 1 calc(33.333% - 40px); /* 3 cards per row */
+            flex: 1 1 calc(33.333% - 40px);
+            /* 3 cards per row */
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
@@ -78,7 +86,8 @@
         /* Responsive Styles */
         @media (max-width: 768px) {
             .card {
-                flex: 1 1 calc(50% - 20px); /* 2 cards per row */
+                flex: 1 1 calc(50% - 20px);
+                /* 2 cards per row */
             }
 
             header h1 {
@@ -88,17 +97,225 @@
 
         @media (max-width: 480px) {
             .card {
-                flex: 1 1 100%; /* 1 card per row */
+                flex: 1 1 100%;
+                /* 1 card per row */
             }
 
             header h1 {
                 font-size: 1.5rem;
             }
         }
+
+        #install-popup {
+            display: none;
+            /* Initially hidden */
+            position: fixed;
+            /* Overlay the entire window */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Semi-transparent background */
+            justify-content: center;
+            /* Center content horizontally */
+            align-items: center;
+            /* Center content vertically */
+            z-index: 1000;
+            /* Ensure it's on top of everything */
+        }
+
+        /* Styling for the popup content */
+        #install-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            /* Add a shadow for better visibility */
+            width: 80%;
+            /* Adjust width as needed */
+            max-width: 300px;
+            /* Maximum width */
+        }
+
+        /* Styling for the buttons */
+        #install-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            /* Space buttons evenly */
+        }
+
+        #install-buttons button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            /* Green */
+            color: white;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        #install-buttons button:hover {
+            background-color: #367c39;
+            /* Darker green */
+        }
+
+        #install-buttons button:last-child {
+            background-color: #f44336;
+            /* Red for "Install Later" */
+        }
+
+        #install-buttons button:last-child:hover {
+            background-color: #d32f2f;
+            /* Darker red */
+        }
+
+        /* Styling for the close button (optional) */
+        #close-popup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        #close-popup:hover {
+            color: #222;
+        }
+
+        #install-content {
+            background: linear-gradient(135deg, #ffffff, #f0f0f0);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 360px;
+            position: relative;
+            animation: fadeInScale 0.3s ease-in-out;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        #install-content h3 {
+            margin-bottom: 10px;
+            font-size: 1.6rem;
+            color: #222;
+        }
+
+        .back-home-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #4f46e5;
+            /* Indigo-600 */
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-home-btn:hover {
+            background-color: #4338ca;
+            /* Indigo-700 */
+            transform: translateY(-2px);
+        }
+
+        .back-home-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        #register-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #register-content {
+            background: linear-gradient(135deg, #ffffff, #f0f0f0);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 360px;
+            position: relative;
+            animation: fadeInScale 0.3s ease-in-out;
+        }
+
+        #register-content h3 {
+            margin-bottom: 10px;
+            font-size: 1.6rem;
+            color: #222;
+        }
+
+        #register-content p {
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        #register-ok {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        #register-ok:hover {
+            background-color: #0056b3;
+        }
+
+        #close-register-popup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        #close-register-popup:hover {
+            color: #222;
+        }
     </style>
 </head>
 
 <body>
+
+    <button id="back-home-btn" class="back-home-btn">← Back</button>
+
     <header>
         <h1>CREATE YOUR MAGIC!</h1>
     </header>
@@ -106,21 +323,159 @@
         <div class="content">
             <div class="card">
                 <!-- <h2>Text Message</h2> -->
-                <p><%= content %></p>
+                <p>
+                    <%= content %>
+                </p>
             </div>
-            <!-- <div class="card">
-                <h2>Card Title 2</h2>
-                <p>This is some text inside the second card. The layout is flexible and responsive.</p>
-            </div>
-            <div class="card">
-                <h2>Card Title 3</h2>
-                <p>This is some text inside the third card. The page will adapt to any device size.</p>
-            </div> -->
+
         </div>
     </div>
-    <!-- <footer>
-        <p>&copy; 2024 Responsive Template. All rights reserved.</p>
-    </footer> -->
+
+
+    <div id="install-popup">
+        <div id="install-content">
+            <span id="close-popup">&times;</span>
+            <h3>Install Our App</h3>
+            <p>Get the best experience on your device.</p>
+            <div id="install-buttons">
+                <button id="install-now">Install Now</button>
+                <button id="install-later">Install Later</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="register-popup">
+        <div id="register-content">
+            <span id="close-register-popup">&times;</span>
+            <h3>Join Us</h3>
+            <p>Create your free account to get started!</p>
+            <button id="register-ok">OK</button>
+        </div>
+    </div>
+
+
+   
+
+    <script>
+        let deferredPrompt = null;
+
+        const isUserLoggedIn = () => {
+            return <%= JSON.stringify(isLoggedIn) %>;
+        };
+
+        const isAppInstalled = () => {
+            return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        };
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            checkAndShowPopup();
+        });
+
+        function checkAndShowPopup() {
+            const installPopup = document.getElementById('install-popup');
+            const registerPopup = document.getElementById('register-popup');
+
+            // if (isUserLoggedIn() && deferredPrompt && !isAppInstalled()) {
+            //     setTimeout(() => {
+            //         popup.style.display = 'flex';
+            //     }, 3000);
+            // }
+
+
+
+            if (isUserLoggedIn()) {
+                if (deferredPrompt && !isAppInstalled()) {
+                    setTimeout(() => {
+                        installPopup.style.display = 'flex';
+                        registerPopup.style.display = 'none';
+                    }, 3000);
+                }
+            } else {
+                setTimeout(() => {
+                    registerPopup.style.display = 'flex';
+                }, 3000);
+            }
+        }
+
+        document.getElementById('install-now').addEventListener('click', () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    console.log(choiceResult.outcome === 'accepted'
+                        ? 'User accepted the install'
+                        : 'User dismissed the install');
+                    deferredPrompt = null;
+                    document.getElementById('install-popup').style.display = 'none';
+                });
+            }
+        });
+
+        document.getElementById('install-later').addEventListener('click', () => {
+            document.getElementById('install-popup').style.display = 'none';
+            window.location.href = "https://magic-code.net/"
+        });
+
+        document.getElementById('close-popup').addEventListener('click', () => {
+            document.getElementById('install-popup').style.display = 'none';
+        });
+
+        // Hide if user clicks outside content
+        window.addEventListener('click', (event) => {
+            const popup = document.getElementById('install-popup');
+            if (event.target === popup) {
+                popup.style.display = 'none';
+            }
+        });
+
+        // Just in case the beforeinstallprompt wasn't fired for some reason
+        if (isUserLoggedIn() && !isAppInstalled()) {
+            // Wait and check again for deferredPrompt in case it's delayed
+            setTimeout(() => {
+                if (deferredPrompt) checkAndShowPopup();
+            }, 4000);
+        }
+
+
+         // Register popup handlers
+    document.getElementById('register-ok').addEventListener('click', () => {
+        window.location.href = "https://magic-code.net/register"; // Update to your actual registration link
+    });
+
+    document.getElementById('close-register-popup').addEventListener('click', () => {
+        document.getElementById('register-popup').style.display = 'none';
+    });
+
+    // Hide popup if user clicks outside content
+    window.addEventListener('click', (event) => {
+        const installPopup = document.getElementById('install-popup');
+        const registerPopup = document.getElementById('register-popup');
+        if (event.target === installPopup) {
+            installPopup.style.display = 'none';
+        }
+        if (event.target === registerPopup) {
+            registerPopup.style.display = 'none';
+        }
+    });
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const backBtn = document.getElementById('back-home-btn');
+
+            if (backBtn) {
+                backBtn.addEventListener('click', () => {
+                    let check = isUserLoggedIn()
+
+                    window.location.href = check
+                        ? "https://magic-code.net/magiccode"
+                        : "https://magic-code.net/";
+                });
+            }
+        });
+    </script>
+
+
 </body>
 
 </html>

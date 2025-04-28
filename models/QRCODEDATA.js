@@ -65,9 +65,25 @@ const qrCodeSchema = new mongoose.Schema(
       default: "first", // Default value if not provided
     },
     assignedTo: {
-      type: [mongoose.Schema.Types.ObjectId], // Array of ObjectIds
+      type: mongoose.Schema.Types.ObjectId, // Single ObjectId
       ref: "User", // Reference to the User schema
       required: false, // Not mandatory
+    },
+    isQrActivated: {
+      type: Boolean,
+      default: false, // QR code is not activated by default
+    },
+    activatedUntil: {
+      type: Date,
+      default: null, // Will be set when QR is activated
+    },
+    isTrial: {
+      type: Boolean,
+      default: false, // Defaults to false for user-created QR codes
+    },
+    isFirstActivationFree: {
+      type: Boolean,
+      default: true, // Initially, the first activation is free
     },
   },
   { timestamps: true }

@@ -9,6 +9,9 @@ const path = require("path");
 const session = require("express-session");
 const passport = require("passport");
 require("./config/passport"); // Load Passport config
+const cron = require("node-cron");
+const sendEmailToAssignedUsers = require("./cronJobs/sendQrDeactivationEmails");
+
 
 connectDB(); //Make Conncetion to Database
 
@@ -53,6 +56,13 @@ app.set("view engine", "ejs");
 
 // Use routes from the index.js file
 app.use("/", indexRouter);
+
+
+// Run every 5 minutes
+cron.schedule("*/5 * * * *", () => {
+  console.log("Checking for expired QR codes...");
+  // sendEmailToAssignedUsers();
+});
 
 // Start the server
 const PORT = process.env.PORT || 3000;

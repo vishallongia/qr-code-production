@@ -102,7 +102,7 @@ body {
 .hero {
     position: relative;
     width: 100%;
-    height: 760px;
+    height: 1100px;
     overflow: hidden;
 }
 
@@ -126,9 +126,9 @@ body {
 
 .logo {
     position: absolute;
-    width: 106px;
-    height: 72px;
-    top: 32px;
+    width: 222px;
+    height: auto;
+    top: 8px;
     left: 50%;
     transform: translateX(-50%);
 }
@@ -371,7 +371,7 @@ body {
     align-items: center;
     gap: 48px;
     position: absolute;
-    top: 216px;
+    top: 45%;
     left: 50%;
     transform: translateX(-50%);
     padding: 0 20px;
@@ -555,7 +555,7 @@ body {
     flex-direction: column;
     width: 100%;
     max-width: 1200px;
-    margin: 120px auto;
+    margin: 5% auto;
     gap: 120px;
     padding: 0 72px;
 }
@@ -714,10 +714,12 @@ body {
     color: var(--greygrey-5);
     font-weight: 300;
 }
-
+.bg-gray{
+    background: #565757;
+}
 /* EXCEPTION: Remove fixed width/height for the last .content-section */
 .content-section:last-child .section-image img {
-    width: 250px;
+    width: 400px;
     height: auto;
     object-fit: contain;
     /* Optional – keeps aspect ratio if needed */
@@ -758,7 +760,7 @@ body {
 }
 
 .section-image img.lost-image {
-    width: 250px;
+    width: 400px;
     height: auto;
     object-fit: contain;
     /* Keep this if you still want the image contained */
@@ -1011,7 +1013,7 @@ body {
     }
 
     .logo {
-        width: auto;
+        width: 200px;
     }
 
     /* Reverse layout for 2nd, 4th, and 6th sections */
@@ -1039,7 +1041,7 @@ body {
     }
 
     .content-section:last-child .section-image img {
-        width: 180px;
+        width: 300px;
     }
 
     .section-image img {
@@ -1069,6 +1071,9 @@ body {
         height: auto;
         object-fit: contain;
     }
+    .hero {
+        height: 850px;
+    }
 }
 
 
@@ -1089,8 +1094,12 @@ body {
     }
 
     .section-image img.lost-image {
-        width: 180px;
+        width: 300px;
         height: auto;
         object-fit: contain;
+    }
+
+    .hero {
+        height: 850px;
     }
 }

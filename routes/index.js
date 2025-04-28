@@ -241,6 +241,15 @@ router.post("/assign-qr-code", async (req, res) => {
         .json({ message: "Magic Code not found", type: "error" });
     }
 
+    console.log(qrCodeData, "wme");
+    // Check if QR code is already assigned and isQrActivated is true
+    if (qrCodeData.assignedTo && qrCodeData.isQrActivated) {
+      return res.status(400).json({
+        message: "QR code is already assigned and activated",
+        type: "error",
+      });
+    }
+
     let user;
 
     // Find the user by email
@@ -262,9 +271,8 @@ router.post("/assign-qr-code", async (req, res) => {
       await user.save();
     }
 
-    // Add the user ID to the 'assignedTo' array if it's not already there
-    if (!qrCodeData.assignedTo.includes(user._id)) {
-      qrCodeData.assignedTo.push(user._id);
+    if (qrCodeData.assignedTo !== user._id) {
+      qrCodeData.assignedTo = user._id; // Assign the user._id directly
       await qrCodeData.save();
     }
 
@@ -338,7 +346,7 @@ router.post("/assign-qr-code", async (req, res) => {
         <p>Hi ${user.fullName},</p>
         <p>Use the magic link below to securely log in to your account. This link will expire in 30 minutes.</p>
         <a href="${magicLink}" class="btn">Login Now</a>
-        <p>If you did not request this login, please ignore this email.</p>
+        <p>After Login SET YOUR PASSWORD under My Profile.</p>
         <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
     </div>
 </body>
@@ -372,7 +380,7 @@ router.get("/admindashboard/qr/:userId", authMiddleware, async (req, res) => {
     const totalQRCodes = await QRCodeData.countDocuments({
       $or: [
         { user_id: userId }, // QR codes created by the user
-        { assignedTo: { $in: [userId] } }, // QR codes assigned to the user (array check)f
+        { assignedTo: userId }, // QR codes assigned to the user (array check)f
       ],
     });
 
@@ -386,7 +394,7 @@ router.get("/admindashboard/qr/:userId", authMiddleware, async (req, res) => {
     const qrDetails = await QRCodeData.find({
       $or: [
         { user_id: userId }, // QR codes created by the user
-        { assignedTo: { $in: [userId] } }, // QR codes assigned to the user (array check)f
+        { assignedTo: userId }, // QR codes assigned to the user (array check)f
       ],
     })
       .select("qrName type code url")
@@ -478,7 +486,7 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
                 $expr: {
                   $or: [
                     { $eq: ["$user_id", "$$userId"] }, // Count QR codes the user created
-                    { $in: ["$$userId", { $ifNull: ["$assignedTo", []] }] }, // Count QR codes assigned to them
+                    { $eq: ["$assignedTo", "$$userId"] }, // Count QR codes assigned to them (direct equality), // Count QR codes assigned to them
                   ],
                 },
               },
@@ -705,14 +713,21 @@ router.post("/login", async (req, res) => {
     );
     // Set token and user ID in cookies
 
-    res.cookie("token", token, {
-      httpOnly: false,
-      maxAge: Number(process.env.COOKIE_EXPIRATION),
-    }); // Expires in 1 hour
+    // res.cookie("token", token, {
+    //   httpOnly: false,
+    //   maxAge: Number(process.env.COOKIE_EXPIRATION),
+    // }); // Expires in 1 hour
     // res.cookie("userId", user._id.toString(), {
     //   httpOnly: false,
     //   maxAge: 3600000,
     // });
+
+    res.cookie("token", token, {
+      httpOnly: true, // More secure — prevents JavaScript access
+      secure: true, // Required for iOS/Safari under HTTPS
+      sameSite: "Lax", // Works well for same-domain setups
+      maxAge: Number(process.env.COOKIE_EXPIRATION),
+    });
 
     let qrCodeDataId = null;
 
@@ -1011,10 +1026,17 @@ router.post("/register", async (req, res) => {
     );
 
     // Set token in cookies
+    // res.cookie("token", token, {
+    //   httpOnly: false,
+    //   maxAge: Number(process.env.COOKIE_EXPIRATION),
+    // }); // Expires in 1 Year
+
     res.cookie("token", token, {
-      httpOnly: false,
+      httpOnly: true, // More secure — prevents JavaScript access
+      secure: true, // Required for iOS/Safari under HTTPS
+      sameSite: "Lax", // Works well for same-domain setups
       maxAge: Number(process.env.COOKIE_EXPIRATION),
-    }); // Expires in 1 Year
+    });
 
     // Send success response with token
     res.status(201).json({
@@ -1067,7 +1089,8 @@ router.post("/usemagiclink", async (req, res) => {
 
       // If user doesn't exist, create a new one with a dummy password
       if (!user) {
-        const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
+        // const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
+        const randomPassword = email.split("@")[0];
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
         const encryptedPassword = encryptPassword(randomPassword);
 
@@ -1151,7 +1174,7 @@ router.post("/usemagiclink", async (req, res) => {
         <p>Hi ${user.fullName},</p>
         <p>Use the magic link below to securely log in to your account. This link will expire in 30 minutes.</p>
         <a href="${magicLink}" class="btn">Login Now</a>
-        <p>If you did not request this login, please ignore this email.</p>
+        <p>After Login SET YOUR PASSWORD under My Profile.</p>
         <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
     </div>
 </body>
@@ -1210,7 +1233,7 @@ router.get("/verify-magiclink/:token", async (req, res) => {
       // 6. Check if QR exists and is created/assigned to the user
       const qrCode = await QRCodeData.findOne({
         _id: decryptedQrCodeId,
-        $or: [{ user_id: user._id }, { assignedTo: { $in: [user._id] } }],
+        $or: [{ user_id: user._id }, { assignedTo: user._id }],
       });
 
       if (qrCode) {
@@ -1370,7 +1393,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
   let user;
   try {
     const userId = req.user?._id; // Ensure userId exists
-    const { magiccode } = req.query; // Get the myvibecode query parameter, if any
+    const { magiccode, showPopup = false } = req.query; // Get the myvibecode query parameter, if any
 
     // Fetch user details using findOne instead of findById
     user = await User.findOne({ _id: userId }).select("-password"); // Exclude password
@@ -1390,7 +1413,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
         _id: magiccode,
         $or: [
           { user_id: userId },
-          { assignedTo: { $in: [userId] } }, // Check if userId exists in the assigned_to array
+          { assignedTo: userId }, // Check if userId exists in the assigned_to array
         ],
       });
 
@@ -1402,6 +1425,11 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
           activeSection: "generate",
           user,
         });
+      }
+
+      // If showpopup is true and qrCode is NOT a trial code, redirect
+      if (showPopup && !qrCode.isTrial) {
+        return res.redirect(`/dashboard?magiccode=${magiccode}`);
       }
       // If QR code is found, render dashboard with this QR code for editing
       return res.render("dashboardnew", {
@@ -1601,7 +1629,7 @@ router.get("/magiccode", authMiddleware, async (req, res) => {
     const qrCodes = await QRCodeData.find({
       $or: [
         { user_id: userId }, // QR codes created by the user
-        { assignedTo: { $in: [userId] } }, // QR codes assigned to the user
+        { assignedTo: userId }, // QR codes assigned to the user
       ],
     }).sort({ createdAt: -1 });
 
@@ -1937,6 +1965,7 @@ router.put(
       applyGradient,
       ColorList,
       logoImageValue,
+      isActivation = null, // Default to null if not provided
     } = req.body; // Get type and URL from request body
     const qrCodeAlphanumeric = req.params.id;
     const user_id = req.user._id;
@@ -1959,7 +1988,7 @@ router.put(
         code: qrCodeAlphanumeric,
         $or: [
           { user_id },
-          { assignedTo: { $in: [user_id] } }, // Check if userId exists in the assigned_to array
+          { assignedTo: user_id }, // Check if userId exists in the assigned_to array
         ],
       });
 
@@ -1975,11 +2004,46 @@ router.put(
 
       if (
         qrCode.user_id.toString() !== user_id.toString() &&
-        !qrCode.assignedTo.some((id) => id.toString() === user_id.toString())
+        qrCode.assignedTo?.toString() !== user_id.toString()
       ) {
         return res
           .status(403)
           .json({ message: "Unauthorized access", type: "error" });
+      }
+
+      if (isActivation) {
+        if (qrCode.isTrial) {
+          if (qrCode.isFirstActivationFree) {
+            let activationDurationMinutes = 5; // Default to 5 minutes
+
+            const activationTimeEnv = parseInt(process.env.ACTIVATION_DURATION, 10);
+
+            if (!isNaN(activationTimeEnv) && activationTimeEnv > 0) {
+              activationDurationMinutes = activationTimeEnv * 24 * 60; // Convert days to minutes
+            }
+
+            const activatedUntil = new Date();
+            activatedUntil.setMinutes(
+              activatedUntil.getMinutes() + activationDurationMinutes
+            );
+
+            qrCode.activatedUntil = activatedUntil; // Set activation expiration time
+            qrCode.isQrActivated = true; // Mark QR as activated
+            qrCode.isFirstActivationFree = false; // Mark free activation as used
+          } else {
+            // Free activation already used
+            return res.status(400).json({
+              message: "Trial expired. Please buy a plan.",
+              type: "error",
+            });
+          }
+        } else {
+          // Not a trial code
+          return res.status(400).json({
+            message: "Activation is only needed for trial QR codes.",
+            type: "error",
+          });
+        }
       }
       // Handle updates based on the type
       if (type === "url") {
@@ -2178,8 +2242,12 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
       ); // Assuming media_url is a relative path (e.g., uploads/)
     } else if (codeData.type === "text") {
       // Send plain HTML response to display the text content
+      let isLoggedIn = false;
+      if (token) {
+        isLoggedIn = true;
+      }
 
-      res.render("content", { content: codeData.text });
+      res.render("content", { content: codeData.text, isLoggedIn });
     } else {
       // If the type is not valid, return an error
       return res.status(400).render("error", {
@@ -3151,6 +3219,9 @@ router.post(
           cornerStyle,
           applyGradient: "none",
           logo: process.env.STATIC_LOGO,
+          isTrial: true,
+          isFirstActivationFree: true,
+          isQrActivated: false,
         });
 
         // Save only once

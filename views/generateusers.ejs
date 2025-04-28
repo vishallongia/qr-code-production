@@ -14,6 +14,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <!-- JSZip library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- FileSaver.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
 </head>
 
 <body>
@@ -36,6 +42,11 @@
                     excel</button>
                 <button class="view-qr-btn" id="resetgeneratedusser" style="display: none;"
                     onclick="return resetLocalStorageAndReload(event)">Reset</button>
+                <!-- New button to download QR codes as a zip -->
+                <button class="view-qr-btn" id="download-qr-zip" style="display: none;"
+                    onclick="return downloadAllCanvasesAsZip(event)">
+                    Download QR as Zip
+                </button>
             </div>
 
 

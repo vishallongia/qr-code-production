@@ -1,4 +1,5 @@
 const exportButton = document.getElementById("generateduserexcelbutton");
+const downloadQRCodeImagesZip = document.getElementById("download-qr-zip");
 const resetGeneratedUserButton = document.getElementById("resetgeneratedusser");
 const assignedemail = document.getElementById("assignedemail");
 const assignBtn = document.getElementById("assignedemailbutton");
@@ -288,6 +289,10 @@ function toggleExportButtonVisibility() {
   resetGeneratedUserButton.style.display = getUsersFromLocalStorage().length
     ? "block"
     : "none";
+
+  downloadQRCodeImagesZip.style.display = getUsersFromLocalStorage().length
+    ? "block"
+    : "none";
 }
 
 // Load users from Local Storage on page load
@@ -322,7 +327,9 @@ async function handleAssignQrCode(event) {
     const result = await assignQrCode(data); // Call the API
 
     // Show themed popup on success
-    showThemePopup("Magic Code assigned to email and login link also sent"); // Pass message if needed
+    showThemePopup(
+      "This MAGIC CODE has been assigned to you now. The Magic Link for Login has been sent to your e-mail address."
+    ); // Pass message if needed
 
     // showToast(result.message, "success");
     assignBtn.disabled = false;
@@ -384,12 +391,76 @@ function showThemePopup(message) {
     "click",
     () => {
       popup.style.display = "none";
-      window.history.back();
+      // window.history.back();
       // window.location.href = "https://lens.google.com/upload"; // Redirect after OK
-      window.open("https://lens.google.com/upload", "_blank");
+      // window.open("https://lens.google.com/upload", "_blank");
 
+      const email = document
+        .getElementById("assignedemail")
+        .value.toLowerCase();
 
+      if (email.includes("gmail.com")) {
+        window.open("https://mail.google.com/mail/u/0/#inbox", "_blank");
+      } else if (
+        email.includes("outlook.com") ||
+        email.includes("hotmail.com") ||
+        email.includes("live.com")
+      ) {
+        window.open("https://outlook.live.com/mail/inbox", "_blank");
+      } else if (email.includes("yahoo.com")) {
+        window.open("https://mail.yahoo.com", "_blank");
+      } else if (
+        email.includes("icloud.com") ||
+        email.includes("me.com") ||
+        email.includes("mac.com")
+      ) {
+        window.open("https://www.icloud.com/mail", "_blank");
+      } else if (email.includes("aol.com")) {
+        window.open("https://mail.aol.com", "_blank");
+      } else if (email.includes("zoho.com")) {
+        window.open("https://mail.zoho.com", "_blank");
+      } else if (email.includes("protonmail.com")) {
+        window.open("https://mail.proton.me/u/0/inbox", "_blank");
+      } else if (email.includes("gmx.com")) {
+        window.open("https://www.gmx.com", "_blank");
+      } else {
+        alert(
+          "We couldn't detect your email provider. Please open your inbox manually."
+        );
+      }
     },
     { once: true }
   );
 }
+
+
+// Main function to download all canvases as a zip
+const downloadAllCanvasesAsZip = () => {
+  const zip = new JSZip();
+  const canvases = document.querySelectorAll(".card canvas");
+
+  if (canvases.length === 0) {
+      alert("No QR codes found to download.");
+      return;
+  }
+
+  let count = 1;
+
+  // Loop through each canvas and add it to the zip file
+  canvases.forEach((canvas) => {
+      const dataURL = canvas.toDataURL("image/png"); // Get canvas as a base64 PNG
+      fetch(dataURL)
+          .then((response) => response.blob()) // Convert base64 to blob
+          .then((blob) => {
+              zip.file(`qr-${count}.png`, blob); // Add to zip with a name like qr-1.png
+              count++;
+
+              // If all files are added, generate the zip
+              if (count > canvases.length) {
+                  zip.generateAsync({ type: "blob" }).then((content) => {
+                      saveAs(content, "qr-codes.zip"); // Trigger download of the zip file
+                  });
+              }
+          });
+  });
+};

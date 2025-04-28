@@ -269,7 +269,7 @@ function createInput(type, id, labelText, labelID) {
 // updateInputFields();
 
 // QR Code generation functions
-function generateAlphanumericCode(length = 6) {
+function generateAlphanumericCode(length = 7) {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let code = "";
   for (let i = 0; i < length; i++) {
@@ -296,6 +296,73 @@ function generateAlphanumericCode(length = 6) {
 // });
 
 // qrCode.append(document.getElementById("qr-code"));
+
+function setupQrExpiryCountdown(qrContainerId, hiddenInputId) {
+  const activatedUntilValue = document.getElementById(hiddenInputId)?.value;
+  let timer;
+  const qrContainer = document.getElementById(qrContainerId);
+
+  if (activatedUntilValue && qrContainer) {
+    const activatedUntil = new Date(activatedUntilValue);
+
+    const expiryElement = document.createElement("div");
+    expiryElement.style.textAlign = "center";
+    expiryElement.style.marginBottom = "8px";
+    expiryElement.style.fontSize = "16px";
+    qrContainer.appendChild(expiryElement);
+
+    function updateExpiryCountdown() {
+      const currentTime = new Date();
+      const timeDifference = activatedUntil - currentTime;
+
+      if (timeDifference > 0) {
+        const secondsLeft = Math.floor(timeDifference / 1000);
+        const minutesLeft = Math.floor(secondsLeft / 60);
+        const hoursLeft = Math.floor(minutesLeft / 60);
+        const daysLeft = Math.floor(hoursLeft / 24);
+
+        const remainingHours = hoursLeft % 24; // hours remaining in the current day
+        const remainingMinutes = minutesLeft % 60; // minutes remaining in the current hour
+        const remainingSeconds = secondsLeft % 60; // seconds remaining in the current minute
+
+        if (daysLeft >= 1) {
+          expiryElement.textContent = `${daysLeft} day${
+            daysLeft !== 1 ? "s" : ""
+          } ${remainingHours} hour${
+            remainingHours !== 1 ? "s" : ""
+          } ${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`;
+        } else if (hoursLeft >= 1) {
+          expiryElement.textContent = `${remainingHours} hour${
+            remainingHours !== 1 ? "s" : ""
+          } ${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`;
+        } else {
+          expiryElement.textContent = `${remainingMinutes} minute${
+            remainingMinutes !== 1 ? "s" : ""
+          } ${remainingSeconds} second${remainingSeconds !== 1 ? "s" : ""}`;
+        }
+
+        expiryElement.style.color = "green";
+      } else {
+        expiryElement.textContent = "Expired";
+        expiryElement.style.color = "red";
+        if (timer) {
+          clearInterval(timer);
+        }
+      }
+    }
+
+    // Initial call
+    updateExpiryCountdown();
+    timer = setInterval(updateExpiryCountdown, 1000); // Update every second for seconds countdown
+
+    // Simulate server refresh (optional)
+    setTimeout(() => {
+      const serverUpdatedActivatedUntil = new Date(activatedUntilValue); // You would actually fetch this
+      console.log("Server Expiry Time updated:", serverUpdatedActivatedUntil);
+      // (Update activatedUntil here if needed)
+    }, 60000);
+  }
+}
 
 function generateQRCodeFe(isUpdate = false, logo) {
   let alphanumericCode;
@@ -437,6 +504,9 @@ function updateQRCodeFe(
     // Clear the content of qrCode before appending
     document.getElementById("qr-code").innerHTML = "";
   }
+  const qrContainer = document.getElementById("qr-code");
+
+  setupQrExpiryCountdown("qr-code", "activatedUntil");
 
   // Inside your updateQRCodeFe function, before qrCode.append():
   if (qrName) {
@@ -447,7 +517,6 @@ function updateQRCodeFe(
     nameElement.style.fontSize = "20px";
     nameElement.style.color = "black";
 
-    const qrContainer = document.getElementById("qr-code");
     qrContainer.appendChild(nameElement);
   }
 
@@ -484,6 +553,7 @@ function showGenerateSection(qr, user) {
   document.getElementById("gradient").value = qr.applyGradient;
   document.getElementById("qr-type").value = qr.type;
   document.getElementById("qr-code-key").value = qr.code;
+  document.getElementById("activatedUntil").value = qr.activatedUntil;
   const logo = qr.logo || "/images/logo.jpg"; // Default if logo is missing
 
   // Conditionally call applySettings based on qr.backgroundColor
@@ -1596,7 +1666,7 @@ async function handleQrCodeUpdateSubmit(event) {
   document.getElementById("bg-color").value = "#ffffff";
   const activeBtn = document.querySelector(".content-type-button.active");
 
-  let type="text"; /*Setting type by default*/
+  let type = "text"; /*Setting type by default*/
   // if (activeBtn) {
   //   const typeText = activeBtn.textContent.trim().toLowerCase();
   //   if (typeText === "link") {
@@ -1652,7 +1722,8 @@ async function handleQrCodeUpdateSubmit(event) {
   formData.append("applyGradient", applyGradient);
   formData.append("qrDotColor", fgColorHex);
   formData.append("logoImageValue", logoImageValue);
-  formData.append("text", qrName);/* In case of assignment */
+  formData.append("text", qrName); /* In case of assignment */
+  formData.append("isActivation", true); /* In case of assignment */
 
   if (!qrName) {
     showToast("Please enter Magic Code name to activate", "error");
@@ -1716,7 +1787,7 @@ async function handleQrCodeUpdateSubmit(event) {
     removeShowPopupParamAndRedirect();
   } catch (error) {
     toggleLoaderVisibility(false);
-    generatedSection.style.display = "block";
+    popup.style.display = "none";
     showToast(error.message || "Error updating QR code.", "error");
   }
 }
@@ -1746,8 +1817,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.has("showPopup")) {
-    showThemePopup("Please Enter your desired Magic Code Name to Activate it");
+  if (urlParams.get("showPopup") === "true") {
+    showThemePopup(
+      "Please enter the name of your first MAGIC CODE, and click ACTIVATE."
+    );
   }
 });
 

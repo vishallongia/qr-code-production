@@ -34,7 +34,7 @@
                 <p>This is a themed popup message!</p>
                 <form>
                     <div class="form-group" style="margin-bottom: 24px;">
-                        <label>Enter Magic Code Name</label>
+                        <!-- <label>Enter Magic Code Name</label> -->
                         <input type="text" id="qr-name-activation" placeholder="Enter Magic Code Name...">
                     </div>
                     <button id="popup-ok-btn">Activate</button>
@@ -44,8 +44,8 @@
         <!-- Header -->
         <header class="header">
             <div class="logo-container">
-                <img class="logo" alt="Logo" src="/image-1.png">
-                <div class="company-name">TextileDruck-Schweiz</div>
+                <img class="logo" alt="Logo" src="\Site-main-logo.png">
+                <div class="company-name">Magic Code</div>
             </div>
             <div class="top-right-options">
                 <div class="language-select-wrapper">
@@ -76,6 +76,12 @@
             <label for="qr-code-key">Code</label>
             <input type="text" id="qr-code-key" placeholder="Code">
         </div>
+
+        <div class="input-group" style="display: none;">
+            <label for="qr-code-key">Code</label>
+            <input type="text" id="qr-code-key" placeholder="Code">
+        </div>
+        <input type="hidden" id="activatedUntil">
         <div class="input-group" style="display: none;">
             <label for="qr-color" id="CodeColorLang">Code Color:</label>
             <input type="color" id="qr-color" value="#000000">
@@ -154,7 +160,7 @@
                     </button>
 
                     <button class="nav-item" data-link="#" id="installBtn">
-                        <img src="/icons-create-1-3.png" alt="Scan icon">
+                        <img src="/images/INSTALLAPP.png" alt="Scan icon">
                         <span>Install App</span>
                     </button>
                 </nav>
@@ -164,7 +170,7 @@
                 </button>
             </aside>
 
-            <script>
+            <!-- <script>
                 let deferredPrompt = null;
                 const installBtn = document.getElementById('installBtn');
 
@@ -193,7 +199,43 @@
                         alert('App is already installed or not installable at this time.');
                     }
                 });
+            </script> -->
+
+            <script>
+                let deferredPrompt = null;
+                const installBtn = document.getElementById('installBtn');
+
+                // Hide the install button by default
+                installBtn.style.display = 'none';
+
+                // Catch the prompt and store it
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    deferredPrompt = e;
+
+                    // Show the install button once the event is triggered
+                    installBtn.style.display = 'flex';
+                });
+
+                // Handle install button click
+                installBtn.addEventListener('click', () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === 'accepted') {
+                                console.log('User accepted the install');
+                            } else {
+                                console.log('User dismissed the install');
+                            }
+                            deferredPrompt = null;
+                            installBtn.style.display = 'none'; // Optionally hide the button after interaction
+                        });
+                    } else {
+                        alert('App is already installed or not installable at this time.');
+                    }
+                });
             </script>
+
 
             <% if (activeSection==='show' ) { %>
                 <!-- Include the header partial -->
