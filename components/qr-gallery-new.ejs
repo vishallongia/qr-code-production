@@ -98,12 +98,17 @@
 
                     // Add small green dot if isQrActivated is true
                     // Check if the QR code is activated
-                    if (qrCodeData.isQrActivated) {
+                    if (qrCodeData.isTrial) {
 
                         // Check if the card exists
                         const card = document.getElementById(`showqrcards`);
 
                         if (card) {
+                            // Determine QR status immediately based on activatedUntil
+                            const now = new Date();
+                            const activatedUntilDate = new Date(qrCodeData.activatedUntil);
+                            const isCurrentlyActive = activatedUntilDate > now;
+
                             // Create a new div element for the status dot
                             const statusDot = document.createElement("div");
 
@@ -114,7 +119,7 @@
                             statusDot.style.width = "12px";
                             statusDot.style.height = "12px";
                             statusDot.style.borderRadius = "50%";
-                            statusDot.style.background = qrCodeData.isQrActivated
+                            statusDot.style.background = isCurrentlyActive
                                 ? "linear-gradient(135deg, #00c853, #00e676)" // green for active
                                 : "linear-gradient(135deg, #d32f2f, #ff5252)"; // red for expired
                             statusDot.style.boxShadow = "0 0 5px rgba(0, 0, 0, 0.3)";
@@ -123,7 +128,7 @@
 
                             // Create a tooltip
                             const tooltip = document.createElement("div");
-                            tooltip.innerText = qrCodeData.isQrActivated ? "QR is Active" : "QR is Expired";
+                            tooltip.innerText = isCurrentlyActive ? "QR is Active" : "QR is Expired";
 
                             // Tooltip styling
                             tooltip.style.position = "absolute";

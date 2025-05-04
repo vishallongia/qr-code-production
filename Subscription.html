@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Subscription Plans</title>
+    <style>
+        :root {
+            --background-color: #f3f4f6;
+            --primary-color: #2563eb;
+            --hover-primary-color: #1d4ed8;
+            --text-color: #333;
+            --heading-color: #111827;
+            --card-background: #fff;
+            --card-hover-shadow: rgba(0, 0, 0, 0.15);
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --button-text-color: #fff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            color: var(--heading-color);
+        }
+
+        .plans {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .plan-card {
+            background: var(--card-background);
+            border-radius: 16px;
+            box-shadow: 0 4px 16px var(--card-shadow);
+            padding: 2rem;
+            width: 100%;
+            max-width: 260px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 24px var(--card-hover-shadow);
+        }
+
+        .plan-duration {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-price {
+            font-size: 2rem;
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .features {
+            margin-bottom: 1.5rem;
+        }
+
+        .features li {
+            list-style: none;
+            margin: 0.5rem 0;
+        }
+
+        .subscribe-btn {
+            background-color: var(--primary-color);
+            color: var(--button-text-color);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .subscribe-btn:hover {
+            background-color: var(--hover-primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .plans {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Choose Your Subscription</h1>
+        <div class="plans">
+            <!-- 15 Days -->
+            <div class="plan-card">
+                <div class="plan-duration">15 Days</div>
+                <div class="plan-price">$9.99</div>
+                <ul class="features">
+                    <li>Basic Access</li>
+                    <li>Email Support</li>
+                </ul>
+                <button class="subscribe-btn">Subscribe</button>
+            </div>
+
+            <!-- 3 Months -->
+            <div class="plan-card">
+                <div class="plan-duration">3 Months</div>
+                <div class="plan-price">$24.99</div>
+                <ul class="features">
+                    <li>Full Access</li>
+                    <li>Email & Chat Support</li>
+                </ul>
+                <button class="subscribe-btn">Subscribe</button>
+            </div>
+
+            <!-- 6 Months -->
+            <div class="plan-card">
+                <div class="plan-duration">6 Months</div>
+                <div class="plan-price">$44.99</div>
+                <ul class="features">
+                    <li>Full Access</li>
+                    <li>Priority Support</li>
+                </ul>
+                <button class="subscribe-btn">Subscribe</button>
+            </div>
+
+            <!-- 1 Year -->
+            <div class="plan-card">
+                <div class="plan-duration">1 Year</div>
+                <div class="plan-price">$79.99</div>
+                <ul class="features">
+                    <li>All Features</li>
+                    <li>24/7 Support</li>
+                </ul>
+                <button class="subscribe-btn">Subscribe</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -88,74 +88,7 @@ function hexToRgb(hex) {
   const b = bigint & 255;
   return `rgb(${r}, ${g}, ${b})`;
 }
-// Toggle the menu open and close
-// menuToggle.addEventListener("click", () => {
-//   sideMenu.classList.add("active");
-// });
 
-// menuClose.addEventListener("click", () => {
-//   sideMenu.classList.remove("active");
-// });
-
-// document.addEventListener("DOMContentLoaded", function () {});
-
-// // Set active tab based on localStorage on page load
-// document.addEventListener("DOMContentLoaded", () => {
-//   const activeTab = localStorage.getItem("activeTab");
-
-//   sideMenu.addEventListener("mouseenter", function () {
-//     sideMenu.classList.add("expanded");
-//   });
-
-//   sideMenu.addEventListener("mouseleave", function () {
-//     sideMenu.classList.remove("expanded");
-//   });
-
-//   if (activeTab) {
-//     // Find the corresponding menu item and section based on the saved tab
-//     menuItems.forEach((item) => {
-//       item.classList.remove("active");
-//       if (item.dataset.section === activeTab) {
-//         item.classList.add("active");
-//       }
-//     });
-//   }
-//   const urlParams = new URLSearchParams(window.location.search);
-//   if (!urlParams.has("magiccode")) {
-//     document.getElementById("qrCodePrintData").value = "";
-//   }
-// });
-
-// // Event listener for menu items
-// menuItems.forEach((item) => {
-//   item.addEventListener("click", () => {
-//     // Remove active class from all menu items
-//     menuItems.forEach((i) => i.classList.remove("active"));
-
-//     // Add active class to the clicked item
-//     item.classList.add("active");
-
-//     // Save the active tab in localStorage
-//     localStorage.setItem("activeTab", item.dataset.section);
-
-//     if (item.dataset.section === "generate") {
-//       window.location.href = "/dashboard";
-//     } else if (item.dataset.section === "profile") {
-//       window.location.href = "/myprofile";
-//     } else if (item.dataset.section === "usercontrol") {
-//       window.location.href = "/usercontrol";
-//     } else {
-//       window.location.href = "/magiccode";
-//     }
-
-//     // Close side menu on small screens
-//     if (window.innerWidth <= 768) {
-//       sideMenu.classList.remove("active");
-//     }
-//   });
-// });
-
-// QR Type change listener to update input fields
 
 function rgbToHex(rgb) {
   const result = rgb.match(/\d+/g);
@@ -269,7 +202,7 @@ function createInput(type, id, labelText, labelID) {
 // updateInputFields();
 
 // QR Code generation functions
-function generateAlphanumericCode(length = 7) {
+function generateAlphanumericCode(length = 6) {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let code = "";
   for (let i = 0; i < length; i++) {
@@ -297,72 +230,72 @@ function generateAlphanumericCode(length = 7) {
 
 // qrCode.append(document.getElementById("qr-code"));
 
-function setupQrExpiryCountdown(qrContainerId, hiddenInputId) {
-  const activatedUntilValue = document.getElementById(hiddenInputId)?.value;
-  let timer;
-  const qrContainer = document.getElementById(qrContainerId);
+// function setupQrExpiryCountdown(qrContainerId, hiddenInputId) {
+//   const activatedUntilValue = document.getElementById(hiddenInputId)?.value;
+//   let timer;
+//   const qrContainer = document.getElementById(qrContainerId);
 
-  if (activatedUntilValue && qrContainer) {
-    const activatedUntil = new Date(activatedUntilValue);
+//   if (activatedUntilValue && qrContainer) {
+//     const activatedUntil = new Date(activatedUntilValue);
 
-    const expiryElement = document.createElement("div");
-    expiryElement.style.textAlign = "center";
-    expiryElement.style.marginBottom = "8px";
-    expiryElement.style.fontSize = "16px";
-    qrContainer.appendChild(expiryElement);
+//     const expiryElement = document.createElement("div");
+//     expiryElement.style.textAlign = "center";
+//     expiryElement.style.marginBottom = "8px";
+//     expiryElement.style.fontSize = "16px";
+//     qrContainer.appendChild(expiryElement);
 
-    function updateExpiryCountdown() {
-      const currentTime = new Date();
-      const timeDifference = activatedUntil - currentTime;
+//     function updateExpiryCountdown() {
+//       const currentTime = new Date();
+//       const timeDifference = activatedUntil - currentTime;
 
-      if (timeDifference > 0) {
-        const secondsLeft = Math.floor(timeDifference / 1000);
-        const minutesLeft = Math.floor(secondsLeft / 60);
-        const hoursLeft = Math.floor(minutesLeft / 60);
-        const daysLeft = Math.floor(hoursLeft / 24);
+//       if (timeDifference > 0) {
+//         const secondsLeft = Math.floor(timeDifference / 1000);
+//         const minutesLeft = Math.floor(secondsLeft / 60);
+//         const hoursLeft = Math.floor(minutesLeft / 60);
+//         const daysLeft = Math.floor(hoursLeft / 24);
 
-        const remainingHours = hoursLeft % 24; // hours remaining in the current day
-        const remainingMinutes = minutesLeft % 60; // minutes remaining in the current hour
-        const remainingSeconds = secondsLeft % 60; // seconds remaining in the current minute
+//         const remainingHours = hoursLeft % 24; // hours remaining in the current day
+//         const remainingMinutes = minutesLeft % 60; // minutes remaining in the current hour
+//         const remainingSeconds = secondsLeft % 60; // seconds remaining in the current minute
 
-        if (daysLeft >= 1) {
-          expiryElement.textContent = `${daysLeft} day${
-            daysLeft !== 1 ? "s" : ""
-          } ${remainingHours} hour${
-            remainingHours !== 1 ? "s" : ""
-          } ${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`;
-        } else if (hoursLeft >= 1) {
-          expiryElement.textContent = `${remainingHours} hour${
-            remainingHours !== 1 ? "s" : ""
-          } ${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`;
-        } else {
-          expiryElement.textContent = `${remainingMinutes} minute${
-            remainingMinutes !== 1 ? "s" : ""
-          } ${remainingSeconds} second${remainingSeconds !== 1 ? "s" : ""}`;
-        }
+//         if (daysLeft >= 1) {
+//           expiryElement.textContent = `${daysLeft} day${
+//             daysLeft !== 1 ? "s" : ""
+//           } ${remainingHours} hour${
+//             remainingHours !== 1 ? "s" : ""
+//           } ${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`;
+//         } else if (hoursLeft >= 1) {
+//           expiryElement.textContent = `${remainingHours} hour${
+//             remainingHours !== 1 ? "s" : ""
+//           } ${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`;
+//         } else {
+//           expiryElement.textContent = `${remainingMinutes} minute${
+//             remainingMinutes !== 1 ? "s" : ""
+//           } ${remainingSeconds} second${remainingSeconds !== 1 ? "s" : ""}`;
+//         }
 
-        expiryElement.style.color = "green";
-      } else {
-        expiryElement.textContent = "Expired";
-        expiryElement.style.color = "red";
-        if (timer) {
-          clearInterval(timer);
-        }
-      }
-    }
+//         expiryElement.style.color = "green";
+//       } else {
+//         expiryElement.textContent = "Expired";
+//         expiryElement.style.color = "red";
+//         if (timer) {
+//           clearInterval(timer);
+//         }
+//       }
+//     }
 
-    // Initial call
-    updateExpiryCountdown();
-    timer = setInterval(updateExpiryCountdown, 1000); // Update every second for seconds countdown
+//     // Initial call
+//     updateExpiryCountdown();
+//     timer = setInterval(updateExpiryCountdown, 1000); // Update every second for seconds countdown
 
-    // Simulate server refresh (optional)
-    setTimeout(() => {
-      const serverUpdatedActivatedUntil = new Date(activatedUntilValue); // You would actually fetch this
-      console.log("Server Expiry Time updated:", serverUpdatedActivatedUntil);
-      // (Update activatedUntil here if needed)
-    }, 60000);
-  }
-}
+//     // Simulate server refresh (optional)
+//     setTimeout(() => {
+//       const serverUpdatedActivatedUntil = new Date(activatedUntilValue); // You would actually fetch this
+//       console.log("Server Expiry Time updated:", serverUpdatedActivatedUntil);
+//       // (Update activatedUntil here if needed)
+//     }, 60000);
+//   }
+// }
 
 function generateQRCodeFe(isUpdate = false, logo) {
   let alphanumericCode;
@@ -506,7 +439,7 @@ function updateQRCodeFe(
   }
   const qrContainer = document.getElementById("qr-code");
 
-  setupQrExpiryCountdown("qr-code", "activatedUntil");
+  // setupQrExpiryCountdown("qr-code", "activatedUntil");
 
   // Inside your updateQRCodeFe function, before qrCode.append():
   if (qrName) {
@@ -700,507 +633,7 @@ function downloadQRCode() {
   }); // High resolution download
 }
 
-// const colorHexMap = {
-//   magenta: "#FF0093",
-//   violet: "#835EC7",
-//   green: "#00B760",
-//   pink: "#FC70BA",
-//   blue: "#1C00FF",
-//   red: "#FF0000",
-//   orange: "#FFC62C",
-//   cyan: "#00AEEF",
-//   yellow: "#FEFE00",
-//   white: "#FFFFFF",
-//   black: "#000000",
-//   turquoise: "#4CCED1",
-// };
 
-// function getColorHex(color) {
-//   return colorHexMap[color.toLowerCase()] || "Invalid color";
-// }
-
-// const hexColorMap = {
-//   "#FF0093": "magenta",
-//   "#835EC7": "violet",
-//   "#00B760": "green",
-//   "#FC70BA": "pink",
-//   "#1C00FF": "blue",
-//   "#FF0000": "red",
-//   "#FFC62C": "orange",
-//   "#00AEEF": "cyan",
-//   "#FEFE00": "yellow",
-//   "#FFFFFF": "white",
-//   "#000000": "black",
-//   "#4CCED1": "turquoise",
-// };
-
-// function getColorName(hex) {
-//   hex = hex.toUpperCase();
-//   return hexColorMap[hex] || "Invalid hex code";
-// }
-
-// let colorOptions1 = {
-//   white: [
-//     "black",
-//     "green",
-//     "pink",
-//     "blue",
-//     "orange",
-//     "cyan",
-//     "yellow",
-//     "turquoise",
-//   ],
-//   black: ["white", "pink", "orange", "yellow", "turquoise"],
-//   magenta: ["white", "cyan", "yellow", "turquoise"],
-//   violet: ["white", "cyan", "yellow", "turquoise"],
-//   green: ["white", "cyan", "yellow", "turquoise"],
-//   pink: ["white", "blue", "orange", "cyan", "yellow", "turquoise"],
-//   blue: ["white", "orange", "cyan", "yellow", "turquoise"],
-//   red: ["pink", "orange", "cyan", "yellow", "turquoise", "white"],
-//   orange: ["white", "pink", "cyan", "turquoise"],
-//   cyan: [
-//     "white",
-//     "black",
-//     "violet",
-//     "green",
-//     "pink",
-//     "blue",
-//     "orange",
-//     "yellow",
-//     "turquoise",
-//   ],
-//   yellow: [
-//     "white",
-//     "black",
-//     "violet",
-//     "green",
-//     "pink",
-//     "blue",
-//     "orange",
-//     "cyan",
-//     "turquoise",
-//   ],
-//   turquoise: [
-//     "white",
-//     "black",
-//     "violet",
-//     "green",
-//     "pink",
-//     "blue",
-//     "orange",
-//     "cyan",
-//     "yellow",
-//   ],
-// };
-
-// let colorOptions2 = {
-//   white: ["black"],
-//   black: ["white"],
-//   magenta: ["white"],
-//   violet: ["white"],
-//   green: ["white"],
-//   pink: ["white"],
-//   blue: ["white"],
-//   red: ["white"],
-//   orange: ["white"],
-//   cyan: ["white"],
-//   yellow: ["black"],
-//   turquoise: ["white"],
-// };
-// let List = colorOptions1;
-
-// let fgSelect = document.getElementById("FgColorsDiv");
-// let bgSelect = document.getElementById("bgColor");
-
-// function populateFgColors() {
-//   let fgSelect = document.getElementById("FgColorsDiv");
-//   fgSelect.innerHTML = "";
-
-//   Object.keys(List).forEach((color) => {
-//     let colorValueHex = getColorHex(color);
-//     let content = `
-//     <div class="color-box" style="background-color: ${colorValueHex};" data-color="${colorValueHex}">
-//    <input type="radio" name="color" id="${color}" value="${colorValueHex}">
-//     <label for="${color}"></label>
-//   <span class="color-name" id="FG${color}">${color}</span>
-// </div>
-//    `;
-
-//     fgSelect.innerHTML += content;
-//   });
-//   // updateBgColors();
-// }
-
-// function updateBgColors() {
-//   bgSelect.innerHTML = "";
-//   let selectedFg = document.querySelector('input[name="color"]:checked').value;
-//   selectedFg = getColorName(selectedFg);
-//   let optionsList = List[selectedFg] || [];
-
-//   let BgColorDiv = document.getElementById("BgColorDiv");
-//   BgColorDiv.innerHTML = ``;
-//   let content = "";
-//   for (let i = 0; i < optionsList.length; i++) {
-//     let color = optionsList[i];
-//     let colorValueHex = getColorHex(color);
-//     content += `
-//      <div class="color-boxBG" style="background-color: ${colorValueHex};" data-color="${colorValueHex}">
-//     <input type="radio" name="bgcolor" id="BG-${color}" value="${colorValueHex}">
-//      <label for="BG-${color}"></label>
-//    <span class="color-name" id="BG${color}">${color}</span>
-// </div>
-//     `;
-//   }
-//   BgColorDiv.innerHTML = content;
-
-//   SelectRadioFOrBGColors();
-
-//   optionsList.forEach((color) => {
-//     let option = document.createElement("option");
-//     option.value = color;
-//     option.textContent = color;
-//     bgSelect.appendChild(option);
-//   });
-// }
-
-// function updatePreview() {
-//   // let fgSelected = document.getElementById("fgColor").value
-//   // let bgSelected = document.getElementById("bgColor").value
-
-//   try {
-//     document.getElementById("languageSwitcher").click();
-
-//     let fgSelected = document.querySelector(
-//       'input[name="color"]:checked'
-//     ).value;
-//     let bgSelected = document.querySelector(
-//       'input[name="bgcolor"]:checked'
-//     ).value;
-
-//     document.getElementById("qr-color").value = fgSelected;
-//     document.getElementById("bg-color").value = bgSelected;
-//   } catch (error) {
-//     console.log(error);
-//   }
-// }
-
-// function updateColorsSelection() {
-//   const fgColor = document.getElementById("qr-color").value;
-//   const bgColor = document.getElementById("bg-color").value;
-
-//   // document.getElementById("fgColor").value = getColorName(qrColor)
-//   // updateBgColors()
-//   // document.getElementById("bgColor").value = getColorName(bgColor)
-
-//   let FGradio = document.querySelector(
-//     `input[name="color"][value="${fgColor}"]`
-//   );
-//   if (FGradio) {
-//     FGradio.checked = true;
-//     FGradio.classList.add("selected");
-//   }
-// }
-
-// function UpdateColorListAccord() {
-//   let selected = CurrentQR.ColorList;
-//   if (selected == "first") {
-//     List = colorOptions1;
-//   }
-
-//   if (selected == "second") {
-//     List = colorOptions2;
-//   }
-//   populateFgColors();
-// }
-
-// // populateFgColors();
-// document.addEventListener("DOMContentLoaded", function () {
-//   UpdateColorListAccord();
-//   // updateColorsSelection()
-// });
-
-// function ChangeLists() {
-//   let selected = document.querySelector(
-//     'input[name="ColorList"]:checked'
-//   ).value;
-
-//   if (selected == "first") {
-//     List = colorOptions1;
-//   }
-
-//   if (selected == "second") {
-//     List = colorOptions2;
-//   }
-//   populateFgColors();
-//   SelectRadioFOrFGColors();
-//   // updateBgColors();
-//   document.getElementById("languageSwitcher").click();
-//   // SelectRadioFOrBGColors()
-//   // updatePreview()
-// }
-
-// document.addEventListener("DOMContentLoaded", () => {
-//   SelectRadioFOrFGColors();
-// });
-
-// function SelectRadioFOrFGColors() {
-//   const colorBoxes = document.querySelectorAll(".color-box");
-
-//   colorBoxes.forEach((box) => {
-//     box.addEventListener("click", () => {
-//       // Remove active state from all boxes
-//       colorBoxes.forEach((b) => {
-//         b.classList.remove("selected");
-//         b.querySelector("label").style.boxShadow = "none"; // Reset previous shadow
-//         b.querySelector("label").style.border = "3px solid transparent"; // Reset border
-//       });
-
-//       // Set the selected state
-//       const input = box.querySelector("input");
-//       input.checked = true;
-//       box.classList.add("selected");
-//       updateBgColors();
-//       // Apply shadow and border based on color
-//       const color = box.dataset.color;
-//       // box.querySelector("label").style.boxShadow = `0px 0px 15px 5px ${color}`;
-//       box.querySelector("label").style.border = `3px solid ${color}`;
-//       updatePreview();
-//     });
-//   });
-// }
-// function SelectRadioFOrBGColors() {
-//   const colorBoxes = document.querySelectorAll(".color-boxBG");
-
-//   colorBoxes.forEach((box) => {
-//     box.addEventListener("click", () => {
-//       // Remove active state from all boxes
-//       colorBoxes.forEach((b) => {
-//         b.classList.remove("selected");
-//         b.querySelector("label").style.boxShadow = "none"; // Reset previous shadow
-//         b.querySelector("label").style.border = "3px solid transparent"; // Reset border
-//       });
-
-//       // Set the selected state
-//       const input = box.querySelector("input");
-//       input.checked = true;
-//       box.classList.add("selected");
-//       // Apply shadow and border based on color
-//       const color = box.dataset.color;
-//       // box.querySelector("label").style.boxShadow = `0px 0px 15px 5px ${color}`;
-//       box.querySelector("label").style.border = `3px solid ${color}`;
-
-//       updatePreview();
-//     });
-//   });
-// }
-
-// document.getElementById("PrintMyQR").addEventListener("click", function () {
-//   const hiddenInput = document.getElementById("qrCodePrintData").value;
-
-//   try {
-//     const jsonData = JSON.parse(hiddenInput);
-//   } catch (error) {
-//     console.error("Invalid JSON data:", error);
-//   }
-// });
-
-// document.addEventListener("DOMContentLoaded", function () {
-//   const fgColorInput = document.getElementById("qr-color");
-//   const bgColorInput = document.getElementById("bg-color");
-
-//   const fgColorSection = document.querySelectorAll(
-//     ".form-group .color-grid"
-//   )[0];
-//   const bgColorSection = document.querySelectorAll(
-//     ".form-group .color-grid"
-//   )[1];
-
-//   const fgColorOptions = fgColorSection.querySelectorAll(".color-option");
-//   const bgColorOptions = bgColorSection.querySelectorAll(".color-option");
-
-//   const keepBgBtn = document.querySelector(
-//     ".button-group .btn-outline:nth-child(1)"
-//   );
-//   const removeBgBtn = document.querySelector(
-//     ".button-group .btn-outline:nth-child(2)"
-//   );
-
-//   function rgbToHex(rgb) {
-//     const match = rgb.match(/\d+/g);
-//     if (!match) return rgb;
-//     return (
-//       "#" +
-//       match
-//         .map((x) => {
-//           const hex = parseInt(x).toString(16);
-//           return hex.length === 1 ? "0" + hex : hex;
-//         })
-//         .join("")
-//     );
-//   }
-
-//   function isBlack(color) {
-//     const hex = rgbToHex(color).toLowerCase();
-//     return hex === "#000000";
-//   }
-
-//   function isWhite(color) {
-//     const hex = rgbToHex(color).toLowerCase();
-//     return hex === "#ffffff";
-//   }
-
-//   function filterColor(oppositeOptions, currentColor) {
-//     const currentHex = rgbToHex(currentColor).toLowerCase();
-
-//     oppositeOptions.forEach((opt) => {
-//       const color = window.getComputedStyle(opt).backgroundColor;
-//       const hex = rgbToHex(color).toLowerCase();
-
-//       if (hex === currentHex) {
-//         opt.style.display = "none"; // hide matching color
-//       } else {
-//         opt.style.display = "block"; // show others
-//       }
-//     });
-//   }
-
-//   function selectColor(optionList, clickedOption, input, oppositeOptions) {
-//     optionList.forEach((opt) => opt.classList.remove("selected"));
-//     clickedOption.classList.add("selected");
-
-//     const color = window.getComputedStyle(clickedOption).backgroundColor;
-//     const hexColor = rgbToHex(color);
-
-//     input.value = hexColor;
-//     input.dispatchEvent(new Event("input"));
-
-//     filterColor(oppositeOptions, color);
-//   }
-
-//   // fgColorOptions.forEach((option) => {
-//   //   option.addEventListener("click", () => {
-//   //     selectColor(fgColorOptions, option, fgColorInput, bgColorOptions);
-//   //   });
-//   // });
-
-//   bgColorOptions.forEach((option) => {
-//     option.addEventListener("click", () => {
-//       selectColor(bgColorOptions, option, bgColorInput, fgColorOptions);
-//     });
-//   });
-
-//   // bgColorOptions.forEach((option) => {
-//   //   option.addEventListener("click", () => {
-//   //     selectColor(
-//   //       bgColorOptions,
-//   //       option,
-//   //       bgColorInput,
-//   //       fgColorOptions,
-//   //       "black"
-//   //     );
-//   //   });
-//   // });
-
-//   keepBgBtn.addEventListener("click", () => {
-//     keepBgBtn.classList.add("active");
-//     removeBgBtn.classList.remove("active");
-//     bgColorSection.style.display = "flex";
-//   });
-
-//   removeBgBtn.addEventListener("click", () => {
-//     removeBgBtn.classList.add("active");
-//     keepBgBtn.classList.remove("active");
-//     bgColorSection.style.display = "none";
-//     bgColorInput.value = "#ffffff"; // still safe default
-//     bgColorInput.dispatchEvent(new Event("input"));
-//   });
-
-//   // Default on load (optional)
-//   const fgSelected = fgColorSection.querySelector(".color-option.selected");
-//   const bgSelected = bgColorSection.querySelector(".color-option.selected");
-
-//   if (fgSelected) {
-//     fgColorInput.value = rgbToHex(
-//       window.getComputedStyle(fgSelected).backgroundColor
-//     );
-//   }
-
-//   if (bgSelected) {
-//     bgColorInput.value = rgbToHex(
-//       window.getComputedStyle(bgSelected).backgroundColor
-//     );
-//   }
-
-//   // 👇 NEW: Handle manual input color change - FG
-//   fgColorInput.addEventListener("input", () => {
-//     const selectedColor = fgColorInput.value.toLowerCase();
-//     let matched = false;
-//     fgColorOptions.forEach((opt) => {
-//       const color = rgbToHex(
-//         window.getComputedStyle(opt).backgroundColor
-//       ).toLowerCase();
-//       if (color === selectedColor) {
-//         fgColorOptions.forEach((o) => o.classList.remove("selected"));
-//         opt.classList.add("selected");
-//         matched = true;
-//       }
-//     });
-//     if (!matched) {
-//       fgColorOptions.forEach((o) => o.classList.remove("selected"));
-//     }
-//     filterColor(bgColorOptions, selectedColor);
-//   });
-
-//   // 👇 NEW: Handle manual input color change - BG
-//   bgColorInput.addEventListener("input", () => {
-//     const selectedColor = bgColorInput.value.toLowerCase();
-//     let matched = false;
-//     bgColorOptions.forEach((opt) => {
-//       const color = rgbToHex(
-//         window.getComputedStyle(opt).backgroundColor
-//       ).toLowerCase();
-//       if (color === selectedColor) {
-//         bgColorOptions.forEach((o) => o.classList.remove("selected"));
-//         opt.classList.add("selected");
-//         matched = true;
-//       }
-//     });
-//     if (!matched) {
-//       bgColorOptions.forEach((o) => o.classList.remove("selected"));
-//     }
-//     filterColor(fgColorOptions, selectedColor);
-//   });
-
-//   filterColor(bgColorOptions, "#000000"); // Hide black from background
-
-//   // ✅ Set default white background color visually & logically
-//   const whiteBgOption = Array.from(bgColorOptions).find((opt) => {
-//     const color = rgbToHex(
-//       window.getComputedStyle(opt).backgroundColor
-//     ).toLowerCase();
-//     return color === "#ffffff";
-//   });
-
-//   if (whiteBgOption) {
-//     whiteBgOption.classList.add("selected");
-//     bgColorInput.value = "#ffffff";
-//     bgColorInput.dispatchEvent(new Event("input"));
-//   }
-
-//   // ✅ Set default black foreground color visually & logically
-//   const blackFgOption = Array.from(fgColorOptions).find((opt) => {
-//     const color = rgbToHex(
-//       window.getComputedStyle(opt).backgroundColor
-//     ).toLowerCase();
-//     return color === "#000000";
-//   });
-
-//   if (blackFgOption) {
-//     blackFgOption.classList.add("selected");
-//     fgColorInput.value = "#000000";
-//     fgColorInput.dispatchEvent(new Event("input"));
-//   }
-// });
 
 document.addEventListener("DOMContentLoaded", function () {
   const keepBtn = document.getElementById("keep-background-update");
@@ -1730,40 +1163,7 @@ async function handleQrCodeUpdateSubmit(event) {
     return;
   }
 
-  // if (type === "media") {
-  //   const mediaFileInput = document.getElementById("media-file-update");
-  //   if (mediaFileInput.files.length > 0) {
-  //     const file = mediaFileInput.files[0];
-  //     if (file.size > maxSize) {
-  //       showToast("File size should not exceed 50 MB.", "error");
-  //       return;
-  //     }
-  //     formData.append("media-file", file);
-  //   } else {
-  //     showToast("Please attach a media file.", "error");
-  //     return;
-  //   }
-  // } else if (type === "text") {
-  //   const text = document.getElementById("text-file-update");
-  //   if (text.value) {
-  //     formData.append("text", text.value);
-  //   } else {
-  //     showToast("Please attach a text file.", "error");
-  //     return;
-  //   }
-  // } else if (type === "url") {
-  //   const urlInput = document.getElementById("url-update");
-  //   if (urlInput.value) {
-  //     if (!/^https?:\/\//i.test(urlInput.value)) {
-  //       showToast("URL must begin with 'http://' or 'https://'.", "error");
-  //       return;
-  //     }
-  //     formData.append("url", urlInput.value);
-  //   } else {
-  //     showToast("Please provide a URL.", "error");
-  //     return;
-  //   }
-  // }
+ 
 
   try {
     const qrCodeId = code;

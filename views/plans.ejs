@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Subscription Plans</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link href="/css/plans.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Choose Your Subscription</h1>
+        <a href="/" class="back-home-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" id="plans-tab">Subscription Plans</div>
+            <div class="tab" id="current-subscription-tab">Current Subscription</div>
+        </div>
+
+        <!-- Subscription Plans Tab -->
+        <div class="tab-content active" id="plans-tab-content">
+            <div class="plans">
+                <% plans.forEach(plan=> { %>
+                    <div class="plan-card">
+                        <div class="plan-duration">
+                            <%= plan.duration %>
+                        </div>
+                        <div class="plan-price">
+                            <%= plan.price %>
+                                <%= plan.currency %>
+                        </div>
+                        <ul class="features">
+                            <% plan.features.forEach(feature=> { %>
+                                <li>
+                                    <%= feature %>
+                                </li>
+                                <% }); %>
+                        </ul>
+                        <button id="checkout-button-<%= plan.encryptedId %>" class="checkout-btn subscribe-btn">
+                            Pay with Stripe
+                        </button>
+                    </div>
+                    <% }); %>
+            </div>
+        </div>
+
+        <div class="tab-content" id="current-subscription-tab-content">
+            <div class="subscription-card">
+                <% if (new Date(user.validUntil) < new Date()) { %>
+                    <div class="status-badge expired">No Active Subscription</div>
+                    <p class="no-subscription-message">Subscribe now to enjoy premium features.</p>
+                    <% } else { %>
+                        <div class="status-badge active">Active Subscription</div>
+                        <div class="subscription-details">
+                            <p><i class="fas fa-user"></i> <strong>Name :&nbsp;</strong>
+                                <%= user.name %>
+                            </p>
+                            <p><i class="fas fa-envelope"></i> <strong>Email :&nbsp;</strong>
+                                <%= user.email %>
+                            </p>
+                            <p><i class="fas fa-calendar-alt"></i> <strong>Valid Until&nbsp;:&nbsp;</strong>
+                                <% if (user.validUntil) { const date=new Date(user.validUntil); const
+                                    dd=String(date.getDate()).padStart(2, '0' ); const mm=String(date.getMonth() +
+                                    1).padStart(2, '0' ); // Months are 0-based const
+                                    yy=String(date.getFullYear()).slice(-4); %>
+                                    <%= `${dd}-${mm}-${yy}` %>
+                                        <% } else { %>
+                                            N/A
+                                            <% } %>
+                            </p>
+                            <p><i class="fas fa-clock"></i> <strong>Time Remaining&nbsp;:&nbsp;</strong> <span
+                                    id="time-remaining">Loading...</span></p>
+                        </div>
+                        <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <script
+        src="https://www.paypal.com/sdk/js?client-id=AWKksR0ZpfPjLfgGbGPUz5VSGtmBPXKaKfKq3OjpIyZZkoncnmsH9cw5bv16ef7sUCe4Ii6GRlNtcqkM"></script>
+    <script src="/js/plan.js"></script>
+    <script>
+        // Update remaining time
+        function formatTime(milliseconds) {
+            let seconds = Math.floor(milliseconds / 1000);
+            let minutes = Math.floor(seconds / 60);
+            let hours = Math.floor(minutes / 60);
+            let days = Math.floor(hours / 24);
+
+            seconds %= 60;
+            minutes %= 60;
+            hours %= 24;
+
+            let timeString = '';
+            if (days > 0) timeString += `${days} days `;
+            if (hours > 0) timeString += `${hours} hours `;
+            if (minutes > 0) timeString += `${minutes} minutes `;
+            if (seconds > 0) timeString += `${seconds} seconds`;
+            return timeString;
+        }
+
+        function updateTimeRemaining() {
+            const validUntil = new Date("<%= user.validUntil %>");
+            const now = new Date();
+            const timeRemaining = validUntil - now;
+
+            if (timeRemaining <= 0) {
+                document.getElementById('time-remaining').textContent = "Subscription expired";
+            } else {
+                document.getElementById('time-remaining').textContent = formatTime(timeRemaining);
+            }
+        }
+
+        setInterval(updateTimeRemaining, 1000);
+
+        // Tab toggle
+        const tabs = document.querySelectorAll(".tab");
+        const contents = document.querySelectorAll(".tab-content");
+
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                tabs.forEach(t => t.classList.remove("active"));
+                contents.forEach(c => c.classList.remove("active"));
+                tab.classList.add("active");
+
+                const target = document.getElementById(tab.id + "-content");
+                if (target) target.classList.add("active");
+            });
+        });
+    </script>
+</body>
+
+</html>

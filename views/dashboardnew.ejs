@@ -163,6 +163,11 @@
                         <img src="/images/INSTALLAPP.png" alt="Scan icon">
                         <span>Install App</span>
                     </button>
+
+                    <button class="nav-item" data-link="/plans">
+                        <img src="/images/INSTALLAPP.png" alt="Scan icon">
+                        <span>Subscription</span>
+                    </button>
                 </nav>
                 <button class="logout-btn" onclick="return handleLogout(event)">
                     <img src="/vuesax-linear-logout.svg" alt="Logout icon">
@@ -480,27 +485,28 @@
 <script src="/js/api-calls.js"></script>
 <script>
     const navItems = document.querySelectorAll(".nav-item");
-
-    // Restore active item from localStorage
-    const currentPath = localStorage.getItem("activeNavPath");
-    if (currentPath) {
-        navItems.forEach(item => {
-            item.classList.toggle("active", item.dataset.link === currentPath);
-        });
-    }
-
+  
+    // Get current actual path from the browser
+    const currentPath = window.location.pathname;
+  
+    // Loop through nav items and sync active class
     navItems.forEach(item => {
-        item.addEventListener("click", () => {
-            const path = item.dataset.link;
-
-            // Save active path to localStorage
-            localStorage.setItem("activeNavPath", path);
-
-            // Redirect
-            window.location.href = path;
-        });
+      const itemPath = item.dataset.link;
+      const isActive = itemPath === currentPath;
+      item.classList.toggle("active", isActive);
+  
+      if (isActive) {
+        localStorage.setItem("activeNavPath", itemPath); // update localStorage to keep in sync
+      }
+  
+      // Add click listener
+      item.addEventListener("click", () => {
+        localStorage.setItem("activeNavPath", itemPath);
+        window.location.href = itemPath;
+      });
     });
-</script>
+  </script>
+  
 
 <script>
     function toggleSidebar() {

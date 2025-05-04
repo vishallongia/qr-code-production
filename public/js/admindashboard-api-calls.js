@@ -45,7 +45,7 @@ function getUsersFromLocalStorage() {
 }
 
 // API Call to Create Demo Users
-async function createDemoUsers(totalNumbers) {
+async function createDemoUsers(totalNumbers, fgColor, bgColor) {
   event.preventDefault();
   const button = event.target.closest("button");
   const loaderOverlay = document.querySelector(".fullscreen-loader");
@@ -60,7 +60,7 @@ async function createDemoUsers(totalNumbers) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ totalNumbers }), // Sending only totalNumbers
+      body: JSON.stringify({ totalNumbers, fgColor, bgColor }), // Sending only totalNumbers
     });
 
     if (!response.ok) {
@@ -84,6 +84,8 @@ async function createDemoUsers(totalNumbers) {
 async function handleCreateDemoUsers() {
   try {
     const totalNumbers = document.getElementById("user-count").value;
+    const fgColor = document.getElementById("selectedFgHex").value;
+    const bgColor = document.getElementById("selectedBgHex").value;
 
     if (!totalNumbers) {
       showToast("Please enter the number of users to generate", "error");
@@ -98,7 +100,7 @@ async function handleCreateDemoUsers() {
       return;
     }
 
-    const result = await createDemoUsers(totalNumbers);
+    const result = await createDemoUsers(totalNumbers, fgColor, bgColor);
     showToast(result.message, "success");
     console.log("Demo Users Created:", result.data);
 
@@ -115,7 +117,6 @@ async function handleCreateDemoUsers() {
   }
 }
 
-// Function to append the demo users to the frontend cards
 function appendUsersToCards(usersData) {
   const container = document.querySelector(".container-custom-generated-user");
   const cardsPerPage = 10; // Set the number of users per page
@@ -126,52 +127,60 @@ function appendUsersToCards(usersData) {
     currentPage = page;
     const startIndex = (currentPage - 1) * cardsPerPage;
     const endIndex = currentPage * cardsPerPage;
-    const usersToDisplay = usersData.slice(startIndex, endIndex);
 
-    // Clear previous cards
-    container.innerHTML = "";
+    // Loop through all the user cards
+    const userCards = container.querySelectorAll(".user-card");
 
-    // Append the users as cards
-    usersToDisplay.forEach((user) => {
-      const wrapper = document.createElement("div");
-      wrapper.style.position = "relative";
-
-      const caption = document.createElement("div");
-      caption.classList.add("card-caption");
-      caption.innerText = `${user.password}`;
-
-      const card = document.createElement("div");
-      card.classList.add("card");
-
-      // Create a div to hold the QR code
-      const qrContainer = document.createElement("div");
-      qrContainer.id = `qr-container-${user.qrCode._id}`;
-
-      // Create the download button
-      const downloadButton = document.createElement("button");
-      downloadButton.classList.add("btn");
-      downloadButton.title = "Download";
-      downloadButton.innerHTML = `<i class="fas fa-download"></i>`;
-      downloadButton.onclick = () => downloadQRCodeShowed(user.qrCode._id);
-
-      card.innerHTML = `
-      <p><strong>Code:</strong> ${user.code}</p>
-      <p></p>
-    `;
-
-      card.prepend(qrContainer);
-      card.appendChild(downloadButton);
-      wrapper.appendChild(caption);
-      wrapper.appendChild(card);
-      container.appendChild(wrapper);
-
-      // Generate QR code for each user
-      generateQRCode(user.qrCode, qrContainer);
+    userCards.forEach((card, index) => {
+      if (index >= startIndex && index < endIndex) {
+        card.style.display = "block"; // Show the card
+      } else {
+        card.style.display = "none"; // Hide the card
+      }
     });
 
     // Update pagination buttons
     updatePagination(usersData.length, currentPage);
   };
+
+  // Create user cards
+  usersData.forEach((user, index) => {
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "relative";
+    wrapper.classList.add("user-card"); // Add the class to identify the card
+
+    const caption = document.createElement("div");
+    caption.classList.add("card-caption");
+    caption.innerText = `${user.qrCode.qrName}`;
+
+    const card = document.createElement("div");
+    card.classList.add("card");
+
+    // Create a div to hold the QR code
+    const qrContainer = document.createElement("div");
+    qrContainer.id = `qr-container-${user.qrCode.qrName}`;
+
+    // Create the download button
+    const downloadButton = document.createElement("button");
+    downloadButton.classList.add("btn");
+    downloadButton.title = "Download";
+    downloadButton.innerHTML = `<i class="fas fa-download"></i>`;
+    downloadButton.onclick = () => downloadQRCodeShowed(user.qrCode._id);
+
+    card.innerHTML = `
+      <p><strong>Code:</strong> ${user.code}</p>
+      <p></p>
+    `;
+
+    card.prepend(qrContainer);
+    card.appendChild(downloadButton);
+    wrapper.appendChild(caption);
+    wrapper.appendChild(card);
+    container.appendChild(wrapper);
+
+    // Generate QR code for each user
+    generateQRCode(user.qrCode, qrContainer);
+  });
 
   // Function to generate QR Code
   function generateQRCode(qrCodeData, qrContainer) {
@@ -179,9 +188,7 @@ function appendUsersToCards(usersData) {
 
     let logoUrl;
     if (qrCodeData.logo) {
-      // if (logo) {
       logoUrl = `${window.location.protocol}//${window.location.host}/${qrCodeData.logo}`;
-      // }
     } else {
       logoUrl = `${window.location.protocol}//${window.location.host}/images/logo.jpg`;
     }
@@ -260,16 +267,20 @@ function appendUsersToCards(usersData) {
   paginateUsers(1);
 }
 
-// Export to Excel Function
 function exportToExcel() {
   const users = getUsersFromLocalStorage();
 
   let csvContent =
-    "data:text/csv;charset=utf-8," + "Email,Code,Password,QR Link\n";
+    "data:text/csv;charset=utf-8," + "QR No.,QR Name,Code,QR Link\n";
+
   users.forEach((user) => {
-    let formattedPassword = `" \t${user.password}"`; // Add tab space to preserve leading zeros
+    // Preserve leading zeros in qrNo and qrName only
+    let qrNo = `="\t${user.qrCode.qrNo}"`;
+    let qrName = `="\t${user.qrCode.qrName}"`;
+    let code = user.code;
     let link = `https://analog-magic-code.netlify.app/?code=${user.code}`;
-    csvContent += `${user.email},${user.code},${formattedPassword},${link}\n\n`;
+
+    csvContent += `${qrNo},${qrName},${code},${link}\n`;
   });
 
   const encodedUri = encodeURI(csvContent);
@@ -433,34 +444,53 @@ function showThemePopup(message) {
   );
 }
 
-
-// Main function to download all canvases as a zip
 const downloadAllCanvasesAsZip = () => {
   const zip = new JSZip();
-  const canvases = document.querySelectorAll(".card canvas");
+  const userCards = document.querySelectorAll(".user-card");
+  const loader = document.querySelector(".fullscreen-loader");
 
-  if (canvases.length === 0) {
-      alert("No QR codes found to download.");
-      return;
+  if (userCards.length === 0) {
+    alert("No QR codes found to download.");
+    return;
   }
 
-  let count = 1;
+  // Create or reuse progress text
+  let zipProgressText = loader.querySelector(".zip-progress-text");
+  if (!zipProgressText) {
+    zipProgressText = document.createElement("p");
+    zipProgressText.classList.add("zip-progress-text");
+    loader.appendChild(zipProgressText);
+  }
 
-  // Loop through each canvas and add it to the zip file
-  canvases.forEach((canvas) => {
-      const dataURL = canvas.toDataURL("image/png"); // Get canvas as a base64 PNG
-      fetch(dataURL)
-          .then((response) => response.blob()) // Convert base64 to blob
-          .then((blob) => {
-              zip.file(`qr-${count}.png`, blob); // Add to zip with a name like qr-1.png
-              count++;
+  // Show loader
+  loader.style.display = "flex";
+  zipProgressText.textContent = `0/${userCards.length}`;
 
-              // If all files are added, generate the zip
-              if (count > canvases.length) {
-                  zip.generateAsync({ type: "blob" }).then((content) => {
-                      saveAs(content, "qr-codes.zip"); // Trigger download of the zip file
-                  });
-              }
+  let completed = 0;
+
+  userCards.forEach((card) => {
+    const canvas = card.querySelector("canvas");
+    const captionElement = card.querySelector(".card-caption");
+
+    if (!canvas || !captionElement) return;
+
+    const fileName = `${captionElement.textContent.trim()}.png`;
+    const dataURL = canvas.toDataURL("image/png");
+
+    fetch(dataURL)
+      .then((response) => response.blob())
+      .then((blob) => {
+        zip.file(fileName, blob);
+        completed++;
+        zipProgressText.textContent = `${completed}/${userCards.length}`;
+
+        if (completed === userCards.length) {
+          zip.generateAsync({ type: "blob" }).then((content) => {
+            saveAs(content, "qr-codes.zip");
+            loader.style.display = "none"; // Hide loader
+            zipProgressText.remove(); // Clean up text
           });
+        }
+      });
   });
 };

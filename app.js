@@ -3,6 +3,7 @@ const express = require("express");
 const app = express();
 const connectDB = require("./db"); // Import the database connection
 const indexRouter = require("./routes/index");
+const plansPaymentsRouter = require("./routes/plansPayments");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -12,11 +13,9 @@ require("./config/passport"); // Load Passport config
 const cron = require("node-cron");
 const sendEmailToAssignedUsers = require("./cronJobs/sendQrDeactivationEmails");
 
-
 connectDB(); //Make Conncetion to Database
 
-// Serve static files from the root directory
-// app.use(express.static(__dirname));
+app.use("/stripe", require("./routes/stripeWebhook")); // Adjust path if needed
 
 // Middleware for parsing request bodies
 app.use(bodyParser.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
@@ -56,12 +55,12 @@ app.set("view engine", "ejs");
 
 // Use routes from the index.js file
 app.use("/", indexRouter);
-
+app.use("/", plansPaymentsRouter); // Handles both plans and payments
 
 // Run every 5 minutes
 cron.schedule("*/5 * * * *", () => {
   console.log("Checking for expired QR codes...");
-  // sendEmailToAssignedUsers();
+  sendEmailToAssignedUsers();
 });
 
 // Start the server

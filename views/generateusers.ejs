@@ -2,73 +2,150 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern List View</title>
-    <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/usersqr.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern List View</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/usersqr.css">
+  <link href="/css/dashboardnew.css" rel="stylesheet">
 
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
-    <!-- JSZip library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-    <!-- FileSaver.js library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+  <!-- JSZip library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <!-- FileSaver.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
 </head>
 
 <body>
-    <!-- Include the Navbar Partial -->
-    <%- include('../components/navbar') %>
+  <input type="hidden" id="selectedFgHex" name="foreground_color">
+  <input type="hidden" id="selectedBgHex" name="background_color">
+  <div id="qr-download-container" style="display: none;"></div>
+  <!-- Include the Navbar Partial -->
+  <%- include('../components/navbar') %>
 
-        <div class="modern-list-container">
-            <div>
-                <h2>Generate Analog Users</h2>
-                <p style="text-align: center;">
-                    New User numbering begins at <%= startNumber %>
-                        <p>
+    <div class="modern-list-container">
+      <div>
+        <h2>Generate Analog Users</h2>
+        <p style="text-align: center;">
+          New User numbering begins at <%= startNumber %>
+            <p>
 
-            </div>
-            <div class="input-group-custom">
-                <input type="number" id="user-count" class="number-input" placeholder="Enter no. of users" min="1">
-                <button class="view-qr-btn" onclick="return handleCreateDemoUsers(event)">Generate User</button>
-                <button class="view-qr-btn" id="generateduserexcelbutton" style="display: none;"
-                    onclick="return exportToExcel(event)">Export to
-                    excel</button>
-                <button class="view-qr-btn" id="resetgeneratedusser" style="display: none;"
-                    onclick="return resetLocalStorageAndReload(event)">Reset</button>
-                <!-- New button to download QR codes as a zip -->
-                <button class="view-qr-btn" id="download-qr-zip" style="display: none;"
-                    onclick="return downloadAllCanvasesAsZip(event)">
-                    Download QR as Zip
-                </button>
-            </div>
+      </div>
+      <div class="input-group-custom">
+        <input type="number" id="user-count" class="number-input" placeholder="Enter no. of users" min="1">
+        <button class="view-qr-btn" onclick="return handleCreateDemoUsers(event)">Generate User</button>
+        <button class="view-qr-btn" id="generateduserexcelbutton" style="display: none;"
+          onclick="return exportToExcel(event)">Export to
+          excel</button>
+        <button class="view-qr-btn" id="resetgeneratedusser" style="display: none;"
+          onclick="return resetLocalStorageAndReload(event)">Reset</button>
+        <!-- New button to download QR codes as a zip -->
+        <button class="view-qr-btn" id="download-qr-zip" style="display: none;"
+          onclick="return downloadAllCanvasesAsZip(event)">
+          Download QR as Zip
+        </button>
+      </div>
 
-
-
-            <!-- Container to display generated users as cards -->
-            <div class="container-custom-generated-user">
-                <!-- The user cards will be dynamically inserted here by JavaScript -->
-            </div>
-
-            <!-- Pagination Container -->
-            <div class="pagination-container">
-                <!-- Pagination buttons will be dynamically inserted here by JavaScript -->
-            </div>
+      <div class="form-group" id="foreground-color-setting-update">
+        <label for="foreground-color-grid-update">Foreground Color</label>
+        <div class="color-grid" id="foreground-color-grid-update">
+          <div class="color-option" style="background-color: #000000" id="fg-color-black-update">
+          </div>
+          <div class="color-option" style="background-color: #ffffff; border: 1px solid #ccc;"
+            id="fg-color-white-update"></div>
+          <!-- <div class="color-option" style="background-color: #d13737" id="fg-color-red-update"></div>
+                    <div class="color-option" style="background-color: #c2d137" id="fg-color-lime-update"></div>
+                    <div class="color-option" style="background-color: #3751d1" id="fg-color-blue-update"></div>
+                    <div class="color-option" style="background-color: #d1376d" id="fg-color-pink-update"></div>
+                    <div class="color-option" style="background-color: #37d149" id="fg-color-green-update">
+                    </div>
+                    <div class="color-option" style="background-color: #37c7d1" id="fg-color-cyan-update"></div>
+                    <div class="color-option" style="background-color: #cc37d1" id="fg-color-purple-update">
+                    </div>
+                    <div class="color-option" style="background-color: #d16337" id="fg-color-orange-update">
+                    </div>
+                    <div class="color-option" style="background-color: #5137d1" id="fg-color-indigo-update">
+                    </div> -->
+          <!-- Real Colors -->
+          <div class="color-option" style="background-color: #FF0093" id="fg-color-magenta"></div>
+          <div class="color-option" style="background-color: #835EC7" id="fg-color-violet"></div>
+          <div class="color-option" style="background-color: #00B760" id="fg-color-green"></div>
+          <div class="color-option" style="background-color: #FC70BA" id="fg-color-pink"></div>
+          <div class="color-option" style="background-color: #1C00FF" id="fg-color-blue"></div>
+          <div class="color-option" style="background-color: #FF0000" id="fg-color-red"></div>
+          <div class="color-option" style="background-color: #FFC62C" id="fg-color-orange"></div>
+          <div class="color-option" style="background-color: #00AEEF" id="fg-color-cyan"></div>
+          <div class="color-option" style="background-color: #FEFE00" id="fg-color-yellow"></div>
+          <div class="color-option" style="background-color: #4CCED1" id="fg-color-turquoise"></div>
+          <!-- <div class="color-option" style="background-color: #5137d1" id="fg-color-indigo"></div> -->
 
         </div>
+      </div>
 
+      <div class="form-group" id="background-color-setting-update">
+        <label for="background-color-grid-update">Background Color</label>
+        <div class="color-grid" id="background-color-grid-update">
+          <div class="color-option" style="background-color: #000000" id="bg-color-black-update">
+          </div>
+          <div class="color-option" style="background-color: #ffffff; border: 1px solid #ccc;"
+            id="bg-color-white-update"></div>
+          <!-- <div class="color-option" style="background-color: #d13737" id="bg-color-red-update"></div>
+                    <div class="color-option" style="background-color: #c2d137" id="bg-color-lime-update"></div>
+                    <div class="color-option" style="background-color: #3751d1" id="bg-color-blue-update"></div>
+                    <div class="color-option" style="background-color: #d1376d" id="bg-color-pink-update"></div>
+                    <div class="color-option" style="background-color: #37d149" id="bg-color-green-update">
+                    </div>
+                    <div class="color-option" style="background-color: #37c7d1" id="bg-color-cyan-update"></div>
+                    <div class="color-option" style="background-color: #cc37d1" id="bg-color-purple-update">
+                    </div>
+                    <div class="color-option" style="background-color: #d16337" id="bg-color-orange-update">
+                    </div>
+                    <div class="color-option" style="background-color: #5137d1" id="bg-color-indigo-update">
+                    </div> -->
+          <!-- Real Colors -->
+          <div class="color-option" style="background-color: #FF0093" id="fg-color-magenta"></div>
+          <div class="color-option" style="background-color: #835EC7" id="fg-color-violet"></div>
+          <div class="color-option" style="background-color: #00B760" id="fg-color-green"></div>
+          <div class="color-option" style="background-color: #FC70BA" id="fg-color-pink"></div>
+          <div class="color-option" style="background-color: #1C00FF" id="fg-color-blue"></div>
+          <div class="color-option" style="background-color: #FF0000" id="fg-color-red"></div>
+          <div class="color-option" style="background-color: #FFC62C" id="fg-color-orange"></div>
+          <div class="color-option" style="background-color: #00AEEF" id="fg-color-cyan"></div>
+          <div class="color-option" style="background-color: #FEFE00" id="fg-color-yellow"></div>
+          <div class="color-option" style="background-color: #4CCED1" id="fg-color-turquoise"></div>
+          <!-- <div class="color-option" style="background-color: #5137d1" id="fg-color-indigo"></div> -->
 
-        <!-- Fullscreen Loader (Add this at the end of body) -->
-        <div class="fullscreen-loader">
-            <div class="loader"></div>
-            <p class="animated-text">Please wait<span>.</span><span>.</span><span>.</span></p>
         </div>
+      </div>
+
+
+
+      <!-- Container to display generated users as cards -->
+      <div class="container-custom-generated-user">
+        <!-- The user cards will be dynamically inserted here by JavaScript -->
+      </div>
+
+      <!-- Pagination Container -->
+      <div class="pagination-container">
+        <!-- Pagination buttons will be dynamically inserted here by JavaScript -->
+      </div>
+
+    </div>
+
+
+    <!-- Fullscreen Loader (Add this at the end of body) -->
+    <div class="fullscreen-loader">
+      <div class="loader"></div>
+      <p class="animated-text">Please wait<span>.</span><span>.</span><span>.</span></p>
+      <p id="zip-progress-text" style="margin-top: 10px; display: none;">1/100</p>
+    </div>
 
 
 </body>
@@ -76,9 +153,115 @@
 <script src="/js/toastify-setup.js"></script>
 <script src="/js/admindashboard-api-calls.js"></script>
 <script>
-    function goToQR(userId) {
-        window.location.href = `/admindashboard/qr/${userId}`;
-    }
+  function goToQR(userId) {
+    window.location.href = `/admindashboard/qr/${userId}`;
+  }
+</script>
+<script>
+  const colorHexMap = {
+    magenta: "#FF0093",
+    violet: "#835EC7",
+    green: "#00B760",
+    pink: "#FC70BA",
+    blue: "#1C00FF",
+    red: "#FF0000",
+    orange: "#FFC62C",
+    cyan: "#00AEEF",
+    yellow: "#FEFE00",
+    white: "#FFFFFF",
+    black: "#000000",
+    turquoise: "#4CCED1",
+  };
+
+  const colorOptions1 = {
+    white: ["black", "green", "pink", "blue", "orange", "cyan", "yellow", "turquoise"],
+    black: ["white", "pink", "orange", "yellow", "turquoise"],
+    magenta: ["white", "cyan", "yellow", "turquoise"],
+    violet: ["white", "cyan", "yellow", "turquoise"],
+    green: ["white", "cyan", "yellow", "turquoise"],
+    pink: ["white", "blue", "orange", "cyan", "yellow", "turquoise"],
+    blue: ["white", "orange", "cyan", "yellow", "turquoise"],
+    red: ["pink", "orange", "cyan", "yellow", "turquoise", "white"],
+    orange: ["white", "pink", "cyan", "turquoise"],
+    cyan: ["white", "black", "violet", "green", "pink", "blue", "orange", "yellow", "turquoise"],
+    yellow: ["white", "black", "violet", "green", "pink", "blue", "orange", "cyan", "turquoise"],
+    turquoise: ["white", "black", "violet", "green", "pink", "blue", "orange", "cyan", "yellow"],
+  };
+
+  const fgGrid = document.getElementById("foreground-color-grid-update");
+  const bgGrid = document.getElementById("background-color-grid-update");
+
+  let selectedFg = null;
+  let selectedBg = null;
+
+  // Utility to get color name from hex
+  function getColorNameFromHex(hex) {
+    return Object.keys(colorHexMap).find((key) => colorHexMap[key].toLowerCase() === hex.toLowerCase());
+  }
+
+  // Clear previous active classes
+  function clearActive(container) {
+    container.querySelectorAll(".color-option").forEach((el) => el.classList.remove("active"));
+  }
+
+  // Foreground color selection
+  fgGrid.querySelectorAll(".color-option").forEach((fgDiv) => {
+    fgDiv.addEventListener("click", function () {
+      clearActive(fgGrid);
+      fgDiv.classList.add("active");
+
+      const fgHex = fgDiv.style.backgroundColor;
+      const fgName = getColorNameFromHex(rgbToHex(fgHex));
+      selectedFg = fgName;
+      document.getElementById("selectedFgHex").value = rgbToHex(fgHex);
+
+      // Reset background
+      clearActive(bgGrid);
+      selectedBg = null;
+
+      // Show only allowed background colors
+      const allowedBgs = colorOptions1[fgName] || [];
+
+      bgGrid.querySelectorAll(".color-option").forEach((bgDiv) => {
+        const bgHex = rgbToHex(bgDiv.style.backgroundColor);
+        const bgName = getColorNameFromHex(bgHex);
+
+        if (allowedBgs.includes(bgName) && bgName !== fgName) {
+          bgDiv.style.display = "inline-block";
+        } else {
+          bgDiv.style.display = "none";
+        }
+      });
+    });
+  });
+
+  // Background color selection
+  bgGrid.querySelectorAll(".color-option").forEach((bgDiv) => {
+    bgDiv.addEventListener("click", function () {
+      if (bgDiv.style.display === "none") return; // skip if not allowed
+
+      clearActive(bgGrid);
+      bgDiv.classList.add("active");
+
+      const bgHex = bgDiv.style.backgroundColor;
+      selectedBg = getColorNameFromHex(rgbToHex(bgHex));
+      document.getElementById("selectedBgHex").value = rgbToHex(bgHex);
+    });
+  });
+
+  // Helper: convert rgb(...) to hex
+  function rgbToHex(rgb) {
+    const rgbValues = rgb.match(/\d+/g);
+    if (!rgbValues || rgbValues.length < 3) return rgb;
+    return (
+      "#" +
+      rgbValues
+        .slice(0, 3)
+        .map((x) => parseInt(x).toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase()
+    );
+  }
 </script>
 
 </html>

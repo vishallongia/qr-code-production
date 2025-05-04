@@ -9,7 +9,6 @@ const qrCodeSchema = new mongoose.Schema(
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // Reference to the User schema
-      required: true,
     },
     type: {
       type: String,
@@ -33,6 +32,7 @@ const qrCodeSchema = new mongoose.Schema(
     code: {
       type: String,
       required: true,
+      unique: true,
     },
     qrDotColor: {
       type: String,
@@ -69,22 +69,30 @@ const qrCodeSchema = new mongoose.Schema(
       ref: "User", // Reference to the User schema
       required: false, // Not mandatory
     },
+    isDemo: {
+      type: Boolean,
+      default: false, // Defaults to false for user-created QR codes
+    },
     isQrActivated: {
       type: Boolean,
       default: false, // QR code is not activated by default
     },
-    activatedUntil: {
-      type: Date,
-      default: null, // Will be set when QR is activated
+    qrNo: {
+      type: String,
     },
-    isTrial: {
-      type: Boolean,
-      default: false, // Defaults to false for user-created QR codes
-    },
-    isFirstActivationFree: {
-      type: Boolean,
-      default: true, // Initially, the first activation is free
-    },
+
+    // activatedUntil: {
+    //   type: Date,
+    //   default: null, // Will be set when QR is activated
+    // },
+    // isTrial: {
+    //   type: Boolean,
+    //   default: false, // Defaults to false for user-created QR codes
+    // },
+    // isFirstActivationFree: {
+    //   type: Boolean,
+    //   default: true, // Initially, the first activation is free
+    // },
   },
   { timestamps: true }
 );

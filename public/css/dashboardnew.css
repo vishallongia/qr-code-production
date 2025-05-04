@@ -32,11 +32,17 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 5;
+    z-index: 50;
     padding: 20px;
     box-sizing: border-box;
 }
 
+.color-option.active {
+    outline: 3px solid #000;
+    outline-offset: 2px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+    border-radius: 5px;
+}
 .popup-content {
     background: white;
     padding: 30px 40px;

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern List View</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/usersqr.css">
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <!-- JSZip library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- FileSaver.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+</head>
+
+<body>
+    <!-- Include the Navbar Partial -->
+    <%- include('../components/navbar') %>
+
+        <div class="modern-list-container">
+            <div>
+                <h2>Generate Trial Users</h2>
+                <p style="text-align: center;">
+                    New User numbering begins at <%= startNumber %>
+                        <p>
+
+            </div>
+            <div class="input-group-custom">
+                <input type="number" id="user-count" class="number-input" placeholder="Enter no. of users" min="1">
+                <button class="view-qr-btn" onclick="return handleCreateTrialUsers(event)">Generate User</button>
+                <button class="view-qr-btn" id="generateduserexcelbutton" style="display: none;"
+                    onclick="return exportToExcel(event)">Export to
+                    excel</button>
+                <button class="view-qr-btn" id="resetgeneratedusser" style="display: none;"
+                    onclick="return resetLocalStorageAndReload(event)">Reset</button>
+                <!-- New button to download QR codes as a zip -->
+                <button class="view-qr-btn" id="download-qr-zip" style="display: none;"
+                    onclick="return downloadAllCanvasesAsZip(event)">
+                    Download QR as Zip
+                </button>
+            </div>
+
+
+
+            <!-- Container to display generated users as cards -->
+            <div class="container-custom-generated-user">
+                <!-- The user cards will be dynamically inserted here by JavaScript -->
+            </div>
+
+            <!-- Pagination Container -->
+            <div class="pagination-container">
+                <!-- Pagination buttons will be dynamically inserted here by JavaScript -->
+            </div>
+
+        </div>
+
+
+        <!-- Fullscreen Loader (Add this at the end of body) -->
+        <div class="fullscreen-loader">
+            <div class="loader"></div>
+            <p class="animated-text">Please wait<span>.</span><span>.</span><span>.</span></p>
+        </div>
+
+
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+<script src="/js/generatetrialusers.js"></script>
+<script>
+    function goToQR(userId) {
+        window.location.href = `/admindashboard/qr/${userId}`;
+    }
+</script>
+
+</html>

@@ -92,6 +92,7 @@ const sendEmailToAssignedUsers = async () => {
 
               // OPTIONAL: Deactivate QR code after email is sent
               qrCode.isQrActivated = false;
+              qrCode.isFirstActivationFree = false;
               await qrCode.save();
               console.log(`QR Code ${qrCode._id} marked as deactivated.`);
             } else {

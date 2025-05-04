@@ -1,0 +1,242 @@
+:root {
+    --background-color: #f9fafb;
+    --primary-color: #1a0161;
+    --hover-primary-color: #350d85;
+    --text-color: #374151;
+    --heading-color: #111827;
+    --card-background: #ffffff;
+    --card-shadow: rgba(0, 0, 0, 0.08);
+    --card-hover-shadow: rgba(0, 0, 0, 0.15);
+    --button-text-color: #ffffff;
+    --transition-speed: 0.3s;
+    --radius: 16px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: 2rem;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 1rem;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 3rem;
+    font-size: 2.8rem;
+    color: var(--heading-color);
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.tab {
+    padding: 0.8rem 1.8rem;
+    cursor: pointer;
+    background: var(--primary-color);
+    color: var(--button-text-color);
+    border-radius: var(--radius) var(--radius) 0 0;
+    font-weight: 600;
+    transition: background var(--transition-speed), transform var(--transition-speed);
+}
+
+.tab:hover {
+    background: var(--hover-primary-color);
+    transform: translateY(-2px);
+}
+
+.tab.active {
+    background: var(--hover-primary-color);
+    box-shadow: 0 2px 6px var(--card-shadow);
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn var(--transition-speed) ease-in;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.plan-card {
+    background: var(--card-background);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 16px var(--card-shadow);
+    padding: 2rem;
+    text-align: center;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    position: relative;
+    overflow: hidden;
+}
+
+.plan-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px var(--card-hover-shadow);
+}
+
+.plan-duration {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--heading-color);
+    margin-bottom: 0.5rem;
+}
+
+.plan-price {
+    font-size: 2.2rem;
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.features {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 2rem;
+}
+
+.features li {
+    margin: 0.5rem 0;
+}
+
+.subscribe-btn {
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+    border: none;
+    padding: 0.8rem 1.6rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+}
+
+.subscribe-btn:hover {
+    background-color: var(--hover-primary-color);
+}
+
+.user-info {
+    font-size: 1.1rem;
+    color: var(--heading-color);
+    margin-top: 2rem;
+    text-align: center;
+    background: var(--card-background);
+    padding: 2rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 16px var(--card-shadow);
+}
+
+
+.subscription-card {
+    background: var(--card-background);
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: 0 6px 20px var(--card-shadow);
+    max-width: 600px;
+    margin: 2rem auto;
+    position: relative;
+    text-align: left;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.status-badge.active {
+    background-color: #10b981;
+    /* green */
+}
+
+.status-badge.expired {
+    background-color: #ef4444;
+    /* red */
+}
+
+.subscription-details p {
+    font-size: 1.1rem;
+    margin: 0.8rem 0;
+    display: flex;
+    align-items: center;
+}
+
+.subscription-details i {
+    margin-right: 0.6rem;
+    color: var(--primary-color);
+    width: 20px;
+    text-align: center;
+}
+
+.no-subscription-message {
+    font-size: 1.2rem;
+    color: var(--text-color);
+    margin-top: 1rem;
+}
+
+.back-home-btn {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 10px 16px;
+    background-color: var(--primary-color);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.back-home-btn i {
+    margin-right: 6px;
+}
+
+.back-home-btn:hover {
+    background-color: var(--hover-primary-color)
+}
+
+@media (max-width: 768px) {
+    .tabs {
+        flex-direction: column;
+        align-items: center;
+    }
+}

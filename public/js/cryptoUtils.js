@@ -20,20 +20,22 @@ function encryptPassword(password) {
   );
 
   // Handle both Buffer and string input
-  const input = Buffer.isBuffer(password) ? password : Buffer.from(password, "utf8");
+  const input = Buffer.isBuffer(password)
+    ? password
+    : Buffer.from(password, "utf8");
 
   // Encrypt the input
   const encrypted = Buffer.concat([cipher.update(input), cipher.final()]);
   const authTag = cipher.getAuthTag(); // Authentication tag for GCM
 
-  return `${iv.toString("hex")}:${encrypted.toString("hex")}:${authTag.toString("hex")}`;
+  return `${iv.toString("hex")}:${encrypted.toString("hex")}:${authTag.toString(
+    "hex"
+  )}`;
 }
 
 // Decryption helper function
 function decryptPassword(encryptedPassword) {
   const [ivHex, encryptedText, authTagHex] = encryptedPassword.split(":");
-
-  
 
   const iv = Buffer.from(ivHex, "hex"); // Convert IV from hex
   const authTag = Buffer.from(authTagHex, "hex"); // Convert auth tag from hex
@@ -46,7 +48,9 @@ function decryptPassword(encryptedPassword) {
   }
 
   if (authTagHex.length !== 32) {
-    throw new Error("Invalid authentication tag length. Possible tampering detected.");
+    throw new Error(
+      "Invalid authentication tag length. Possible tampering detected."
+    );
   }
 
   const decipher = crypto.createDecipheriv(
@@ -58,19 +62,23 @@ function decryptPassword(encryptedPassword) {
   decipher.setAuthTag(authTag); // Set the authentication tag
 
   // Decrypt the encrypted data
-  const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+  const decrypted = Buffer.concat([
+    decipher.update(encrypted),
+    decipher.final(),
+  ]);
 
   return decrypted.toString("utf8"); // Convert the result to UTF-8 string
 }
 
 // Helper function to generate a random 6-character alphanumeric code
-const generateCode = () => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < 7; i++) {
+const generateCode = (length = 6) => {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return result;
 };
 
-module.exports = { encryptPassword, decryptPassword ,generateCode };
+module.exports = { encryptPassword, decryptPassword, generateCode };

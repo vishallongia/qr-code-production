@@ -159,7 +159,7 @@ async function generateQRCode(formData) {
     return result; // Return the result for further handling
   } catch (error) {
     toggleLoaderVisibility(false);
-    generatedSection.style.display = "block";
+    // generatedSection.style.display = "block";
     console.error("Error:", error);
     document.querySelector(".submit-btn").disabled = false;
     throw error; // Propagate the error
@@ -329,7 +329,7 @@ submitBtnUpdate.addEventListener("click", async (event) => {
     toggleLoaderVisibility(false);
   } catch (error) {
     toggleLoaderVisibility(false);
-    generatedSection.style.display = "block";
+    // generatedSection.style.display = "block";
     showToast(error.message || "Error updating QR code.", "error");
   }
   // generateQRCodeFe(true, logo);

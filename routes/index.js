@@ -6,10 +6,14 @@ const bcrypt = require("bcrypt");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
 const { authMiddleware } = require("../middleware/auth"); // Import the middleware
+const {
+  checkSubscriptionMiddleware,
+} = require("../middleware/checkSubscriptionStatus"); // Import the middleware
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const mongoose = require("mongoose");
 const ExcelJS = require("exceljs");
 // const { sendResetPasswordEmail } = require("../public/js/email-service");
 const SendEmail = require("../Messages/SendEmail");
@@ -74,6 +78,19 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
+// Home route
+router.get("/cancel", authMiddleware, async (req, res) => {
+  try {
+    res.render("paymentfailed"); // Send type as 'success'
+  } catch (error) {
+    console.error("Error generating Magic code:", error);
+    res.status(500).render("error", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
 // Register route
 router.get("/register", async (req, res) => {
   try {
@@ -100,9 +117,36 @@ router.get("/new", async (req, res) => {
   }
 });
 
-// Home route
 router.get(
   "/admindashboard/generateusers",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      // Get the largest existing qrNo
+      const latestQR = await QRCodeData.findOne({
+        qrNo: { $regex: /^[0-9]{7}$/ }, // Only 7-digit numeric values
+      })
+        .sort({ qrNo: -1 }) // Get the highest one
+        .limit(1);
+
+      // Determine the next qrNo
+      let startNumber = "0000001"; // Default if none exist
+      if (latestQR) {
+        startNumber = String(parseInt(latestQR.qrNo, 10) + 1).padStart(7, "0");
+      }
+      res.render("generateusers", { startNumber }); // Send type as 'success'
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      res.status(500).render("login", {
+        message: "Failed to generate Magic code",
+        type: "error", // Send type as 'error'
+      });
+    }
+  }
+);
+
+router.get(
+  "/admindashboard/generatetrialusers",
   authMiddleware,
   async (req, res) => {
     try {
@@ -119,7 +163,7 @@ router.get(
           parseInt(largestUser.email.split("@")[0], 10) + 1
         ).padStart(7, "0");
       }
-      res.render("generateusers", { startNumber }); // Send type as 'success'
+      res.render("generatetrialusers", { startNumber }); // Send type as 'success'
     } catch (error) {
       console.error("Error generating QR code:", error);
       res.status(500).render("login", {
@@ -241,9 +285,12 @@ router.post("/assign-qr-code", async (req, res) => {
         .json({ message: "Magic Code not found", type: "error" });
     }
 
-    console.log(qrCodeData, "wme");
     // Check if QR code is already assigned and isQrActivated is true
-    if (qrCodeData.assignedTo && qrCodeData.isQrActivated) {
+    if (
+      qrCodeData.assignedTo &&
+      qrCodeData.isQrActivated &&
+      qrCodeData.isDemo
+    ) {
       return res.status(400).json({
         message: "QR code is already assigned and activated",
         type: "error",
@@ -542,62 +589,40 @@ router.get(
       const currentPage = parseInt(req.query.page) || 1;
       const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
 
-      // Fetch total number of demo-users to calculate total pages
-      const totalUsers = await User.countDocuments({ role: "demo-user" });
+      const totalQrCodes = await QRCodeData.countDocuments({
+        isDemo: true,
+        assignedTo: { $exists: false },
+      });
 
       // Calculate total pages (ceil to the nearest whole number)
-      const totalPages = Math.ceil(totalUsers / recordsPerPage);
+      const totalPages = Math.ceil(totalQrCodes / recordsPerPage);
 
       // Calculate the number of users to skip
       const skip = (currentPage - 1) * recordsPerPage;
 
       // Fetch demo-users and count their QR codes in a single query
-      const users = await User.aggregate([
-        { $match: { role: "demo-user" } }, // Filter for demo-user role
-        {
-          $lookup: {
-            from: "qrcodedatas", // Collection name for QR code data
-            localField: "_id", // Field in User model
-            foreignField: "user_id", // Field in QRCodeData model
-            as: "qrData", // Name of the joined field
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            fullName: 1,
-            email: 1,
-            role: 1,
-            isActive: 1,
-            userPasswordKey: 1,
-            qrCount: { $size: "$qrData" }, // Count of QR codes
-            qrData: { $arrayElemAt: ["$qrData", 0] }, // Get the first (and only) QR code
-          },
-        },
-      ])
+      const qrCodes = await QRCodeData.find({
+        isDemo: true,
+        assignedTo: { $exists: false },
+      })
         .skip(skip)
         .limit(recordsPerPage);
 
       // Decrypt passwords only for the users on the current page
-      users.forEach((user) => {
-        if (user.userPasswordKey) {
-          user.userPasswordKey = decryptPassword(user.userPasswordKey); // Decrypt the password
-        }
+      qrCodes.forEach((user) => {
         user.encryptedId = encryptPassword(user._id.toString()); // Encrypt the ObjectId string
 
-        if (user.qrData && user.qrData._id) {
-          // Encrypt the QR code ID
-          user.encryptedQrId = encryptPassword(user.qrData._id.toString());
-          user.code = user.qrData.code;
-        }
+        // Encrypt the QR code ID
+        user.encryptedQrId = encryptPassword(user._id.toString());
+        user.code = user.code;
       });
 
       // Render the dashboard with the demo-users data and pagination info
       res.render("demouserdashboard", {
-        users,
+        qrCodes,
         currentPage,
         totalPages,
-        totalUsers,
+        totalQrCodes,
         FRONTEND_URL: process.env.FRONTEND_URL,
       });
     } catch (error) {
@@ -613,54 +638,53 @@ router.get(
 //Export Demo Users
 router.get("/admindashboard/export-users", authMiddleware, async (req, res) => {
   try {
-    const users = await User.aggregate([
-      { $match: { role: "demo-user" } }, // Filter for demo-user role
+    const qrCodes = await QRCodeData.aggregate([
       {
-        $lookup: {
-          from: "qrcodedatas",
-          localField: "_id",
-          foreignField: "user_id",
-          as: "qrData",
-        },
+        $match: { isDemo: true }, // Only demo QR codes
       },
       {
         $project: {
-          _id: 1,
-          fullName: 1,
-          email: 1,
-          role: 1,
-          isActive: 1,
-          userPasswordKey: 1,
-          qrCount: { $size: "$qrData" },
-          qrCode: { $arrayElemAt: ["$qrData.code", 0] }, // Get the first QR codeF
+          _id: 0,
+          qrCode: "$code",
+          qrCodeLink: {
+            $concat: ["https://analog-magic-code.netlify.app/?code=", "$code"],
+          },
+          qrName: 1, // Include qrName
+          qrNo: 1, // Include qrNo
         },
       },
     ]);
 
-    users.forEach((user) => {
-      if (user.userPasswordKey) {
-        user.userPasswordKey = decryptPassword(user.userPasswordKey);
-      }
-      if (user.qrCode) {
-        user.qrCodeLink = `https://analog-magic-code.netlify.app/?code=${user.qrCode}`;
-      }
-    });
+    // users.forEach((user) => {
+    //   if (user.userPasswordKey) {
+    //     user.userPasswordKey = decryptPassword(user.userPasswordKey);
+    //   }
+    //   if (user.qrCode) {
+    //     user.qrCodeLink = `https://analog-magic-code.netlify.app/?code=${user.qrCode}`;
+    //   }
+    // });
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Users");
     worksheet.columns = [
-      { header: "Full Name", key: "fullName", width: 20 },
-      { header: "Email", key: "email", width: 25 },
-      { header: "Password", key: "userPasswordKey", width: 20 },
-      { header: "QR Count", key: "qrCount", width: 10 },
-      { header: "Active", key: "isActive", width: 10 },
+      // { header: "Full Name", key: "fullName", width: 20 },
+      // { header: "Email", key: "email", width: 25 },
+      // { header: "Password", key: "userPasswordKey", width: 20 },
+      // { header: "QR Count", key: "qrCount", width: 10 },
+      // { header: "Active", key: "isActive", width: 10 },
+      { header: "No.", key: "qrNo", width: 10 },
+      { header: "Name", key: "qrName", width: 10 },
       { header: "Code", key: "qrCode", width: 10 },
       { header: "Link", key: "qrCodeLink", width: 30 },
     ];
 
-    users.forEach((user) => {
-      worksheet.addRow(user);
+    qrCodes.forEach((qr) => {
+      worksheet.addRow(qr);
     });
+
+    // users.forEach((user) => {
+    //   worksheet.addRow(user);
+    // });
 
     res.setHeader("Content-Disposition", "attachment; filename=users.xlsx");
     res.setHeader(
@@ -1393,8 +1417,8 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
   let user;
   try {
     const userId = req.user?._id; // Ensure userId exists
-    const { magiccode, showPopup = false } = req.query; // Get the myvibecode query parameter, if any
-
+    const { magiccode } = req.query; // Get the myvibecode query parameter, if any
+    const showPopup = String(req.query.showPopup).toLowerCase() === "true";
     // Fetch user details using findOne instead of findById
     user = await User.findOne({ _id: userId }).select("-password"); // Exclude password
 
@@ -1427,8 +1451,12 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
         });
       }
 
+      if (qrCode.isDemo && !qrCode.isQrActivated && !showPopup) {
+        return res.redirect(`/dashboard?magiccode=${magiccode}&showPopup=true`);
+      }
       // If showpopup is true and qrCode is NOT a trial code, redirect
-      if (showPopup && !qrCode.isTrial) {
+      if (showPopup && !qrCode.isDemo) {
+        console.log("i am in 2");
         return res.redirect(`/dashboard?magiccode=${magiccode}`);
       }
       // If QR code is found, render dashboard with this QR code for editing
@@ -1673,6 +1701,8 @@ router.get("/magiccode", authMiddleware, async (req, res) => {
 router.post(
   "/generate",
   authMiddleware,
+  checkSubscriptionMiddleware,
+
   upload.fields([
     { name: "media-file", maxCount: 1 },
     { name: "text-file", maxCount: 1 },
@@ -1776,24 +1806,6 @@ router.post(
       } else {
         return res.status(400).json({ message: "Invalid type", type: "error" });
       }
-
-      // Check if logo file exists and save it if provided
-      // if (req.files["logo"]) {
-      //   const logoFile = req.files["logo"][0];
-      //   const logoFolderPath = path.join(__dirname, "../logos");
-
-      //   // Ensure the logos folder exists
-      //   if (!fs.existsSync(logoFolderPath)) {
-      //     fs.mkdirSync(logoFolderPath);
-      //   }
-
-      //   // Set the logo path to save in database
-      //   logoPath = path.join("logos", logoFile.filename);
-      //   const logoFullPath = path.join(logoFolderPath, logoFile.filename);
-
-      //   // Move the uploaded logo to the 'logos' folder
-      //   fs.renameSync(logoFile.path, logoFullPath);
-      // }
 
       const qrCode = new QRCodeData({
         user_id,
@@ -1946,6 +1958,7 @@ router.delete("/delete/:id", authMiddleware, async (req, res) => {
 router.put(
   "/update/:id", // Update QR code by ID
   authMiddleware,
+  checkSubscriptionMiddleware,
   upload.fields([
     { name: "media-file", maxCount: 1 },
     { name: "text-file", maxCount: 1 },
@@ -2002,45 +2015,43 @@ router.put(
           .json({ message: "Magic Code not found", type: "error" });
       }
 
+      // Check if QR trial has expired
+
+      // Check if QR trial has expired
+      // if (
+      //   qrCode.isTrial &&
+      //   qrCode.activatedUntil &&
+      //   new Date() > new Date(qrCode.activatedUntil)
+      // ) {
+      //   return res
+      //     .status(400)
+      //     .json({ message: "QR code has expired", type: "error" });
+      // }
+
       if (
-        qrCode.user_id.toString() !== user_id.toString() &&
-        qrCode.assignedTo?.toString() !== user_id.toString()
+        (!qrCode.user_id || qrCode.user_id.toString() !== user_id.toString()) &&
+        (!qrCode.assignedTo ||
+          qrCode.assignedTo.toString() !== user_id.toString())
       ) {
         return res
           .status(403)
           .json({ message: "Unauthorized access", type: "error" });
       }
-
       if (isActivation) {
-        if (qrCode.isTrial) {
-          if (qrCode.isFirstActivationFree) {
-            let activationDurationMinutes = 5; // Default to 5 minutes
-
-            const activationTimeEnv = parseInt(process.env.ACTIVATION_DURATION, 10);
-
-            if (!isNaN(activationTimeEnv) && activationTimeEnv > 0) {
-              activationDurationMinutes = activationTimeEnv * 24 * 60; // Convert days to minutes
-            }
-
-            const activatedUntil = new Date();
-            activatedUntil.setMinutes(
-              activatedUntil.getMinutes() + activationDurationMinutes
-            );
-
-            qrCode.activatedUntil = activatedUntil; // Set activation expiration time
+        if (qrCode.isDemo) {
+          if (!qrCode.isQrActivated) {
             qrCode.isQrActivated = true; // Mark QR as activated
-            qrCode.isFirstActivationFree = false; // Mark free activation as used
           } else {
             // Free activation already used
             return res.status(400).json({
-              message: "Trial expired. Please buy a plan.",
+              message: "Demo Qr code already activated",
               type: "error",
             });
           }
         } else {
           // Not a trial code
           return res.status(400).json({
-            message: "Activation is only needed for trial QR codes.",
+            message: "Activation is only needed for Demo QR codes.",
             type: "error",
           });
         }
@@ -2119,37 +2130,6 @@ router.put(
         });
       }
 
-      // Delete existing logo file if applicable
-      // if (existingLogoUrl) {
-      //   const existingLogoPath = path.resolve(__dirname, "..", existingLogoUrl);
-      //   fs.unlink(existingLogoPath, (err) => {
-      //     if (err) {
-      //       console.error("Error deleting existing logo file:", err);
-      //     } else {
-      //       console.log("Successfully deleted logo file.");
-      //     }
-      //   });
-      // }
-      // // Move new logo to 'logos' folder if a new logo file is provided
-      // if (req.files["logo"]) {
-      //   const newLogoPath = path.join("logos", req.files["logo"][0].filename);
-      //   const logoTempPath = req.files["logo"][0].path;
-      //   qrCode.logo = newLogoPath;
-
-      //   // Move logo to the 'logos' directory
-      //   fs.rename(logoTempPath, newLogoPath, (err) => {
-      //     if (err) {
-      //       console.error("Error moving logo file to 'logos' folder:", err);
-      //       return res.status(500).json({ message: "Error saving new logo." });
-      //     } else {
-      //       qrCode.logo = newLogoPath; // Update the logo path in the QR code data
-      //       console.log("Logo file successfully moved to 'logos' folder.");
-      //     }
-      //   });
-      // } else {
-      //   // Set logo to null if no new logo file is provided
-      //   qrCode.logo = null;
-      // }
       qrCode.type = type; // Change the type
       // Assign new fields to the qrCode object
       qrCode.qrName = qrName; // Assign qrName
@@ -2218,6 +2198,14 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6,7})", async (req, res) => {
       });
     }
 
+    if (
+      codeData.isTrial &&
+      codeData.activatedUntil &&
+      new Date() > new Date(codeData.activatedUntil)
+    ) {
+      res.render("expired-code");
+    }
+
     // ✅ If user ID matches and showEditOnScan is true, redirect to dummy link
     if (
       user && // Check if user exists
@@ -2233,6 +2221,7 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6,7})", async (req, res) => {
 
     // Check the type of the code and handle accordingly
     if (codeData.type === "url") {
+      console.log("I am working");
       // Redirect to the URL found in the database if type is 'url'
       return res.redirect(codeData.url); // Redirects to the URL
     } else if (codeData.type === "media") {
@@ -2267,7 +2256,7 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6,7})", async (req, res) => {
 // Home route
 router.get("/newqr", async (req, res) => {
   try {
-    res.render("qr"); // Send type as 'success'
+    ("qr"); // Send type as 'success'
   } catch (error) {
     console.error("Error generating Magic Code:", error);
     res.status(500).render("login", {
@@ -2612,332 +2601,187 @@ router.post("/create-generate", async (req, res) => {
       CodeArr,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Error generating Magic code." });
   }
 });
 
-// Create a Demo User
+router.post(
+  "/create-demo-users",
+  upload.fields([{ name: "media-file", maxCount: 1 }]),
+  multerErrorHandler,
+  async (req, res) => {
+    let UserArrObj = [];
+    let { totalNumbers, fgColor, bgColor } = req.body;
+    fgColor = fgColor && fgColor.trim() !== "" ? fgColor : "#000000";
+    bgColor = bgColor && bgColor.trim() !== "" ? bgColor : "#FFFFFF";
 
-// router.post(
-//   "/register-generate",
-//   upload.fields([
-//     { name: "media-file", maxCount: 1 },
-//     // { name: "logo", maxCount: 1 },
-//   ]), multerErrorHandler,
-//   async (req, res) => {
-//     const {
-//       fullName,
-//       email,
-//       password,
-//       qrName,
-//       type,
-//       qrDotColor,
-//       backgroundColor,
-//       dotStyle,
-//       cornerStyle,
-//       applyGradient,
-//       url,
-//       text,
-//     } = req.body;
+    totalNumbers = parseInt(totalNumbers, 10) || 1;
+    let startNumber = "0000001";
 
-//     if (!fullName)
-//       return res
-//         .status(400)
-//         .json({ message: "Full name is required", type: "error" });
-//     if (!email)
-//       return res
-//         .status(400)
-//         .json({ message: "Email is required", type: "error" });
-//     if (!password || password.length < 6)
-//       return res.status(400).json({
-//         message: "Password must be at least 6 characters",
-//         type: "error",
-//       });
-//     if (!qrName)
-//       return res
-//         .status(400)
-//         .json({ message: "QR name is required", type: "error" });
-//     if (!type || !["media", "text", "url"].includes(type))
-//       return res
-//         .status(400)
-//         .json({ message: "Invalid QR type", type: "error" });
-//     if (!qrDotColor)
-//       return res
-//         .status(400)
-//         .json({ message: "QR dot color is required", type: "error" });
-//     if (!backgroundColor)
-//       return res
-//         .status(400)
-//         .json({ message: "Background color is required", type: "error" });
-//     if (!dotStyle)
-//       return res
-//         .status(400)
-//         .json({ message: "Dot style is required", type: "error" });
-//     if (!cornerStyle)
-//       return res
-//         .status(400)
-//         .json({ message: "Corner style is required", type: "error" });
-//     // if (applyGradient === undefined || typeof applyGradient !== "boolean")
-//     //   return res
-//     //     .status(400)
-//     //     .json({ message: "Apply gradient must be a boolean", type: "error" });
+    // Find the latest qrNo (fixed 7-digit number in string format)
+    const latestQR = await QRCodeData.findOne({
+      qrNo: { $regex: /^[0-9]{7}$/ },
+    }).sort({ qrNo: -1 });
 
-//     // if (!url || !/^https?:\/\//.test(url))
-//     //   return res
-//     //     .status(400)
-//     //     .json({ message: "Valid URL is required", type: "error" });
-//     // if (!text)
-//     //   return res
-//     //     .status(400)
-//     //     .json({ message: "Text is required", type: "error" });
+    if (latestQR) {
+      startNumber = String(parseInt(latestQR.qrNo, 10) + 1).padStart(7, "0");
+    }
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-//     try {
-//       const existingUser = await User.findOne({ email });
-//       if (existingUser) {
-//         return res
-//           .status(400)
-//           .json({ message: "Email already in use", type: "error" });
-//       }
+    try {
+      for (let i = 0; i < totalNumbers; i++) {
+        const qrNo = startNumber;
+        const qrName = startNumber;
+        const qrCodeId = new mongoose.Types.ObjectId();
+        let code = generateCode();
 
-//       const hashedPassword = await bcrypt.hash(password, 10);
-//       const encryptedPassword = encryptPassword(password);
-//       const newUser = new User({
-//         fullName,
-//         email,
-//         password: hashedPassword,
-//         role: "demo-user",
-//         isActive: true,
-//         userPasswordKey: encryptedPassword,
-//       });
+        // Ensure unique QR code
+        let existingCode = await QRCodeData.findOne({ code }).session(session);
+        while (existingCode) {
+          code = generateCode();
+          existingCode = await QRCodeData.findOne({ code }).session(session);
+        }
 
-//       // Generate a 6-character alphanumeric code
-//       const code = generateCode();
+        const qrCode = new QRCodeData({
+          _id: qrCodeId,
+          qrNo, // fixed, always like "0000001"
+          qrName,
+          type: "url",
+          url: `${process.env.FRONTEND_URL}/assign-qr-code/${encryptPassword(
+            qrCodeId.toString()
+          )}`,
+          text: "",
+          code,
+          qrDotColor: fgColor,
+          backgroundColor: bgColor,
+          dotStyle: "rounded",
+          cornerStyle: "dot",
+          applyGradient: "none",
+          logo: process.env.STATIC_LOGO,
+          isDemo: true,
+        });
 
-//       // Handle media and text file uploads
-//       let mediaFilePath;
-//       let logoPath = process.env.STATIC_LOGO;
+        await qrCode.save({ session });
 
-//       if (type === "media") {
-//         // Check if media file is attached
-//         if (!req.files["media-file"]) {
-//           return res
-//             .status(400)
-//             .json({ message: "Media file not attached", type: "error" });
-//         }
-//         // Assuming req.files["media-file"] is correctly populated by your upload middleware
-//         const mediaFile = req.files["media-file"][0];
+        // Push in the same format as original route
+        UserArrObj.push({
+          uid: null, // no user created
+          email: null, // for reference only
+          password: null, // no user created
+          code,
+          resetLinkValue: `${
+            process.env.FRONTEND_URL
+          }/assign-qr-code/${encryptPassword(qrCodeId.toString())}`,
+          qrCode,
+        });
 
-//         // Validate media file size
-//         if (mediaFile.size > MAX_FILE_SIZE) {
-//           return res.status(400).json({
-//             message: "Media file size should not exceed 50 MB",
-//             type: "error",
-//           });
-//         }
-//         mediaFilePath = mediaFile.path; // Path to uploaded media file
-//       } else if (type === "text") {
-//         // Check if text file is attached
-//         if (!text) {
-//           return res
-//             .status(400)
-//             .json({ message: "Text is missing", type: "error" });
-//         }
-//       } else if (type === "url") {
-//         // Validate URL
+        startNumber = String(parseInt(startNumber, 10) + 1).padStart(7, "0");
+      }
 
-//         if (!url) {
-//           return res
-//             .status(400)
-//             .json({ message: "Url is missing", type: "error" });
-//         }
-//         // Ensure the URL starts with 'http://' or 'https://'
-//         if (!/^https?:\/\//i.test(url)) {
-//           return res.status(400).json({
-//             message: "URL must begin with 'http://' or 'https://'.",
-//             type: "error",
-//           });
-//         }
-//       } else {
-//         return res.status(400).json({ message: "Invalid type", type: "error" });
-//       }
+      await session.commitTransaction();
+      session.endSession();
 
-//       await newUser.save();
-//       let qrCode
+      return res.status(201).json({
+        message: "Demo QR codes successfully created",
+        data: UserArrObj,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      if (session && session.inTransaction()) {
+        await session.abortTransaction();
+        session.endSession();
+      }
+      return res.status(500).json({
+        message: "Something went wrong please try again later",
+        type: "error",
+      });
+    }
+  }
+);
 
-//       if (qrName && type) {
-//          qrCode = new QRCodeData({
-//           user_id: newUser._id,
-//           type,
-//           url,
-//           text,
-//           code,
-//           qrName,
-//           qrDotColor,
-//           backgroundColor,
-//           dotStyle,
-//           cornerStyle,
-//           applyGradient : "none",
-//           logo: logoPath,
-//         });
-
-//       }
-
-//       console.log(mediaFilePath,"check me")
-//       if (type === "media") {
-//         qrCode.media_url = mediaFilePath; // Save media file path
-//       }
-
-//       await qrCode.save();
-
-//       res.status(201).json({
-//         message: "Demo user registered and QR generated successfully",
-//         type: "success",
-//       });
-//     } catch (error) {
-//       console.error("Error during registration and QR generation:", error);
-//       res.status(500).json({ message: "An error occurred", type: "error" });
-//     }
-//   }
-// );
-
-const mongoose = require("mongoose");
-const { type } = require("os");
+// New APi Changes as provided
 
 // router.post(
 //   "/create-demo-users",
 //   upload.fields([{ name: "media-file", maxCount: 1 }]),
 //   multerErrorHandler,
 //   async (req, res) => {
-//     const {
-//       fullName,
-//       email,
-//       password,
-//       qrName,
-//       type,
-//       qrDotColor,
-//       backgroundColor,
-//       dotStyle,
-//       cornerStyle,
-//       applyGradient,
-//       url,
-//       text,
-//     } = req.body;
+//     let UserArrObj = [];
+//     let { totalNumbers } = req.body; // Get the number of users to create
 
-//     if (!fullName)
-//       return res
-//         .status(400)
-//         .json({ message: "Full name is required", type: "error" });
-//     if (!email)
-//       return res
-//         .status(400)
-//         .json({ message: "Email is required", type: "error" });
-//     if (!password || password.length < 6)
-//       return res.status(400).json({
-//         message: "Password must be at least 6 characters",
-//         type: "error",
-//       });
-//     if (!qrName)
-//       return res
-//         .status(400)
-//         .json({ message: "QR name is required", type: "error" });
-//     if (!type || !["media", "text", "url"].includes(type))
-//       return res
-//         .status(400)
-//         .json({ message: "Invalid QR type", type: "error" });
-//     if (!qrDotColor)
-//       return res
-//         .status(400)
-//         .json({ message: "QR dot color is required", type: "error" });
-//     if (!backgroundColor)
-//       return res
-//         .status(400)
-//         .json({ message: "Background color is required", type: "error" });
-//     if (!dotStyle)
-//       return res
-//         .status(400)
-//         .json({ message: "Dot style is required", type: "error" });
-//     if (!cornerStyle)
-//       return res
-//         .status(400)
-//         .json({ message: "Corner style is required", type: "error" });
+//     totalNumbers = parseInt(totalNumbers, 10) || 1; // Default to 1 if not provided
+//     let startNumber = "0000001"; // Starting point
 
+//     // Get the largest existing user number
+//     const largestUser = await User.findOne(
+//       { email: { $regex: /^[0-9]+@magic-code\.net$/ } } // Filter only relevant emails
+//     )
+//       .sort({ email: -1 }) // Sort numerically
+//       .limit(1);
+
+//     if (largestUser) {
+//       startNumber = String(
+//         parseInt(largestUser.email.split("@")[0], 10) + 1
+//       ).padStart(7, "0");
+//     }
+//     const session = await mongoose.startSession(); // Start a session
+//     session.startTransaction(); // Start a transaction
 //     try {
-//       const session = await mongoose.startSession(); // Start a session
-//       session.startTransaction(); // Start a transaction
+//       for (let i = 0; i < totalNumbers; i++) {
+//         let fullName = "User";
+//         let email = `${startNumber}@magic-code.net`;
+//         let password = startNumber;
+//         let qrName = startNumber;
+//         let type = "url";
+//         let qrDotColor = "#000000";
+//         let backgroundColor = "#FFFFFF";
+//         let dotStyle = "rounded";
+//         let cornerStyle = "dot";
+//         let text = "";
+//         let url = "";
 
-//       const existingUser = await User.findOne({ email }).session(session);
-//       if (existingUser) {
-//         await session.abortTransaction(); // Abort if user exists
-//         return res
-//           .status(400)
-//           .json({ message: "Email already in use", type: "error" });
-//       }
-
-//       const hashedPassword = await bcrypt.hash(password, 10);
-//       const encryptedPassword = encryptPassword(password);
-//       const newUser = new User({
-//         fullName,
-//         email,
-//         password: hashedPassword,
-//         role: "demo-user",
-//         isActive: true,
-//         userPasswordKey: encryptedPassword,
-//       });
-
-//       // Save new user
-//       await newUser.save({ session });
-
-//       // Generate a 6-character alphanumeric code
-//       const code = generateCode();
-
-//       // Handle media and text file uploads
-//       let mediaFilePath;
-//       let logoPath = process.env.STATIC_LOGO;
-
-//       if (type === "media") {
-//         // Check if media file is attached
-//         if (!req.files["media-file"]) {
-//           await session.abortTransaction(); // Abort if no media file
+//         const existingUser = await User.findOne({ email }).session(session);
+//         if (existingUser) {
+//           await session.abortTransaction();
 //           return res
 //             .status(400)
-//             .json({ message: "Media file not attached", type: "error" });
+//             .json({ message: "Email already in use", type: "error" });
 //         }
-//         const mediaFile = req.files["media-file"][0];
 
-//         // Validate media file size
-//         if (mediaFile.size > MAX_FILE_SIZE) {
-//           await session.abortTransaction(); // Abort if file size is too large
-//           return res.status(400).json({
-//             message: "Media file size should not exceed 50 MB",
-//             type: "error",
-//           });
-//         }
-//         mediaFilePath = mediaFile.path;
-//       } else if (type === "text") {
-//         if (!text) {
-//           await session.abortTransaction(); // Abort if text is missing
-//           return res
-//             .status(400)
-//             .json({ message: "Text is missing", type: "error" });
-//         }
-//       } else if (type === "url") {
-//         if (!url || !/^https?:\/\//i.test(url)) {
-//           await session.abortTransaction(); // Abort if URL is invalid
-//           return res.status(400).json({
-//             message:
-//               "The URL must be valid and start with 'http://' or 'https://'.",
-//             type: "error",
-//           });
-//         }
-//       }
+//         const hashedPassword = await bcrypt.hash(password, 10);
+//         const encryptedPassword = encryptPassword(password);
+//         const newUser = new User({
+//           fullName,
+//           email,
+//           password: hashedPassword,
+//           role: "demo-user",
+//           isActive: true,
+//           userPasswordKey: encryptedPassword,
+//         });
 
-//       let qrCode;
-//       if (qrName && type) {
-//         qrCode = new QRCodeData({
+//         await newUser.save({ session });
+
+//         const code = generateCode();
+
+//         // Ensure unique code
+//         let existingCode = await QRCodeData.findOne({ code }).session(session);
+
+//         while (existingCode) {
+//           code = generateCode(); // Generate new code
+//           existingCode = await QRCodeData.findOne({ code }).session(session); // Check again
+//         }
+
+//         const qrCodeId = new mongoose.Types.ObjectId(); // Generate _id manually
+
+//         let qrCode = new QRCodeData({
+//           _id: qrCodeId, // Assign generated _id
 //           user_id: newUser._id,
 //           type,
-//           url,
+//           url: `${process.env.FRONTEND_URL}/assign-qr-code/${encryptPassword(
+//             qrCodeId.toString()
+//           )}`,
 //           text,
 //           code,
 //           qrName,
@@ -2946,201 +2790,54 @@ const { type } = require("os");
 //           dotStyle,
 //           cornerStyle,
 //           applyGradient: "none",
-//           logo: logoPath,
+//           logo: process.env.STATIC_LOGO,
+//           // isTrial: true,
+//           // isFirstActivationFree: true,
+//           // isQrActivated: false,
 //         });
 
-//         if (type === "media") {
-//           qrCode.media_url = mediaFilePath; // Save media file path
-//         }
+//         // Save only once
+//         await qrCode.save({ session });
+
+//         UserArrObj.push({
+//           uid: newUser._id,
+//           email,
+//           password,
+//           code,
+//           resetLinkValue: `${
+//             process.env.FRONTEND_URL
+//           }/assign-qr-code/${encryptPassword(qrCode._id.toString())}`,
+//           qrCode,
+//         });
+
+//         // Increment number
+//         startNumber = String(parseInt(startNumber, 10) + 1).padStart(7, "0");
 //       }
-
-//       // Save qrCode
-//       await qrCode.save({ session });
-
-//       // If both save operations are successful, commit the transaction
 //       await session.commitTransaction();
 //       session.endSession();
-
-//       res.status(201).json({
-//         message: "Demo user registered and QR generated successfully",
-//         type: "success",
-//       });
 //     } catch (error) {
-//       console.error("Error during registration and QR generation:", error);
-
-//       if (session.inTransaction()) {
-//         await session.abortTransaction(); // Rollback transaction if an error occurred
-//         res.status(500).json({
-//           message: "Something went wrong with transaction",
-//           type: "error",
-//         });
+//       console.error("Error during registration:", error);
+//       // Check if session is defined before using it
+//       // Check if session exists and is still active before aborting
+//       if (session && session.inTransaction()) {
+//         await session.abortTransaction();
+//         session.endSession();
 //       }
-//       res.status(500).json({ message: "An error occurred", type: "error" });
+//       return res.status(500).json({
+//         message: "Something went wrong please try again later",
+//         type: "error",
+//       });
 //     }
+//     res.status(201).json({
+//       message: "Demo users successfully registered",
+//       data: UserArrObj,
+//       type: "success",
+//     });
 //   }
 // );
 
-/*router.post(
-  "/create-demo-users",
-  upload.fields([{ name: "media-file", maxCount: 1 }]),
-  multerErrorHandler,
-  async (req, res) => {
-    let UserArrObj = [];
-
-    // let number = "0000001";
-    let number = "9000000";
-    let totalNumbers = 200; // Number of iterations
-
-    for (let i = 0; i < totalNumbers; i++) {
-      let fullName = "User";
-      let email = `${number}@magic-code.net`;
-      let password = number;
-      let qrName = "My Magic Code";
-      let type = "text";
-      let qrDotColor = "#000000";
-      let backgroundColor = "#FFFFFF";
-      let dotStyle = "rounded";
-      let cornerStyle = "dot";
-      let text = "Magic Code";
-      let url = "";
-
-      try {
-        const session = await mongoose.startSession(); // Start a session
-        session.startTransaction(); // Start a transaction
-
-        const existingUser = await User.findOne({ email }).session(session);
-        if (existingUser) {
-          await session.abortTransaction(); // Abort if user exists
-          return res
-            .status(400)
-            .json({ message: "Email already in use", type: "error" });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const encryptedPassword = encryptPassword(password);
-        const newUser = new User({
-          fullName,
-          email,
-          password: hashedPassword,
-          role: "demo-user",
-          isActive: true,
-          userPasswordKey: encryptedPassword,
-        });
-
-        // Save new user
-        await newUser.save({ session });
-
-        // Generate a 6-character alphanumeric code
-        const code = generateCode();
-
-        // Handle media and text file uploads
-        let mediaFilePath;
-        let logoPath = process.env.STATIC_LOGO;
-
-        if (type === "media") {
-          // Check if media file is attached
-          if (!req.files["media-file"]) {
-            await session.abortTransaction(); // Abort if no media file
-            return res
-              .status(400)
-              .json({ message: "Media file not attached", type: "error" });
-          }
-          const mediaFile = req.files["media-file"][0];
-
-          // Validate media file size
-          if (mediaFile.size > MAX_FILE_SIZE) {
-            await session.abortTransaction(); // Abort if file size is too large
-            return res.status(400).json({
-              message: "Media file size should not exceed 50 MB",
-              type: "error",
-            });
-          }
-          mediaFilePath = mediaFile.path;
-        } else if (type === "text") {
-          if (!text) {
-            await session.abortTransaction(); // Abort if text is missing
-            return res
-              .status(400)
-              .json({ message: "Text is missing", type: "error" });
-          }
-        } else if (type === "url") {
-          if (!url || !/^https?:\/\//i.test(url)) {
-            await session.abortTransaction(); // Abort if URL is invalid
-            return res.status(400).json({
-              message:
-                "The URL must be valid and start with 'http://' or 'https://'.",
-              type: "error",
-            });
-          }
-        }
-
-        let qrCode;
-        if (qrName && type) {
-          qrCode = new QRCodeData({
-            user_id: newUser._id,
-            type,
-            url,
-            text,
-            code,
-            qrName,
-            qrDotColor,
-            backgroundColor,
-            dotStyle,
-            cornerStyle,
-            applyGradient: "none",
-            logo: logoPath,
-          });
-
-          if (type === "media") {
-            qrCode.media_url = mediaFilePath; // Save media file path
-          }
-        }
-
-        // Save qrCode
-        await qrCode.save({ session });
-
-        // If both save operations are successful, commit the transaction
-        await session.commitTransaction();
-        session.endSession();
-
-        let uid = newUser._id;
-        let resetLinkValue = encryptPassword(uid.toString());
-        let obj = {
-          uid,
-          email,
-          password,
-          code,
-          resetLinkValue,
-        };
-
-        UserArrObj.push(obj);
-
-        number = String(parseInt(number) - 1).padStart(7, "0");
-      } catch (error) {
-        console.error("Error during registration and QR generation:", error);
-
-        if (session.inTransaction()) {
-          await session.abortTransaction(); // Rollback transaction if an error occurred
-          res.status(500).json({
-            message: "Something went wrong with transaction",
-            type: "error",
-          });
-        }
-        res.status(500).json({ message: "An error occurred", type: "error" });
-      }
-    }
-
-    res.status(201).json({
-      message: UserArrObj,
-      type: "success",
-    });
-  }
-);*/
-
-// New APi Changes as provided
-
 router.post(
-  "/create-demo-users",
+  "/create-trial-users",
   upload.fields([{ name: "media-file", maxCount: 1 }]),
   multerErrorHandler,
   async (req, res) => {
@@ -3199,7 +2896,15 @@ router.post(
 
         await newUser.save({ session });
 
-        const code = generateCode();
+        const code = generateCode(7);
+
+        // Ensure unique code
+        let existingCode = await QRCodeData.findOne({ code }).session(session);
+
+        while (existingCode) {
+          code = generateCode(); // Generate new code
+          existingCode = await QRCodeData.findOne({ code }).session(session); // Check again
+        }
 
         const qrCodeId = new mongoose.Types.ObjectId(); // Generate _id manually
 
@@ -3257,171 +2962,11 @@ router.post(
       });
     }
     res.status(201).json({
-      message: "Demo users successfully registered",
+      message: "Trial users successfully registered",
       data: UserArrObj,
       type: "success",
     });
   }
 );
-
-// router.post(
-//   "/create-demo-users",
-//   upload.fields([{ name: "media-file", maxCount: 1 }]),
-//   multerErrorHandler,
-//   async (req, res) => {
-//     let UserArrObj = [];
-
-//     // let number = "0000001";
-//     let number = "9004800";
-//     // let totalNumbers = 200; // Number of iterations
-//     let totalNumbers = 1; // Number of iterations
-
-//     for (let i = 0; i < totalNumbers; i++) {
-//       let fullName = "User";
-//       let email = `${number}@magic-code.net`;
-//       let password = number;
-//       let qrName = "My Magic Code";
-//       let type = "url";
-//       let qrDotColor = "#000000";
-//       let backgroundColor = "#FFFFFF";
-//       let dotStyle = "rounded";
-//       let cornerStyle = "dot";
-//       let text = "";
-//       let url = "";
-
-//       try {
-//         const session = await mongoose.startSession(); // Start a session
-//         session.startTransaction(); // Start a transaction
-
-//         const existingUser = await User.findOne({ email }).session(session);
-//         if (existingUser) {
-//           await session.abortTransaction(); // Abort if user exists
-//           return res
-//             .status(400)
-//             .json({ message: "Email already in use", type: "error" });
-//         }
-
-//         const hashedPassword = await bcrypt.hash(password, 10);
-//         const encryptedPassword = encryptPassword(password);
-//         const newUser = new User({
-//           fullName,
-//           email,
-//           password: hashedPassword,
-//           role: "demo-user",
-//           isActive: true,
-//           userPasswordKey: encryptedPassword,
-//         });
-
-//         // Save new user
-//         await newUser.save({ session });
-
-//         // Generate a 6-character alphanumeric code
-//         const code = generateCode();
-
-//         // Handle media and text file uploads
-//         let mediaFilePath;
-//         let logoPath = process.env.STATIC_LOGO;
-
-//         if (type === "media") {
-//           // Check if media file is attached
-//           if (!req.files["media-file"]) {
-//             await session.abortTransaction(); // Abort if no media file
-//             return res
-//               .status(400)
-//               .json({ message: "Media file not attached", type: "error" });
-//           }
-//           const mediaFile = req.files["media-file"][0];
-
-//           // Validate media file size
-//           if (mediaFile.size > MAX_FILE_SIZE) {
-//             await session.abortTransaction(); // Abort if file size is too large
-//             return res.status(400).json({
-//               message: "Media file size should not exceed 50 MB",
-//               type: "error",
-//             });
-//           }
-//           mediaFilePath = mediaFile.path;
-//         } else if (type === "text") {
-//           if (!text) {
-//             await session.abortTransaction(); // Abort if text is missing
-//             return res
-//               .status(400)
-//               .json({ message: "Text is missing", type: "error" });
-//           }
-//         } else if (type === "url") {
-//           // if (!url || !/^https?:\/\//i.test(url)) {
-//           //   await session.abortTransaction(); // Abort if URL is invalid
-//           //   return res.status(400).json({
-//           //     message:
-//           //       "The URL must be valid and start with 'http://' or 'https://'.",
-//           //     type: "error",
-//           //   });
-//           // }
-//         }
-
-//         let uid = newUser._id;
-//         let resetLink = encryptPassword(uid.toString());
-//         resetLink = `http://localhost:3000/update-user-details/${resetLink}`;
-//         let qrCode;
-//         if (qrName && type) {
-//           qrCode = new QRCodeData({
-//             user_id: newUser._id,
-//             type,
-//             url: resetLink,
-//             text,
-//             code,
-//             qrName,
-//             qrDotColor,
-//             backgroundColor,
-//             dotStyle,
-//             cornerStyle,
-//             applyGradient: "none",
-//             logo: logoPath,
-//           });
-
-//           if (type === "media") {
-//             qrCode.media_url = mediaFilePath; // Save media file path
-//           }
-//         }
-
-//         // Save qrCode
-//         await qrCode.save({ session });
-
-//         // If both save operations are successful, commit the transaction
-//         await session.commitTransaction();
-//         session.endSession();
-
-//         let resetLinkValue = encryptPassword(uid.toString());
-//         let obj = {
-//           uid,
-//           email,
-//           password,
-//           code,
-//           resetLinkValue,
-//         };
-
-//         UserArrObj.push(obj);
-
-//         number = String(parseInt(number) - 1).padStart(7, "0");
-//       } catch (error) {
-//         console.error("Error during registration and QR generation:", error);
-
-//         if (session.inTransaction()) {
-//           await session.abortTransaction(); // Rollback transaction if an error occurred
-//           res.status(500).json({
-//             message: "Something went wrong with transaction",
-//             type: "error",
-//           });
-//         }
-//         res.status(500).json({ message: "An error occurred", type: "error" });
-//       }
-//     }
-
-//     res.status(201).json({
-//       message: UserArrObj,
-//       type: "success",
-//     });
-//   }
-// );
 
 module.exports = router;

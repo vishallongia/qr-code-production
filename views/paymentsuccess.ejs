@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Status</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/css/payment-status.css" rel="stylesheet">
+    <script>
+        // Redirect after 5 seconds to the homepage
+        // setTimeout(() => {
+        //     window.location.href = "/";
+        // }, 5000);
+    </script>
+</head>
+
+<body class="success-page">
+    <div class="message-box animated fadeInDown">
+        <!-- Display status based on payment status -->
+        <i class="fas fa-3x" id="status-icon"></i> <!-- Increased icon size to 3x -->
+        <h1 id="status-title"></h1>
+        <p id="status-message"></p>
+        <p class="redirect-msg">You will be redirected to the homepage shortly...</p>
+    </div>
+
+    <script>
+        // Get payment status and error message dynamically from server-side rendering
+        const paymentStatus = "<%= paymentStatus %>";  // From server-side
+        const errorMessage = "<%= errorMessage %>";  // From server-side
+        const statusIcon = document.getElementById('status-icon');
+        const statusTitle = document.getElementById('status-title');
+        const statusMessage = document.getElementById('status-message');
+
+        console.log(paymentStatus)
+
+        // Handling different statuses
+        if (paymentStatus === "completed") {
+            statusIcon.classList.add("fas", "fa-check-circle");
+            statusIcon.style.color = "green"; // Green for success
+            statusTitle.textContent = "Payment Successful!";
+            statusMessage.textContent = "Thank you! Your subscription is now active.";
+        } else if (paymentStatus === "failed") {
+            statusIcon.classList.add("fas", "fa-times-circle");
+            statusIcon.style.color = "red"; // Red for failure
+            statusTitle.textContent = "Payment Failed!";
+            statusMessage.textContent = errorMessage || "There was an issue processing your payment.";
+        } else if (paymentStatus === "pending") {
+            statusIcon.classList.add("fas", "fa-spinner", "fa-spin");
+            statusIcon.style.color = "gray"; // Gray for pending
+            statusTitle.textContent = "Processing Payment...";
+            statusMessage.textContent = "Please wait while we finalize your payment.";
+        } else {
+            statusIcon.classList.add("fas", "fa-exclamation-circle");
+            statusIcon.style.color = "orange"; // Orange for unknown
+            statusTitle.textContent = "Unknown Status";
+            statusMessage.textContent = "We encountered an issue. Please try again.";
+        }
+    </script>
+</body>
+
+</html>

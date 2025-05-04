@@ -19,10 +19,10 @@
 
 
         <div class="modern-list-container">
-            <% if (users && users.length> 0) { %>
+            <% if (qrCodes && qrCodes.length> 0) { %>
                 <div class="export-container">
                     <button class="view-qr-btn export-btn" onclick="return exportUsers(event)">
-                        <i class="fas fa-file-excel"></i> Export User
+                        <i class="fas fa-file-excel"></i> Export Codes
                         <span class="tooltip-custom">Export Analog Codes</span>
                     </button>
                 </div>
@@ -30,59 +30,40 @@
                 <h2>Analog User List</h2>
                 <div class="list-wrapper">
                     <div class="list-header">
+                        <span>No.</span>
                         <span>Name</span>
-                        <span>Email</span>
-                        <span>Password</span>
+                        <!--<span>Email</span>
+                        <span>Password</span> -->
                         <!-- <span>Update Details</span> -->
                         <span>QR Code Link</span>
                         <span>Assign</span>
-                        <span>QR Count</span>
-                        <span>QR's</span>
-                        <span>Active</span>
+                        <!-- <span>QR Count</span> -->
+                        <!-- <span>QR's</span> -->
+                        <!-- <span>Active</span> -->
                     </div>
                     <ul id="userList" class="user-list">
-                        <% users.forEach(user=> { %>
+                        <% qrCodes.forEach(qrCode=> { %>
                             <li class="user-item">
                                 <span>
-                                    <%= user.fullName %>
+                                    <%= qrCode.qrNo %>
                                 </span>
                                 <span>
-                                    <%= user.email %>
+                                    <%= qrCode.qrName %>
                                 </span>
+
                                 <span>
-                                    <%= user.userPasswordKey %>
-                                </span>
-                                <!-- <span>
-                                    <a href="/update-user-details/<%= user.encryptedId %>" id="Update-Details-Link">
-                                        <button class="view-qr-btn" data-user-id="<%= user._id %>">Update
-                                            Details</button>
-                                    </a>
-                                </span> -->
-                                <span>
-                                    <a href="https://analog-magic-code.netlify.app/?code=<%= user.code %>" target="_blank">
+                                    <a href="https://analog-magic-code.netlify.app/?code=<%= qrCode.code %>"
+                                        target="_blank">
                                         <button class="view-qr-btn">Open</button>
                                     </a>
-                                    
+
                                 </span>
                                 <span>
-                                    <a href="/assign-qr-code/<%= user.encryptedQrId %>" id="Update-Details-Link">
-                                        <button class="view-qr-btn" data-user-id="<%= user._id %>">Assign</button>
+                                    <a href="/assign-qr-code/<%= qrCode.encryptedQrId %>" id="Update-Details-Link">
+                                        <button class="view-qr-btn" data-user-id="<%= qrCode._id %>">Assign</button>
                                     </a>
                                 </span>
-                                <span style="display: flex; justify-content: center;">
-                                    <%= user.qrCount %>
-                                </span>
-                                <span>
-                                    <button class="view-qr-btn" data-user-id="<%= user._id %>"
-                                        onclick="goToQR('<%= user._id %>')">View QR</button>
-                                </span>
-                                <span>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" class="toggle-checkbox" data-user-id="<%= user._id %>"
-                                            <%=user.isActive ? 'checked' : '' %>>
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </span>
+
                             </li>
                             <% }); %>
                     </ul>
