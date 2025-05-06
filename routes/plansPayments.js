@@ -11,7 +11,7 @@ const {
 const { client } = require("../config/paypal");
 
 const { authMiddleware } = require("../middleware/auth");
-const SendEmail = require("../Messages/SendEmail");
+const bodyParser = require("body-parser");
 
 // Route to render subscription plans with encrypted IDs
 router.get("/plans", authMiddleware, async (req, res) => {
@@ -40,10 +40,13 @@ router.get("/plans", authMiddleware, async (req, res) => {
       name: req.user.fullName, // Assuming req.user contains user data like name
       email: req.user.email, // Assuming req.user contains user data like email
     };
-    console.log(userSubscription);
 
     // Render the 'plans' EJS page and pass the encrypted plans data to it
-    res.render("plans", { plans: encryptedPlans, user: userSubscription });
+    res.render("dashboardnew", {
+      plans: encryptedPlans,
+      user: userSubscription,
+      activeSection: "plans",
+    });
   } catch (error) {
     console.error("Error fetching plans:", error);
     res.status(500).send("Error fetching plans.");
@@ -119,7 +122,6 @@ router.get("/successpayment", async (req, res) => {
   try {
     const session = req.query.session_id;
     const payment = await Payment.findOne({ transactionId: session });
-    console.log(payment);
 
     res.render("paymentsuccess", {
       paymentStatus: payment?.paymentStatus || "pending",
@@ -156,7 +158,7 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
       purchase_units: [
         {
           amount: {
-            currency_code: "USD",
+            currency_code: plan.currency,
             value: plan.price.toFixed(2),
           },
           custom_id: req.user._id.toString(),

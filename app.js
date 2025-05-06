@@ -15,6 +15,9 @@ const sendEmailToAssignedUsers = require("./cronJobs/sendQrDeactivationEmails");
 
 connectDB(); //Make Conncetion to Database
 
+// 💡 REGISTER RAW PARSER ROUTE FIRST — BEFORE global JSON body parser
+app.use("/paypalwh", require("./routes/paypalWebhook"));
+
 app.use("/stripe", require("./routes/stripeWebhook")); // Adjust path if needed
 
 // Middleware for parsing request bodies

@@ -5,6 +5,7 @@ const submitBtnUpdate = document.getElementById("submit-btn-update");
 const generatedSection = document.getElementById("generate-section");
 const downloadQrButton = document.getElementById("downloadQRCode");
 const maxSize = 50 * 1024 * 1024; // Max Size of media file 50 MB in bytes
+const plansPopup = document.getElementById("theme-popup-view-plans");
 
 if (!urlParams.has("magiccode")) {
   submitBtnGenerate.addEventListener("click", async (event) => {
@@ -125,7 +126,11 @@ if (!urlParams.has("magiccode")) {
 
       // window.location.reload();
     } catch (error) {
-      showToast(error.message || "Error generating QR code.", "error"); // Show error message
+      if (error.redirectUrl) {
+        plansPopup.style.display = "flex";
+      } else {
+        showToast(error.message || "Error generating QR code.", "error"); // Show error message
+      }
     }
   });
 }
@@ -145,7 +150,10 @@ async function generateQRCode(formData) {
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.message || "QR Code generation failed!");
+      const error = new Error(result.message || "QR Code generation failed!");
+      error.type = result.type || "error"; // optional, if you want to use different toast styles
+      error.redirectUrl = result.redirectUrl || null; // preserve redirect URL
+      throw error;
     } else {
       // document.getElementById("qr-code").style.display = "block"; // Show the element
       submitBtnGenerate.disabled = false;

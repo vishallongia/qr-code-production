@@ -1750,6 +1750,20 @@ router.post(
         });
       }
 
+      const qrCodes = await QRCodeData.find({
+        $or: [
+          { user_id: user.id }, // QR codes created by the user
+          // { assignedTo: user.id }, // QR codes assigned to the user
+        ],
+      });
+
+      // Check if user has already created 5 or more QR codes
+      if (qrCodes.length >= 5) {
+        return res.status(400).json({
+          message: "You can only create a maximum of 5 QR codes.",
+          type: "error",
+        });
+      }
       if (!qrName) {
         return res
           .status(400)

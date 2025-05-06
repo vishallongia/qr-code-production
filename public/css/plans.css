@@ -23,14 +23,9 @@ body {
     background: var(--background-color);
     color: var(--text-color);
     line-height: 1.6;
-    padding: 2rem;
 }
 
-.container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 1rem;
-}
+
 
 h1 {
     text-align: center;
@@ -92,8 +87,9 @@ h1 {
 .plans {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 2rem;
+    gap: 1rem;
     margin-top: 2rem;
+    padding: 0 1rem;
 }
 
 .plan-card {
@@ -145,6 +141,7 @@ h1 {
     border-radius: 8px;
     cursor: pointer;
     transition: background-color var(--transition-speed);
+    width: 100%;
 }
 
 .subscribe-btn:hover {

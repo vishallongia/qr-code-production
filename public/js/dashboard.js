@@ -12,6 +12,7 @@ let CurrentQR = "";
 let qrCode;
 const popup = document.getElementById("theme-popup-activate-qr");
 
+
 const colorHexMap = {
   magenta: "#FF0093",
   violet: "#835EC7",
@@ -88,7 +89,6 @@ function hexToRgb(hex) {
   const b = bigint & 255;
   return `rgb(${r}, ${g}, ${b})`;
 }
-
 
 function rgbToHex(rgb) {
   const result = rgb.match(/\d+/g);
@@ -633,8 +633,6 @@ function downloadQRCode() {
   }); // High resolution download
 }
 
-
-
 document.addEventListener("DOMContentLoaded", function () {
   const keepBtn = document.getElementById("keep-background-update");
   const removeBtn = document.getElementById("remove-background-update");
@@ -1163,8 +1161,6 @@ async function handleQrCodeUpdateSubmit(event) {
     return;
   }
 
- 
-
   try {
     const qrCodeId = code;
     toggleLoaderVisibility(true);
@@ -1207,22 +1203,22 @@ function showThemePopup(message) {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const activationInput = document.getElementById("qr-name-activation");
-  const qrName = document.getElementById("qr-name");
+// document.addEventListener("DOMContentLoaded", () => {
+//   const activationInput = document.getElementById("qr-name-activation");
+//   const qrName = document.getElementById("qr-name");
 
-  if (activationInput && qrName) {
-    activationInput.addEventListener("input", () => {
-      qrName.value = activationInput.value;
-    });
-  }
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("showPopup") === "true") {
-    showThemePopup(
-      "Please enter the name of your first MAGIC CODE, and click ACTIVATE."
-    );
-  }
-});
+//   if (activationInput && qrName) {
+//     activationInput.addEventListener("input", () => {
+//       qrName.value = activationInput.value;
+//     });
+//   }
+//   const urlParams = new URLSearchParams(window.location.search);
+//   if (urlParams.get("showPopup") === "true") {
+//     showThemePopup(
+//       "Please enter the name of your first MAGIC CODE, and click ACTIVATE."
+//     );
+//   } 
+// });
 
 function removeShowPopupParamAndRedirect() {
   setTimeout(() => {

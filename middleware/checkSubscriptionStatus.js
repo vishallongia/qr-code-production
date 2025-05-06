@@ -20,7 +20,8 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
     if (!latestPayment) {
       return res.status(403).json({
         message: "No subscription found. Please purchase a plan.",
-        type: "error",
+        type: "hidden",
+        redirectUrl: "/dashboard?showPlans=true",
       });
     }
 
