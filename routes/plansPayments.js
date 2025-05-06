@@ -92,8 +92,8 @@ router.post(
           plan_id: plan._id.toString(),
         },
         mode: "payment",
-        success_url: `http://localhost:3000/successpayment?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `http://localhost:3000/cancel`,
+        success_url: `${process.env.FRONTEND_URL}/successpayment?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.FRONTEND_URL}/cancel`,
       });
 
       // Send structured response
