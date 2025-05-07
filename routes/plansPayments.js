@@ -80,7 +80,7 @@ router.post(
         line_items: [
           {
             price_data: {
-              currency: "usd",
+              currency: plan.currency,
               product_data: {
                 name: plan.name,
                 description: plan.description || "",
