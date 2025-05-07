@@ -59,6 +59,8 @@ router.post(
         }
       );
 
+      console.log("Verification Response:", verification);F
+
       if (verification.verification_status !== "SUCCESS") {
         return res.status(400).send("Invalid webhook signature.");
       }
