@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
-const paypal = require("@paypal/checkout-server-sdk");
 const Payment = require("../models/Payment");
 const { client } = require("../config/paypal");
 const axios = require("axios");
