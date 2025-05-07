@@ -46,6 +46,11 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: false,
   },
+
+  lastExpiryEmailSent: {
+    type: Date,
+    default: null,
+  }, // New field
   createdAt: {
     type: Date,
     default: Date.now,

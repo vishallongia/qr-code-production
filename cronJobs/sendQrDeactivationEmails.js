@@ -2,109 +2,124 @@ const mongoose = require("mongoose");
 const QRCodeData = require("../models/QRCODEDATA");
 const User = require("../models/User");
 const SendEmail = require("../Messages/SendEmail");
+const Payment = require("../models/Payment");
 
-// Cron Job Function
-const sendEmailToAssignedUsers = async () => {
+const sendExpiryEmailForPayments = async () => {
   try {
-    const now = new Date(); // Current full date and time
+    const now = new Date();
 
     const sender = {
       email: "textildruckschweiz.com@gmail.com",
-      name: "Magic Code - Login Link",
+      name: "Magic Code - Plan Update",
     };
 
-    // 1. Fetch QR codes that are still active and have an activatedUntil field
-    const qrCodes = await QRCodeData.find({
-      isQrActivated: true,
-      activatedUntil: { $exists: true },
-    });
+    // Step 1: Get all users who have at least one payment
+    const userIdsWithPayments = await Payment.distinct("user_id");
 
-    for (const qrCode of qrCodes) {
-      if (qrCode.activatedUntil) {
-        const activatedUntilDate = new Date(qrCode.activatedUntil);
+    for (const userId of userIdsWithPayments) {
+      // Step 2: Deactivate expired plans for this user
+      await Payment.updateMany(
+        { user_id: userId, validUntil: { $lt: now } },
+        { $set: { isActive: false } }
+      );
 
-        // Very accurate comparison of full date + time
-        if (activatedUntilDate.getTime() < now.getTime()) {
-          if (qrCode.assignedTo) {
-            // 2. Find the assigned user
-            const assignedUser = await User.findById(qrCode.assignedTo);
+      // Step 3: Find the latest valid (non-expired) plan
+      const latestValidPlan = await Payment.findOne({
+        user_id: userId,
+        validUntil: { $gte: now },
+      })
+        .sort({ validUntil: -1 })
+        .exec();
 
-            if (assignedUser && assignedUser.email) {
-              // 3. Prepare email content
-              const subject = `QR Code Deactivated: ${qrCode.qrName}`;
+      if (!latestValidPlan) {
+        // Step 5: No active plan found — notify user
 
-              const htmlContent = `
-              <!DOCTYPE html>
-              <html>
-              <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>QR Code Deactivation Notice</title>
-                <style>
-                  body {
-                    font-family: Arial, sans-serif;
-                    background-color: #f4f4f4;
-                    margin: 0;
-                    padding: 0;
-                  }
-                  .container {
-                    max-width: 600px;
-                    margin: 30px auto;
-                    background: #ffffff;
-                    padding: 20px;
-                    border-radius: 10px;
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                    text-align: center;
-                  }
-                  h2 {
-                    color: #333;
-                  }
-                  p {
-                    color: #555;
-                    font-size: 16px;
-                    line-height: 1.5;
-                  }
-                  .footer {
-                    margin-top: 20px;
-                    font-size: 14px;
-                    color: #888;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <h2>QR Code Deactivated</h2>
-                  <p>Hi ${assignedUser.fullName || "User"},</p>
-                  <p>Your assigned QR Code "<strong>${
-                    qrCode.qrName
-                  }</strong>" has been deactivated on <strong>${activatedUntilDate.toLocaleString()}</strong> because the activation period has expired.</p>
-                  <p>If you need a new QR code, please contact us or visit your dashboard for new options.</p>
-                  <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
-                </div>
-              </body>
-              </html>
-              `;
+        // Fetch the user
+        const user = await User.findById(userId);
 
-              // 4. Send HTML Email
-              SendEmail(sender, assignedUser.email, subject, htmlContent);
+        if (user && user.email) {
+          const lastSent = user.lastExpiryEmailSent;
+          const hoursSinceLastSent = lastSent
+            ? (now - new Date(lastSent)) / (1000 * 60 * 60)
+            : Infinity;
 
-              console.log(`Deactivation email sent to ${assignedUser.email}`);
-
-              // OPTIONAL: Deactivate QR code after email is sent
-              qrCode.isQrActivated = false;
-              qrCode.isFirstActivationFree = false;
-              await qrCode.save();
-              console.log(`QR Code ${qrCode._id} marked as deactivated.`);
-            } else {
-              console.log(`Assigned user not found for QR code ${qrCode._id}`);
-            }
+          if (hoursSinceLastSent < 24) {
+            console.log(`Email already sent recently to ${user.email}`);
+            continue;
           }
+
+          // Get the most recent expired plan for date reference
+          const lastExpiredPlan = await Payment.findOne({
+            user_id: userId,
+            validUntil: { $lt: now },
+          }).sort({ validUntil: -1 });
+
+          const expiredDate =
+            lastExpiredPlan?.validUntil?.toLocaleString() || "recently";
+          const subject = "Your Plan Has Expired";
+
+          const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Plan Expired</title>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  background-color: #f4f4f4;
+                  margin: 0;
+                  padding: 0;
+                }
+                .container {
+                  max-width: 600px;
+                  margin: 30px auto;
+                  background: #ffffff;
+                  padding: 20px;
+                  border-radius: 10px;
+                  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                  text-align: center;
+                }
+                h2 {
+                  color: #333;
+                }
+                p {
+                  color: #555;
+                  font-size: 16px;
+                  line-height: 1.5;
+                }
+                .footer {
+                  margin-top: 20px;
+                  font-size: 14px;
+                  color: #888;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h2>Your Subscription Plan Expired</h2>
+                <p>Hi ${user.fullName || "User"},</p>
+                <p>Your subscription plan has expired as of <strong>${expiredDate}</strong>.</p>
+                <p>Please renew or purchase a new plan to continue enjoying our services.</p>
+                <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
+              </div>
+            </body>
+            </html>
+          `;
+
+          // Send the email
+          SendEmail(sender, user.email, subject, htmlContent);
+          console.log(`Expiry email sent to ${user.email}`);
+          // ✅ Update timestamp after sending
+          user.lastExpiryEmailSent = now;
+          await user.save();
         }
       }
     }
   } catch (error) {
-    console.error("Error in cron job:", error);
+    console.error("Error in payment plan cron job:", error);
   }
 };
 
-module.exports = sendEmailToAssignedUsers;
+module.exports = sendExpiryEmailForPayments;

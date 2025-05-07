@@ -11,7 +11,7 @@ const session = require("express-session");
 const passport = require("passport");
 require("./config/passport"); // Load Passport config
 const cron = require("node-cron");
-const sendEmailToAssignedUsers = require("./cronJobs/sendQrDeactivationEmails");
+const sendExpiryEmailForPayments = require("./cronJobs/sendQrDeactivationEmails");
 
 connectDB(); //Make Conncetion to Database
 
@@ -61,9 +61,9 @@ app.use("/", indexRouter);
 app.use("/", plansPaymentsRouter); // Handles both plans and payments
 
 // Run every 5 minutes
-cron.schedule("*/5 * * * *", () => {
+cron.schedule("*/1 * * * *", () => {
   console.log("Checking for expired QR codes...");
-  sendEmailToAssignedUsers();
+  sendExpiryEmailForPayments();
 });
 
 // Start the server
