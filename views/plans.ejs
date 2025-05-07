@@ -125,7 +125,13 @@
                         })
                             .then(res => res.json())
                             .then(response => {
-                                alert("Payment Successful: " + response.status);
+                                if (data.status === 'COMPLETED') {
+                                    // Now redirect user to success page
+                                    window.location.href = `/successpayment?session_id=${orderID}`;
+                                } else {
+                                    // Show error or retry
+                                    alert("Payment wasn't completed.");
+                                }
                                 // You can redirect or refresh here
                             });
                     },

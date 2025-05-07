@@ -165,10 +165,6 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
           description: plan.name,
         },
       ],
-      application_context: {
-        return_url: `${process.env.FRONTEND_URL}/paypal-success`,
-        cancel_url: `${process.env.FRONTEND_URL}/cancel`,
-      },
     });
 
     const order = await client().execute(request);
@@ -220,37 +216,6 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
   }
 });
 
-// ✅ New Route: Redirect PayPal return to /successpayment
-router.get("/paypal-success", async (req, res) => {
-  try {
-    const orderId = req.query.token;
-    if (!orderId) {
-      return res.render("paymentsuccess", {
-        paymentStatus: "failed",
-        amount: 0,
-        errorMessage: "Invalid PayPal token received.",
-      });
-    }
 
-    const payment = await Payment.findOne({ transactionId: orderId });
-
-    if (!payment) {
-      return res.render("paymentsuccess", {
-        paymentStatus: "pending",
-        amount: 0,
-        errorMessage: "Payment not yet registered. Please refresh in a moment.",
-      });
-    }
-
-    res.redirect(`/successpayment?session_id=${orderId}`);
-  } catch (err) {
-    console.error("PayPal Success Redirect Error:", err.message);
-    res.render("paymentsuccess", {
-      paymentStatus: "failed",
-      amount: 0,
-      errorMessage: "An error occurred while redirecting PayPal success.",
-    });
-  }
-});
 
 module.exports = router;
