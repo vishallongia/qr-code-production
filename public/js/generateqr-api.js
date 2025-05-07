@@ -321,7 +321,10 @@ submitBtnUpdate.addEventListener("click", async (event) => {
 
     const result = await response.json();
     if (!response.ok) {
-      throw new Error(result.message || "Error updating QR code.");
+      const error = new Error(result.message || "Error Updating QR");
+      error.type = result.type || "error"; // optional, if you want to use different toast styles
+      error.redirectUrl = result.redirectUrl || null; // preserve redirect URL
+      throw error;
     }
 
     // generatedSection.style.display = "block";
@@ -338,7 +341,11 @@ submitBtnUpdate.addEventListener("click", async (event) => {
   } catch (error) {
     toggleLoaderVisibility(false);
     // generatedSection.style.display = "block";
-    showToast(error.message || "Error updating QR code.", "error");
+    if (error.redirectUrl) {
+      plansPopup.style.display = "flex";
+    } else {
+      showToast(error.message || "Error generating QR code.", "error"); // Show error message
+    }
   }
   // generateQRCodeFe(true, logo);
 });

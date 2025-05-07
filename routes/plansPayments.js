@@ -209,13 +209,15 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
       paymentDetails: captureData,
     });
 
-    res.json({ message: "Payment successful", status: captureDetails.status });
+    res.json({
+      message: "Payment successful",
+      status: captureDetails.status,
+      transactionId: captureDetails.id,
+    });
   } catch (err) {
     console.error("PayPal Capture Error:", err.message);
     res.status(500).json({ error: "Capture failed" });
   }
 });
-
-
 
 module.exports = router;

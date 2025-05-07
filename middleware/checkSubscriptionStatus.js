@@ -27,8 +27,9 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
 
     if (!latestPayment.isActive) {
       return res.status(403).json({
-        message: "Your subscription is inactive. Please contact support.",
+        message: "Your subscription is inactive.",
         type: "error",
+        redirectUrl: "/dashboard?showPlans=true"
       });
     }
 
@@ -39,6 +40,7 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
       return res.status(500).json({
         message: "Invalid subscription data. Please contact support.",
         type: "error",
+        redirectUrl: "/dashboard?showPlans=true"
       });
     }
 
@@ -48,6 +50,7 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
       return res.status(403).json({
         message: "Your subscription has expired. Please renew.",
         type: "error",
+        redirectUrl: "/dashboard?showPlans=true"
       });
     }
 

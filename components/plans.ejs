@@ -124,8 +124,18 @@
                         })
                             .then(res => res.json())
                             .then(response => {
-                                alert("Payment Successful: " + response.status);
-                                // You can redirect or refresh here
+                                if (response.status === 'COMPLETED') {
+
+
+                                    if (response.transactionId) {
+                                        // ✅ Redirect to success page with transaction ID
+                                        window.location.href = `/successpayment?session_id=${response.transactionId}`;
+                                    } else {
+                                        alert("Transaction ID not found.");
+                                    }
+                                } else {
+                                    window.location.href = `/cancel`;
+                                }
                             });
                     },
                     onError: function (err) {
