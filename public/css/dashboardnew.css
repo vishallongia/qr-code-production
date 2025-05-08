@@ -43,6 +43,7 @@ body {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
     border-radius: 5px;
 }
+
 .popup-content {
     background: white;
     padding: 30px 40px;
@@ -752,5 +753,15 @@ textarea {
         justify-content: center;
         width: 100%;
 
+    }
+}
+
+#show-section-plans {
+    width: 80%;
+}
+
+@media (max-width: 768px) {
+    #show-section-plans {
+        width: 100%;
     }
 }

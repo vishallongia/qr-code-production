@@ -12,6 +12,10 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
       });
     }
 
+    if (req.user.role === "super-admin") {
+      return next();
+    }
+
     const latestPayment = await Payment.findOne({
       user_id: userId,
       paymentStatus: "completed",
@@ -29,7 +33,7 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
       return res.status(403).json({
         message: "Your subscription is inactive.",
         type: "error",
-        redirectUrl: "/dashboard?showPlans=true"
+        redirectUrl: "/dashboard?showPlans=true",
       });
     }
 
@@ -40,7 +44,7 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
       return res.status(500).json({
         message: "Invalid subscription data. Please contact support.",
         type: "error",
-        redirectUrl: "/dashboard?showPlans=true"
+        redirectUrl: "/dashboard?showPlans=true",
       });
     }
 
@@ -50,7 +54,7 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
       return res.status(403).json({
         message: "Your subscription has expired. Please renew.",
         type: "error",
-        redirectUrl: "/dashboard?showPlans=true"
+        redirectUrl: "/dashboard?showPlans=true",
       });
     }
 

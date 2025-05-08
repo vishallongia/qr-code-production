@@ -1758,7 +1758,7 @@ router.post(
       });
 
       // Check if user has already created 5 or more QR codes
-      if (qrCodes.length >= 5) {
+      if (qrCodes.length >= 5 && user.role !== "super-admin") {
         return res.status(400).json({
           message: "You can only create a maximum of 5 QR codes.",
           type: "error",

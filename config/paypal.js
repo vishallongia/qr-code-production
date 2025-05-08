@@ -5,7 +5,10 @@ function environment() {
   let clientSecret = process.env.PAYPAL_CLIENT_SECRET;
 
   if (process.env.NODE_ENV === "production") {
-    return new checkoutNodeJssdk.core.SandboxEnvironment(clientId, clientSecret);
+    return new checkoutNodeJssdk.core.SandboxEnvironment(
+      clientId,
+      clientSecret
+    );
   } else {
     return new checkoutNodeJssdk.core.SandboxEnvironment(
       clientId,
