@@ -91,6 +91,19 @@ router.get("/cancel", authMiddleware, async (req, res) => {
   }
 });
 
+// Home route
+router.get("/scanner", authMiddleware, async (req, res) => {
+  try {
+    res.render("dashboardnew", { user: null, activeSection: "scanner" });
+  } catch (error) {
+    console.error("Error generating Magic code:", error);
+    res.status(500).render("error", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
 // Register route
 router.get("/register", async (req, res) => {
   try {
@@ -1456,7 +1469,6 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
       }
       // If showpopup is true and qrCode is NOT a trial code, redirect
       if (showPopup && !qrCode.isDemo) {
-        console.log("i am in 2");
         return res.redirect(`/dashboard?magiccode=${magiccode}`);
       }
       // If QR code is found, render dashboard with this QR code for editing
