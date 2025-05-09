@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Use your Stripe secret key
-const QRCodeData = require("../models/QRCODEDATA");
 const Plan = require("../models/Plan");
 const Payment = require("../models/Payment");
 const {
@@ -17,7 +16,7 @@ const bodyParser = require("body-parser");
 router.get("/plans", authMiddleware, async (req, res) => {
   try {
     // Fetch all active plans from the database
-    const plans = await Plan.find({ active: true });
+    const plans = await Plan.find({ active: true }).sort({ durationInDays: 1 });
 
     // Encrypt the plan IDs
     const encryptedPlans = plans.map((plan) => {
@@ -59,7 +58,8 @@ router.post(
   authMiddleware,
   async (req, res) => {
     try {
-      const { planId } = req.body;
+      const { planId, couponCode } = req.body;
+      console.log(couponCode, "watch me");
 
       // Decrypt the plan ID
       const decryptedPlanId = decryptPassword(planId);
@@ -74,6 +74,43 @@ router.post(
         });
       }
 
+      // Check if user already used the same coupon for this plan
+      if (couponCode) {
+        const existingPayment = await Payment.findOne({
+          user_id: req.user._id,
+          plan_id: plan._id,
+          isCouponUsed: true,
+        });
+
+        if (existingPayment) {
+          return res.status(400).json({
+            message: "You have already used this coupon for this plan.",
+            type: "error",
+            data: null,
+          });
+        }
+      }
+
+      // Check if coupon is valid (stored in env)
+      let discount = 0;
+      if (couponCode) {
+        const couponKey = `COUPON_${couponCode.toUpperCase()}`;
+        const discountValue = process.env[couponKey];
+        if (discountValue) {
+          discount = parseFloat(discountValue);
+        } else {
+          return res.status(400).json({
+            message: "Invalid coupon code.",
+            type: "error",
+            data: null,
+          });
+        }
+      }
+
+      // Calculate final price
+      const originalPrice = plan.price;
+      const discountedPrice = Math.max(originalPrice - discount, 0); // prevent negative values
+
       // Create Stripe session
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -85,7 +122,7 @@ router.post(
                 name: plan.name,
                 description: plan.description || "",
               },
-              unit_amount: Math.round(plan.price * 100),
+              unit_amount: Math.round(discountedPrice * 100),
             },
             quantity: 1,
           },
@@ -93,6 +130,7 @@ router.post(
         metadata: {
           user_id: req.user._id.toString(),
           plan_id: plan._id.toString(),
+          coupon: couponCode || "",
         },
         mode: "payment",
         success_url: `${process.env.FRONTEND_URL}/successpayment?session_id={CHECKOUT_SESSION_ID}`,

@@ -1079,7 +1079,7 @@ document
       }
 
       if (type == "tattoo") {
-        finalURL = `https://textildruck-schweiz.com/products/magic-tattoo?image=${encodedURL}`;
+        finalURL = `https://magicprints.studio/products/magic-tattoo?image=${encodedURL}`;
       }
 
       console.log(finalURL);
@@ -1203,22 +1203,22 @@ function showThemePopup(message) {
   });
 }
 
-// document.addEventListener("DOMContentLoaded", () => {
-//   const activationInput = document.getElementById("qr-name-activation");
-//   const qrName = document.getElementById("qr-name");
+document.addEventListener("DOMContentLoaded", () => {
+  const activationInput = document.getElementById("qr-name-activation");
+  const qrName = document.getElementById("qr-name");
 
-//   if (activationInput && qrName) {
-//     activationInput.addEventListener("input", () => {
-//       qrName.value = activationInput.value;
-//     });
-//   }
-//   const urlParams = new URLSearchParams(window.location.search);
-//   if (urlParams.get("showPopup") === "true") {
-//     showThemePopup(
-//       "Please enter the name of your first MAGIC CODE, and click ACTIVATE."
-//     );
-//   } 
-// });
+  if (activationInput && qrName) {
+    activationInput.addEventListener("input", () => {
+      qrName.value = activationInput.value;
+    });
+  }
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("showPopup") === "true") {
+    showThemePopup(
+      "Please enter the name of your first MAGIC CODE, and click ACTIVATE."
+    );
+  } 
+});
 
 function removeShowPopupParamAndRedirect() {
   setTimeout(() => {

@@ -55,6 +55,14 @@ const paymentSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  coupon: {
+    type: String,
+    default: null,
+  },
+  isCouponUsed: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 paymentSchema.pre("save", async function (next) {

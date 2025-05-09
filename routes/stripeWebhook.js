@@ -4,6 +4,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const Payment = require("../models/Payment");
 
 async function recordPayment(session, status) {
+  console.log("i am called");
   try {
     const existingPayment = await Payment.findOne({
       transactionId: session.id,
@@ -26,6 +27,8 @@ async function recordPayment(session, status) {
         currency: session.currency.toUpperCase(),
         transactionId: session.id,
         paymentDetails: session,
+        coupon: session.metadata.coupon || null,
+        isCouponUsed: !!session.metadata.coupon, // ✅ set true if a coupon was use
       });
       console.log(`✅ Payment created successfully with status: ${status}`);
     }
@@ -73,6 +76,7 @@ router.post(
 
       // Handle payment statuses: paid, unpaid, pending
       if (paymentStatus === "paid") {
+        F;
         await recordPayment(session, "completed");
       } else if (paymentStatus === "unpaid") {
         await recordPayment(session, "pending");
