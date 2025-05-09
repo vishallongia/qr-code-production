@@ -13,7 +13,7 @@ const paymentSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ["stripe", "paypal"], // Only Stripe and PayPal are valid payment methods
+    enum: ["stripe", "paypal", "manual"], // Only Stripe and PayPal are valid payment methods
     required: [true, "Payment method is required"],
   },
   paymentStatus: {

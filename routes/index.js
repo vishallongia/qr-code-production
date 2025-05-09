@@ -76,7 +76,7 @@ router.get("/", authMiddleware, async (req, res) => {
       type: "error", // Send type as 'error'
     });
   }
-});
+}); 
 
 // Home route
 router.get("/cancel", authMiddleware, async (req, res) => {
