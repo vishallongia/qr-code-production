@@ -30,7 +30,7 @@
                         <div class="plan-duration">
                             <%= plan.duration %>
                         </div>
-                        <div class="plan-price">
+                        <div class="plan-price" id="plan-price-<%= sanitizedId %>">
                             <%= plan.price %>
                                 <%= plan.currency %>
                         </div>
@@ -42,9 +42,17 @@
                                 <% }); %>
                         </ul>
                         <!-- ✅ Coupon Code Input -->
-                        <div class="coupon-section" style="margin-bottom: 10px;">
+                        <div class="coupon-section" style="margin-bottom: 10px; display: none;">
                             <input type="text" class="coupon-input" placeholder="Enter coupon code"
                                 id="coupon-code-<%= sanitizedId %>" />
+                        </div>
+                        <button id="add-coupon-button-<%= plan.encryptedId %>" class="subscribe-btn add-coupon-btn"
+                            data-plan-id="<%= plan.encryptedId %>" style="margin-bottom: 10px;">
+                            Add Coupon
+                        </button>
+                        <div id="coupon-success-message-<%= plan.encryptedId %>" style=" display: none;"
+                            class="coupon-success-message">
+                            Coupon Added
                         </div>
                         <div>
                             <button id="checkout-button-<%= plan.encryptedId %>" class="checkout-btn subscribe-btn">
@@ -133,6 +141,11 @@
                                     // Show success message
                                     showToast(data.message, "success");
                                     if (couponInput) couponInput.value = ""; // Clear the coupon input
+                                    // Reload the page after 3 seconds (to allow time for the toast to show)
+                                    setTimeout(() => {
+                                        location.reload(); // Reload the page
+                                    }, 2000); // 3000 ms (3 seconds) delay before reload
+
                                 }
                                 return data.id;
                             })

@@ -119,6 +119,35 @@ router.post(
         }
       }
 
+      // Check if the price is 0 (zero-dollar transaction)
+      if (finalPrice === 0) {
+        const paymentRecord = await Payment.create({
+          user_id: req.user._id,
+          plan_id: plan._id,
+          paymentMethod: "manual",
+          paymentStatus: "completed",
+          amount: 0,
+          currency: plan.currency,
+          transactionId: "manual_zero_txn_" + Date.now(),
+          paymentDetails: {
+            mode: "manual-stripe",
+            reason: "Free plan or full discount coupon",
+          },
+          isActive: true,
+          coupon: couponCode || null,
+          isCouponUsed: !!couponCode,
+          paymentDate: new Date(),
+        });
+
+        return res.status(200).json({
+          message: "Free Plan activated",
+          type: "success",
+          data: {
+            sessionId: null,
+          },
+        });
+      }
+
       // Create Stripe session
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -252,7 +281,7 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
         currency: plan.currency,
         transactionId: "manual_zero_txn_" + Date.now(),
         paymentDetails: {
-          mode: "manual",
+          mode: "manual-paypal",
           reason: "Free plan or full discount coupon",
         },
         isActive: true,
@@ -335,6 +364,86 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("PayPal Capture Error:", err.message);
     res.status(500).json({ error: "Capture failed" });
+  }
+});
+
+router.post("/stripe/validate-coupon", authMiddleware, async (req, res) => {
+  try {
+    const { planId, couponCode } = req.body;
+
+    if (!planId || !couponCode) {
+      return res.status(400).json({
+        message: "Plan ID and coupon code are required.",
+        type: "error",
+        data: null,
+      });
+    }
+
+    // Decrypt the plan ID
+    const decryptedPlanId = decryptPassword(planId);
+
+    // Find the plan
+    const plan = await Plan.findById(decryptedPlanId);
+    if (!plan) {
+      return res.status(404).json({
+        message: "Plan not found.",
+        type: "error",
+        data: null,
+      });
+    }
+
+    // Check if coupon is already used by user for this plan
+    const existingPayment = await Payment.findOne({
+      user_id: req.user._id,
+      plan_id: plan._id,
+      isCouponUsed: true,
+    });
+
+    if (existingPayment) {
+      return res.status(400).json({
+        message: "You have already used this coupon for this plan.",
+        type: "error",
+        data: null,
+      });
+    }
+
+    // Validate coupon code
+    const validCoupon = process.env.COUPON_CODE;
+    if (couponCode.toUpperCase() !== validCoupon) {
+      return res.status(400).json({
+        message: "Invalid coupon code.",
+        type: "error",
+        data: null,
+      });
+    }
+
+    // Determine coupon price
+    const durationKey = `COUPON_PRICE_${plan.durationInDays}`;
+    const couponPrice = process.env[durationKey];
+
+    if (couponPrice === undefined) {
+      return res.status(400).json({
+        message: "Coupon not applicable for this plan.",
+        type: "error",
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Coupon Added.",
+      type: "success",
+      data: {
+        originalPrice: plan.price,
+        discountedPrice: parseFloat(couponPrice),
+      },
+    });
+  } catch (error) {
+    console.error("Coupon validation error:", error);
+    return res.status(500).json({
+      message: "An error occurred while validating the coupon.",
+      type: "error",
+      data: null,
+    });
   }
 });
 

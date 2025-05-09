@@ -16,7 +16,7 @@ function showToast(message, type = "success") {
     backgroundColor: backgroundColors[type] || backgroundColors.success,
     close: true, // Show close button
     style: {
-      zIndex: 100,
+      zIndex: 1000,
     },
     onClick: function () {}, // Callback after click
   }).showToast();
