@@ -75,8 +75,7 @@ router.post(
       const paymentStatus = session.payment_status;
 
       // Handle payment statuses: paid, unpaid, pending
-      if (paymentStatus === "paid") {
-        F;
+      if (paymentStatus === "paid") {F
         await recordPayment(session, "completed");
       } else if (paymentStatus === "unpaid") {
         await recordPayment(session, "pending");
