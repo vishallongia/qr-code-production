@@ -2218,7 +2218,7 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6,7})", async (req, res) => {
     const codeData = await QRCodeData.findOne({ code: alphanumericCode });
 
     const checkSubscription = await Payment.findOne({
-      user_id: userId,
+      user_id: decoded?.userId,
       paymentStatus: "completed",
       isActive: true,
       validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
