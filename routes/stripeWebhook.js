@@ -70,33 +70,38 @@ router.post(
     const session = event.data.object;
     console.log(session.id);
 
-    // Handle checkout session completion
-    if (event.type === "checkout.session.completed") {
-      const paymentStatus = session.payment_status;
+    try {
+      // Handle checkout session completion
+      if (event.type === "checkout.session.completed") {
+        const paymentStatus = session.payment_status;
 
-      // Handle payment statuses: paid, unpaid, pending
-      if (paymentStatus === "paid") {F
+        // Handle payment statuses: paid, unpaid, pending
+        if (paymentStatus === "paid") {
+          await recordPayment(session, "completed");
+        } else if (paymentStatus === "unpaid") {
+          await recordPayment(session, "pending");
+        } else if (paymentStatus === "pending") {
+          await recordPayment(session, "pending");
+        } else {
+          await recordPayment(session, "failed");
+        }
+      }
+
+      // Handle async payment statuses
+      if (event.type === "checkout.session.async_payment_succeeded") {
         await recordPayment(session, "completed");
-      } else if (paymentStatus === "unpaid") {
-        await recordPayment(session, "pending");
-      } else if (paymentStatus === "pending") {
-        await recordPayment(session, "pending");
-      } else {
+      }
+
+      if (event.type === "checkout.session.async_payment_failed") {
         await recordPayment(session, "failed");
       }
-    }
 
-    // Handle async payment statuses
-    if (event.type === "checkout.session.async_payment_succeeded") {
-      await recordPayment(session, "completed");
+      // Respond to acknowledge receipt of the event
+      res.status(200).send("Webhook received");
+    } catch (err) {
+      console.error("Error processing webhook event:", err.message);
+      res.status(500).send(`Internal Server Error: ${err.message}`);
     }
-
-    if (event.type === "checkout.session.async_payment_failed") {
-      await recordPayment(session, "failed");
-    }
-
-    // Respond to acknowledge receipt of the event
-    res.status(200).send("Webhook received");
   }
 );
 
