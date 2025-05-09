@@ -19,6 +19,8 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
     const latestPayment = await Payment.findOne({
       user_id: userId,
       paymentStatus: "completed",
+      isActive: true,
+      validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
     }).sort({ validUntil: -1 });
 
     if (!latestPayment) {

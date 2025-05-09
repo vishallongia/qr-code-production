@@ -76,7 +76,7 @@ router.get("/", authMiddleware, async (req, res) => {
       type: "error", // Send type as 'error'
     });
   }
-}); 
+});
 
 // Home route
 router.get("/cancel", authMiddleware, async (req, res) => {
@@ -2216,20 +2216,15 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6,7})", async (req, res) => {
     // Find the record using the alphanumeric code
     const codeData = await QRCodeData.findOne({ code: alphanumericCode });
 
-    if (!codeData) {
-      // If no data found for the alphanumeric code
-      return res.status(404).render("error", {
-        message: "Magic Code not found.",
-        type: "error", // Used for toast or error notification
-      });
-    }
+    const checkSubscription = await Payment.findOne({
+      user_id: userId,
+      paymentStatus: "completed",
+      isActive: true,
+      validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
+    }).sort({ validUntil: -1 });
 
-    if (
-      codeData.isTrial &&
-      codeData.activatedUntil &&
-      new Date() > new Date(codeData.activatedUntil)
-    ) {
-      res.render("expired-code");
+    if (!checkSubscription) {
+      return res.render("expired-code");
     }
 
     // ✅ If user ID matches and showEditOnScan is true, redirect to dummy link
