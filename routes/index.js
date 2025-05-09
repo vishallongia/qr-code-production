@@ -10,6 +10,7 @@ const {
   checkSubscriptionMiddleware,
 } = require("../middleware/checkSubscriptionStatus"); // Import the middleware
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
+const Payment = require("../models/Payment");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
