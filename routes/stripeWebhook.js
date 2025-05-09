@@ -4,7 +4,6 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const Payment = require("../models/Payment");
 
 async function recordPayment(session, status) {
-  console.log("i am called");
   try {
     const existingPayment = await Payment.findOne({
       transactionId: session.id,

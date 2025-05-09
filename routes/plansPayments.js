@@ -91,25 +91,33 @@ router.post(
         }
       }
 
-      // Check if coupon is valid (stored in env)
-      let discount = 0;
+      // Check if coupon is valid (single coupon)
+      let finalPrice = plan.price;
+
       if (couponCode) {
-        const couponKey = `COUPON_${couponCode.toUpperCase()}`;
-        const discountValue = process.env[couponKey];
-        if (discountValue) {
-          discount = parseFloat(discountValue);
-        } else {
+        const validCoupon = process.env.COUPON_CODE;
+        if (couponCode.toUpperCase() !== validCoupon) {
           return res.status(400).json({
             message: "Invalid coupon code.",
             type: "error",
             data: null,
           });
         }
-      }
 
-      // Calculate final price
-      const originalPrice = plan.price;
-      const discountedPrice = Math.max(originalPrice - discount, 0); // prevent negative values
+        // Determine price based on plan durationInDays
+        const durationKey = `COUPON_PRICE_${plan.durationInDays}`;
+        const couponPrice = process.env[durationKey];
+
+        if (couponPrice !== undefined) {
+          finalPrice = parseFloat(couponPrice);
+        } else {
+          return res.status(400).json({
+            message: "Coupon not applicable for this plan.",
+            type: "error",
+            data: null,
+          });
+        }
+      }
 
       // Create Stripe session
       const session = await stripe.checkout.sessions.create({
@@ -122,7 +130,7 @@ router.post(
                 name: plan.name,
                 description: plan.description || "",
               },
-              unit_amount: Math.round(discountedPrice * 100),
+              unit_amount: Math.round(finalPrice * 100),
             },
             quantity: 1,
           },
