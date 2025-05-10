@@ -429,6 +429,34 @@ router.post("/stripe/validate-coupon", authMiddleware, async (req, res) => {
       });
     }
 
+    // If valid coupon and plan duration is 15 days, activate free plan
+    if (plan.durationInDays === 15) {
+      const paymentRecord = await Payment.create({
+        user_id: req.user._id,
+        plan_id: plan._id,
+        paymentMethod: "manual",
+        paymentStatus: "completed",
+        amount: 0,
+        currency: plan.currency,
+        transactionId: "manual_zero_txn_" + Date.now(),
+        paymentDetails: {
+          mode: "manual",
+          reason: "Free plan activated via coupon",
+        },
+        isActive: true,
+        coupon: couponCode,
+        isCouponUsed: true,
+        paymentDate: new Date(),
+      });
+
+      return res.status(200).json({
+        message: "Free Plan activated",
+        type: "success",
+        data: { paymentId: paymentRecord._id },
+        reload: true, // <- Add this
+      });
+    }
+
     return res.status(200).json({
       message: "Coupon Added.",
       type: "success",

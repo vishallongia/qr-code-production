@@ -414,8 +414,87 @@ router.post("/assign-qr-code", async (req, res) => {
 </html>
     `;
 
+    const couponCode = process.env.COUPON_CODE || "SAVE10";
+
+    const contentCoupon = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free 15-Day Plan</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    h2 {
+      color: #333;
+    }
+    p {
+      color: #555;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    .btn {
+      display: inline-block;
+      background: #28a745;
+      color: #ffffff;
+      padding: 12px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    .code-box {
+      font-size: 18px;
+      background-color: #f0f0f0;
+      padding: 10px 15px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #d63384;
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Enjoy a Free 15-Day Plan</h2>
+    <p>Hi ${user.fullName},</p>
+    <p>We’re excited to offer you <strong>15 days of our premium plan — completely free!</strong> Just use the coupon code below during checkout.</p>
+    <div class="code-box">${couponCode}</div>
+    <p>Don’t miss out — this offer is limited!</p>
+    <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
+  </div>
+</body>
+</html>
+`;
+
     // Send the magic link email
     SendEmail(sender, user.email, "Your Magic Link to Login", content);
+    SendEmail(
+      sender,
+      user.email,
+      "Enjoy 15 Days Free – Use Coupon Inside",
+      contentCoupon
+    );
 
     //Clear cookies (if needed)
     res.clearCookie("token", { httpOnly: false });

@@ -11,8 +11,9 @@
 </head>
 
 <body>
-    <div class="container" style="margin-top: 10px;">
-        <!-- <h1>Choose Your Subscription</h1> -->
+    <div class="container">
+        <h1>Choose Your Subscription</h1>
+        <a href="/" class="back-home-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
 
         <!-- Tabs -->
         <div class="tabs">
@@ -30,7 +31,7 @@
                         <div class="plan-duration">
                             <%= plan.duration %>
                         </div>
-                        <div class="plan-price" id="plan-price-<%= sanitizedId %>">
+                        <div class="plan-price">
                             <%= plan.price %>
                                 <%= plan.currency %>
                         </div>
@@ -41,19 +42,6 @@
                                 </li>
                                 <% }); %>
                         </ul>
-                        <!-- ✅ Coupon Code Input -->
-                        <div class="coupon-section" style="margin-bottom: 10px; display: none;">
-                            <input type="text" class="coupon-input" placeholder="Enter coupon code"
-                                id="coupon-code-<%= sanitizedId %>" />
-                        </div>
-                        <button id="add-coupon-button-<%= plan.encryptedId %>" class="subscribe-btn add-coupon-btn"
-                            data-plan-id="<%= plan.encryptedId %>" style="margin-bottom: 10px;">
-                            Add Coupon
-                        </button>
-                        <div id="coupon-success-message-<%= plan.encryptedId %>" style=" display: none;"
-                            class="coupon-success-message">
-                            Coupon Added
-                        </div>
                         <div>
                             <button id="checkout-button-<%= plan.encryptedId %>" class="checkout-btn subscribe-btn">
                                 Pay with Credit Card
@@ -101,8 +89,6 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
-    <script src="/js/toastify-setup.js"></script>
     <script src="https://js.stripe.com/v3/"></script>
     <script
         src="https://www.paypal.com/sdk/js?client-id=ARlL9iKwH-ib4SALn8uUCwXs7yMUdALrHPYk8_5l6uETER8_3fMGUb3Fc0ulLyWA-LAlGFdFxtSXXEcQ&currency=CHF"></script>
@@ -111,50 +97,20 @@
         document.addEventListener("DOMContentLoaded", function () {
             const containers = document.querySelectorAll(".paypal-button-container");
 
-
             containers.forEach(container => {
                 const planId = container.dataset.planId;
-                const sanitizedId = container.id.replace("paypal-button-container-", "");
-                // Get the related coupon input field using the plan ID
-                const couponInput = document.querySelector(`#coupon-code-${sanitizedId}`);
 
                 paypal.Buttons({
                     createOrder: function () {
-                        const couponCode = couponInput ? couponInput.value.trim() : "";
                         return fetch("/paypal/create-order", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json"
                             },
-                            body: JSON.stringify({ planId, couponCode })
+                            body: JSON.stringify({ planId })
                         })
-                            .then(async res => {
-                                if (!res.ok) {
-                                    const errorData = await res.json();
-                                    throw new Error(errorData.message || "Failed to create order");
-                                }
-                                return res.json();
-                            })
-                            .then(data => {
-                                // Check if a success message exists
-                                if (data.message) {
-                                    // Show success message
-                                    showToast(data.message, "success");
-                                    if (couponInput) couponInput.value = ""; // Clear the coupon input
-                                    // Reload the page after 3 seconds (to allow time for the toast to show)
-                                    setTimeout(() => {
-                                        location.reload(); // Reload the page
-                                    }, 2000); // 3000 ms (3 seconds) delay before reload
-
-                                }
-                                return data.id;
-                            })
-                            .catch(err => {
-                                console.error("Create Order Error:", err);
-                                showToast(err.message || "An error occurred while creating the order", "error");
-                                if (couponInput) couponInput.value = ""; // Clear the coupon input
-                                throw err; // rethrow so PayPal knows it failed
-                            });
+                            .then(res => res.json())
+                            .then(data => data.id);
                     },
                     onApprove: function (data) {
                         return fetch("/paypal/capture-order", {
@@ -169,25 +125,19 @@
                         })
                             .then(res => res.json())
                             .then(response => {
-                                if (response.status === 'COMPLETED') {
-
-
-                                    if (response.transactionId) {
-                                        if (couponInput) couponInput.value = ""; // Clear the coupon input
-                                        // ✅ Redirect to success page with transaction ID
-                                        window.location.href = `/successpayment?session_id=${response.transactionId}`;
-                                    } else {
-                                        alert("Transaction ID not found.");
-                                    }
+                                if (data.status === 'COMPLETED') {
+                                    // Now redirect user to success page
+                                    window.location.href = `/successpayment?session_id=${orderID}`;
                                 } else {
-                                    window.location.href = `/cancel`;
+                                    // Show error or retry
+                                    alert("Payment wasn't completed yet.");
                                 }
+                                // You can redirect or refresh here
                             });
                     },
                     onError: function (err) {
-                        console.log(err)
                         console.error("PayPal Button Error:", err);
-                        // showToast("An error occurred during the transaction.", "error");
+                        alert("An error occurred during the transaction.");
                     }
                 }).render(container);
             });
