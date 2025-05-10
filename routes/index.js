@@ -2303,7 +2303,7 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6,7})", async (req, res) => {
       validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
     }).sort({ validUntil: -1 });
 
-    if (!checkSubscription) {
+    if (!checkSubscription && codeData.assignedTo) {
       return res.render("expired-code");
     }
 
@@ -2322,7 +2322,6 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6,7})", async (req, res) => {
 
     // Check the type of the code and handle accordingly
     if (codeData.type === "url") {
-      console.log("I am working");
       // Redirect to the URL found in the database if type is 'url'
       return res.redirect(codeData.url); // Redirects to the URL
     } else if (codeData.type === "media") {
