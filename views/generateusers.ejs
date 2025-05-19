@@ -32,14 +32,14 @@
 
     <div class="modern-list-container">
       <div>
-        <h2>Generate Analog Users</h2>
+        <h2>Generate Analog Codes</h2>
         <p style="text-align: center;">
-          New User numbering begins at <%= startNumber %>
+          New Codes numbering begins at <%= startNumber %>
             <p>
 
       </div>
       <div class="input-group-custom">
-        <input type="number" id="user-count" class="number-input" placeholder="Enter no. of users" min="1">
+        <input type="number" id="user-count" class="number-input" placeholder="Enter no. of codes" min="1">
         <button class="view-qr-btn" onclick="return handleCreateDemoUsers(event)">Generate User</button>
         <button class="view-qr-btn" id="generateduserexcelbutton" style="display: none;"
           onclick="return exportToExcel(event)">Export to

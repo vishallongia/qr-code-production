@@ -35,6 +35,9 @@
                     <!-- <a class="nav-link" href="#">Features</a> -->
                     <a class="nav-link" href="/admindashboard/generateusers">Create Analog Codes</a>
                     <a class="nav-link" href="/admindashboard/demo-user-dashboard">Analog Codes</a>
+                    <a class="nav-link" href="/admindashboard/affiliate/create-affiliate-user">Create Affiliate User</a>
+                    <a class="nav-link" href="/admindashboard/affiliate/affiliate-users">Affiliate Users</a>
+
                     <!-- <a class="nav-link" href="/admindashboard/generatetrialusers">Trial Codes</a> -->
                     <!-- <a class="nav-link disabled" aria-disabled="true">Disabled</a> -->
                 </div>
@@ -51,14 +54,15 @@
         </div>
     </nav>
 
-    <!-- Link Bootstrap JS -->
-    <script src="/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/api-calls.js"></script> <!-- Add this script to ensure API calls are loaded -->
-    <script>
-        function handleProfileUpdate() {
-            window.location.href = "/myprofile"; // Navigate to /myprofile
-        }
-    </script>
+
 </body>
+<!-- Link Bootstrap JS -->
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/logout.js"></script>
+<script>
+    function handleProfileUpdate() {
+        window.location.href = "/myprofile"; // Navigate to /myprofile
+    }
+</script>
 
 </html>

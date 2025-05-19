@@ -65,7 +65,15 @@ async function handleRegister(event) {
     const result = await registerUser(data); // Call the API function
     showToast(result.message, "success"); // Show success message
     registerBtn.disabled = false;
-    window.location.href = "/dashboard";
+    if (result.redirect) {
+      // If the user was created by admin (affiliate), redirect after a delay
+      setTimeout(() => {
+        window.location.href = result.redirect;
+      }, 1000); // Adjust delay as needed
+    } else {
+      // Self registration → go to magic code
+      window.location.href = "/magiccode";
+    }
     form.reset(); // Reset the form after successful submission
   } catch (error) {
     showToast(error.message || "An error occurred. Please try again.", "error"); // Show error message
@@ -95,7 +103,7 @@ async function handleLogin(event) {
       } else if (result.role === "demo-user") {
         window.location.href = `/dashboard?magiccode=${result.qrCodeDataId}`;
       } else {
-        window.location.href = "/dashboard";
+        window.location.href = "/magiccode";
       }
     }, 1000); // Optional delay to let the toast show up
   } catch (error) {
@@ -252,9 +260,16 @@ async function updateDetails(data, userId) {
 }
 
 // Handle Magic Link form submission
-async function handleMagicLink(event, emailInputId, buttonId, encId = null) {
+async function handleMagicLink(
+  event,
+  emailInputId,
+  buttonId,
+  encId = null,
+  isAffiliate = false
+) {
   event.preventDefault();
 
+  console.log(isAffiliate, "wm");
   const email = document.getElementById(emailInputId).value;
   const button = document.getElementById(buttonId);
 
@@ -265,12 +280,15 @@ async function handleMagicLink(event, emailInputId, buttonId, encId = null) {
 
   try {
     button.disabled = true;
-    const result = await requestMagicLink(email, encId); // Call the Magic Link API
+    const result = await requestMagicLink(email, encId, isAffiliate); // Call the Magic Link API
     showToast(result.message || "Magic link sent to your email!", "success");
-    document.getElementById(emailInputId).value = "";
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 1000); // Optional delay to let the toast show up
+
+    if (!isAffiliate) {
+      document.getElementById(emailInputId).value = "";
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000); // Optional delay to let the toast show up
+    }
   } catch (error) {
     showToast(
       error.message || "Something went wrong. Please try again.",
@@ -282,12 +300,16 @@ async function handleMagicLink(event, emailInputId, buttonId, encId = null) {
 }
 
 // Function to request Magic Link
-async function requestMagicLink(email, encId) {
+async function requestMagicLink(email, encId, isAffiliate) {
   try {
     const requestBody = { email };
 
     if (encId) {
       requestBody.encId = encId; // Add encId if available
+    }
+
+    if (isAffiliate) {
+      requestBody.isAffiliate = isAffiliate; // Add encId if available
     }
     const response = await fetch("/usemagiclink", {
       method: "POST",

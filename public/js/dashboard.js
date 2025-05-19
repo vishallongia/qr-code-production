@@ -12,7 +12,6 @@ let CurrentQR = "";
 let qrCode;
 const popup = document.getElementById("theme-popup-activate-qr");
 
-
 const colorHexMap = {
   magenta: "#FF0093",
   violet: "#835EC7",
@@ -441,15 +440,113 @@ function updateQRCodeFe(
 
   // setupQrExpiryCountdown("qr-code", "activatedUntil");
 
-  // Inside your updateQRCodeFe function, before qrCode.append():
   if (qrName) {
     const nameElement = document.createElement("div");
-    nameElement.textContent = qrName;
-    nameElement.style.textAlign = "center";
-    nameElement.style.marginBottom = "16px"; // gap between name and QR
-    nameElement.style.fontSize = "20px";
+    nameElement.style.display = "flex";
+    nameElement.style.alignItems = "center";
+    nameElement.style.justifyContent = "center";
+    nameElement.style.gap = "12px";
+    nameElement.style.marginBottom = "16px";
+    nameElement.style.fontSize = "22px";
     nameElement.style.color = "black";
 
+    const nameText = document.createElement("span");
+    nameText.textContent = qrName;
+    nameText.style.cursor = "default";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.style.fontSize = "20px";
+    input.style.padding = "4px 8px";
+    input.style.textAlign = "center";
+    input.style.display = "none";
+
+    input.addEventListener("input", () => {
+      const targetInput = document.getElementById("qr-name");
+      if (targetInput) {
+        targetInput.value = input.value;
+      }
+    });
+
+    // Icons container
+    const iconsWrapper = document.createElement("div");
+    iconsWrapper.style.display = "flex";
+    iconsWrapper.style.alignItems = "center";
+    iconsWrapper.style.gap = "8px";
+
+    // Pencil Icon (edit)
+    const pencilIcon = document.createElement("span");
+    pencilIcon.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24">
+      <path fill="black" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 
+      7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 
+      0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+    </svg>`;
+    pencilIcon.style.cursor = "pointer";
+
+    // Update Icon (check mark)
+    const updateIcon = document.createElement("span");
+    updateIcon.innerHTML = `
+    <svg width="24" height="24" viewBox="0 0 24 24">
+      <path fill="green" d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/>
+    </svg>`;
+    updateIcon.style.cursor = "pointer";
+    updateIcon.style.display = "none";
+    updateIcon.id = "confirm-edit";
+
+    // Cancel Icon (cross)
+    const cancelIcon = document.createElement("span");
+    cancelIcon.innerHTML = `
+    <svg width="24" height="24" viewBox="0 0 24 24">
+      <path fill="red" d="M18.3 5.71a1 1 0 0 0-1.41 0L12 10.59 7.11 5.7a1 1 0 1 0-1.41 1.41L10.59 
+      12l-4.89 4.89a1 1 0 1 0 1.41 1.41L12 13.41l4.89 4.89a1 1 0 0 0 1.41-1.41L13.41 
+      12l4.89-4.89a1 1 0 0 0 0-1.4z"/>
+    </svg>`;
+    cancelIcon.style.cursor = "pointer";
+    cancelIcon.style.display = "none";
+
+    // Append icons
+    iconsWrapper.appendChild(pencilIcon);
+    iconsWrapper.appendChild(updateIcon);
+    iconsWrapper.appendChild(cancelIcon);
+
+    // Events
+    pencilIcon.addEventListener("click", () => {
+      input.value = nameText.textContent;
+      nameText.style.display = "none";
+      input.style.display = "inline-block";
+
+      pencilIcon.style.display = "none";
+      updateIcon.style.display = "inline-block";
+      cancelIcon.style.display = "inline-block";
+
+      input.focus();
+    });
+
+    updateIcon.addEventListener("click", () => {
+      nameText.textContent = input.value.trim() || "Unnamed";
+      nameText.style.display = "inline-block";
+      input.style.display = "none";
+
+      pencilIcon.style.display = "inline-block";
+      updateIcon.style.display = "none";
+      cancelIcon.style.display = "none";
+      document.getElementById("submit-btn-update").click();
+    });
+
+    cancelIcon.addEventListener("click", () => {
+      nameText.style.display = "inline-block";
+      input.style.display = "none";
+
+      pencilIcon.style.display = "inline-block";
+      updateIcon.style.display = "none";
+      cancelIcon.style.display = "none";
+    });
+
+    // Assemble
+    nameElement.appendChild(nameText);
+    nameElement.appendChild(input);
+    nameElement.appendChild(iconsWrapper);
     qrContainer.appendChild(nameElement);
   }
 
@@ -1185,6 +1282,12 @@ async function handleQrCodeUpdateSubmit(event) {
     toggleLoaderVisibility(false);
     popup.style.display = "none";
     showToast(error.message || "Error updating QR code.", "error");
+
+    if (error.message == "No subscription found. Please purchase a plan.") {
+      setTimeout(() => {
+        window.location.href = "/plans";
+      }, 500);
+    }
   }
 }
 
@@ -1198,8 +1301,40 @@ function showThemePopup(message) {
 
   // Add one-time event listener
   okBtn.addEventListener("click", async () => {
-    // Ensure we only proceed if the QR code update function is successful
-    await handleQrCodeUpdateSubmit(event);
+    event.preventDefault(); // <- Prevent form submission
+    const couponCode = document.getElementById("coupon-code-15").value.trim();
+    if (!couponCode) {
+      showToast("Coupon code or plan is missing.", "error");
+      return;
+    }
+    try {
+      const response = await fetch("/stripe/validate-coupon", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          couponCode: couponCode,
+          is15DayPlan: true,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        showToast(result.message, "success");
+        if (result.reload) {
+          setTimeout(() => {
+            window.location.href = "/magiccode";
+          }, 1000);
+        }
+      } else {
+        showToast(result.message, "error");
+      }
+    } catch (error) {
+      console.error("Error validating coupon:", error);
+      showToast("Something went wrong. Please try again.", "error");
+    }
   });
 }
 
@@ -1214,10 +1349,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get("showPopup") === "true") {
-    showThemePopup(
-      "Please enter the name of your first MAGIC CODE, and click ACTIVATE."
-    );
-  } 
+    showThemePopup("Just enter the discount code you received in the e-mail with your magic link, and activate your account.");
+  }
 });
 
 function removeShowPopupParamAndRedirect() {

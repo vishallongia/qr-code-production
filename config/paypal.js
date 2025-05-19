@@ -10,7 +10,7 @@ function environment() {
       clientSecret
     );
   } else {
-    return new checkoutNodeJssdk.core.SandboxEnvironment(
+    return new checkoutNodeJssdk.core.LiveEnvironment(
       clientId,
       clientSecret
     );

@@ -1,15 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User"); // Replace with your User model
 
-const adminRoutes = {
-  "/admindashboard": true,
-  "/admindashboard/qr/:userId": true,
-  "/admindashboard/toggle-status": true,
-  "admindashboard/demo-user-dashboard": true,
-  "admindashboard/export-users": true,
-  "/admindashboard/generateusers": true,
-};
-
 const authMiddleware = async (req, res, next) => {
   try {
     // Get the token from cookies
@@ -29,10 +20,12 @@ const authMiddleware = async (req, res, next) => {
         return handleAuthError(res, "User not found. Please log in.");
       }
 
-      // Attach user to the request
       req.user = user;
-      // Check if the requested path contains "/admindashboard"
-      if (req.path.includes("/admindashboard") && user.role !== "admin") {
+      if (
+        (req.path.includes("/admindashboard") ||
+          req.originalUrl.includes("/admindashboard")) &&
+        user.role !== "admin"
+      ) {
         return handleAuthError(req, res, "Access denied. Admins only.");
       }
 
@@ -43,7 +36,7 @@ const authMiddleware = async (req, res, next) => {
 
     // If the user is authenticated and requests the "/" path (SSR), redirect to "/dashboard"
     if (req.path === "/" && req.user) {
-      return res.redirect("/dashboard");
+      return res.redirect("/magiccode");
     }
 
     // Proceed to the next middleware or route handler

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern List View</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/viewaffiliateuser.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <%- include('../components/navbar') %>
+        <% const pageNum=currentPage ? Number(currentPage) : 1; const invalidPage=isNaN(pageNum) || pageNum < 1 ||
+            pageNum> totalPages;
+            %>
+
+            <div class="modern-list-container">
+                <div class="affiliate-actions">
+                    <% if (!user) { %>
+                        <div class="error-message" role="alert" aria-live="assertive">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"
+                                focusable="false">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Error: Affiliate user not found.</span>
+                        </div>
+                        <% } else if (invalidPage && totalPages> 0) { %>
+                            <%- include('../components/404') %>
+                                <% } else { %>
+                                    <h2>Affiliate User Info</h2>
+                                    <div class="action-fields">
+                                        <input type="text" id="affiliateName" value="<%= user.fullName %>"
+                                            placeholder="Affiliate Name" readonly>
+                                        <input type="email" id="affiliateEmail" value="<%= user.email %>"
+                                            placeholder="Affiliate Email" readonly>
+                                        <button class="action-btn" id="sendMagicLinkAffiliate"
+                                            onclick="return handleMagicLink(event,'affiliateEmail', 'sendMagicLinkAffiliate',null,true)">Send
+                                            Magic Link</button>
+                                        <button class="action-btn"
+                                            onclick="window.location.href='/admindashboard/affiliate/create-coupon/<%= user._id %>'">
+                                            Add Coupon
+                                        </button>
+                                    </div>
+
+                                    <% if (coupons && coupons.length> 0) { %>
+                                        <h2>Coupons List</h2>
+                                        <div class="list-wrapper">
+                                            <div class="list-header">
+                                                <span>Code</span>
+                                                <span>Discount (%)</span>
+                                                <span>Commission (%)</span>
+                                                <span>Actions</span>
+                                            </div>
+                                            <ul id="couponList" class="user-list">
+                                                <% coupons.forEach(coupon=> { %>
+                                                    <li class="user-item">
+                                                        <span>
+                                                            <%= coupon.code %>
+                                                        </span>
+                                                        <span>
+                                                            <%= coupon.discountPercent %>
+                                                        </span>
+                                                        <span>
+                                                            <%= coupon.commissionPercent %>
+                                                        </span>
+                                                        <span class="coupon-actions">
+                                                            <a href="/admindashboard/affiliate/update-coupon/<%= coupon._id %>"
+                                                                title="Edit" class="icon-btn edit-icon">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            <a title="Delete"
+                                                                onclick="handleDeleteCoupon(event, '<%= coupon._id %>')"
+                                                                class="icon-btn delete-icon" style="cursor: pointer;">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </a>
+                                                        </span>
+
+                                                    </li>
+                                                    <% }) %>
+                                            </ul>
+                                        </div>
+                                        <% } else { %>
+                                            <p class="no-coupons-message animated-fade-in">No coupons found.</p>
+                                            <% } %>
+
+                                                <% if (totalPages && totalPages> 1) { %>
+                                                    <div class="pagination-container">
+                                                        <% if (pageNum> 1) { %>
+                                                            <a href="?page=<%= pageNum - 1 %>"
+                                                                class="pagination-btn prev-btn">
+                                                                <svg width="22" height="22" viewBox="0 0 24 24"
+                                                                    fill="currentColor">
+                                                                    <path d="M15 19L8 12L15 5" />
+                                                                </svg>
+                                                            </a>
+                                                            <% } %>
+
+                                                                <% for (let i=1; i <=totalPages; i++) { %>
+                                                                    <% if (i===pageNum) { %>
+                                                                        <span class="pagination-btn active-page">
+                                                                            <%= i %>
+                                                                        </span>
+                                                                        <% } else { %>
+                                                                            <a href="?page=<%= i %>"
+                                                                                class="pagination-btn">
+                                                                                <%= i %>
+                                                                            </a>
+                                                                            <% } %>
+                                                                                <% } %>
+
+                                                                                    <% if (pageNum < totalPages) { %>
+                                                                                        <a href="?page=<%= pageNum + 1 %>"
+                                                                                            class="pagination-btn next-btn">
+                                                                                            <svg width="22" height="22"
+                                                                                                viewBox="0 0 24 24"
+                                                                                                fill="currentColor">
+                                                                                                <path
+                                                                                                    d="M9 5L16 12L9 19" />
+                                                                                            </svg>
+                                                                                        </a>
+                                                                                        <% } %>
+                                                    </div>
+                                                    <% } %>
+                                                        <% } %>
+                </div>
+            </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+<script src="/js/api-calls.js"></script>
+<script src="/js/coupon.js"></script>
+<script src="/js/admindashboard-api-calls.js"></script>
+
+</html>

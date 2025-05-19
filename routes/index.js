@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
 const { authMiddleware } = require("../middleware/auth"); // Import the middleware
+const { verifyAdminUser } = require("../middleware/verifyAdminUser"); // Import the middleware
 const {
   checkSubscriptionMiddleware,
 } = require("../middleware/checkSubscriptionStatus"); // Import the middleware
@@ -255,9 +256,19 @@ router.get("/assign-qr-code/:qrCodeId?", async (req, res) => {
       return res.status(404).send("QR Code not found");
     }
 
+    // Check if QR code is already assigned and isQrActivated is true
+    if (qrCode.assignedTo && qrCode.isDemo) {
+      // Render the assign QR code page with the QR code data
+      return res.render("assignqrcode-new", {
+        qrCode, // Send the QR code data to the EJS template
+        showPopup: true,
+      });
+    }
+
     // Render the assign QR code page with the QR code data
-    res.render("assignqrcode-new", {
+    return res.render("assignqrcode-new", {
       qrCode, // Send the QR code data to the EJS template
+      showPopup: false,
     });
   } catch (error) {
     console.error("Error generating assign Magic code page", error);
@@ -300,11 +311,7 @@ router.post("/assign-qr-code", async (req, res) => {
     }
 
     // Check if QR code is already assigned and isQrActivated is true
-    if (
-      qrCodeData.assignedTo &&
-      qrCodeData.isQrActivated &&
-      qrCodeData.isDemo
-    ) {
+    if (qrCodeData.assignedTo && qrCodeData.isDemo) {
       return res.status(400).json({
         message: "QR code is already assigned and activated",
         type: "error",
@@ -319,8 +326,9 @@ router.post("/assign-qr-code", async (req, res) => {
     if (!user) {
       // Create a new user if the user does not exist
       const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
-      const encryptedPassword = encryptPassword(randomPassword);
+      let usernameAsPW = email.split("@")[0];
+      const hashedPassword = await bcrypt.hash(usernameAsPW, 10);
+      const encryptedPassword = encryptPassword(usernameAsPW);
 
       user = new User({
         fullName: "New User",
@@ -334,6 +342,7 @@ router.post("/assign-qr-code", async (req, res) => {
 
     if (qrCodeData.assignedTo !== user._id) {
       qrCodeData.assignedTo = user._id; // Assign the user._id directly
+      qrCodeData.isQrActivated = true;
       await qrCodeData.save();
     }
 
@@ -353,76 +362,15 @@ router.post("/assign-qr-code", async (req, res) => {
       name: "Magic Code - Login Link",
     };
 
-    const content = `
-        <!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login with Magic Link</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 30px auto;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        h2 {
-            color: #333;
-        }
-        p {
-            color: #555;
-            font-size: 16px;
-            line-height: 1.5;
-        }
-        .btn {
-            display: inline-block;
-            background: #007bff;
-            color: #ffffff;
-            padding: 12px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 16px;
-            margin-top: 20px;
-        }
-        .footer {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #888;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>Login with Magic Link</h2>
-        <p>Hi ${user.fullName},</p>
-        <p>Use the magic link below to securely log in to your account. This link will expire in 30 minutes.</p>
-        <a href="${magicLink}" class="btn">Login Now</a>
-        <p>After Login SET YOUR PASSWORD under My Profile.</p>
-        <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
-    </div>
-</body>
-</html>
-    `;
-
     const couponCode = process.env.COUPON_CODE || "SAVE10";
 
     const contentCoupon = `
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Free 15-Day Plan</title>
+  <title>Login with Magic Link + Free 15-Day Plan</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -449,7 +397,7 @@ router.post("/assign-qr-code", async (req, res) => {
     }
     .btn {
       display: inline-block;
-      background: #28a745;
+      background: #007bff;
       color: #ffffff;
       padding: 12px 20px;
       text-decoration: none;
@@ -468,7 +416,7 @@ router.post("/assign-qr-code", async (req, res) => {
       color: #d63384;
     }
     .footer {
-      margin-top: 20px;
+      margin-top: 30px;
       font-size: 14px;
       color: #888;
     }
@@ -476,9 +424,14 @@ router.post("/assign-qr-code", async (req, res) => {
 </head>
 <body>
   <div class="container">
-    <h2>Enjoy a Free 15-Day Plan</h2>
+    <h2>Login with Magic Link</h2>
     <p>Hi ${user.fullName},</p>
-    <p>We’re excited to offer you <strong>15 days of our premium plan — completely free!</strong> Just use the coupon code below during checkout.</p>
+    <p>Click the magic link below to securely log in to your account. This link will expire in 30 minutes.</p>
+    <a href="${magicLink}" class="btn">Login Now</a>
+    <p>After login, set your password under <strong>My Profile</strong>.</p>
+    <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+    <h2>Claim Your Free 15-Day Premium Plan!</h2>
+    <p>Enjoy <strong>15 days of our premium plan — completely free!</strong> Use the coupon code below at checkout:</p>
     <div class="code-box">${couponCode}</div>
     <p>Don’t miss out — this offer is limited!</p>
     <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
@@ -488,13 +441,7 @@ router.post("/assign-qr-code", async (req, res) => {
 `;
 
     // Send the magic link email
-    SendEmail(sender, user.email, "Your Magic Link to Login", content);
-    SendEmail(
-      sender,
-      user.email,
-      "Enjoy 15 Days Free – Use Coupon Inside",
-      contentCoupon
-    );
+    SendEmail(sender, user.email, "Your Magic Link to Login", contentCoupon);
 
     //Clear cookies (if needed)
     res.clearCookie("token", { httpOnly: false });
@@ -550,7 +497,6 @@ router.get("/admindashboard/qr/:userId", authMiddleware, async (req, res) => {
         totalPages: 1,
       });
     }
-    console.log(currentPage, totalPages);
     // Render the QR details view with pagination
     res.render("usersqr", {
       message: "Magic Code details fetched successfully",
@@ -606,7 +552,7 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
 
     // Fetch total number of non-admin users to calculate total pages
-    const totalUsers = await User.countDocuments({ role: { $ne: "admin" } });
+    const totalUsers = await User.countDocuments({ role: "user" });
 
     // Calculate total pages (ceil to the nearest whole number)
     const totalPages = Math.ceil(totalUsers / recordsPerPage);
@@ -615,7 +561,7 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
     const skip = (currentPage - 1) * recordsPerPage;
 
     const users = await User.aggregate([
-      { $match: { role: { $ne: "admin" } } }, // Exclude admin users
+      { $match: { role: "user" } }, // Exclude admin users
       {
         $lookup: {
           from: "qrcodedatas",
@@ -1110,10 +1056,21 @@ router.post("/reset-password/:token", async (req, res) => {
 });
 
 // Registration Route
-router.post("/register", async (req, res) => {
-  const { fullName, email, password } = req.body;
+router.post("/register", verifyAdminUser, async (req, res) => {
+  const { fullName, email, password, role = "user" } = req.body;
+  const currentUser = req.user || null; // Authenticated user who is trying to register someone
+  // Only set cookie and return token if it's self-registration (non-admin creating own account)
+  const isSelfRegistration = !currentUser || currentUser.role !== "admin";
 
   try {
+    // ✅ Only admin can create affiliate users
+    if (role === "affiliate" && currentUser.role !== "admin") {
+      return res.status(403).json({
+        message: "Only admins can create affiliate users.",
+        type: "error",
+      });
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -1132,6 +1089,7 @@ router.post("/register", async (req, res) => {
       email,
       password: hashedPassword,
       userPasswordKey: encryptedPassword,
+      role,
     });
     await newUser.save();
 
@@ -1148,18 +1106,24 @@ router.post("/register", async (req, res) => {
     //   maxAge: Number(process.env.COOKIE_EXPIRATION),
     // }); // Expires in 1 Year
 
-    res.cookie("token", token, {
-      httpOnly: true, // More secure — prevents JavaScript access
-      secure: true, // Required for iOS/Safari under HTTPS
-      sameSite: "Lax", // Works well for same-domain setups
-      maxAge: Number(process.env.COOKIE_EXPIRATION),
-    });
+    if (isSelfRegistration) {
+      res.cookie("token", token, {
+        httpOnly: true, // More secure — prevents JavaScript access
+        secure: true, // Required for iOS/Safari under HTTPS
+        sameSite: "Lax", // Works well for same-domain setups
+        maxAge: Number(process.env.COOKIE_EXPIRATION),
+      });
+    }
 
     // Send success response with token
     res.status(201).json({
       message: "Registration successful!",
       token,
       type: "success",
+      redirect:
+        role === "affiliate"
+          ? `/admindashboard/affiliate/affiliate-user/${newUser._id}`
+          : null,
     });
   } catch (error) {
     console.error("Error during registration:", error);
@@ -1171,7 +1135,7 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/usemagiclink", async (req, res) => {
-  const { email, encId } = req.body;
+  const { email, encId, isAffiliate = false } = req.body;
 
   try {
     if (!email) {
@@ -1205,7 +1169,7 @@ router.post("/usemagiclink", async (req, res) => {
       user = await User.findOne({ email });
 
       // If user doesn't exist, create a new one with a dummy password
-      if (!user) {
+      if (!user && !isAffiliate) {
         // const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
         const randomPassword = email.split("@")[0];
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
@@ -1231,78 +1195,86 @@ router.post("/usemagiclink", async (req, res) => {
 
     const magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
 
-    // Email configuration
     const sender = {
       email: "textildruckschweiz.com@gmail.com",
       name: "Magic Code - Login Link",
     };
 
+    // Get decrypted password for affiliate
+    const decryptedPassword = decryptPassword(user.userPasswordKey);
+
     let content = `
-        <!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login with Magic Link</title>
-    <style>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Login with Magic Link</title>
+      <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
         }
         .container {
-            max-width: 600px;
-            margin: 30px auto;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
+          max-width: 600px;
+          margin: 30px auto;
+          background: #ffffff;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          text-align: center;
         }
         h2 {
-            color: #333;
+          color: #333;
         }
         p {
-            color: #555;
-            font-size: 16px;
-            line-height: 1.5;
+          color: #555;
+          font-size: 16px;
+          line-height: 1.5;
         }
         .btn {
-            display: inline-block;
-            background: #007bff;
-            color: #ffffff;
-            padding: 12px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 16px;
-            margin-top: 20px;
+          display: inline-block;
+          background: #007bff;
+          color: #ffffff;
+          padding: 12px 20px;
+          text-decoration: none;
+          border-radius: 5px;
+          font-size: 16px;
+          margin-top: 20px;
         }
         .footer {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #888;
+          margin-top: 20px;
+          font-size: 14px;
+          color: #888;
         }
-    </style>
-</head>
-<body>
-    <div class="container">
+      </style>
+    </head>
+    <body>
+      <div class="container">
         <h2>Login with Magic Link</h2>
         <p>Hi ${user.fullName},</p>
         <p>Use the magic link below to securely log in to your account. This link will expire in 30 minutes.</p>
         <a href="${magicLink}" class="btn">Login Now</a>
-        <p>After Login SET YOUR PASSWORD under My Profile.</p>
+        ${
+          isAffiliate
+            ? `<p><strong>Email:</strong> ${user.email}</p>
+               <p><strong>Password:</strong> ${decryptedPassword}</p>`
+            : `<p>After Login SET YOUR PASSWORD under My Profile.</p>`
+        }
         <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
-    </div>
-</body>
-</html>
-
-      `;
+      </div>
+    </body>
+    </html>
+    `;
 
     SendEmail(sender, user.email, "Your Magic Link to Login", content);
-    // Clear cookies
-    res.clearCookie("token", { httpOnly: false });
-    res.clearCookie("userId", { httpOnly: false });
+
+    if (!isAffiliate) {
+      res.clearCookie("token", { httpOnly: false });
+      res.clearCookie("userId", { httpOnly: false });
+    }
 
     res
       .status(200)
@@ -1353,15 +1325,56 @@ router.get("/verify-magiclink/:token", async (req, res) => {
         $or: [{ user_id: user._id }, { assignedTo: user._id }],
       });
 
+      // 1. Check if user has any currently active plan (validUntil in future)
+      const activePlan = await Payment.findOne({
+        user_id: user,
+        validUntil: { $gt: new Date() }, // active based on expiry
+      });
+
+      // 2. Check if user has ever used a 15-day coupon plan
+      const used15DayCouponPlan = await Payment.findOne({
+        user_id: user,
+        isCouponUsed: true,
+      }).populate({
+        path: "plan_id",
+        match: { durationInDays: 15 }, // only match 15-day plans
+      });
+
+      const hasUsed15DayCouponPlan =
+        used15DayCouponPlan && used15DayCouponPlan.plan_id;
+
       if (qrCode) {
-        return res.redirect(
-          `${process.env.FRONTEND_URL}/dashboard?magiccode=${decryptedQrCodeId}&showPopup=true`
-        );
+        // Update desired fields
+        qrCode.set({
+          type: "text",
+          text: "Enter text here",
+          isQrActivated: true,
+        });
+
+        // Remove the 'url' field if it exists
+        if ("url" in qrCode) {
+          qrCode.set("url", undefined);
+        }
+
+        // Save the updated document
+        await qrCode.save();
+        // 3. Decision based on both conditions
+        if (!activePlan && !hasUsed15DayCouponPlan) {
+          // No active plan and never used 15-day coupon — show popup
+          return res.redirect(
+            `${process.env.FRONTEND_URL}/dashboard?magiccode=${decryptedQrCodeId}&showPopup=true`
+          );
+        } else {
+          // Either active plan exists or 15-day coupon was used — no popup
+          return res.redirect(
+            `${process.env.FRONTEND_URL}/dashboard?magiccode=${decryptedQrCodeId}`
+          );
+        }
       }
     }
 
     // Redirect user to dashboard
-    res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+    res.redirect(`${process.env.FRONTEND_URL}/magiccode`);
   } catch (error) {
     console.error("Error verifying magic link:", error);
     res.status(500).render("login", {
@@ -1407,7 +1420,7 @@ router.get(
           maxAge: Number(process.env.COOKIE_EXPIRATION),
         });
 
-        return res.redirect(`/dashboard`);
+        return res.redirect(`/magiccode`);
       }
 
       // Create new user
@@ -2296,16 +2309,16 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6,7})", async (req, res) => {
     // Find the record using the alphanumeric code
     const codeData = await QRCodeData.findOne({ code: alphanumericCode });
 
-    const checkSubscription = await Payment.findOne({
-      user_id: decoded?.userId,
-      paymentStatus: "completed",
-      isActive: true,
-      validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
-    }).sort({ validUntil: -1 });
+    // const checkSubscription = await Payment.findOne({
+    //   user_id: codeData.user_id,
+    //   paymentStatus: "completed",
+    //   isActive: true,
+    //   validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
+    // }).sort({ validUntil: -1 });
 
-    if (!checkSubscription && codeData.assignedTo) {
-      return res.render("expired-code");
-    }
+    // if (!checkSubscription && codeData.assignedTo) {
+    //   return res.render("expired-code");
+    // }
 
     // ✅ If user ID matches and showEditOnScan is true, redirect to dummy link
     if (

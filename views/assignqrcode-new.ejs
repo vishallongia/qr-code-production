@@ -19,94 +19,112 @@
             </select>
         </div>
     </div>
-    <!-- Popup HTML -->
-    <div id="theme-popup" class="popup-overlay" style="display: none;">
-        <div class="popup-content">
-            <p>This is a themed popup message!</p>
-            <button id="popup-ok-btn">Check My E-Mail</button>
-            <br>
-            <p style="margin-top: 2rem;">CHECK BOTH: YOUR INBOX AND YOUR SPAM FOLDER</p>
+    <% if (showPopup) { %>
+        <div id="theme-popup" class="popup-overlay">
+            <div class="popup-content">
+                <p>This MAGIC CODE has been assigned to you now. The Magic Link for Login has been sent to your e-mail address.</p>
+                <button id="popup-ok-btn" style="display: none;">Check My E-Mail</button>
+                <p style="margin-top: 2rem;">CHECK BOTH: YOUR INBOX AND YOUR SPAM FOLDER</p>
+            </div>
         </div>
-    </div>
-    <main class="main">
-        <div class="container">
-            <!-- Hero Section -->
-            <section class="hero">
-                <div class="hero-background">
-                    <img class="background-pattern" alt="Background pattern" src="/assignqrimages/group-1.png" />
+        <% } else { %>
+            <div id="theme-popup" class="popup-overlay" style="display: none;">
+                <div class="popup-content">
+                    <p>This is a themed popup message!</p>
+                    <button id="popup-ok-btn" style="display: none;">Check My E-Mail</button>
+                    <p style="margin-top: 2rem;">CHECK BOTH: YOUR INBOX AND YOUR SPAM FOLDER</p>
                 </div>
-                <div style="display: flex; justify-content: center; padding: 10px 20px;">
-                    <div class="section-image bg-gray">
-                        <img alt="Logo" src="\assignqrimages\MAGIC CODE WEB.png" />
-                    </div>
-                </div>
+            </div>
+            <% } %>
+                <main class="main">
+                    <div class="container">
+                        <!-- Hero Section -->
+                        <section class="hero">
+                            <div class="hero-background">
+                                <img class="background-pattern" alt="Background pattern"
+                                    src="/assignqrimages/group-1.png" />
+                            </div>
+                            <div style="display: flex; justify-content: center; padding: 10px 20px;">
+                                <div class="section-image bg-gray">
+                                    <img alt="Logo" src="\assignqrimages\MAGIC CODE WEB.png" />
+                                </div>
+                            </div>
 
-                <!-- Floating stickers -->
-                <div class="sticker sticker-1">
-                    <div class="sticker-inner">
-                        <div class="sticker-bg"></div>
-                        <img alt="Sticker image" class="sticker-48 rotate-15" src="/assignqrimages/image-16.png" />
-                    </div>
-                </div>
-                <div class="sticker sticker-2">
-                    <div class="sticker-inner">
-                        <div class="sticker-bg"></div>
-                        <img alt="Sticker image" class="sticker-48 rotate-130" src="/assignqrimages/image-16-1.png" />
-                    </div>
-                </div>
-                <div class="sticker sticker-3">
-                    <img alt="Sticker image" class="sticker-48 rotate30" src="/assignqrimages/image-16-12.png" />
-                </div>
-                <div class="sticker sticker-4">
-                    <img alt="Sticker image" class="sticker-32 rotate32" src="/assignqrimages/image-16-3.png" />
-                </div>
-                <div class="sticker sticker-5">
-                    <img alt="Sticker image" class="sticker-32 rotate47" src="/assignqrimages/image-16-13.png" />
-                </div>
-                <div class="sticker sticker-6">
-                    <img alt="Sticker image" class="sticker-48 rotate15" src="/assignqrimages/image-16-12.png" />
-                </div>
-                <div class="sticker sticker-7">
-                    <img alt="Sticker image" class="sticker-32 rotate27" src="/assignqrimages/image-16-10.png" />
-                </div>
-                <div class="sticker sticker-8">
-                    <div class="sticker-inner">
-                        <div class="sticker-bg"></div>
-                        <img alt="Sticker image" class="sticker-32 rotate60" src="/assignqrimages/image-16-9.png" />
-                    </div>
-                </div>
+                            <!-- Floating stickers -->
+                            <div class="sticker sticker-1">
+                                <div class="sticker-inner">
+                                    <div class="sticker-bg"></div>
+                                    <img alt="Sticker image" class="sticker-48 rotate-15"
+                                        src="/assignqrimages/image-16.png" />
+                                </div>
+                            </div>
+                            <div class="sticker sticker-2">
+                                <div class="sticker-inner">
+                                    <div class="sticker-bg"></div>
+                                    <img alt="Sticker image" class="sticker-48 rotate-130"
+                                        src="/assignqrimages/image-16-1.png" />
+                                </div>
+                            </div>
+                            <div class="sticker sticker-3">
+                                <img alt="Sticker image" class="sticker-48 rotate30"
+                                    src="/assignqrimages/image-16-12.png" />
+                            </div>
+                            <div class="sticker sticker-4">
+                                <img alt="Sticker image" class="sticker-32 rotate32"
+                                    src="/assignqrimages/image-16-3.png" />
+                            </div>
+                            <div class="sticker sticker-5">
+                                <img alt="Sticker image" class="sticker-32 rotate47"
+                                    src="/assignqrimages/image-16-13.png" />
+                            </div>
+                            <div class="sticker sticker-6">
+                                <img alt="Sticker image" class="sticker-48 rotate15"
+                                    src="/assignqrimages/image-16-12.png" />
+                            </div>
+                            <div class="sticker sticker-7">
+                                <img alt="Sticker image" class="sticker-32 rotate27"
+                                    src="/assignqrimages/image-16-10.png" />
+                            </div>
+                            <div class="sticker sticker-8">
+                                <div class="sticker-inner">
+                                    <div class="sticker-bg"></div>
+                                    <img alt="Sticker image" class="sticker-32 rotate60"
+                                        src="/assignqrimages/image-16-9.png" />
+                                </div>
+                            </div>
 
-                <!-- Hero content -->
-                <div class="hero-content">
-                    <div class="hero-text">
-                        <h1>CONTROL YOUR MESSAGES, STAY ANONYMOUS!</h1>
-                        <p>Leave behind meaningful messages without revealing your identity. Your Magic Sticker becomes
-                            your personal, incognito communication tool.</p>
-                    </div>
+                            <!-- Hero content -->
+                            <div class="hero-content">
+                                <div class="hero-text">
+                                    <h1>CONTROL YOUR MESSAGES, STAY ANONYMOUS!</h1>
+                                    <p>Leave behind meaningful messages without revealing your identity. Your Magic
+                                        Sticker becomes
+                                        your personal, incognito communication tool.</p>
+                                </div>
 
-                    <div class="hero-form">
-                        <form id="forgotPasswordForm"></form>
-                        <input type="email" id="assignedemail" name="email" placeholder="Enter email address..."
-                            class="input" />
-                        <button class="button" type="submit" id="assignedemailbutton"
-                            onclick="return handleAssignQrCode(event)">Get Magic Link</button>
-                        </form>
-                    </div>
+                                <div class="hero-form">
+                                    <form id="forgotPasswordForm"></form>
+                                    <input type="email" id="assignedemail" name="email"
+                                        placeholder="Enter email address..." class="input" />
+                                    <button class="button" type="submit" id="assignedemailbutton"
+                                        onclick="return handleAssignQrCode(event)">Get Magic Link</button>
+                                    </form>
+                                </div>
 
-                </div>
-            </section>
+                            </div>
+                        </section>
 
-            <!-- Features Section -->
-            <section class="features" style="display: none;">
-                <!-- <div class="features-header">
+                        <!-- Features Section -->
+                        <section class="features" style="display: none;">
+                            <!-- <div class="features-header">
                     <h2>Stay Safe, Keep Your Valuables Safe,<br />with Your&nbsp;&nbsp;Magic Safety Sticker!</h2>
                     <p>Magic Stickers aren't just cool — they're surprisingly useful in everyday life.<br />Lost or left
                         behind anything valuable? Whoever finds it can scan and send you a message via your Magic Code.
                     </p>
                 </div> -->
 
-                <div class="features-cards">
-                    <!-- <div class="feature-card">
+                            <div class="features-cards">
+                                <!-- <div class="feature-card">
                         <div class="feature-icon">
                             <div class="icon-container">
                                 <img src="/assignqrimages/Lost.svg" alt="Lost icon" class="icon-lost" />
@@ -118,150 +136,168 @@
                         </div>
                     </div> -->
 
-                    <!-- <div class="separator"></div> -->
+                                <!-- <div class="separator"></div> -->
 
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <div class="icon-container">
-                                <div class="icon-anonymous"><img src="/assignqrimages/Anonyms.svg" alt="Lost icon"
-                                        class="icon-lost" /><img src="/assignqrimages/_.svg" style="position: absolute;
+                                <div class="feature-card">
+                                    <div class="feature-icon">
+                                        <div class="icon-container">
+                                            <div class="icon-anonymous"><img src="/assignqrimages/Anonyms.svg"
+                                                    alt="Lost icon" class="icon-lost" /><img src="/assignqrimages/_.svg"
+                                                    style="position: absolute;
                                         top: 50%;
                                         left: 50%;
                                         transform: translate(-50%, -150%); width: 30px;" alt="Lost icon"
-                                        class="icon-lost" /></div>
+                                                    class="icon-lost" /></div>
+                                        </div>
+                                    </div>
+                                    <div class="feature-content">
+                                        <h2>Stay Safe, Stay Anonimous With Your MAGIC CODE</h2>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="feature-content">
-                            <h2>Stay Safe, Stay Anonimous With Your MAGIC CODE</h2>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                        </section>
 
-            <!-- Content Sections -->
-            <section class="content-sections">
-                <div class="content-section">
-                    <div class="section-image bg-peach">
-                        <img src="/assignqrimages/Lost.png" class="lost-image" alt="Keep yourself safe" />
-                    </div>
-                    <div class="section-text">
-                        <h2>Keep Yourself And Your Valuables Safe - With Your MAGIC STICKER!</h2>
-                        <p>Magic Stickers aren’t just cool — they’re surprisingly useful in everyday life:
-                            Lost or left behind anything valuable? Whoever finds it can scan your Magic Code Sticker and
-                            follow your message you are sending them.</p>
-                    </div>
-                </div>
-
-                <div class="content-section">
-                    <div class="section-text">
-                        <h2>Get Your MAGIC TATTOO, And Enjoy The Ride!</h2>
-                        <p>My tattoo speaks to you - temporarily. I decide what it reveals. Scan it, and let the fun
-                            begin! Your Magic Tattoo becomes your personal, undercover way to communicate. Wanna know
-                            more? Just scan me!</p>
-                    </div>
-                    <div class="section-image bg-peach">
-                        <img src="\assignqrimages\MAGIC TATTOO BUTTON.png" alt="Magic tattoo" />
-                    </div>
-                </div>
-
-                <div class="content-section">
-                    <div class="section-image">
-                        <img src="/assignqrimages/context-and-privacy-icon.png" alt="Context and privacy" />
-                    </div>
-                    <div class="section-text">
-                        <h2>Change Content, Keep Your Privacy And Safety</h2>
-                        <p>Easily change the context of your Magic Code instantly in seconds any time, while always
-                            keeping your privacy. Your identity is hidden and protected, and your messages can not be
-                            tracked or reviewed later.</p>
-                    </div>
-                </div>
-
-                <div class="content-section">
-                    <div class="section-text">
-                        <h2>It Is Private, Persistent, Personal</h2>
-                        <p>Only you can manage the content behind your Magic Code. It's fully editable, secured, always
-                            accessible - and never trackable.</p>
-                    </div>
-                    <div class="section-image bg-peach">
-                        <img src="/assignqrimages/freepik--shield--inject-72.png" alt="Privacy shield" />
-                    </div>
-                </div>
-
-                <div class="content-section">
-                    <div class="section-image">
-                        <img src="/assignqrimages/instant-access-icon.png" alt="Instant access" />
-                    </div>
-                    <div class="section-text">
-                        <h2>Access Instantly With Your E-mail</h2>
-                        <p>No signup, no profiles. Just assign your code to your e-mail address, and get your Magic
-                            Link. Fast, private, and ready to use.</p>
-                    </div>
-                </div>
-
-                <div class="content-section">
-                    <div class="section-text">
-                        <h2>Forever Yours - You Can't Lose Your Magic Code</h2>
-                        <p>Your Magic Code is yours for life. Lost your sticker? No problem. You can reorder unlimited
-                            copies at any time – same code, same identity.</p>
-                    </div>
-                    <div class="section-image bg-peach">
-                        <img src="\assignqrimages\YOURS FOREVER.png" class="foreveryours-img" alt="Forever yours" />
-                    </div>
-                </div>
-            </section>
-
-            <!-- CTA Section -->
-            <section class="cta">
-                <div class="cta-background">
-                    <div class="cta-content">
-                        <form id="forgotPasswordForm">
-                            <h2>Ready To Activate Your<br />Magic Code?</h2>
-                            <div class="cta-form">
-                                <input type="email" id="assignedemail" name="email" placeholder="Enter email address..."
-                                    class="input" style="z-index: 1;" />
-                                <button class="button" type="submit" id="assignedemailbutton" style="z-index: 1;"
-                                    onclick="return handleAssignQrCode(event)">Get Magic Link</button>
+                        <!-- Content Sections -->
+                        <section class="content-sections">
+                            <div class="content-section">
+                                <div class="section-image bg-peach">
+                                    <img src="/assignqrimages/Lost.png" class="lost-image" alt="Keep yourself safe" />
+                                </div>
+                                <div class="section-text">
+                                    <h2>Keep Yourself And Your Valuables Safe - With Your MAGIC STICKER!</h2>
+                                    <p>Magic Stickers aren’t just cool — they’re surprisingly useful in everyday life:
+                                        Lost or left behind anything valuable? Whoever finds it can scan your Magic Code
+                                        Sticker and
+                                        follow your message you are sending them.</p>
+                                </div>
                             </div>
-                        </form>
-                    </div>
 
-                    <!-- CTA Floating stickers -->
-                    <div class="cta-stickers">
-                        <div class="sticker cta-sticker-1">
-                            <div class="sticker-inner">
-                                <div class="sticker-bg"></div>
-                                <img alt="Sticker" class="sticker-48 rotate-15" src="/assignqrimages/image-16-13.png" />
+                            <div class="content-section">
+                                <div class="section-text">
+                                    <h2>Get Your MAGIC TATTOO, And Enjoy The Ride!</h2>
+                                    <p>My tattoo speaks to you - temporarily. I decide what it reveals. Scan it, and let
+                                        the fun
+                                        begin! Your Magic Tattoo becomes your personal, undercover way to communicate.
+                                        Wanna know
+                                        more? Just scan me!</p>
+                                </div>
+                                <div class="section-image bg-peach">
+                                    <img src="\assignqrimages\MAGIC TATTOO BUTTON.png" alt="Magic tattoo" />
+                                </div>
                             </div>
-                        </div>
-                        <div class="sticker cta-sticker-2">
-                            <div class="sticker-inner">
-                                <div class="sticker-bg"></div>
-                                <img alt="Sticker" class="sticker-48 rotate-130" src="/assignqrimages/image-16-9.png" />
-                            </div>
-                        </div>
-                        <div class="sticker cta-sticker-3">
-                            <img alt="Sticker" class="sticker-32 rotate11" src="/assignqrimages/image-16-10.png" />
-                        </div>
-                        <div class="sticker cta-sticker-4">
-                            <img alt="Sticker" class="sticker-32 rotate-15" src="/assignqrimages/image-16-11.png" />
-                        </div>
-                        <div class="sticker cta-sticker-5">
-                            <img alt="Sticker" class="sticker-32 rotate47" src="/assignqrimages/image-16-12.png" />
-                        </div>
-                        <div class="sticker cta-sticker-6">
-                            <img alt="Sticker" class="sticker-32 rotate-17" src="/assignqrimages/image-16-13.png" />
-                        </div>
-                    </div>
-                </div>
-            </section>
 
-            <!-- Footer -->
-            <footer class="footer">
-                <p>All Rights Reserved © 2025 Magic Stickers</p>
-                <p>Privacy Policy • Terms and Conditions • Contact information</p>
-            </footer>
-        </div>
-    </main>
+                            <div class="content-section">
+                                <div class="section-image">
+                                    <img src="/assignqrimages/context-and-privacy-icon.png" alt="Context and privacy" />
+                                </div>
+                                <div class="section-text">
+                                    <h2>Change Content, Keep Your Privacy And Safety</h2>
+                                    <p>Easily change the context of your Magic Code instantly in seconds any time, while
+                                        always
+                                        keeping your privacy. Your identity is hidden and protected, and your messages
+                                        can not be
+                                        tracked or reviewed later.</p>
+                                </div>
+                            </div>
+
+                            <div class="content-section">
+                                <div class="section-text">
+                                    <h2>It Is Private, Persistent, Personal</h2>
+                                    <p>Only you can manage the content behind your Magic Code. It's fully editable,
+                                        secured, always
+                                        accessible - and never trackable.</p>
+                                </div>
+                                <div class="section-image bg-peach">
+                                    <img src="/assignqrimages/freepik--shield--inject-72.png" alt="Privacy shield" />
+                                </div>
+                            </div>
+
+                            <div class="content-section">
+                                <div class="section-image">
+                                    <img src="/assignqrimages/instant-access-icon.png" alt="Instant access" />
+                                </div>
+                                <div class="section-text">
+                                    <h2>Access Instantly With Your E-mail</h2>
+                                    <p>No signup, no profiles. Just assign your code to your e-mail address, and get
+                                        your Magic
+                                        Link. Fast, private, and ready to use.</p>
+                                </div>
+                            </div>
+
+                            <div class="content-section">
+                                <div class="section-text">
+                                    <h2>Forever Yours - You Can't Lose Your Magic Code</h2>
+                                    <p>Your Magic Code is yours for life. Lost your sticker? No problem. You can reorder
+                                        unlimited
+                                        copies at any time – same code, same identity.</p>
+                                </div>
+                                <div class="section-image bg-peach">
+                                    <img src="\assignqrimages\YOURS FOREVER.png" class="foreveryours-img"
+                                        alt="Forever yours" />
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- CTA Section -->
+                        <section class="cta">
+                            <div class="cta-background">
+                                <div class="cta-content">
+                                    <form id="forgotPasswordForm">
+                                        <h2>Ready To Activate Your<br />Magic Code?</h2>
+                                        <div class="cta-form">
+                                            <input type="email" id="assignedemail" name="email"
+                                                placeholder="Enter email address..." class="input"
+                                                style="z-index: 1;" />
+                                            <button class="button" type="submit" id="assignedemailbutton"
+                                                style="z-index: 1;" onclick="return handleAssignQrCode(event)">Get Magic
+                                                Link</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- CTA Floating stickers -->
+                                <div class="cta-stickers">
+                                    <div class="sticker cta-sticker-1">
+                                        <div class="sticker-inner">
+                                            <div class="sticker-bg"></div>
+                                            <img alt="Sticker" class="sticker-48 rotate-15"
+                                                src="/assignqrimages/image-16-13.png" />
+                                        </div>
+                                    </div>
+                                    <div class="sticker cta-sticker-2">
+                                        <div class="sticker-inner">
+                                            <div class="sticker-bg"></div>
+                                            <img alt="Sticker" class="sticker-48 rotate-130"
+                                                src="/assignqrimages/image-16-9.png" />
+                                        </div>
+                                    </div>
+                                    <div class="sticker cta-sticker-3">
+                                        <img alt="Sticker" class="sticker-32 rotate11"
+                                            src="/assignqrimages/image-16-10.png" />
+                                    </div>
+                                    <div class="sticker cta-sticker-4">
+                                        <img alt="Sticker" class="sticker-32 rotate-15"
+                                            src="/assignqrimages/image-16-11.png" />
+                                    </div>
+                                    <div class="sticker cta-sticker-5">
+                                        <img alt="Sticker" class="sticker-32 rotate47"
+                                            src="/assignqrimages/image-16-12.png" />
+                                    </div>
+                                    <div class="sticker cta-sticker-6">
+                                        <img alt="Sticker" class="sticker-32 rotate-17"
+                                            src="/assignqrimages/image-16-13.png" />
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Footer -->
+                        <footer class="footer">
+                            <p>All Rights Reserved © 2025 Magic Stickers</p>
+                            <p>Privacy Policy • Terms and Conditions • Contact information</p>
+                        </footer>
+                    </div>
+                </main>
 </body>
 
 

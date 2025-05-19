@@ -28,6 +28,10 @@ async function recordPayment(session, status) {
         paymentDetails: session,
         coupon: session.metadata.coupon || null,
         isCouponUsed: !!session.metadata.coupon, // ✅ set true if a coupon was use
+        coupon_id: session.metadata.coupon_id || "",
+        original_price: session.metadata.original_price || "",
+        discount_amount: session.metadata.discount_amount || "",
+        commission_amount: session.metadata.commission_amount || "",
       });
       console.log(`✅ Payment created successfully with status: ${status}`);
     }
@@ -67,7 +71,6 @@ router.post(
     );
 
     const session = event.data.object;
-    console.log(session.id);
 
     try {
       // Handle checkout session completion

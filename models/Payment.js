@@ -63,6 +63,10 @@ const paymentSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  coupon_id: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" },
+  originalAmount: { type: Number }, // Plan price before discount
+  discountAmount: { type: Number }, // Discount given to the user
+  commissionAmount: { type: Number },
 });
 
 paymentSchema.pre("save", async function (next) {

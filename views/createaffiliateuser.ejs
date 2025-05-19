@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern List View</title>
+    <link rel="stylesheet" href="/css/admin.css">
+
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+</head>
+<style>
+    .form-container {
+        background: var(--container-bg);
+        backdrop-filter: blur(var(--container-backdrop-blur));
+        padding: 2rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        width: 100%;
+        max-width: 400px;
+        color: var(--text-color);
+    }
+
+    .form-container h2 {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--input-border-color);
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.3s;
+    }
+
+    .form-group input:focus {
+        border-color: var(--input-focus-border-color);
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: var(--submit-btn-bg);
+        color: white;
+        font-size: 1rem;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .submit-btn:hover {
+        background-color: var(--submit-btn-hover-bg);
+    }
+
+    .aff-signup {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+</style>
+
+<body>
+    <input type="hidden" id="selectedFgHex" name="foreground_color">
+    <input type="hidden" id="selectedBgHex" name="background_color">
+    <div id="qr-download-container" style="display: none;"></div>
+    <!-- Include the Navbar Partial -->
+    <%- include('../components/navbar') %>
+
+        <div class="aff-signup">
+            <div class="form-container">
+                <h2>Affiliate Signup</h2>
+                <form action="/register" method="POST" onsubmit="return handleRegister(event)">
+                    <div class="form-group">
+                        <label for="affiliate-name">Affiliate Name</label>
+                        <input type="text" id="affiliate-name" name="fullName" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required />
+                    </div>
+                    <!-- Hidden input to pass the role -->
+                    <input type="hidden" name="role" value="affiliate" />
+                    <button type="submit" class="submit-btn" id="RegisterBtnText">Submit</button>
+                </form>
+            </div>
+        </div>
+
+</body>
+<script src="/js/api-calls.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+
+</html>

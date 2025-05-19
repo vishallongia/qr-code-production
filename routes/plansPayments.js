@@ -10,7 +10,7 @@ const {
 const { client } = require("../config/paypal");
 
 const { authMiddleware } = require("../middleware/auth");
-const bodyParser = require("body-parser");
+const Coupon = require("../models/Coupon");
 
 // Route to render subscription plans with encrypted IDs
 router.get("/plans", authMiddleware, async (req, res) => {
@@ -52,19 +52,13 @@ router.get("/plans", authMiddleware, async (req, res) => {
   }
 });
 
-// Route to create Stripe checkout session for a plan
 router.post(
   "/stripe/create-checkout-session",
   authMiddleware,
   async (req, res) => {
     try {
       const { planId, couponCode } = req.body;
-      console.log(couponCode, "watch me");
-
-      // Decrypt the plan ID
       const decryptedPlanId = decryptPassword(planId);
-
-      // Find the plan by decrypted ID
       const plan = await Plan.findById(decryptedPlanId);
       if (!plan) {
         return res.status(404).json({
@@ -74,29 +68,19 @@ router.post(
         });
       }
 
-      // Check if user already used the same coupon for this plan
+      let finalPrice = plan.price;
+      let isCouponUsed = false;
+      let discountAmount = 0;
+      let coupon = null;
+
       if (couponCode) {
-        const existingPayment = await Payment.findOne({
-          user_id: req.user._id,
-          plan_id: plan._id,
-          isCouponUsed: true,
+        // Check if coupon exists in DB
+        coupon = await Coupon.findOne({
+          code: couponCode.toUpperCase(),
+          isActive: true,
         });
 
-        if (existingPayment) {
-          return res.status(400).json({
-            message: "You have already used this coupon for this plan.",
-            type: "error",
-            data: null,
-          });
-        }
-      }
-
-      // Check if coupon is valid (single coupon)
-      let finalPrice = plan.price;
-
-      if (couponCode) {
-        const validCoupon = process.env.COUPON_CODE;
-        if (couponCode.toUpperCase() !== validCoupon) {
+        if (!coupon) {
           return res.status(400).json({
             message: "Invalid coupon code.",
             type: "error",
@@ -104,22 +88,43 @@ router.post(
           });
         }
 
-        // Determine price based on plan durationInDays
-        const durationKey = `COUPON_PRICE_${plan.durationInDays}`;
-        const couponPrice = process.env[durationKey];
-
-        if (couponPrice !== undefined) {
-          finalPrice = parseFloat(couponPrice);
-        } else {
-          return res.status(400).json({
-            message: "Coupon not applicable for this plan.",
-            type: "error",
-            data: null,
+        // Check 15-day plan uniqueness
+        if (plan.durationInDays === 15) {
+          const existingFree15Day = await Payment.findOne({
+            user_id: req.user._id,
+            isCouponUsed: true,
+            amount: 0,
           });
+
+          if (existingFree15Day) {
+            return res.status(400).json({
+              message: "You have already used a coupon for a free 15-day plan.",
+              type: "error",
+              data: null,
+            });
+          }
+
+          // Make finalPrice = 0 for 15-day plan
+          finalPrice = 0;
+          discountAmount = plan.price;
+          isCouponUsed = true;
+        } else {
+          // For other plans apply percentage discount
+          discountAmount = (coupon.discountPercent / 100) * plan.price;
+          finalPrice = parseFloat((plan.price - discountAmount).toFixed(2));
+          isCouponUsed = true;
+
+          // Calculate commission from final (discounted) price
+          commissionAmount = 0;
+          if (coupon.commissionPercent) {
+            commissionAmount = parseFloat(
+              ((coupon.commissionPercent / 100) * finalPrice).toFixed(2)
+            );
+          }
         }
       }
 
-      // Check if the price is 0 (zero-dollar transaction)
+      // Handle free plan logic
       if (finalPrice === 0) {
         const paymentRecord = await Payment.create({
           user_id: req.user._id,
@@ -135,8 +140,13 @@ router.post(
           },
           isActive: true,
           coupon: couponCode || null,
-          isCouponUsed: !!couponCode,
+          coupon_id: coupon?._id || null,
+          isCouponUsed,
           paymentDate: new Date(),
+          originalAmount: plan.price,
+          discountAmount: discountAmount || 0,
+          commissionAmount: 0,
+          coupon_id: coupon._id,
         });
 
         return res.status(200).json({
@@ -148,7 +158,7 @@ router.post(
         });
       }
 
-      // Create Stripe session
+      // Stripe session creation
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
@@ -159,7 +169,7 @@ router.post(
                 name: plan.name,
                 description: plan.description || "",
               },
-              unit_amount: Math.round(finalPrice * 100),
+              unit_amount: Math.round(finalPrice * 100), // cents
             },
             quantity: 1,
           },
@@ -168,13 +178,16 @@ router.post(
           user_id: req.user._id.toString(),
           plan_id: plan._id.toString(),
           coupon: couponCode || "",
+          coupon_id: coupon?._id?.toString() || "",
+          original_price: plan.price,
+          discount_amount: discountAmount,
+          commission_amount: commissionAmount,
         },
         mode: "payment",
         success_url: `${process.env.FRONTEND_URL}/successpayment?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.FRONTEND_URL}/cancel`,
       });
 
-      // Send structured response
       res.status(200).json({
         message: "Checkout session created successfully",
         type: "success",
@@ -192,7 +205,6 @@ router.post(
     }
   }
 );
-
 router.get("/successpayment", async (req, res) => {
   try {
     const session = req.query.session_id;
@@ -369,21 +381,31 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
 
 router.post("/stripe/validate-coupon", authMiddleware, async (req, res) => {
   try {
-    const { planId, couponCode } = req.body;
+    let { planId, couponCode, is15DayPlan } = req.body;
 
-    if (!planId || !couponCode) {
+    if (!couponCode) {
       return res.status(400).json({
-        message: "Plan ID and coupon code are required.",
+        message: "Coupon code is required.",
         type: "error",
         data: null,
       });
     }
 
-    // Decrypt the plan ID
-    const decryptedPlanId = decryptPassword(planId);
+    let plan;
+    if (is15DayPlan) {
+      plan = await Plan.findOne({ durationInDays: 15 });
+    } else {
+      if (!planId) {
+        return res.status(400).json({
+          message: "Plan ID is required.",
+          type: "error",
+          data: null,
+        });
+      }
+      const decryptedPlanId = decryptPassword(planId);
+      plan = await Plan.findById(decryptedPlanId);
+    }
 
-    // Find the plan
-    const plan = await Plan.findById(decryptedPlanId);
     if (!plan) {
       return res.status(404).json({
         message: "Plan not found.",
@@ -392,24 +414,12 @@ router.post("/stripe/validate-coupon", authMiddleware, async (req, res) => {
       });
     }
 
-    // Check if coupon is already used by user for this plan
-    const existingPayment = await Payment.findOne({
-      user_id: req.user._id,
-      plan_id: plan._id,
-      isCouponUsed: true,
+    const coupon = await Coupon.findOne({
+      code: couponCode.toUpperCase(),
+      isActive: true,
     });
 
-    if (existingPayment) {
-      return res.status(400).json({
-        message: "You have already used this coupon for this plan.",
-        type: "error",
-        data: null,
-      });
-    }
-
-    // Validate coupon code
-    const validCoupon = process.env.COUPON_CODE;
-    if (couponCode.toUpperCase() !== validCoupon) {
+    if (!coupon) {
       return res.status(400).json({
         message: "Invalid coupon code.",
         type: "error",
@@ -417,20 +427,23 @@ router.post("/stripe/validate-coupon", authMiddleware, async (req, res) => {
       });
     }
 
-    // Determine coupon price
-    const durationKey = `COUPON_PRICE_${plan.durationInDays}`;
-    const couponPrice = process.env[durationKey];
-
-    if (couponPrice === undefined) {
-      return res.status(400).json({
-        message: "Coupon not applicable for this plan.",
-        type: "error",
-        data: null,
-      });
-    }
-
-    // If valid coupon and plan duration is 15 days, activate free plan
+    // Special logic for 15-day plan
     if (plan.durationInDays === 15) {
+      const existingCouponUsage = await Payment.findOne({
+        user_id: req.user._id,
+        isCouponUsed: true,
+        amount: 0,
+      });
+
+      if (existingCouponUsage) {
+        return res.status(400).json({
+          message: "You have already used a coupon for the 15-day plan.",
+          type: "error",
+          data: null,
+        });
+      }
+
+      // No previous coupon used on 15-day plan → Activate for free
       const paymentRecord = await Payment.create({
         user_id: req.user._id,
         plan_id: plan._id,
@@ -444,25 +457,40 @@ router.post("/stripe/validate-coupon", authMiddleware, async (req, res) => {
           reason: "Free plan activated via coupon",
         },
         isActive: true,
-        coupon: couponCode,
+        coupon: coupon.code,
         isCouponUsed: true,
         paymentDate: new Date(),
+        originalAmount: plan.price,
+        discountAmount: 5, // fixed for 15-day free plan
+        commissionAmount: 0, // always 0 for free plan
+        coupon_id: coupon._id,
       });
 
       return res.status(200).json({
-        message: "Free Plan activated",
+        message: "Free 15-day Plan activated",
         type: "success",
-        data: { paymentId: paymentRecord._id },
-        reload: true, // <- Add this
+        data: {
+          paymentId: paymentRecord._id,
+          originalPrice: plan.price,
+          discountedPrice: 0,
+        },
+        reload: true,
       });
     }
 
+    // For other plans: allow same/different coupon multiple times
+    const discountAmount = (coupon.discountPercent / 100) * plan.price;
+    const discountedPrice = parseFloat(
+      (plan.price - discountAmount).toFixed(2)
+    );
+
     return res.status(200).json({
-      message: "Coupon Added.",
+      message: "Coupon applied.",
       type: "success",
       data: {
         originalPrice: plan.price,
-        discountedPrice: parseFloat(couponPrice),
+        discountedPrice,
+        affiliateId: coupon.assignedToAffiliate || null,
       },
     });
   } catch (error) {

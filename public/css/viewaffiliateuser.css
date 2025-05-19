@@ -1,0 +1,174 @@
+.action-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 20px 0;
+    background: var(--container-bg);
+    backdrop-filter: blur(var(--container-backdrop-blur));
+    padding: 20px;
+    border-radius: var(--border-radius);
+    justify-content: space-between;
+}
+
+.action-fields input {
+    flex: 1 1 250px;
+    min-width: 220px;
+    padding: 10px 15px;
+    font-family: var(--font-family);
+    font-size: 16px;
+    border: 1px solid var(--input-border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+    background-color: #fff;
+    transition: border 0.3s ease;
+    box-sizing: border-box;
+}
+
+.action-fields input:focus {
+    border-color: var(--input-focus-border-color);
+    outline: none;
+}
+
+.action-fields .action-btn {
+    flex: 1 1 200px;
+    max-width: 160px;
+    padding: 10px 10px;
+    font-family: var(--font-family);
+    font-size: 16px;
+    background-color: var(--submit-btn-bg);
+    color: #fff;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-align: center;
+}
+
+.action-fields .action-btn:hover {
+    background-color: var(--submit-btn-hover-bg);
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    gap: 0.75rem;
+    max-width: 400px;
+    margin: 1rem auto;
+    box-shadow: 0 2px 6px rgba(184, 39, 50, 0.2);
+}
+
+.error-message svg {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    stroke: #842029;
+    stroke-width: 2;
+    fill: none;
+}
+
+.animated-fade-in {
+    opacity: 0;
+    animation: fadeIn 0.6s ease-in-out forwards;
+}
+
+.coupon-actions {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.icon-btn i {
+    font-size: 20px;
+    transition: transform 0.2s ease;
+}
+
+.edit-icon {
+    color: var(--submit-btn-bg);
+    /* Uses your button theme color */
+}
+
+.delete-icon {
+    color: #dc3545;
+}
+
+.icon-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: scale(1.1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.no-coupons-message {
+    text-align: center;
+    font-size: 18px;
+    color: #999;
+    margin-top: 20px;
+}
+
+/* 🌐 Responsive Breakpoints */
+@media (max-width: 1024px) {
+    .action-fields {
+        gap: 12px;
+    }
+
+    .action-fields input,
+    .action-fields .action-btn {
+        flex: 1 1 45%;
+    }
+}
+
+@media (max-width: 768px) {
+    .action-fields {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .action-fields input,
+    .action-fields .action-btn {
+        width: 100%;
+    }
+}
+
+/* 🌐 Responsive: Ensure good spacing and scaling on smaller screens */
+@media (max-width: 768px) {
+    .coupon-actions {
+        gap: 10px;
+        justify-content: flex-start;
+    }
+
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .icon-btn i {
+        font-size: 18px;
+    }
+}

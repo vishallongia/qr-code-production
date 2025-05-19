@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Overlay Effect</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background-color: #1a0033;
+            overflow: hidden;
+        }
+
+        .background-image {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(26, 0, 51, 0.7);
+            /* Dark tint */
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .overlay-patterns {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 40%;
+            z-index: 2;
+            opacity: 0.7;
+        }
+
+        .main-figure-wrapper {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            z-index: 3;
+        }
+
+        .main-figure-wrapper::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-color: rgba(26, 0, 51, 0.7);
+            /* 50% opacity */
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .main-figure {
+            width: 100%;
+            display: block;
+            position: relative;
+            z-index: 1;
+            top: 70px;
+        }
+
+        .text-content {
+            position: absolute;
+            top: 10%;
+            /* Adjust this value for the desired top margin */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 800px;
+            /* Optional: limit max width for readability */
+            z-index: 5;
+            color: white;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .text-line {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .red-line {
+            width: 50px;
+            height: 2px;
+            background-color: #ff0000;
+            margin-right: 15px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            font-weight: normal;
+            text-transform: uppercase;
+        }
+
+        .back-button {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 6;
+            background-color: white;
+            color: #333;
+            padding: 8px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button .arrow {
+            font-size: 18px;
+            /* Background color for the circle */
+            color: black;
+            /* Arrow color */
+            border-radius: 50%;
+            /* Make it circular */
+            padding: 4px;
+            /* Space around the arrow */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #1a1a8f;
+            /* 1px solid border with the desired color */
+        }
+
+        /* QR code wrapper styling */
+        .qr-wrapper {
+            position: absolute;
+            z-index: 4;
+            width: 100px;
+            /* Adjust size */
+            height: 100px;
+            /* Adjust size */
+            /* Optional: add border for clarity */
+            border-radius: 8px;
+            /* Optional: round the edges */
+            opacity: 0.8;
+        }
+
+        .qr-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        /* Overlay effect on QR code */
+        .qr-wrapper::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-color: rgba(26, 0, 51, 0.7);
+            /* Same overlay effect as main figure */
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Random good-looking positioning of QR codes */
+        .qr-wrapper1 {
+            top: 68%;
+            left: 10%;
+            transform: rotate(20deg);
+            width: 60px;
+            height: 60px;
+        }
+
+        .qr-wrapper2 {
+            top: 67%;
+            left: 70%;
+            transform: rotate(-10deg);
+            width: 95px;
+            height: 95px;
+        }
+
+        .qr-wrapper3 {
+            top: 55%;
+            right: 84%;
+            transform: rotate(10deg);
+            width: 70px;
+            height: 70px;
+        }
+
+        .qr-wrapper4 {
+            top: 40%;
+            right: 5%;
+            transform: rotate(-15deg);
+            width: 100px;
+            height: 100px;
+        }
+
+        /* Position QR codes in the middle, overflowing beyond container */
+        .qr-wrapper5 {
+            top: 40%;
+            left: -5%;
+            transform: rotate(30deg);
+            width: 100px;
+            height: 100px;
+            overflow: visible;
+        }
+
+        .qr-wrapper6 {
+            top: 56%;
+            right: 0;
+            transform: rotate(0deg);
+            width: 80px;
+            height: 80px;
+            overflow: visible;
+        }
+
+        .qr-wrapper7 {
+            top: 50%;
+            left: 20%;
+            transform: rotate(-15deg);
+            width: 40px;
+            height: 40px;
+            overflow: visible;
+        }
+
+        .qr-wrapper8 {
+            top: 50%;
+            right: 20%;
+            transform: rotate(-25deg);
+            width: 50px;
+            height: 50px;
+            overflow: visible;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+
+        <!-- Overlay over background -->
+        <div class="overlay"></div>
+
+
+
+        <!-- Main figure with overlay effect -->
+        <div class="main-figure-wrapper">
+            <img class="main-figure" src="../public/images/content-background-removebg-preview.png" alt="Main Figure" />
+        </div>
+
+        <!-- Multiple QR codes with overlay effect -->
+        <div class="qr-wrapper qr-wrapper1">
+            <img src="../public/rectangle-3463279-6.png" alt="QR Code 1" />
+        </div>
+        <div class="qr-wrapper qr-wrapper2">
+            <img src="../public/rectangle-3463279-6.png" alt="QR Code 2" />
+        </div>
+        <div class="qr-wrapper qr-wrapper3">
+            <img src="../public/rectangle-3463279-6.png" alt="QR Code 3" />
+        </div>
+        <div class="qr-wrapper qr-wrapper4">
+            <img src="../public/rectangle-3463279-6.png" alt="QR Code 4" />
+        </div>
+        <div class="qr-wrapper qr-wrapper5">
+            <img src="../public/rectangle-3463279-6.png" alt="QR Code 5" />
+        </div>
+        <div class="qr-wrapper qr-wrapper6">
+            <img src="../public/rectangle-3463279-6.png" alt="QR Code 6" />
+        </div>
+
+        <div class="qr-wrapper qr-wrapper7">
+            <img src="../public/rectangle-3463279-6.png" alt="QR Code 5" />
+        </div>
+        <div class="qr-wrapper qr-wrapper8">
+            <img src="../public/rectangle-3463279-6.png" alt="QR Code 6" />
+        </div>
+
+        <!-- Text content -->
+        <div class="text-content">
+            <div class="text-line">
+                <h1 class="title">Hello World</h1>
+            </div>
+            <div class="text-line">
+                <h2 class="subtitle">Your Magic Message</h2>
+            </div>
+        </div>
+
+        <!-- Back button -->
+        <a href="#" class="back-button">
+            <span class="arrow">←</span>
+            Back
+        </a>
+    </div>
+</body>
+
+</html>

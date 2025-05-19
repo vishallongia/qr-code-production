@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-const QRCodeData = require("../models/QRCODEDATA");
 const User = require("../models/User");
 const SendEmail = require("../Messages/SendEmail");
 const Payment = require("../models/Payment");
