@@ -8,8 +8,8 @@ async function recordPayment(session, status) {
     const existingPayment = await Payment.findOne({
       transactionId: session.id,
     });
-
     if (existingPayment) {
+      console.log("Come for update");
       // Update existing record
       existingPayment.paymentStatus = status;
       existingPayment.paymentDetails = session;
@@ -17,6 +17,8 @@ async function recordPayment(session, status) {
       console.log(`🔄 Payment updated successfully with status: ${status}`);
     } else {
       // Create new record
+      console.log("Creating New Payment");
+
       await Payment.create({
         user_id: session.metadata.user_id,
         plan_id: session.metadata.plan_id,
@@ -28,10 +30,12 @@ async function recordPayment(session, status) {
         paymentDetails: session,
         coupon: session.metadata.coupon || null,
         isCouponUsed: !!session.metadata.coupon, // ✅ set true if a coupon was use
-        coupon_id: session.metadata.coupon_id || "",
-        original_price: session.metadata.original_price || "",
-        discount_amount: session.metadata.discount_amount || "",
-        commission_amount: session.metadata.commission_amount || "",
+        ...(session.metadata.coupon_id && {
+          coupon_id: session.metadata.coupon_id,
+        }),
+        originalAmount: Number(session.metadata.original_price) || null,
+        discountAmount: Number(session.metadata.discount_amount) || null,
+        commissionAmount: Number(session.metadata.commission_amount) || null,
       });
       console.log(`✅ Payment created successfully with status: ${status}`);
     }
@@ -62,13 +66,13 @@ router.post(
     }
 
     // Log the received event type
-    console.log("📩 Received Stripe event:", event.type);
+    // console.log("📩 Received Stripe event:", event.type);
 
     // Log the entire session or object (pretty printed)
-    console.log(
-      "🔍 Event data object:",
-      JSON.stringify(event.data.object, null, 2)
-    );
+    // console.log(
+    //   "🔍 Event data object:",
+    //   JSON.stringify(event.data.object, null, 2)
+    // );
 
     const session = event.data.object;
 
@@ -99,6 +103,7 @@ router.post(
       }
 
       // Respond to acknowledge receipt of the event
+      console.log("webhook hitted");
       res.status(200).send("Webhook received");
     } catch (err) {
       console.error("Error processing webhook event:", err.message);

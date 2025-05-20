@@ -32,6 +32,7 @@ const paymentSchema = new mongoose.Schema({
   transactionId: {
     type: String, // Transaction ID from payment gateway (Stripe/PayPal)
     required: [true, "Transaction ID is required"],
+    unique: true,
   },
   paymentDate: {
     type: Date,

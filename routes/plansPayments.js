@@ -72,6 +72,7 @@ router.post(
       let isCouponUsed = false;
       let discountAmount = 0;
       let coupon = null;
+      let commissionAmount;
 
       if (couponCode) {
         // Check if coupon exists in DB
@@ -205,6 +206,7 @@ router.post(
     }
   }
 );
+
 router.get("/successpayment", async (req, res) => {
   try {
     const session = req.query.session_id;
@@ -379,7 +381,7 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/stripe/validate-coupon", authMiddleware, async (req, res) => {
+router.post("/validate-coupon", authMiddleware, async (req, res) => {
   try {
     let { planId, couponCode, is15DayPlan } = req.body;
 
@@ -443,7 +445,7 @@ router.post("/stripe/validate-coupon", authMiddleware, async (req, res) => {
         });
       }
 
-      // No previous coupon used on 15-day plan → Activate for free
+      // // No previous coupon used on 15-day plan → Activate for free
       const paymentRecord = await Payment.create({
         user_id: req.user._id,
         plan_id: plan._id,

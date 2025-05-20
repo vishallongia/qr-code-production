@@ -83,7 +83,7 @@ document
     }
 
     try {
-      const response = await fetch("/stripe/validate-coupon", {
+      const response = await fetch("/validate-coupon", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
