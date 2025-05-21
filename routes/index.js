@@ -12,6 +12,7 @@ const {
 } = require("../middleware/checkSubscriptionStatus"); // Import the middleware
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
 const Payment = require("../models/Payment");
+const Coupon = require("../models/Coupon");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -2292,7 +2293,7 @@ router.put(
 );
 
 // Route to handle alphanumeric codes
-router.get("/:alphanumericCode([a-zA-Z0-9]{6,7})", async (req, res) => {
+router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
   try {
     const { alphanumericCode } = req.params; // Get alphanumericCode from the URL
 
@@ -3081,5 +3082,249 @@ router.post(
     });
   }
 );
+
+// Affiliate Users Routes
+
+// Sales
+router.get("/sales", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    // Fetch only the showEditOnScan field, excluding other sensitive data
+    const user = await User.findById(userId);
+
+    // Get current page from query params, default to 1 if not provided
+    const currentPage = parseInt(req.query.page) || 1;
+    const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+
+    // Calculate the number of users to skip
+    const skip = (currentPage - 1) * recordsPerPage;
+
+    const result = await Coupon.aggregate([
+      {
+        $match: {
+          assignedToAffiliate: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: "payments",
+          let: {
+            couponId: "$_id",
+            couponCode: "$code",
+            discountPercent: "$discountPercent",
+            commissionPercent: "$commissionPercent",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$coupon_id", "$$couponId"] },
+                    { $eq: ["$isCouponUsed", true] },
+                    { $eq: ["$paymentStatus", "completed"] },
+                  ],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "user_id",
+                foreignField: "_id",
+                as: "user",
+              },
+            },
+            { $unwind: "$user" },
+            {
+              $project: {
+                fullName: "$user.fullName",
+                email: "$user.email",
+                amount: 1,
+                commissionAmount: 1,
+                paymentDate: 1,
+                couponCode: "$$couponCode",
+                discountPercent: "$$discountPercent",
+                commissionPercent: "$$commissionPercent",
+              },
+            },
+          ],
+          as: "usedUsers",
+        },
+      },
+      { $unwind: "$usedUsers" },
+      { $replaceRoot: { newRoot: "$usedUsers" } },
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [{ $skip: skip }, { $limit: recordsPerPage }],
+        },
+      },
+    ]);
+
+    const usedByUsers = result[0].data;
+    const totalUsedUsers = result[0].metadata[0]?.total || 0;
+    const totalPages = Math.ceil(totalUsedUsers / recordsPerPage);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found", type: "error" });
+    }
+    res.render("dashboardnew", {
+      user,
+      activeSection: "sales",
+      usedByUsers,
+      totalUsedUsers,
+      currentPage,
+      totalPages,
+    });
+  } catch (error) {
+    console.error("Error retrieving profile:", error);
+    res.status(500).render("dashboardnew", {
+      message: error.message,
+      type: "error", // Send type as 'error'
+      activeSection: "sales",
+      user: {},
+    });
+  }
+});
+
+// Wallet (Commission Balance)
+router.get("/walletstatus", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).render("dashboardnew", {
+        message: "User not found",
+        type: "error",
+        user: {},
+        activeSection: "wallet",
+      });
+    }
+
+    // Role check: Only allow if user is an affiliate
+    if (user.role !== "affiliate") {
+      return res.status(403).render("dashboardnew", {
+        message: "Access denied. Only affiliates can view wallet.",
+        type: "error",
+        user,
+        activeSection: "wallet",
+      });
+    }
+
+    // Aggregate total commission balance
+    const result = await Coupon.aggregate([
+      {
+        $match: {
+          assignedToAffiliate: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: "payments",
+          let: { couponId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$coupon_id", "$$couponId"] },
+                    { $eq: ["$isCouponUsed", true] },
+                    { $eq: ["$paymentStatus", "completed"] },
+                  ],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                totalCommission: { $sum: "$commissionAmount" },
+              },
+            },
+          ],
+          as: "commissionData",
+        },
+      },
+      { $unwind: "$commissionData" },
+      {
+        $group: {
+          _id: null,
+          totalCommissionBalance: { $sum: "$commissionData.totalCommission" },
+        },
+      },
+    ]);
+
+    const totalCommissionBalance = result[0]?.totalCommissionBalance || 0;
+
+    res.render("dashboardnew", {
+      user,
+      activeSection: "wallet",
+      totalCommissionBalance,
+    });
+  } catch (error) {
+    console.error("Error retrieving wallet balance:", error);
+    res.status(500).render("dashboardnew", {
+      message: error.message,
+      type: "error",
+      user: {},
+      activeSection: "wallet",
+    });
+  }
+});
+
+router.get("/coupons", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Fetch user with minimal fields (e.g., role)
+    const user = await User.findById(userId).select("role showEditOnScan");
+
+    if (!user || user.role !== "affiliate") {
+      return res.status(403).render("viewaffiliateuser", {
+        message: "Access denied or user is not an affiliate",
+        type: "error",
+        user: null,
+        FRONTEND_URL: process.env.FRONTEND_URL,
+        coupons: [],
+        currentPage: null,
+        totalPages: null,
+      });
+    }
+
+    const currentPage = parseInt(req.query.page) || 1;
+    const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+
+    const totalCoupons = await Coupon.countDocuments({
+      assignedToAffiliate: userId,
+    });
+
+    const totalPages = Math.ceil(totalCoupons / recordsPerPage);
+    const skip = (currentPage - 1) * recordsPerPage;
+
+    const coupons = await Coupon.find({ assignedToAffiliate: userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(recordsPerPage);
+
+    res.render("dashboardnew", {
+      user,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+      coupons,
+      currentPage,
+      totalPages,
+      activeSection: "coupon",
+    });
+  } catch (error) {
+    console.error("Error fetching affiliate coupons:", error);
+    res.status(500).render("dashboardnew", {
+      message: "An error occurred while fetching affiliate coupons",
+      type: "error",
+      user: null,
+      coupons: [],
+      FRONTEND_URL: process.env.FRONTEND_URL,
+    });
+  }
+});
 
 module.exports = router;

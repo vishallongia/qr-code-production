@@ -24,7 +24,7 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container-custom">
         <div class="loader-overlay" id="loader">
             <div class="spinner"></div>
         </div>
@@ -177,7 +177,7 @@
                             <img src="/icons-create-1.png" alt="Create icon">
                             <span>Sales</span>
                         </button>
-                        <button class="nav-item" data-link="/wallet">
+                        <button class="nav-item" data-link="/walletstatus">
                             <img src="/icons-create-1-1.png" alt="My codes icon">
                             <span>Wallet</span>
                         </button>
@@ -315,241 +315,321 @@
                                         </div>
                                         <% } %>
 
-
-                                            <% if (activeSection==='usercontrol' ) { %>
+                                            <% if (activeSection==='sales' ) { %>
                                                 <!-- Include the header partial -->
-                                                <div id="show-section" class="fade-in">
-                                                    <%- include('../components/usercontrolnew'); -%>
+                                                <div id="show-section-plans" class="fade-in">
+                                                    <%- include('../components/sales',{ usedByUsers: usedByUsers,
+                                                        totalUsedUsers: totalUsedUsers, currentPage: currentPage,
+                                                        totalPages: totalPages,}); -%>
                                                 </div>
                                                 <% } %>
-                                                    <!-- Main Content -->
-                                                    <% if (activeSection==='generate' ) { %>
 
-                                                        <div id="show-section-create-qr" class="fade-in">
-                                                            <div>
-                                                                <span style="font-family: Poppins;
+                                                    <% if (activeSection==='wallet' ) { %>
+                                                        <!-- Include the header partial -->
+                                                        <div id="show-section-plans" class="fade-in">
+                                                            <%- include('../components/wallet',{totalCommissionBalance
+                                                                }); -%>
+                                                        </div>
+                                                        <% } %>
+
+                                                            <% if (activeSection==='coupon' ) { %>
+                                                                <!-- Include the header partial -->
+                                                                <div id="show-section-plans" class="fade-in">
+                                                                    <%- include('../components/coupon.ejs',{ user: user,
+                                                                        coupons: coupons, currentPage: currentPage,
+                                                                        totalPages: totalPages, FRONTEND_URL:
+                                                                        FRONTEND_URL, }); -%>
+                                                                </div>
+                                                                <% } %>
+
+
+
+
+                                                                    <% if (activeSection==='usercontrol' ) { %>
+                                                                        <!-- Include the header partial -->
+                                                                        <div id="show-section" class="fade-in">
+                                                                            <%- include('../components/usercontrolnew');
+                                                                                -%>
+                                                                        </div>
+                                                                        <% } %>
+                                                                            <!-- Main Content -->
+                                                                            <% if (activeSection==='generate' ) { %>
+
+                                                                                <div id="show-section-create-qr"
+                                                                                    class="fade-in">
+                                                                                    <div>
+                                                                                        <span style="font-family: Poppins;
                                             font-weight: 600;
                                             font-size: 20px;
                                             line-height: 20px;">Create Magic Code</span>
-                                                            </div>
+                                                                                    </div>
 
-                                                            <div class="new-section-qr" id="new-section-qr">
+                                                                                    <div class="new-section-qr"
+                                                                                        id="new-section-qr">
 
-                                                                <!-- <div class="header-custom">Create New Magic Code</div> -->
-                                                                <div class="form-group">
-                                                                    <!-- <label>MAGIC CODE Name</label> -->
-                                                                    <input type="text" id="qr-name"
-                                                                        placeholder="Add magic code name..."
-                                                                        style="border: none; text-align: center;">
-                                                                </div>
+                                                                                        <!-- <div class="header-custom">Create New Magic Code</div> -->
+                                                                                        <div class="form-group">
+                                                                                            <!-- <label>MAGIC CODE Name</label> -->
+                                                                                            <input type="text"
+                                                                                                id="qr-name"
+                                                                                                placeholder="Add magic code name..."
+                                                                                                style="border: none; text-align: center;">
+                                                                                        </div>
 
-                                                                <div class="qr-container">
-                                                                    <div class="qr-icon"></div>
-                                                                    <img src="/images/ICONS CREATE.png" alt="wand"
-                                                                        class="wand" />
+                                                                                        <div class="qr-container">
+                                                                                            <div class="qr-icon"></div>
+                                                                                            <img src="/images/ICONS CREATE.png"
+                                                                                                alt="wand"
+                                                                                                class="wand" />
 
-                                                                </div>
-                                                                <div
-                                                                    style="width: 100%; display: flex; justify-content: center;">
-                                                                    <button class="save-btn"
-                                                                        id="submit-btn-generate">Save</button>
-                                                                </div>
+                                                                                        </div>
+                                                                                        <div
+                                                                                            style="width: 100%; display: flex; justify-content: center;">
+                                                                                            <button class="save-btn"
+                                                                                                id="submit-btn-generate">Save</button>
+                                                                                        </div>
 
-                                                            </div>
-                                                        </div>
-                                                        <% } %>
-                                                            <% if (activeSection==='generate' ) { %>
-                                                                <main class="main-content" id="generateqrsection"
-                                                                    style="display: none;">
-
-                                                                    <div class="content-wrapper">
-                                                                        <h1>Create MAGIC CODE</h1>
-
-                                                                        <form class="create-form">
-                                                                            <!-- <div class="form-group">
-                            <label>MAGIC CODE Name</label>
-                            <input type="text" id="qr-name" placeholder="Enter MAGIC CODE name...">
-                        </div> -->
-
-                                                                            <div class="form-group">
-                                                                                <label>MAGIC CODE Content</label>
-                                                                                <select id="qr-type">
-                                                                                    <option id="MediaLangPhoto"
-                                                                                        value="media">
-                                                                                        Photo/Video
-                                                                                    </option>
-                                                                                    <option id="TextLangChoose"
-                                                                                        value="text" selected>
-                                                                                        Text
-                                                                                    </option>
-                                                                                    <option id="LinkLangChoose"
-                                                                                        value="url">Link
-                                                                                    </option>
-                                                                                </select>
-                                                                            </div>
-
-                                                                            <div id="input-fields"></div>
-
-                                                                            <!-- <div class="form-group">
-                            <label>Upload Your File</label>
-                            <div class="upload-box">
-                                <img src="/vuesax-linear-export.svg" alt="Upload icon">
-                                <p>Drag & Drop or <span class="browse-text">Browse</span></p>
-                            </div>
-                        </div> -->
-
-                                                                            <div class="form-group">
-                                                                                <label>Background</label>
-                                                                                <div class="button-group">
-                                                                                    <button type="button"
-                                                                                        class="btn-outline active">Keep
-                                                                                        Background</button>
-                                                                                    <button type="button"
-                                                                                        class="btn-outline">Remove
-                                                                                        Background</button>
+                                                                                    </div>
                                                                                 </div>
-                                                                            </div>
+                                                                                <% } %>
+                                                                                    <% if (activeSection==='generate' )
+                                                                                        { %>
+                                                                                        <main class="main-content"
+                                                                                            id="generateqrsection"
+                                                                                            style="display: none;">
+
+                                                                                            <div
+                                                                                                class="content-wrapper">
+                                                                                                <h1>Create MAGIC CODE
+                                                                                                </h1>
+
+                                                                                                <form
+                                                                                                    class="create-form">
+
+
+                                                                                                    <div
+                                                                                                        class="form-group">
+                                                                                                        <label>MAGIC
+                                                                                                            CODE
+                                                                                                            Content</label>
+                                                                                                        <select
+                                                                                                            id="qr-type">
+                                                                                                            <option
+                                                                                                                id="MediaLangPhoto"
+                                                                                                                value="media">
+                                                                                                                Photo/Video
+                                                                                                            </option>
+                                                                                                            <option
+                                                                                                                id="TextLangChoose"
+                                                                                                                value="text"
+                                                                                                                selected>
+                                                                                                                Text
+                                                                                                            </option>
+                                                                                                            <option
+                                                                                                                id="LinkLangChoose"
+                                                                                                                value="url">
+                                                                                                                Link
+                                                                                                            </option>
+                                                                                                        </select>
+                                                                                                    </div>
+
+                                                                                                    <div
+                                                                                                        id="input-fields">
+                                                                                                    </div>
 
 
 
-                                                                            <div class="form-group">
-                                                                                <label>Foreground Color</label>
-                                                                                <div class="color-grid">
-                                                                                    <!-- <div class="color-option selected">
+                                                                                                    <div
+                                                                                                        class="form-group">
+                                                                                                        <label>Background</label>
+                                                                                                        <div
+                                                                                                            class="button-group">
+                                                                                                            <button
+                                                                                                                type="button"
+                                                                                                                class="btn-outline active">Keep
+                                                                                                                Background</button>
+                                                                                                            <button
+                                                                                                                type="button"
+                                                                                                                class="btn-outline">Remove
+                                                                                                                Background</button>
+                                                                                                        </div>
+                                                                                                    </div>
+
+
+
+                                                                                                    <div
+                                                                                                        class="form-group">
+                                                                                                        <label>Foreground
+                                                                                                            Color</label>
+                                                                                                        <div
+                                                                                                            class="color-grid">
+                                                                                                            <!-- <div class="color-option selected">
                                     <img src="/image.png" alt="Color">
                                     <img src="/tick-circle.png" alt="Selected" class="tick">
                                 </div> -->
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #000000">
-                                                                                    </div>
-                                                                                    <!-- Black -->
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #ffffff; border: 1px solid #ccc;">
-                                                                                    </div> <!-- White -->
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #d13737">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #c2d137">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #3751d1">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #d1376d">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #37d149">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #37c7d1">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #cc37d1">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #d16337">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #5137d1">
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #000000">
+                                                                                                            </div>
+                                                                                                            <!-- Black -->
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #ffffff; border: 1px solid #ccc;">
+                                                                                                            </div>
+                                                                                                            <!-- White -->
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #d13737">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #c2d137">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #3751d1">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #d1376d">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #37d149">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #37c7d1">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #cc37d1">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #d16337">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #5137d1">
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </div>
 
-                                                                            <div class="form-group">
-                                                                                <label>Background Color</label>
-                                                                                <div class="color-grid">
-                                                                                    <!-- <div class="color-option selected">
+                                                                                                    <div
+                                                                                                        class="form-group">
+                                                                                                        <label>Background
+                                                                                                            Color</label>
+                                                                                                        <div
+                                                                                                            class="color-grid">
+                                                                                                            <!-- <div class="color-option selected">
                                     <img src="/image-2.png" alt="Color">
                                     <img src="/tick-circle-1.png" alt="Selected" class="tick">
                                 </div> -->
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #000000">
-                                                                                    </div>
-                                                                                    <!-- Black -->
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #ffffff; border: 1px solid #ccc;">
-                                                                                    </div> <!-- White -->
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #d13737">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #c2d137">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #3751d1">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #d1376d">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #37d149">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #37c7d1">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #cc37d1">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #d16337">
-                                                                                    </div>
-                                                                                    <div class="color-option"
-                                                                                        style="background-color: #5137d1">
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #000000">
+                                                                                                            </div>
+                                                                                                            <!-- Black -->
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #ffffff; border: 1px solid #ccc;">
+                                                                                                            </div>
+                                                                                                            <!-- White -->
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #d13737">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #c2d137">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #3751d1">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #d1376d">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #37d149">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #37c7d1">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #cc37d1">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #d16337">
+                                                                                                            </div>
+                                                                                                            <div class="color-option"
+                                                                                                                style="background-color: #5137d1">
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </div>
 
-                                                                            <div class="action-buttons">
-                                                                                <button type="button"
-                                                                                    class="btn-outline active submit-btn">
-                                                                                    <img src="/icons-create-1-4.png"
-                                                                                        alt="Create icon">
-                                                                                    Create MAGIC CODE
-                                                                                </button>
-                                                                                <button type="button"
-                                                                                    class="btn-outline" id="PrintMyQR"
-                                                                                    style="display: none;">
-                                                                                    <img src="/icons-create-1-5.png"
-                                                                                        alt="Print icon">
-                                                                                    Print Magic Code
-                                                                                </button>
-                                                                            </div>
-                                                                        </form>
-                                                                    </div>
-                                                                </main>
-                                                                <% } %>
+                                                                                                    <div
+                                                                                                        class="action-buttons">
+                                                                                                        <button
+                                                                                                            type="button"
+                                                                                                            class="btn-outline active submit-btn">
+                                                                                                            <img src="/icons-create-1-4.png"
+                                                                                                                alt="Create icon">
+                                                                                                            Create MAGIC
+                                                                                                            CODE
+                                                                                                        </button>
+                                                                                                        <button
+                                                                                                            type="button"
+                                                                                                            class="btn-outline"
+                                                                                                            id="PrintMyQR"
+                                                                                                            style="display: none;">
+                                                                                                            <img src="/icons-create-1-5.png"
+                                                                                                                alt="Print icon">
+                                                                                                            Print Magic
+                                                                                                            Code
+                                                                                                        </button>
+                                                                                                    </div>
+                                                                                                </form>
+                                                                                            </div>
+                                                                                        </main>
+                                                                                        <% } %>
 
-                                                                    <% if (activeSection==='update' ) { %>
-                                                                        <div id="show-section" class="fade-in">
-                                                                            <div class="form-group"
-                                                                                style="display: none;">
-                                                                                <label>MAGIC CODE Name</label>
-                                                                                <input type="text" id="qr-name"
-                                                                                    placeholder="Enter MAGIC CODE name...">
-                                                                            </div>
-                                                                            <div class="form-group"
-                                                                                style="display: none;">
-                                                                                <label>MAGIC CODE Content</label>
-                                                                                <select id="qr-type">
-                                                                                    <option id="MediaLangPhoto"
-                                                                                        value="media">
-                                                                                        Photo/Video
-                                                                                    </option>
-                                                                                    <option id="TextLangChoose"
-                                                                                        value="text" selected>
-                                                                                        Text
-                                                                                    </option>
-                                                                                    <option id="LinkLangChoose"
-                                                                                        value="url">Link
-                                                                                    </option>
-                                                                                </select>
-                                                                            </div>
-                                                                            <%- include('../components/showandupdateqr',
-                                                                                { qrCode: qrCode, user: user,
-                                                                                activeSection: activeSection }) %>
-                                                                                <% } %>
-                                                                        </div>
+                                                                                            <% if
+                                                                                                (activeSection==='update'
+                                                                                                ) { %>
+                                                                                                <div id="show-section"
+                                                                                                    class="fade-in">
+                                                                                                    <div class="form-group"
+                                                                                                        style="display: none;">
+                                                                                                        <label>MAGIC
+                                                                                                            CODE
+                                                                                                            Name</label>
+                                                                                                        <input
+                                                                                                            type="text"
+                                                                                                            id="qr-name"
+                                                                                                            placeholder="Enter MAGIC CODE name...">
+                                                                                                    </div>
+                                                                                                    <div class="form-group"
+                                                                                                        style="display: none;">
+                                                                                                        <label>MAGIC
+                                                                                                            CODE
+                                                                                                            Content</label>
+                                                                                                        <select
+                                                                                                            id="qr-type">
+                                                                                                            <option
+                                                                                                                id="MediaLangPhoto"
+                                                                                                                value="media">
+                                                                                                                Photo/Video
+                                                                                                            </option>
+                                                                                                            <option
+                                                                                                                id="TextLangChoose"
+                                                                                                                value="text"
+                                                                                                                selected>
+                                                                                                                Text
+                                                                                                            </option>
+                                                                                                            <option
+                                                                                                                id="LinkLangChoose"
+                                                                                                                value="url">
+                                                                                                                Link
+                                                                                                            </option>
+                                                                                                        </select>
+                                                                                                    </div>
+                                                                                                    <%- include('../components/showandupdateqr',
+                                                                                                        { qrCode:
+                                                                                                        qrCode, user:
+                                                                                                        user,
+                                                                                                        activeSection:
+                                                                                                        activeSection })
+                                                                                                        %>
+                                                                                                        <% } %>
+
+
+                                                                                                </div>
 
 
         </div>

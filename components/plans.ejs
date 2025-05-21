@@ -105,11 +105,13 @@
     <script src="/js/toastify-setup.js"></script>
     <script src="https://js.stripe.com/v3/"></script>
     <script
-        src="https://www.paypal.com/sdk/js?client-id=ARlL9iKwH-ib4SALn8uUCwXs7yMUdALrHPYk8_5l6uETER8_3fMGUb3Fc0ulLyWA-LAlGFdFxtSXXEcQ&currency=CHF"></script>
+        src="https://www.paypal.com/sdk/js?client-id=AeUlyT2WmljAHqGaXytGewyz61xmfAJ4woW1wA_2TwjcaqbbjJTkPHy47FsEJhcH68BGlm9-AdDfmbrU&currency=CHF"></script>
     <script src="/js/plan.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const containers = document.querySelectorAll(".paypal-button-container");
+            // Initialize the global object to store meta tokens if not already present
+            window.paypalMetaTokens = window.paypalMetaTokens || {};
 
 
             containers.forEach(container => {
@@ -147,6 +149,10 @@
                                     }, 2000); // 3000 ms (3 seconds) delay before reload
 
                                 }
+                                // Store metaToken indexed by order ID for later use in capture
+                                if (data.id && data.metaToken) {
+                                    window.paypalMetaTokens[data.id] = data.metaToken;
+                                }
                                 return data.id;
                             })
                             .catch(err => {
@@ -157,6 +163,7 @@
                             });
                     },
                     onApprove: function (data) {
+                        const metaToken = window.paypalMetaTokens[data.orderID];
                         return fetch("/paypal/capture-order", {
                             method: "POST",
                             headers: {
@@ -164,14 +171,15 @@
                             },
                             body: JSON.stringify({
                                 orderID: data.orderID,
-                                planId
+                                planId,
+                                metaToken,
                             })
                         })
                             .then(res => res.json())
                             .then(response => {
+                                // Clear the metaToken no matter what
+                                delete window.paypalMetaTokens[data.orderID];
                                 if (response.status === 'COMPLETED') {
-
-
                                     if (response.transactionId) {
                                         if (couponInput) couponInput.value = ""; // Clear the coupon input
                                         // ✅ Redirect to success page with transaction ID
@@ -180,11 +188,16 @@
                                         alert("Transaction ID not found.");
                                     }
                                 } else {
-                                    window.location.href = `/cancel`;
+                                    showToast(response.message, "error");
+                                    setTimeout(() => {
+                                        window.location.href = `/cancel`;
+                                    }, 1000); // 1000 milliseconds = 1 second delay
                                 }
                             });
                     },
                     onError: function (err) {
+                        // Also clear in case of error to avoid memory leaks
+                        delete window.paypalMetaTokens[data.orderID];
                         console.log(err)
                         console.error("PayPal Button Error:", err);
                         // showToast("An error occurred during the transaction.", "error");

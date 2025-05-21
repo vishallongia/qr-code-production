@@ -11,6 +11,7 @@ const { client } = require("../config/paypal");
 
 const { authMiddleware } = require("../middleware/auth");
 const Coupon = require("../models/Coupon");
+const jwt = require("jsonwebtoken");
 
 // Route to render subscription plans with encrypted IDs
 router.get("/plans", authMiddleware, async (req, res) => {
@@ -342,11 +343,9 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
     });
 
     const order = await client().execute(request);
-
-    // Attach extra data in metadata if needed for capture phase
-    res.json({
-      id: order.result.id,
-      meta: {
+    // Create JWT token with metadata
+    const metaToken = jwt.sign(
+      {
         originalAmount: plan.price,
         discountAmount,
         commissionAmount,
@@ -354,6 +353,14 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
         coupon_id: coupon?._id || null,
         isCouponUsed,
       },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // Attach extra data in metadata if needed for capture phase
+    res.json({
+      id: order.result.id,
+      metaToken,
     });
   } catch (err) {
     console.error("PayPal Create Order Error:", err.message);
@@ -364,21 +371,33 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
 // Route to capture PayPal order
 router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
   try {
-    const {
-      orderID,
-      planId,
-      originalAmount,
-      discountAmount,
-      commissionAmount,
-      couponCode,
-      coupon_id,
-    } = req.body;
+    const { orderID, planId, metaToken } = req.body;
     const decryptedPlanId = decryptPassword(planId);
     const plan = await Plan.findById(decryptedPlanId);
 
     if (!plan) {
       return res.status(404).json({ error: "Plan not found" });
     }
+
+    // Verify JWT metaToken
+    let metaData;
+    try {
+      metaData = jwt.verify(metaToken, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(400).json({
+        message: "Invalid token. Please refresh and try again.",
+        type: "error",
+      });
+    }
+
+    const {
+      originalAmount = plan.price,
+      discountAmount = 0,
+      commissionAmount = 0,
+      couponCode = null,
+      coupon_id = null,
+      isCouponUsed = false,
+    } = metaData;
 
     const request =
       new (require("@paypal/checkout-server-sdk").orders.OrdersCaptureRequest)(
@@ -398,14 +417,14 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
       paymentMethod: "paypal",
       paymentStatus: captureDetails.status.toLowerCase(),
       amount,
-      currency,
+      currency: captureDetails.amount.currency_code,
       transactionId: captureDetails.id,
       paymentDetails: captureData,
-      coupon: couponCode || null,
-      isCouponUsed: !!(couponCode && coupon_id),
-      originalAmount: Number(originalAmount) || plan.price,
-      discountAmount: Number(discountAmount) || 0,
-      commissionAmount: Number(commissionAmount) || 0,
+      coupon: couponCode,
+      isCouponUsed,
+      originalAmount: Number(originalAmount),
+      discountAmount: Number(discountAmount),
+      commissionAmount: Number(commissionAmount),
       ...(coupon_id && { coupon_id }),
     };
 

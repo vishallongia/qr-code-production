@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wallet Balance</title>
+    <style>
+        :root {
+            --font-family: "Poppins", sans-serif;
+            --bg-gradient-start: #e0f7fa;
+            --bg-gradient-end: #ffe0b2;
+            --container-bg: rgba(255, 255, 255, 0.9);
+            --container-backdrop-blur: 10px;
+            --border-radius: 10px;
+            --box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            --input-border-color: rgba(0, 0, 0, 0.2);
+            --input-focus-border-color: #80deea;
+            --submit-btn-bg: #18024b;
+            --submit-btn-hover-bg: rgba(26, 1, 97, 0.9);
+            ;
+            --link-color: #18024b;
+            --link-hover-color: rgba(26, 1, 97, 0.9);
+            ;
+            --text-color: #333333;
+        }
+
+
+
+        .container-custom-wallet {
+            background: var(--container-bg);
+            backdrop-filter: blur(var(--container-backdrop-blur));
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 2rem 3rem;
+            text-align: center;
+        }
+
+        .wallet-balance {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .label {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 2rem;
+            display: block;
+        }
+
+        #getPaidBtn {
+            background-color: var(--submit-btn-bg);
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 0.75rem 1.5rem;
+            font-size: 1.1rem;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #getPaidBtn:hover {
+            background-color: var(--submit-btn-hover-bg);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-custom-wallet">
+        <span class="label">Total Wallet Balance</span>
+        <div class="wallet-balance" id="walletBalance"> $<%= totalCommissionBalance.toFixed(2) %>
+        </div>
+        <% if (totalCommissionBalance> 0) { %>
+            <button id="getPaidBtn">Get Paid</button>
+            <% } %>
+    </div>
+
+
+</body>
+
+</html>

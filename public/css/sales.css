@@ -1,0 +1,558 @@
+:root {
+    --font-family: "Poppins", sans-serif;
+    --bg-gradient-start: #e0f7fa;
+    --bg-gradient-end: #ffe0b2;
+    --container-bg: rgba(255, 255, 255, 0.9);
+    --container-backdrop-blur: 10px;
+    --border-radius: 10px;
+    --box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    --input-border-color: rgba(0, 0, 0, 0.2);
+    --input-focus-border-color: #80deea;
+    --submit-btn-bg: #4db6ac;
+    --submit-btn-hover-bg: #26a69a;
+    --link-color: #18024b;
+    --link-hover-color: #18024b;
+    --text-color: #333333;
+    --grid-columns-7: 0.8fr 0.8fr 0.8fr 1.0fr 0.5fr 0.5fr 0.5fr;
+    --grid-columns-9: 0.7fr 0.7fr 0.7fr 1.0fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr;
+    --grid-columns-6: 0.7fr 0.7fr 0.7fr 0.5fr 0.5fr 0.5fr;
+}
+
+body {
+    font-family: var(--font-family);
+    /* background: linear-gradient(45deg, var(--bg-gradient-start), var(--bg-gradient-end)); */
+    margin: 0;
+    min-height: 100vh;
+}
+
+canvas {
+    max-width: 175px;
+}
+
+.modern-list-container {
+    background: var(--container-bg);
+    backdrop-filter: blur(var(--container-backdrop-blur));
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    width: 90%;
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+.modern-list-container h2 {
+    color: var(--text-color);
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.list-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.list-header,
+.user-item {
+    display: grid;
+    grid-template-columns: var(--grid-columns-6);
+    /* Default to 8 columns */
+    gap: 15px;
+    padding: 15px 0;
+    min-width: 950px;
+}
+
+/* If the container has exactly 7 children, change the grid */
+.list-header:has(> *:nth-child(7):last-child),
+.user-item:has(> *:nth-child(7):last-child) {
+    grid-template-columns: var(--grid-columns-7);
+}
+
+.list-header {
+    font-weight: bold;
+    border-bottom: 2px solid var(--input-border-color);
+}
+
+.user-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    max-height: 400px;
+}
+
+.user-item {
+    border-bottom: 1px solid var(--input-border-color);
+    transition: background-color 0.3s ease;
+}
+
+.user-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.user-item span {
+    display: block;
+    overflow: hidden;
+    word-wrap: break-word;
+    text-overflow: ellipsis;
+    white-space: normal;
+}
+
+.view-qr-btn {
+    background-color: var(--submit-btn-bg);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.view-qr-btn:hover {
+    background-color: var(--submit-btn-hover-bg);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked+.toggle-slider {
+    background-color: var(--submit-btn-bg);
+}
+
+input:checked+.toggle-slider:before {
+    transform: translateX(26px);
+}
+
+.input-group-custom {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.number-input {
+    padding: 6px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid var(--input-border-color);
+    width: 200px;
+    /* Adjust width as needed */
+    box-sizing: border-box;
+}
+
+.number-input:focus {
+    outline: none;
+    border-color: var(--input-focus-border-color);
+}
+
+.export-container {
+    display: flex;
+    justify-content: end;
+}
+
+
+.card-caption {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    z-index: 999999999;
+}
+
+/* Ensure the parent container has relative positioning */
+.export-container {
+    display: flex;
+    justify-content: flex-end;
+    /* Align button to the right */
+    position: relative;
+    /* Ensures tooltip positions correctly */
+    width: 100%;
+    /* Ensures it takes full width */
+}
+
+/* Tooltip Styling */
+.tooltip-custom {
+    visibility: hidden;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 6px 10px;
+    border-radius: 5px;
+    position: absolute;
+    z-index: 10;
+    font-size: 12px;
+    bottom: 100%;
+    /* Positions it above the button */
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    white-space: nowrap;
+    margin-bottom: 5px;
+    /* Adds spacing between the button and tooltip */
+}
+
+/* Tooltip arrow */
+.tooltip-custom::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    /* Positions the arrow below the tooltip */
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+    /* Creates an arrow effect */
+}
+
+/* Show tooltip on hover */
+.view-qr-btn:hover .tooltip-custom {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Button Styling */
+.view-qr-btn {
+    position: relative;
+    /* Ensures tooltip is positioned relative to the button */
+}
+
+/* Fullscreen Loader Styling */
+.fullscreen-loader {
+    display: none;
+    /* Initially hidden */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    /* Semi-transparent background */
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Spinning Loader */
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #ccc;
+    border-top: 5px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+/* Loader Animation */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Animated "Please wait..." text */
+.animated-text {
+    display: flex;
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.animated-text span {
+    animation: blink 1.5s infinite;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Create a blinking effect for each dot */
+.animated-text span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.animated-text span:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.animated-text span:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-item {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.pagination-btn {
+    padding: 5px 10px;
+    margin: 0 5px;
+    background-color: lightslategrey;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.pagination-btn:hover {
+    background-color: var(--link-hover-color);
+}
+
+.pagination-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.prev-btn,
+.next-btn {
+    padding: 3px;
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    margin: 0 10px;
+}
+
+/* Active Page Style */
+.pagination-btn.active-page {
+    background-color: var(--link-hover-color);
+    font-weight: bold;
+    pointer-events: none;
+    /* Prevent clicking on the active page */
+}
+
+.container-custom-generated-user {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 40px;
+    /* Adjust the value as needed */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .modern-list-container {
+        width: 95%;
+        padding: 15px;
+    }
+
+    .list-wrapper {
+        overflow-x: auto;
+    }
+
+    .list-header,
+    .user-item {
+        width: 140%;
+        min-width: unset;
+        font-size: 0.9em;
+        gap: 10px;
+    }
+
+    .input-group-custom {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .number-input {
+        width: 100%;
+    }
+
+    .view-qr-btn {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .modern-list-container {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .list-header,
+    .user-item {
+        font-size: 0.8em;
+        gap: 8px;
+    }
+
+    .view-qr-btn {
+        padding: 3px 6px;
+        font-size: 0.8em;
+    }
+
+    input:checked+.toggle-slider:before {
+        transform: translateX(18px);
+    }
+
+    .toggle-switch {
+        width: 40px;
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .pagination-btn {
+        padding: 5px 10px;
+        margin: 0 5px;
+        background-color: lightslategrey;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .prev-btn,
+    .next-btn {
+        padding: 3px;
+    }
+
+    .pagination-btn:hover {
+        background-color: var(--link-hover-color);
+    }
+
+    .pagination-btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .pagination-info {
+        display: flex;
+        align-items: center;
+        margin: 0 10px;
+    }
+
+    .pagination-btn.active-page {
+        background-color: var(--link-hover-color);
+        font-weight: bold;
+        pointer-events: none;
+    }
+
+    .arrow {
+        width: 0;
+        height: 0;
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+        border-right: 10px solid black;
+    }
+
+}
+
+
+
+.card {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    /* Two cards per row on larger screens */
+    max-width: 300px;
+    text-align: center;
+}
+
+/* Responsive for tablets */
+@media (max-width: 768px) {
+    .card {
+        width: calc(100% - 20px);
+        /* One card per row */
+    }
+}
+
+/* Responsive for mobile */
+@media (max-width: 480px) {
+    .container-custom-generated-user {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 5px;
+    }
+
+    .card {
+        width: 100%;
+        max-width: 90%;
+        /* Slight padding on the sides */
+    }
+
+    canvas {
+        max-width: 120px;
+    }
+}
