@@ -239,29 +239,20 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
       return res.status(404).json({ error: "Plan not found" });
     }
 
-    // Check if user already used the same coupon for this plan
+    let finalPrice = plan.price;
+    let isCouponUsed = false;
+    let discountAmount = 0;
+    let commissionAmount = 0;
+    let coupon = null;
+
+    // Coupon logic from DB (not env)
     if (couponCode) {
-      const existingPayment = await Payment.findOne({
-        user_id: req.user._id,
-        plan_id: plan._id,
-        isCouponUsed: true,
+      coupon = await Coupon.findOne({
+        code: couponCode.toUpperCase(),
+        isActive: true,
       });
 
-      if (existingPayment) {
-        return res.status(400).json({
-          message: "You have already used this coupon for this plan.",
-          type: "error",
-          data: null,
-        });
-      }
-    }
-
-    // Apply the coupon code if available
-    let finalPrice = plan.price;
-
-    if (couponCode) {
-      const validCoupon = process.env.COUPON_CODE;
-      if (couponCode.toUpperCase() !== validCoupon) {
+      if (!coupon) {
         return res.status(400).json({
           message: "Invalid coupon code.",
           type: "error",
@@ -269,22 +260,39 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
         });
       }
 
-      // Check and apply discount based on plan's durationInDays
-      const durationKey = `COUPON_PRICE_${plan.durationInDays}`;
-      const couponPrice = process.env[durationKey];
-
-      if (couponPrice !== undefined) {
-        finalPrice = parseFloat(couponPrice);
-      } else {
-        return res.status(400).json({
-          message: "Coupon not applicable for this plan.",
-          type: "error",
-          data: null,
+      // Check if the user already used this coupon for a free 15-day plan
+      if (plan.durationInDays === 15) {
+        const existingFree15Day = await Payment.findOne({
+          user_id: req.user._id,
+          isCouponUsed: true,
+          amount: 0,
         });
+
+        if (existingFree15Day) {
+          return res.status(400).json({
+            message: "You have already used a coupon for a free 15-day plan.",
+            type: "error",
+            data: null,
+          });
+        }
+
+        finalPrice = 0;
+        discountAmount = plan.price;
+        isCouponUsed = true;
+      } else {
+        discountAmount = (coupon.discountPercent / 100) * plan.price;
+        finalPrice = parseFloat((plan.price - discountAmount).toFixed(2));
+        isCouponUsed = true;
+
+        if (coupon.commissionPercent) {
+          commissionAmount = parseFloat(
+            ((coupon.commissionPercent / 100) * finalPrice).toFixed(2)
+          );
+        }
       }
     }
 
-    // Check if the price is 0 (zero-dollar transaction)
+    // If the plan is free (due to coupon or by default)
     if (finalPrice === 0) {
       const paymentRecord = await Payment.create({
         user_id: req.user._id,
@@ -300,8 +308,12 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
         },
         isActive: true,
         coupon: couponCode || null,
-        isCouponUsed: !!couponCode,
+        coupon_id: coupon?._id || null,
+        isCouponUsed,
         paymentDate: new Date(),
+        originalAmount: plan.price,
+        discountAmount,
+        commissionAmount,
       });
 
       return res.status(200).json({
@@ -311,6 +323,7 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
       });
     }
 
+    // Paid order creation with PayPal
     const request =
       new (require("@paypal/checkout-server-sdk").orders.OrdersCreateRequest)();
     request.prefer("return=representation");
@@ -320,7 +333,7 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
         {
           amount: {
             currency_code: plan.currency,
-            value: finalPrice.toFixed(2), // The discounted price or the original price,
+            value: finalPrice.toFixed(2),
           },
           custom_id: req.user._id.toString(),
           description: plan.name,
@@ -329,7 +342,19 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
     });
 
     const order = await client().execute(request);
-    res.json({ id: order.result.id });
+
+    // Attach extra data in metadata if needed for capture phase
+    res.json({
+      id: order.result.id,
+      meta: {
+        originalAmount: plan.price,
+        discountAmount,
+        commissionAmount,
+        couponCode: couponCode || null,
+        coupon_id: coupon?._id || null,
+        isCouponUsed,
+      },
+    });
   } catch (err) {
     console.error("PayPal Create Order Error:", err.message);
     res.status(500).json({ error: "Unable to create PayPal order" });
@@ -339,7 +364,15 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
 // Route to capture PayPal order
 router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
   try {
-    const { orderID, planId } = req.body;
+    const {
+      orderID,
+      planId,
+      originalAmount,
+      discountAmount,
+      commissionAmount,
+      couponCode,
+      coupon_id,
+    } = req.body;
     const decryptedPlanId = decryptPassword(planId);
     const plan = await Plan.findById(decryptedPlanId);
 
@@ -359,17 +392,24 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
     const captureDetails = captureData.purchase_units[0].payments.captures[0];
     const amount = parseFloat(captureDetails.amount.value);
 
-    await Payment.create({
+    const paymentData = {
       user_id: req.user._id,
       plan_id: plan._id,
       paymentMethod: "paypal",
       paymentStatus: captureDetails.status.toLowerCase(),
-      amount: amount,
-      currency: captureDetails.amount.currency_code,
+      amount,
+      currency,
       transactionId: captureDetails.id,
       paymentDetails: captureData,
-    });
+      coupon: couponCode || null,
+      isCouponUsed: !!(couponCode && coupon_id),
+      originalAmount: Number(originalAmount) || plan.price,
+      discountAmount: Number(discountAmount) || 0,
+      commissionAmount: Number(commissionAmount) || 0,
+      ...(coupon_id && { coupon_id }),
+    };
 
+    await Payment.create(paymentData);
     res.json({
       message: "Payment successful",
       status: captureDetails.status,

@@ -9,7 +9,6 @@ async function recordPayment(session, status) {
       transactionId: session.id,
     });
     if (existingPayment) {
-      console.log("Come for update");
       // Update existing record
       existingPayment.paymentStatus = status;
       existingPayment.paymentDetails = session;
@@ -17,7 +16,6 @@ async function recordPayment(session, status) {
       console.log(`🔄 Payment updated successfully with status: ${status}`);
     } else {
       // Create new record
-      console.log("Creating New Payment");
 
       await Payment.create({
         user_id: session.metadata.user_id,
