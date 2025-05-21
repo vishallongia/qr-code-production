@@ -102,6 +102,8 @@ async function handleLogin(event) {
         window.location.href = "/admindashboard";
       } else if (result.role === "demo-user") {
         window.location.href = `/dashboard?magiccode=${result.qrCodeDataId}`;
+      } else if (result.role === "affiliate") {
+        window.location.href = `/sales`;
       } else {
         window.location.href = "/magiccode";
       }
