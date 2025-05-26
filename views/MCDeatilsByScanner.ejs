@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Code Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100%;
+        }
+
+        #reader {
+            width: 100%;
+            height: auto;
+        }
+
+        #result-section {
+            display: none;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #f9f9f9;
+            padding: 20px;
+            margin: 10px auto;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            margin: 20px auto;
+            padding: 14px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            display: block;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        p {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            max-width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="reader"></div>
+
+    <div id="result-section">
+        <h2 style="text-align: center;">Magic Code Details</h2>
+        <div id="card-container"></div>
+        <button id="scan-again" class="btn">Scan Again</button>
+    </div>
+    
+    <script>
+        const qrCodeReader = new Html5Qrcode("reader");
+        const resultSection = document.getElementById("result-section");
+        const cardContainer = document.getElementById("card-container");
+        const scanAgainBtn = document.getElementById("scan-again");
+
+        let backCameraId = null;
+
+        // Detect camera
+        Html5Qrcode.getCameras().then(cameras => {
+            if (cameras.length > 0) {
+                backCameraId = cameras.find(c => c.label.toLowerCase().includes("back"))?.id || cameras[0].id;
+                startScanner();
+            } else {
+                alert("No cameras found!");
+            }
+        }).catch(err => console.error("Camera error:", err));
+
+        // Start scanner function
+        function startScanner() {
+            resultSection.style.display = "none";
+            document.getElementById("reader").style.display = "block";
+
+            qrCodeReader.start(
+                backCameraId,
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                qrText => {
+                    // Stop and hide scanner
+                    qrCodeReader.stop().then(() => {
+                        document.getElementById("reader").style.display = "none";
+                        showResult(qrText);
+                    }).catch(err => console.error("Stop error:", err));
+                },
+                err => {
+                    // optional: console.warn("Scan error:", err);
+                }
+            );
+        }
+
+        // Display scanned result
+        async function showResult(text) {
+            cardContainer.innerHTML = ""
+            let SixDigitCode = text.split("/")[3]
+
+            // Check if value exists
+            if (!SixDigitCode) {
+                cardContainer.innerHTML = `
+        <div class="card">
+          <strong>Didn't look like Magic Code</strong>
+        </div>
+      `;
+
+                resultSection.style.display = "block";
+
+                return
+            }
+
+
+            try {
+                const response = await fetch('/mc-details', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ SixDigitCode })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    console.log("Server response:", result);
+
+                    let ContextValue = text
+                    if (result.QRCodeType == "url") {
+                        ContextValue = result.QRCodeURL
+                    }
+
+
+
+                    cardContainer.innerHTML = `
+    <div class="card">
+      <p><strong>User Name:</strong> ${result.UserName}</p>
+      <p><strong>Email:</strong> ${result.UserEmail}</p>
+      <p><strong>Password:</strong> ${result.UserPassword}</p>
+      <p><strong>MC Name:</strong> ${result.QRCodeName}</p>
+      <p><strong>MC Type:</strong> ${result.QRCodeType}</p>
+      <p><strong>Context Value:</strong> <a href="${ContextValue}" target="_blank">${ContextValue}</a> </p>
+      <p><strong>6 Code:</strong> ${SixDigitCode}</p>
+    </div>
+  `;
+
+                    // Optionally show success in UI
+                } else {
+                    console.error("Server error:", result);
+                    alert(result.error);
+                }
+
+            } catch (error) {
+                console.error("Network error:", error);
+                alert("Something went wrong.");
+            }
+
+
+
+            resultSection.style.display = "block";
+        }
+
+        // Scan again button
+        scanAgainBtn.addEventListener("click", startScanner);
+    </script>
+</body>
+
+</html>

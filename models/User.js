@@ -52,9 +52,9 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     }, // New field
-    walletBalance: {
-      type: Number,
-      default: 0,
+    // Affiliate-specific fields
+    accountNo: {
+      type: String,
     },
   },
   {

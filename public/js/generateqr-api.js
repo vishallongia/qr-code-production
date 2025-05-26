@@ -13,7 +13,7 @@ if (!urlParams.has("magiccode")) {
 
     generateQRCodeFe();
 
-    document.getElementById("text-file").value = "Enter text here";
+    document.getElementById("text-file").value = "YOUR MESSAGE";
     const qrName = document.getElementById("qr-name").value;
     const qrDotColor = document.getElementById("qr-color").value;
     const backgroundColor = document.getElementById("bg-color").value;

@@ -4,69 +4,45 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="/css/wallet.css" rel="stylesheet">
     <title>Wallet Balance</title>
-    <style>
-        :root {
-            --font-family: "Poppins", sans-serif;
-            --bg-gradient-start: #e0f7fa;
-            --bg-gradient-end: #ffe0b2;
-            --container-bg: rgba(255, 255, 255, 0.9);
-            --container-backdrop-blur: 10px;
-            --border-radius: 10px;
-            --box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-            --input-border-color: rgba(0, 0, 0, 0.2);
-            --input-focus-border-color: #80deea;
-            --submit-btn-bg: #18024b;
-            --submit-btn-hover-bg: rgba(26, 1, 97, 0.9);
-            ;
-            --link-color: #18024b;
-            --link-hover-color: rgba(26, 1, 97, 0.9);
-            ;
-            --text-color: #333333;
-        }
-
-
-
-        .container-custom-wallet {
-            background: var(--container-bg);
-            backdrop-filter: blur(var(--container-backdrop-blur));
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 2rem 3rem;
-            text-align: center;
-        }
-
-        .wallet-balance {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
-        }
-
-        .label {
-            font-size: 1rem;
-            color: #555;
-            margin-bottom: 2rem;
-            display: block;
-        }
-
-        #getPaidBtn {
-            background-color: var(--submit-btn-bg);
-            border: none;
-            border-radius: var(--border-radius);
-            padding: 0.75rem 1.5rem;
-            font-size: 1.1rem;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        #getPaidBtn:hover {
-            background-color: var(--submit-btn-hover-bg);
-        }
-    </style>
 </head>
 
 <body>
+    <div id="theme-popup-get-paid" class="popup-overlay" style="display: none;">
+        <div class="popup-content" style="position: relative;">
+            <span id="close-popup-get-paid" style="
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 25px;
+            cursor: pointer;
+        ">&times;</span>
+            <p>Please Enter Details</p>
+            <form>
+                <!-- Account Number -->
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <input type="text" id="account-number" placeholder="Enter Account Number"
+                        value="<%= typeof user !== 'undefined' && user.accountNo ? user.accountNo : '' %>" <%=typeof
+                        user !=='undefined' && user.accountNo ? 'disabled' : '' %> >
+                </div>
+
+
+                <!-- Remarks -->
+                <div class=" form-group" style="margin-bottom: 24px;">
+                    <input type="text" id="remarks" placeholder="Enter Remarks">
+                </div>
+
+                <!-- Purpose -->
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <input type="text" id="purpose" placeholder="Enter Purpose">
+                </div>
+
+                <button id="popup-ok-btn-get-paid" type="button">Get Paid</button>
+            </form>
+        </div>
+    </div>
+
     <div class="container-custom-wallet">
         <span class="label">Total Wallet Balance</span>
         <div class="wallet-balance" id="walletBalance"> $<%= totalCommissionBalance.toFixed(2) %>
@@ -78,5 +54,98 @@
 
 
 </body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const popup = document.getElementById("theme-popup-get-paid");
+        const getPaidBtn = document.getElementById("getPaidBtn");
+        const closeBtn = document.getElementById("close-popup-get-paid");
+        const okBtn = document.getElementById("popup-ok-btn-get-paid");
+
+        const accountInput = document.getElementById("account-number");
+        const remarksInput = document.getElementById("remarks");
+        const purposeInput = document.getElementById("purpose");
+
+        // Create spinner element
+        const spinner = document.createElement("span");
+        spinner.classList.add("spinner");
+        spinner.style.display = "none";
+        spinner.style.marginRight = "8px";
+        okBtn.prepend(spinner);
+
+        // Show popup on Get Paid button click
+        if (getPaidBtn) {
+            getPaidBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                popup.style.display = "flex";
+            });
+        }
+
+        // Close popup
+        if (closeBtn) {
+            closeBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                popup.style.display = "none";
+            });
+        }
+
+        // Handle "Get Paid" form submission
+        okBtn.addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            const accountNumber = accountInput.value.trim();
+            const remarks = remarksInput.value.trim();
+            const purpose = purposeInput.value.trim();
+
+            if (!accountNumber) {
+                showToast("Account number is required.", "error");
+                return;
+            }
+
+            if (!purpose) {
+                showToast("Purpose is required.", "error");
+                return;
+            }
+
+            // Disable button and show spinner
+            okBtn.disabled = true;
+            spinner.style.display = "inline-block";
+            okBtn.textContent = "Processing...";
+            okBtn.prepend(spinner);
+
+            try {
+                const response = await fetch("/api/get-paid", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ accountNo: accountNumber, remarks, purpose }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showToast(result.message || "Payment initiated!", "success");
+                    popup.style.display = "none";
+                    accountInput.value = "";
+                    remarksInput.value = "";
+                    purposeInput.value = "";
+                } else {
+                    showToast(result.message || "Something went wrong!", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Network error. Please try again.", "error");
+            }
+
+            // Reset button and spinner
+            spinner.style.display = "none";
+            okBtn.disabled = false;
+            okBtn.textContent = "Get Paid";
+            okBtn.prepend(spinner);
+        });
+    });
+
+</script>
+
+
 
 </html>

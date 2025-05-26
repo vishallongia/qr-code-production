@@ -82,6 +82,19 @@ router.get("/", authMiddleware, async (req, res) => {
 });
 
 // Home route
+router.get("/", authMiddleware, async (req, res) => {
+  try {
+    res.render("login"); // Send type as 'success'
+  } catch (error) {
+    console.error("Error generating Magic code:", error);
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+// Home route
 router.get("/cancel", authMiddleware, async (req, res) => {
   try {
     res.render("paymentfailed"); // Send type as 'success'
@@ -1348,7 +1361,7 @@ router.get("/verify-magiclink/:token", async (req, res) => {
         // Update desired fields
         qrCode.set({
           type: "text",
-          text: "Enter text here",
+          text: "YOUR MESSAGE",
           isQrActivated: true,
         });
 
@@ -1372,6 +1385,11 @@ router.get("/verify-magiclink/:token", async (req, res) => {
           );
         }
       }
+    }
+
+    if (user.role === "affiliate") {
+      // Redirect user to dashboard
+      return res.redirect(`${process.env.FRONTEND_URL}/sales`);
     }
 
     // Redirect user to dashboard
@@ -3092,6 +3110,10 @@ router.get("/sales", authMiddleware, async (req, res) => {
     // Fetch only the showEditOnScan field, excluding other sensitive data
     const user = await User.findById(userId);
 
+    if (!user) {
+      return res.status(404).json({ message: "User not found", type: "error" });
+    }
+
     // Get current page from query params, default to 1 if not provided
     const currentPage = parseInt(req.query.page) || 1;
     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
@@ -3165,9 +3187,6 @@ router.get("/sales", authMiddleware, async (req, res) => {
     const totalUsedUsers = result[0].metadata[0]?.total || 0;
     const totalPages = Math.ceil(totalUsedUsers / recordsPerPage);
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found", type: "error" });
-    }
     res.render("dashboardnew", {
       user,
       activeSection: "sales",
@@ -3261,6 +3280,7 @@ router.get("/walletstatus", authMiddleware, async (req, res) => {
       user,
       activeSection: "wallet",
       totalCommissionBalance,
+      user,
     });
   } catch (error) {
     console.error("Error retrieving wallet balance:", error);
@@ -3325,6 +3345,172 @@ router.get("/coupons", authMiddleware, async (req, res) => {
       FRONTEND_URL: process.env.FRONTEND_URL,
     });
   }
+});
+
+// Send Admin Notification Email
+router.post("/send-admin-email", async (req, res) => {
+  const { remarks, purpose, userEmail, accountNumber } = req.body;
+
+  try {
+    if (!remarks || !purpose || !accountNumber) {
+      return res.status(400).json({
+        message: "Remarks, purpose, and account number are required",
+        type: "error",
+      });
+    }
+
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
+
+    const sender = {
+      email: "textildruckschweiz.com@gmail.com",
+      name: "Magic Code - Admin Notification",
+    };
+
+    const emailContent = `
+    <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Notification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    h2 {
+      color: #333;
+    }
+    p {
+      color: #555;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    .info-box {
+      font-size: 16px;
+      background-color: #f0f0f0;
+      padding: 10px 15px;
+      border-radius: 5px;
+      display: inline-block;
+      margin: 10px 0;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Admin Alert: New Submission</h2>
+    <p><strong>User Email:</strong> ${userEmail || "Not Provided"}</p>
+
+    <p><strong>Account Number:</strong></p>
+    <div class="info-box">${accountNumber}</div>
+
+    <p><strong>Purpose:</strong></p>
+    <div class="info-box">${purpose}</div>
+
+    <p><strong>Remarks:</strong></p>
+    <div class="info-box">${remarks}</div>
+
+    <p class="footer">&copy; 2025 Magic Code | Admin Notification System</p>
+  </div>
+</body>
+</html>
+    `;
+
+    // Send the email
+    SendEmail(sender, adminEmail, "New Payment Request", emailContent);
+
+    res
+      .status(200)
+      .json({ message: "Admin email sent successfully", type: "success" });
+  } catch (error) {
+    console.error("Error sending admin email:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to send admin email", type: "error" });
+  }
+});
+
+router.post("/mc-details", authMiddleware, async (req, res) => {
+  try {
+    const { SixDigitCode } = req.body;
+
+    if (!SixDigitCode) {
+      return res.status(400).json({ error: "SixDigitCode is required." });
+    }
+
+    const qrCode = await QRCodeData.findOne({ code: SixDigitCode });
+
+    if (!qrCode) {
+      return res
+        .status(404)
+        .json({ error: "QR code not associated with Any Account yet." });
+    }
+
+    let QRCodeName = qrCode.qrName;
+    let QRCodeType = qrCode.type;
+    let QRCodeURL = qrCode.url;
+    let QRCodeDemo = qrCode.isDemo;
+    let QRUserID = qrCode.user_id;
+
+    if (QRCodeDemo) {
+      QRUserID = qrCode.assignedTo;
+    }
+
+    if (!QRUserID) {
+      return res.status(400).json({
+        error: `MC not assigned to anyone, btw it's name is ${QRCodeName}`,
+      });
+    }
+
+    let user = await User.findOne({
+      _id: new mongoose.Types.ObjectId(QRUserID),
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const UserName = user.fullName;
+    const UserEmail = user.email;
+
+    const UserPassword = decryptPassword(user.userPasswordKey);
+
+    return res.json({
+      QRCodeName,
+      QRCodeType,
+      QRCodeURL,
+      QRCodeDemo,
+      QRUserID,
+      UserName,
+      UserEmail,
+      UserPassword,
+    });
+  } catch (error) {
+    console.error("Error in /mc-details:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+router.get("/admindashboard/scanner", authMiddleware, async (req, res) => {
+  res.render("MCDeatilsByScanner");
 });
 
 module.exports = router;

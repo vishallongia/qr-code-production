@@ -32,11 +32,15 @@ const authMiddleware = async (req, res, next) => {
       if (req.path === "/" && user.role === "admin") {
         return res.redirect("/admindashboard");
       }
-    }
 
-    // If the user is authenticated and requests the "/" path (SSR), redirect to "/dashboard"
-    if (req.path === "/" && req.user) {
-      return res.redirect("/magiccode");
+      if (req.path === "/" && user.role === "affiliate") {
+        return res.redirect("/sales");
+      }
+
+      // If the user is authenticated and requests the "/" path (SSR), redirect to "/magiccode"
+      if (req.path === "/" && req.user) {
+        return res.redirect("/magiccode");
+      }
     }
 
     // Proceed to the next middleware or route handler

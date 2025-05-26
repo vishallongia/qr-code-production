@@ -64,6 +64,10 @@ const paymentSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  isPaidToAffiliate: {
+    type: Boolean,
+    default: false, // If the subscription is still active
+  },
   coupon_id: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" },
   originalAmount: { type: Number }, // Plan price before discount
   discountAmount: { type: Number }, // Discount given to the user
