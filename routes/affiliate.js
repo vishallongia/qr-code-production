@@ -4,6 +4,8 @@ const router = express.Router();
 require("dotenv").config();
 const User = require("../models/User");
 const Coupon = require("../models/Coupon");
+const Payment = require("../models/Payment");
+const AffiliatePayment = require("../models/AffiliatePayment");
 const {
   encryptPassword,
   decryptPassword,
@@ -19,6 +21,47 @@ router.get("/create-affiliate-user", async (req, res) => {
     res.status(500).render("login", {
       message: "Failed to load login page",
       type: "error", // Send type as 'error'
+    });
+  }
+});
+
+// create affiliate user
+router.get("/affiliate-users", async (req, res) => {
+  try {
+    const currentPage = parseInt(req.query.page) || 1;
+    const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+
+    // Fetch total number of affiliate users
+    const totalAffiliates = await User.countDocuments({ role: "affiliate" });
+    const totalPages = Math.ceil(totalAffiliates / recordsPerPage);
+    const skip = (currentPage - 1) * recordsPerPage;
+
+    // Fetch paginated affiliate users
+    const users = await User.find({ role: "affiliate" })
+      .skip(skip)
+      .limit(recordsPerPage);
+
+    // Add encrypted ID if needed
+    users.forEach((user) => {
+      if (user.userPasswordKey) {
+        user.userPasswordKey = decryptPassword(user.userPasswordKey); // Decrypt the password
+      }
+      user.encryptedId = encryptPassword(user._id.toString()); // Encrypt the ObjectId string
+    });
+
+    // Render the affiliate dashboard with data
+    res.render("affiliateusers", {
+      users,
+      currentPage,
+      totalPages,
+      totalUsers: totalAffiliates,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+    });
+  } catch (error) {
+    console.error("Error loading Affiliate Dashboard:", error);
+    res.status(500).render("login", {
+      message: "Failed to load Affiliate Dashboard",
+      type: "error",
     });
   }
 });
@@ -442,6 +485,211 @@ router.delete("/delete-coupon/:couponId", async (req, res) => {
       message: "Internal server error while deleting coupon",
       type: "error",
     });
+  }
+});
+
+// Wallet (Commission Balance)
+router.get("/pay-affiliate/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).render("pay-affiliate", {
+        message: "User not found",
+        type: "error",
+        user: {},
+      });
+    }
+
+    const result = await Coupon.aggregate([
+      {
+        $match: {
+          assignedToAffiliate: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: "payments",
+          let: { couponId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$coupon_id", "$$couponId"] },
+                    { $eq: ["$isCouponUsed", true] },
+                    { $eq: ["$paymentStatus", "completed"] },
+                    { $eq: ["$isPaidToAffiliate", false] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "validPayments",
+        },
+      },
+      {
+        $addFields: {
+          totalCommission: {
+            $sum: "$validPayments.commissionAmount",
+          },
+          salesCount: {
+            $size: "$validPayments",
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalCommissionBalance: { $sum: "$totalCommission" },
+          numberOfSales: { $sum: "$salesCount" },
+        },
+      },
+    ]);
+
+    const totalCommissionBalance = result[0]?.totalCommissionBalance || 0;
+    const numberOfSales = result[0]?.numberOfSales || 0;
+
+    res.render("pay-affiliate", {
+      user,
+      totalCommissionBalance,
+      numberOfSales,
+      user,
+    });
+  } catch (error) {
+    console.error("Error retrieving wallet balance:", error);
+    res.status(500).render("pay-affiliate", {
+      message: error.message,
+      type: "error",
+      user: {},
+    });
+  }
+});
+
+router.post("/pay-now", async (req, res) => {
+  const session = await mongoose.startSession();
+
+  try {
+    const { affiliateId, amount } = req.body;
+
+    if (!affiliateId || isNaN(amount)) {
+      return res.status(400).json({ message: "Invalid affiliateId or amount" });
+    }
+
+    const numericAmount = Number(amount);
+    const affiliateObjectId = new mongoose.Types.ObjectId(affiliateId);
+
+    session.startTransaction();
+
+    // Step 1: Get all coupon IDs assigned to this affiliate
+    const coupons = await Coupon.find(
+      { assignedToAffiliate: affiliateObjectId },
+      { _id: 1 }
+    ).session(session);
+
+    const couponIds = coupons.map((c) => c._id);
+
+    if (couponIds.length === 0) {
+      await session.abortTransaction();
+      return res
+        .status(404)
+        .json({ message: "No coupons found for this affiliate." });
+    }
+
+    // Step 2: Get unpaid, completed, used payments sorted by oldest and add cumulative sum
+    const payments = await Payment.aggregate([
+      {
+        $match: {
+          coupon_id: { $in: couponIds },
+          isCouponUsed: true,
+          paymentStatus: "completed",
+          isPaidToAffiliate: false,
+        },
+      },
+      { $sort: { createdAt: 1 } },
+      {
+        $setWindowFields: {
+          sortBy: { createdAt: 1 },
+          output: {
+            cumulativeSum: {
+              $sum: "$commissionAmount",
+              window: { documents: ["unbounded", "current"] },
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          cumulativeSum: { $lte: numericAmount },
+        },
+      },
+    ]).session(session);
+
+    if (!payments.length) {
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ message: "No eligible payments found to match the amount." });
+    }
+
+    // Calculate total of selected commissionAmount
+    const totalCommission = payments.reduce(
+      (sum, p) => sum + p.commissionAmount,
+      0
+    );
+
+    // Strict check: must match the amount exactly
+    if (totalCommission !== numericAmount) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: `Mismatch: Sent amount ₹${numericAmount} ≠ eligible commissions ₹${totalCommission}`,
+      });
+    }
+
+    const selectedIds = payments.map((p) => p._id);
+
+    // Step 3: Mark selected payments as paid
+    const updateResult = await Payment.updateMany(
+      { _id: { $in: selectedIds } },
+      { $set: { isPaidToAffiliate: true } },
+      { session }
+    );
+
+    if (updateResult.modifiedCount !== selectedIds.length) {
+      await session.abortTransaction();
+      return res
+        .status(500)
+        .json({ message: "Mismatch while updating payment records." });
+    }
+
+    // Step 4: Record the payout
+    await AffiliatePayment.create(
+      [
+        {
+          affiliateId: affiliateObjectId,
+          amount: numericAmount,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({
+      message: "Affiliate payment completed successfully.",
+      totalPaid: numericAmount,
+      transactionsMarked: selectedIds.length,
+    });
+  } catch (err) {
+    console.error("Affiliate payout error:", err);
+    await session.abortTransaction();
+    session.endSession();
+    return res.status(500).json({ message: "Internal server error." });
   }
 });
 

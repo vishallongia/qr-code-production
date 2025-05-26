@@ -556,3 +556,36 @@ input:checked+.toggle-slider:before {
         max-width: 120px;
     }
 }
+
+
+.status-sticker {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    position: relative;
+    white-space: nowrap;
+    min-width: 120px;
+    text-align: center;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s ease;
+}
+
+.status-sticker.success {
+    background: linear-gradient(to right, #34d399, #10b981);
+    color: white;
+    border: 1px solid #10b981;
+}
+
+.status-sticker.pending {
+    background: linear-gradient(to right, #fbbf24, #f59e0b);
+    color: white;
+    border: 1px solid #f59e0b;
+}
+
+.status-sticker:hover {
+    transform: scale(1.05);
+}

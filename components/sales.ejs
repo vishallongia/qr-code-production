@@ -37,9 +37,15 @@
                                     <span>Email</span>
                                     <span>Earned</span>
                                     <span>Coupon</span>
+                                    <span>Date</span>
+                                    <span>Status</span>
                                 </div>
                                 <ul id="userList" class="user-list">
-                                    <% usedByUsers.forEach(user=> { %>
+                                    <% usedByUsers.forEach(user=> {
+                                        const formattedDate = new Date(user.paymentDate).toLocaleString("en-GB", {
+                                        day: '2-digit', month: '2-digit', year: 'numeric',
+                                        hour: '2-digit', minute: '2-digit'
+                                        });%>
                                         <li class="user-item">
                                             <span>
                                                 <%= user.fullName %>
@@ -52,6 +58,13 @@
                                             </span>
                                             <span>
                                                 <%= user.couponCode %>
+                                            </span>
+                                            <span>
+                                                <%= formattedDate %>
+                                            </span>
+                                            <span
+                                                class="status-sticker <%= user.isPaidToAffiliate ? 'success' : 'pending' %>">
+                                                <%= user.isPaidToAffiliate ? "Success" : "Pending" %>
                                             </span>
                                         </li>
                                         <% }) %>

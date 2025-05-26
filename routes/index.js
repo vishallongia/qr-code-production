@@ -12,6 +12,7 @@ const {
 } = require("../middleware/checkSubscriptionStatus"); // Import the middleware
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
 const Payment = require("../models/Payment");
+const AffiliatePayment = require("../models/AffiliatePayment");
 const Coupon = require("../models/Coupon");
 const multer = require("multer");
 const path = require("path");
@@ -3167,6 +3168,7 @@ router.get("/sales", authMiddleware, async (req, res) => {
                 couponCode: "$$couponCode",
                 discountPercent: "$$discountPercent",
                 commissionPercent: "$$commissionPercent",
+                isPaidToAffiliate: 1,
               },
             },
           ],
@@ -3175,6 +3177,8 @@ router.get("/sales", authMiddleware, async (req, res) => {
       },
       { $unwind: "$usedUsers" },
       { $replaceRoot: { newRoot: "$usedUsers" } },
+      // Sort here again before pagination in case multiple coupons combined:
+      { $sort: { paymentDate: -1 } },
       {
         $facet: {
           metadata: [{ $count: "total" }],
@@ -3206,11 +3210,10 @@ router.get("/sales", authMiddleware, async (req, res) => {
   }
 });
 
-// Wallet (Commission Balance)
+// Wallet (Commission Balance + Transaction History with Queries)
 router.get("/walletstatus", authMiddleware, async (req, res) => {
   try {
     const userId = req.user._id;
-
     const user = await User.findById(userId);
 
     if (!user) {
@@ -3222,7 +3225,6 @@ router.get("/walletstatus", authMiddleware, async (req, res) => {
       });
     }
 
-    // Role check: Only allow if user is an affiliate
     if (user.role !== "affiliate") {
       return res.status(403).render("dashboardnew", {
         message: "Access denied. Only affiliates can view wallet.",
@@ -3232,7 +3234,7 @@ router.get("/walletstatus", authMiddleware, async (req, res) => {
       });
     }
 
-    // Aggregate total commission balance
+    // === Existing logic to get unpaid commission balance ===
     const result = await Coupon.aggregate([
       {
         $match: {
@@ -3251,6 +3253,7 @@ router.get("/walletstatus", authMiddleware, async (req, res) => {
                     { $eq: ["$coupon_id", "$$couponId"] },
                     { $eq: ["$isCouponUsed", true] },
                     { $eq: ["$paymentStatus", "completed"] },
+                    { $eq: ["$isPaidToAffiliate", false] },
                   ],
                 },
               },
@@ -3276,11 +3279,67 @@ router.get("/walletstatus", authMiddleware, async (req, res) => {
 
     const totalCommissionBalance = result[0]?.totalCommissionBalance || 0;
 
+    // === Get paid commissions (isPaidToAffiliate = true) from Payment ===
+    const paidCommissions = await Payment.aggregate([
+      {
+        $match: {
+          isCouponUsed: true,
+          paymentStatus: "completed",
+        },
+      },
+      {
+        $lookup: {
+          from: "coupons",
+          localField: "coupon_id",
+          foreignField: "_id",
+          as: "couponData",
+        },
+      },
+      { $unwind: "$couponData" },
+      {
+        $match: {
+          "couponData.assignedToAffiliate": new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          amount: "$commissionAmount",
+          createdAt: "$paymentDate",
+          type: { $literal: "commission_paid" },
+        },
+      },
+    ]);
+
+    // === Get admin payments to affiliate from AffiliatePayment ===
+    const affiliatePayments = await AffiliatePayment.aggregate([
+      {
+        $match: {
+          affiliateId: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          amount: "$amount",
+          createdAt: "$createdAt",
+          type: { $literal: "admin_payment" },
+        },
+      },
+    ]);
+
+    // === Merge and sort all transaction records ===
+    const allTransactions = [...paidCommissions, ...affiliatePayments];
+    allTransactions.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    ); // Descending order
+
+    // === Render to dashboard ===
     res.render("dashboardnew", {
       user,
       activeSection: "wallet",
-      totalCommissionBalance,
-      user,
+      totalCommissionBalance: totalCommissionBalance.toFixed(2),
+      transactionHistory: allTransactions,
     });
   } catch (error) {
     console.error("Error retrieving wallet balance:", error);
@@ -3348,8 +3407,8 @@ router.get("/coupons", authMiddleware, async (req, res) => {
 });
 
 // Send Admin Notification Email
-router.post("/send-admin-email", async (req, res) => {
-  const { remarks, purpose, userEmail, accountNumber } = req.body;
+router.post("/send-admin-email", authMiddleware, async (req, res) => {
+  const { remarks, purpose, accountNumber } = req.body;
 
   try {
     if (!remarks || !purpose || !accountNumber) {
@@ -3359,7 +3418,24 @@ router.post("/send-admin-email", async (req, res) => {
       });
     }
 
-    const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        type: "error",
+      });
+    }
+
+    // If user is an affiliate and accountNo is not already set
+    if (user.role === "affiliate" && !user.accountNo) {
+      user.accountNo = accountNumber;
+      await user.save();
+    }
+
+    const adminEmail = process.env.ADMIN_EMAIL || "rahul216000@gmail.com";
 
     const sender = {
       email: "textildruckschweiz.com@gmail.com",
@@ -3417,7 +3493,7 @@ router.post("/send-admin-email", async (req, res) => {
 <body>
   <div class="container">
     <h2>Admin Alert: New Submission</h2>
-    <p><strong>User Email:</strong> ${userEmail || "Not Provided"}</p>
+    <p><strong>User Email:</strong> ${user.email || "Not Provided"}</p>
 
     <p><strong>Account Number:</strong></p>
     <div class="info-box">${accountNumber}</div>
