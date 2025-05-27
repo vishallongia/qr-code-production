@@ -96,6 +96,19 @@ router.get("/", authMiddleware, async (req, res) => {
 });
 
 // Home route
+router.get("/affiliate-login", async (req, res) => {
+  try {
+    res.render("affiliate-login"); // Send type as 'success'
+  } catch (error) {
+    console.error("Error generating Magic code:", error);
+    res.status(500).render("affiliate-login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+// Home route
 router.get("/cancel", authMiddleware, async (req, res) => {
   try {
     res.render("paymentfailed"); // Send type as 'success'
@@ -253,6 +266,48 @@ router.get("/update-user-details/:userid?", async (req, res) => {
 });
 
 router.get("/assign-qr-code/:qrCodeId?", async (req, res) => {
+  try {
+    const { qrCodeId } = req.params;
+
+    // Check if qrCodeId exists in the request parameters
+    if (!qrCodeId) {
+      return res.status(400).send("Magic Code ID is required");
+    }
+
+    // Decrypt the qr ID using the decryptPassword function
+    const decryptedQrId = decryptPassword(qrCodeId.toString());
+    // Find the QR code by its ID using findOne
+    const qrCode = await QRCodeData.findOne({ _id: decryptedQrId });
+
+    // Check if QR code exists
+    if (!qrCode) {
+      return res.status(404).send("QR Code not found");
+    }
+
+    // Check if QR code is already assigned and isQrActivated is true
+    if (qrCode.assignedTo && qrCode.isDemo) {
+      // Render the assign QR code page with the QR code data
+      return res.render("assignqrcode", {
+        qrCode, // Send the QR code data to the EJS template
+        showPopup: true,
+      });
+    }
+
+    // Render the assign QR code page with the QR code data
+    return res.render("assignqrcode", {
+      qrCode, // Send the QR code data to the EJS template
+      showPopup: false,
+    });
+  } catch (error) {
+    console.error("Error generating assign Magic code page", error);
+    res.status(500).render("login", {
+      message: error.message,
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/assign-mc-to-your/:qrCodeId?", async (req, res) => {
   try {
     const { qrCodeId } = req.params;
 
@@ -756,7 +811,7 @@ router.get("/admindashboard/export-users", authMiddleware, async (req, res) => {
 
 // Login route
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, avoidAffiliate } = req.body;
 
   try {
     // Check if user exists
@@ -775,6 +830,19 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    if (avoidAffiliate && user.role === "affiliate") {
+      return res.status(403).json({
+        message: "Please go to affiliate login page",
+        type: "error",
+      });
+    }
+
+    if (!avoidAffiliate && user.role !== "affiliate") {
+      return res.status(403).json({
+        message: "Please go to the user login page",
+        type: "error",
+      });
+    }
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -3108,18 +3176,15 @@ router.post(
 router.get("/sales", authMiddleware, async (req, res) => {
   try {
     const userId = req.user._id;
-    // Fetch only the showEditOnScan field, excluding other sensitive data
+
     const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found", type: "error" });
     }
 
-    // Get current page from query params, default to 1 if not provided
     const currentPage = parseInt(req.query.page) || 1;
     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
-
-    // Calculate the number of users to skip
     const skip = (currentPage - 1) * recordsPerPage;
 
     const result = await Coupon.aggregate([
@@ -3177,18 +3242,19 @@ router.get("/sales", authMiddleware, async (req, res) => {
       },
       { $unwind: "$usedUsers" },
       { $replaceRoot: { newRoot: "$usedUsers" } },
-      // Sort here again before pagination in case multiple coupons combined:
       { $sort: { paymentDate: -1 } },
       {
         $facet: {
-          metadata: [{ $count: "total" }],
           data: [{ $skip: skip }, { $limit: recordsPerPage }],
+          paginatedCount: [{ $count: "total" }],
+          fullCount: [{ $count: "total" }],
         },
       },
     ]);
 
     const usedByUsers = result[0].data;
-    const totalUsedUsers = result[0].metadata[0]?.total || 0;
+    const totalUsedUsers = result[0].paginatedCount[0]?.total || 0;
+    const totalUsedUsersWithoutPagination = result[0].fullCount[0]?.total || 0;
     const totalPages = Math.ceil(totalUsedUsers / recordsPerPage);
 
     res.render("dashboardnew", {
@@ -3196,6 +3262,7 @@ router.get("/sales", authMiddleware, async (req, res) => {
       activeSection: "sales",
       usedByUsers,
       totalUsedUsers,
+      totalUsedUsersWithoutPagination,
       currentPage,
       totalPages,
     });
@@ -3203,7 +3270,7 @@ router.get("/sales", authMiddleware, async (req, res) => {
     console.error("Error retrieving profile:", error);
     res.status(500).render("dashboardnew", {
       message: error.message,
-      type: "error", // Send type as 'error'
+      type: "error",
       activeSection: "sales",
       user: {},
     });
@@ -3215,6 +3282,9 @@ router.get("/walletstatus", authMiddleware, async (req, res) => {
   try {
     const userId = req.user._id;
     const user = await User.findById(userId);
+
+    const limit = parseInt(req.query.limit) || 5; // Default to 5 items
+    const skip = parseInt(req.query.skip) || 0;
 
     if (!user) {
       return res.status(404).render("dashboardnew", {
@@ -3328,18 +3398,28 @@ router.get("/walletstatus", authMiddleware, async (req, res) => {
       },
     ]);
 
-    // === Merge and sort all transaction records ===
     const allTransactions = [...paidCommissions, ...affiliatePayments];
     allTransactions.sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    ); // Descending order
+    );
+
+    const paginatedTransactions = allTransactions.slice(skip, skip + limit);
+
+    // === Render to dashboard ===
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.json({
+        transactionHistory: paginatedTransactions,
+        hasMore: skip + limit < allTransactions.length,
+      });
+    }
 
     // === Render to dashboard ===
     res.render("dashboardnew", {
       user,
       activeSection: "wallet",
       totalCommissionBalance: totalCommissionBalance.toFixed(2),
-      transactionHistory: allTransactions,
+      transactionHistory: paginatedTransactions,
+      hasMore: skip + limit < allTransactions.length,
     });
   } catch (error) {
     console.error("Error retrieving wallet balance:", error);
@@ -3430,9 +3510,13 @@ router.post("/send-admin-email", authMiddleware, async (req, res) => {
     }
 
     // If user is an affiliate and accountNo is not already set
-    if (user.role === "affiliate" && !user.accountNo) {
-      user.accountNo = accountNumber;
-      await user.save();
+    if (user.role === "affiliate") {
+      const trimmedAccount = accountNumber.trim();
+
+      if (!user.accountNo || user.accountNo.trim() !== trimmedAccount) {
+        user.accountNo = trimmedAccount;
+        await user.save();
+      }
     }
 
     const adminEmail = process.env.ADMIN_EMAIL || "rahul216000@gmail.com";

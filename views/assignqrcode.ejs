@@ -2,62 +2,104 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Login & Registration</title>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <link rel="stylesheet" href="/css/style.css"> <!-- Adjusted path -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assign Magic Cide</title>
+    <link href="/css/assignqr-new.css" rel="stylesheet" />
+    <link href="/css/login.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 
+
 <body>
-
-    <div class="lang">
-        <!-- Language Switcher -->
-        <select id="languageSwitcher">
-            <option value="en">English</option>
-            <option value="de">Deutsch (German)</option>
-            <!-- <option value="hu">Magyar (Hungarian)</option> -->
-        </select>
-    </div>
-
-    <div class="container">
-
-        <div class="form-container">
-
-            <div class="form-box update">
-                <h2 id="UpdateDetailsText">Assign Magic Sticker to yourself</h2>
-                <form id="UpdateUserDetails" method="POST">
-
-                    <div class="input-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="assignedemail" name="email" placeholder="Enter your E-mail" required value>
-                    </div>
-
-                    <button type="submit" class="submit-btn" id="assignedemailbutton"
-                        onclick="return handleAssignQrCode(event)">Send Magic Link</button>
-                </form>
-            </div>
+    <div class="top-right-options">
+        <div class="language-select-wrapper">
+            <select id="languageSwitcher" class="language-selector-select">
+                <option value="en">English</option>
+                <option value="de">Deutsch (German)</option>
+            </select>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
-    <script src="/js/toastify-setup.js"></script>
-    <!-- <script src="/js/updateuser.js"></script>
-    <script src="/js/api-calls.js"></script> -->
-    <script src="/js/admindashboard-api-calls.js"></script>
-    <script>
-        // Check if there's a message passed from the server
-        <% if (typeof message !== 'undefined' && message) { %>
-            showToast("<%= message %>", "<%= type || 'success' %>");
-        <% } %>
-    </script>
 
-    <!-- <script src="/js/translations.js"></script> -->
+    <% if (showPopup) { %>
+        <div id="theme-popup" class="popup-overlay">
+            <div class="popup-content">
+                <p>This MAGIC CODE has been assigned to you now. The Magic Link for Login has been sent to your e-mail address.</p>
+                <button id="popup-ok-btn" style="display: none;">Check My E-Mail</button>
+                <p style="margin-top: 2rem;">CHECK BOTH: YOUR INBOX AND YOUR SPAM FOLDER</p>
+            </div>
+        </div>
+        <% } else { %>
+            <div id="theme-popup" class="popup-overlay" style="display: none;">
+                <div class="popup-content">
+                    <p>This is a themed popup message!</p>
+                    <button id="popup-ok-btn" style="display: none;">Check My E-Mail</button>
+                    <p style="margin-top: 2rem;">CHECK BOTH: YOUR INBOX AND YOUR SPAM FOLDER</p>
+                </div>
+            </div>
+            <% } %>
+
+    <div class="container">
+        <form class="login-box" method="POST">
+            <h2>Assign Magic Sticker to yourself</h2>
+
+            <input type="email" name="email" placeholder="Enter email address..." id="assignedemail" required />
+
+
+
+            <button type="submit" class="login-btn" id="assignedemailbutton"
+                onclick="return handleAssignQrCode(event)">Get Magic Link</button>
+
+            
+                <button type="button" class="login-btn" onclick="Redirect()">Find Out More</button>
+
+        </form>
+    </div>
 </body>
+<script>
+
+    function Redirect(){
+        const url = window.location.href; // Get the full URL
+        const encId = url.split("/").pop();
+
+        window.location.href = `/assign-mc-to-your/${encId}`
+    }
+
+    const langSelector = document.querySelector('.language-selector');
+    const selectedLang = document.querySelector('.selected-lang');
+    const dropdownItems = document.querySelectorAll('.language-dropdown li');
+
+    langSelector.addEventListener('click', () => {
+        langSelector.classList.toggle('active');
+    });
+
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const lang = e.target.getAttribute('data-lang');
+            selectedLang.textContent = lang;
+            langSelector.classList.remove('active');
+        });
+    });
+
+    // Optional: Click outside to close dropdown
+    document.addEventListener('click', (e) => {
+        if (!langSelector.contains(e.target)) {
+            langSelector.classList.remove('active');
+        }
+    });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+<script src="/js/admindashboard-api-calls.js"></script>
+<script>
+  // Check if there's a message passed from the server
+  <% if (typeof message !== 'undefined' && message) { %>
+        showToast("<%= message %>", "<%= type || 'success' %>");
+  <% } %>
+</script>
+<script src="/js/translations.js"></script>
+
 
 </html>

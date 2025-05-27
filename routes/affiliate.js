@@ -693,4 +693,157 @@ router.post("/pay-now", async (req, res) => {
   }
 });
 
+router.get("/sales/:id", async (req, res) => {
+  const currentPage = parseInt(req.query.page) || 1;
+  const recordsPerPage = Number(process.env.USER_PER_PAGE) || 10;
+
+  try {
+    const userId = req.params.id;
+
+    // Validate MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).render("admin-affiliate-sales.ejs", {
+        message: "Invalid user ID.",
+        type: "error",
+        activeSection: "sales",
+        user: {},
+        usedByUsers: [],
+        totalUsedUsers: 0,
+        currentPage,
+        totalPages: 0,
+        totalUsedUsersWithoutPagination: 0,
+      });
+    }
+
+    // Check user existence
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).render("admin-affiliate-sales.ejs", {
+        message: "User not found.",
+        type: "error",
+        activeSection: "sales",
+        user: {},
+        usedByUsers: [],
+        totalUsedUsers: 0,
+        currentPage,
+        totalPages: 0,
+        totalUsedUsersWithoutPagination: 0,
+      });
+    }
+
+    // Optional: Check if user is an affiliate
+    if (user.role !== "affiliate") {
+      return res.status(403).render("admin-affiliate-sales.ejs", {
+        message: "User is not an affiliate.",
+        type: "error",
+        activeSection: "sales",
+        user,
+        usedByUsers: [],
+        totalUsedUsers: 0,
+        currentPage,
+        totalPages: 0,
+        totalUsedUsersWithoutPagination: 0,
+      });
+    }
+
+    const skip = (currentPage - 1) * recordsPerPage;
+
+    const result = await Coupon.aggregate([
+      {
+        $match: {
+          assignedToAffiliate: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: "payments",
+          let: {
+            couponId: "$_id",
+            couponCode: "$code",
+            discountPercent: "$discountPercent",
+            commissionPercent: "$commissionPercent",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$coupon_id", "$$couponId"] },
+                    { $eq: ["$isCouponUsed", true] },
+                    { $eq: ["$paymentStatus", "completed"] },
+                  ],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "user_id",
+                foreignField: "_id",
+                as: "user",
+              },
+            },
+            { $unwind: "$user" },
+            {
+              $project: {
+                fullName: "$user.fullName",
+                email: "$user.email",
+                amount: 1,
+                commissionAmount: 1,
+                paymentDate: 1,
+                couponCode: "$$couponCode",
+                discountPercent: "$$discountPercent",
+                commissionPercent: "$$commissionPercent",
+                isPaidToAffiliate: 1,
+              },
+            },
+          ],
+          as: "usedUsers",
+        },
+      },
+      { $unwind: "$usedUsers" },
+      { $replaceRoot: { newRoot: "$usedUsers" } },
+      {
+        $sort: { paymentDate: -1 },
+      },
+      {
+        $facet: {
+          data: [{ $skip: skip }, { $limit: recordsPerPage }],
+          paginatedCount: [{ $count: "total" }],
+          fullCount: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    const usedByUsers = result[0].data;
+    const totalUsedUsers = result[0].paginatedCount[0]?.total || 0;
+    const totalUsedUsersWithoutPagination = result[0].fullCount[0]?.total || 0;
+    const totalPages = Math.ceil(totalUsedUsers / recordsPerPage);
+
+    res.render("admin-affiliate-sales.ejs", {
+      user,
+      activeSection: "sales",
+      usedByUsers,
+      totalUsedUsers,
+      totalUsedUsersWithoutPagination,
+      currentPage,
+      totalPages,
+      message: null,
+    });
+  } catch (error) {
+    console.error("Error in /sales/:id route:", error);
+    res.status(500).render("admin-affiliate-sales.ejs", {
+      message: "Server error occurred.",
+      type: "error",
+      activeSection: "sales",
+      user: {},
+      usedByUsers: [],
+      totalUsedUsers: 0,
+      currentPage,
+      totalPages: 0,
+      totalUsedUsersWithoutPagination: 0,
+    });
+  }
+});
+
 module.exports = router;

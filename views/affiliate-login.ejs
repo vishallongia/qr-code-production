@@ -21,9 +21,9 @@
         </div>
     </div>
 
-    <div class="container">
+    <div class="container" style="top:0px;">
         <form class="login-box" method="POST" action="/login" onsubmit="return handleLogin(event)">
-            <h2 id="LoginText">Login to Magic Code</h2>
+            <h2 id="LoginText">Login to Magic Code As Affiliate</h2>
 
             <input type="email" name="email" placeholder="Enter email address..." id="EmailText" required />
             <div class="password-wrapper">
@@ -42,6 +42,11 @@
 
 
             <button type="submit" class="login-btn" id="LoginBtnText">Login</button>
+            <p class="signup-text">
+                <span id="RegularAccountNoteText">
+                    Are you a regular user?</span>
+                <a href="/" id="user-login-link">Go to User Login</a>
+            </p>
         </form>
     </div>
 </body>

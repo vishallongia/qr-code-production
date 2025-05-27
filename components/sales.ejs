@@ -28,7 +28,7 @@
 
                             <!-- Total Sales Display -->
                             <p><strong>Total Sales:</strong>
-                                <%= usedByUsers.length %>
+                                <%= totalUsedUsersWithoutPagination %>
                             </p>
 
                             <div class="list-wrapper">
@@ -38,7 +38,7 @@
                                     <span>Earned</span>
                                     <span>Coupon</span>
                                     <span>Date</span>
-                                    <span>Status</span>
+                                    <span>Payment Status</span>
                                 </div>
                                 <ul id="userList" class="user-list">
                                     <% usedByUsers.forEach(user=> {
@@ -64,7 +64,7 @@
                                             </span>
                                             <span
                                                 class="status-sticker <%= user.isPaidToAffiliate ? 'success' : 'pending' %>">
-                                                <%= user.isPaidToAffiliate ? "Success" : "Pending" %>
+                                                <%= user.isPaidToAffiliate ? "Paid" : "Pending" %>
                                             </span>
                                         </li>
                                         <% }) %>

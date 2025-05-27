@@ -23,8 +23,7 @@
                 <!-- Account Number -->
                 <div class="form-group" style="margin-bottom: 24px;">
                     <input type="text" id="account-number" placeholder="Enter Account Number"
-                        value="<%= typeof user !== 'undefined' && user.accountNo ? user.accountNo : '' %>" <%=typeof
-                        user !=='undefined' && user.accountNo ? 'disabled' : '' %> >
+                        value="<%= typeof user !== 'undefined' && user.accountNo ? user.accountNo : '' %>">
                 </div>
 
 
@@ -82,7 +81,9 @@
                             <% } %>
         </div>
 
-        <!-- <button id="loadMoreBtn">Load More</button> -->
+        <% if (hasMore) { %>
+            <button id="loadMoreBtn">Load More</button>
+            <% } %>
     </div>
 
 
@@ -158,7 +159,6 @@
                 if (response.ok) {
                     showToast(result.message || "Payment initiated!", "success");
                     popup.style.display = "none";
-                    accountInput.value = "";
                     remarksInput.value = "";
                     purposeInput.value = "";
                 } else {
@@ -176,6 +176,64 @@
             okBtn.prepend(spinner);
         });
     });
+
+
+    let skipCount = <%= transactionHistory.length %>;
+
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener("click", async () => {
+            try {
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.textContent = "Loading...";
+
+                const response = await fetch(`/walletstatus?skip=${skipCount}&limit=5`, {
+                    headers: {
+                        Accept: "application/json"
+                    }
+                });
+                const data = await response.json();
+
+                data.transactionHistory.forEach((tx) => {
+                    const item = document.createElement("div");
+                    item.className = "transaction-item";
+
+                    // Format date in 'dd/mm/yyyy, hh:mm' like `en-GB` locale
+                    const formattedDate = new Date(tx.createdAt).toLocaleString("en-GB", {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+
+                    item.innerHTML = `
+        <span class="transaction-amount">
+            ${Number(tx.amount).toFixed(2)} CHF
+        </span>
+        <span class="transaction-type">
+            ${tx.type === 'admin_payment' ? 'Paid' : 'Earned'}
+        </span>
+        <span class="transaction-date">
+            ${formattedDate}
+        </span>
+    `;
+
+                    document.getElementById("transactionList").appendChild(item);
+                });
+
+
+                skipCount += data.transactionHistory.length;
+
+                if (!data.hasMore) {
+                    loadMoreBtn.remove();
+                } else {
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.textContent = "Load More";
+                }
+            } catch (err) {
+                console.error("Load more failed", err);
+            }
+        });
+    }
+
 
 </script>
 

@@ -118,7 +118,7 @@
         // Display scanned result
         async function showResult(text) {
             cardContainer.innerHTML = ""
-            let SixDigitCode = text.split("/")[3]
+            let SixDigitCode = text.split("/").pop();
 
             // Check if value exists
             if (!SixDigitCode) {

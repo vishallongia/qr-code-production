@@ -578,12 +578,14 @@ input:checked+.toggle-slider:before {
     background: linear-gradient(to right, #34d399, #10b981);
     color: white;
     border: 1px solid #10b981;
+    height: max-content;
 }
 
 .status-sticker.pending {
     background: linear-gradient(to right, #fbbf24, #f59e0b);
     color: white;
     border: 1px solid #f59e0b;
+    height: max-content;
 }
 
 .status-sticker:hover {

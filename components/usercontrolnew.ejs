@@ -10,13 +10,53 @@
     <link rel="stylesheet" href="/css/usercontrolnew.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        .btn {
+            margin: 20px auto;
+            padding: 10px 30px;
+            border: none;
+            background-color: rgba(26, 1, 97, 1);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background-color: rgb(45, 18, 117);
+            ;
+        }
+    </style>
 </head>
 
 <body class="qr-page">
 
     <div class="container-user-control">
         <div class="content-section">
-            <h2>When Scanning My Magic Code</h2>
+
+            <div>
+                <h2>When Scanning My Magic Code</h2>
+
+                <div>
+                    <button class="btn" onclick="startScanner()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            class="bi bi-qr-code-scan" viewBox="0 0 16 16">
+                            <path
+                                d="M0 .5A.5.5 0 0 1 .5 0h3a.5.5 0 0 1 0 1H1v2.5a.5.5 0 0 1-1 0zm12 0a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V1h-2.5a.5.5 0 0 1-.5-.5M.5 12a.5.5 0 0 1 .5.5V15h2.5a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5v-3a.5.5 0 0 1 .5-.5m15 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1H15v-2.5a.5.5 0 0 1 .5-.5M4 4h1v1H4z" />
+                            <path d="M7 2H2v5h5zM3 3h3v3H3zm2 8H4v1h1z" />
+                            <path d="M7 9H2v5h5zm-4 1h3v3H3zm8-6h1v1h-1z" />
+                            <path
+                                d="M9 2h5v5H9zm1 1v3h3V3zM8 8v2h1v1H8v1h2v-2h1v2h1v-1h2v-1h-3V8zm2 2H9V9h1zm4 2h-1v1h-2v1h3zm-4 2v-1H8v1z" />
+                            <path d="M12 9h2V8h-2z" />
+                        </svg>
+
+                        SCAN
+                    </button>
+                </div>
+            </div>
+
 
             <div class="modern-radio-group">
                 <input type="radio" id="show-edit" name="qr-update-option" value="ShowEdit"
@@ -38,6 +78,144 @@
 
         </div>
     </div>
+
+
+    <div id="reader"></div>
+
+    <div id="result-section">
+        <!-- <h2 style="text-align: center;">Magic Code Details</h2> -->
+        <div id="card-container"></div>
+        <!-- <button id="scan-again" class="btn">Scan Again</button> -->
+    </div>
+
+    <script>
+
+        const qrCodeReader = new Html5Qrcode("reader");
+        const resultSection = document.getElementById("result-section");
+        const cardContainer = document.getElementById("card-container");
+        // const scanAgainBtn = document.getElementById("scan-again");
+
+        let backCameraId = null;
+
+        // Detect camera
+        // Html5Qrcode.getCameras().then(cameras => {
+        //     if (cameras.length > 0) {
+        //         backCameraId = cameras.find(c => c.label.toLowerCase().includes("back"))?.id || cameras[0].id;
+        //         startScanner();
+        //     } else {
+        //         alert("No cameras found!");
+        //     }
+        // }).catch(err => console.error("Camera error:", err));
+
+        // Start scanner function
+        // function startScanner() {
+        //     resultSection.style.display = "none";
+        //     document.getElementById("reader").style.display = "block";
+
+        //     qrCodeReader.start(
+        //         backCameraId,
+        //         {
+        //             fps: 10,
+        //             qrbox: { width: 250, height: 250 }
+        //         },
+        //         qrText => {
+        //             // Stop and hide scanner
+        //             qrCodeReader.stop().then(() => {
+        //                 document.getElementById("reader").style.display = "none";
+        //                 showResult(qrText);
+        //             }).catch(err => console.error("Stop error:", err));
+        //         },
+        //         err => {
+        //             // optional: console.warn("Scan error:", err);
+        //         }
+        //     );
+        // }
+
+
+
+        // Display scanned result
+
+
+        Html5Qrcode.getCameras().then(cameras => {
+            if (cameras.length > 0) {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                if (!isIOS) {
+                    backCameraId = cameras.find(c => c.label.toLowerCase().includes("back"))?.id || cameras[0].id;
+                }
+                // startScanner();
+            } else {
+                alert("No cameras found!");
+            }
+        }).catch(err => {
+            console.error("Camera error:", err);
+            // iOS fallback
+            // startScanner();
+        });
+
+
+        function startScanner() {
+            resultSection.style.display = "none";
+            document.getElementById("reader").style.display = "block";
+
+            let cameraConstraints = null;
+
+            if (backCameraId) {
+                cameraConstraints = { deviceId: { exact: backCameraId } };
+            } else {
+                cameraConstraints = { facingMode: { exact: "environment" } };
+            }
+
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                videoConstraints: cameraConstraints
+            };
+
+            qrCodeReader.start(
+                cameraConstraints, // ✅ only deviceId or facingMode here
+                config,
+                qrText => {
+                    qrCodeReader.stop().then(() => {
+                        document.getElementById("reader").style.display = "none";
+                        showResult(qrText);
+                    }).catch(err => console.error("Stop error:", err));
+                },
+                err => {
+                    // Scan error, usually harmless
+                }
+            );
+        }
+
+
+        async function showResult(text) {
+            cardContainer.innerHTML = ""
+            let SixDigitCode = text.split("/").pop();
+
+            // Check if value exists
+            if (!SixDigitCode) {
+                cardContainer.innerHTML = `
+        <div class="card">
+          <strong>Didn't look like Magic Code</strong>
+        </div>
+      `;
+
+                resultSection.style.display = "block";
+
+                return
+            }
+
+            window.location.href = /^https?:\/\//i.test(text) ? text : 'https://' + text
+
+
+
+
+            resultSection.style.display = "block";
+        }
+
+        // Scan again button
+        // scanAgainBtn.addEventListener("click", startScanner);
+    </script>
+
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
