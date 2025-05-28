@@ -351,7 +351,7 @@ router.get("/assign-mc-to-your/:qrCodeId?", async (req, res) => {
 
 //Assignment of QRCode
 router.post("/assign-qr-code", async (req, res) => {
-  const { email, encId } = req.body;
+  const { email, encId, couponCode } = req.body;
 
   try {
     if (!email) {
@@ -431,8 +431,27 @@ router.post("/assign-qr-code", async (req, res) => {
       email: "textildruckschweiz.com@gmail.com",
       name: "Magic Code - Login Link",
     };
+    if (couponCode) {
+      const normalizedCode = couponCode.trim().toUpperCase();
 
-    const couponCode = process.env.COUPON_CODE || "SAVE10";
+      await User.updateOne(
+        { _id: user._id },
+        { $addToSet: { couponCodes: normalizedCode } }
+      );
+
+      // Re-fetch updated user
+      user = await User.findById(user._id);
+    }
+
+    const coupons = user.couponCodes || [];
+
+    // If no coupons, show a single message box
+    const couponBoxesHtml =
+      coupons.length > 0
+        ? coupons
+            .map((code) => `<div class="code-box">${code}</div>`)
+            .join("\n")
+        : `<div class="code-box">No coupon codes used yet.</div>`;
 
     const contentCoupon = `
     <!DOCTYPE html>
@@ -502,7 +521,8 @@ router.post("/assign-qr-code", async (req, res) => {
     <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
     <h2>Claim Your Free 15-Day Premium Plan!</h2>
     <p>Enjoy <strong>15 days of our premium plan — completely free!</strong> Use the coupon code below at checkout:</p>
-    <div class="code-box">${couponCode}</div>
+     <p>Coupons which you can use:</p>
+    ${couponBoxesHtml}
     <p>Don’t miss out — this offer is limited!</p>
     <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
   </div>

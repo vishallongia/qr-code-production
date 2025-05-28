@@ -56,6 +56,13 @@ const userSchema = new mongoose.Schema(
     accountNo: {
       type: String,
     },
+    couponCodes: {
+      type: [String],
+      default: [],
+      set: (codes) => [
+        ...new Set(codes.map((code) => code.trim().toLowerCase())),
+      ],
+    },
   },
   {
     timestamps: true, // adds createdAt and updatedAt automatically

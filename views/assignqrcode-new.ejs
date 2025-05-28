@@ -22,7 +22,8 @@
     <% if (showPopup) { %>
         <div id="theme-popup" class="popup-overlay">
             <div class="popup-content">
-                <p>This MAGIC CODE has been assigned to you now. The Magic Link for Login has been sent to your e-mail address.</p>
+                <p>This MAGIC CODE has been assigned to you now. The Magic Link for Login has been sent to your e-mail
+                    address.</p>
                 <button id="popup-ok-btn" style="display: none;">Check My E-Mail</button>
                 <p style="margin-top: 2rem;">CHECK BOTH: YOUR INBOX AND YOUR SPAM FOLDER</p>
             </div>
@@ -104,10 +105,13 @@
 
                                 <div class="hero-form">
                                     <form id="forgotPasswordForm"></form>
-                                    <input type="email" id="assignedemail" name="email"
+                                    <input type="email" id="assignedemail1" name="email"
                                         placeholder="Enter email address..." class="input" />
-                                    <button class="button" type="submit" id="assignedemailbutton"
-                                        onclick="return handleAssignQrCode(event)">Get Magic Link</button>
+                                    <input type="text" id="couponcode" name="couponcode1"
+                                        placeholder="Enter Coupon Code" class="input" />
+                                    <button class="button" type="submit" id="assignedemailbutton1"
+                                        onclick="return handleAssignQrCode(event, 'assignedemail1', 'couponcode1')">Get
+                                        Magic Link</button>
                                     </form>
                                 </div>
 
@@ -245,12 +249,14 @@
                                     <form id="forgotPasswordForm">
                                         <h2>Ready To Activate Your<br />Magic Code?</h2>
                                         <div class="cta-form">
-                                            <input type="email" id="assignedemail" name="email"
+                                            <input type="email" id="assignedemail2" name="email"
                                                 placeholder="Enter email address..." class="input"
                                                 style="z-index: 1;" />
-                                            <button class="button" type="submit" id="assignedemailbutton"
-                                                style="z-index: 1;" onclick="return handleAssignQrCode(event)">Get Magic
-                                                Link</button>
+                                            <input type="text" id="couponcode2" name="couponcode1"
+                                                placeholder="Enter Coupon Code" class="input" style="z-index: 1;" />
+                                            <button class="button" type="submit" id="assignedemailbutton1"
+                                                onclick="return handleAssignQrCode(event, 'assignedemail2', 'couponcode2')">Get
+                                                Magic Link</button>
                                         </div>
                                     </form>
                                 </div>

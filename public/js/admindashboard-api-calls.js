@@ -1,7 +1,8 @@
 const exportButton = document.getElementById("generateduserexcelbutton");
 const downloadQRCodeImagesZip = document.getElementById("download-qr-zip");
 const resetGeneratedUserButton = document.getElementById("resetgeneratedusser");
-const assignedemail = document.getElementById("assignedemail");
+// const assignedemail = document.getElementById("assignedemail");
+// const couponCode = document.getElementById("couponcode");
 const assignBtn = document.getElementById("assignedemailbutton");
 const qrCodesMap = {};
 document.querySelectorAll(".toggle-checkbox").forEach((checkbox) => {
@@ -322,27 +323,31 @@ function resetLocalStorageAndReload() {
 }
 
 // Handle QR Code assignment form submission
-async function handleAssignQrCode(event) {
+async function handleAssignQrCode(event, emailId, couponId) {
   event.preventDefault();
 
-  const url = window.location.href; // Get the full URL
-  const encId = url.split("/").pop(); // Extract the last part
+  const emailInput = document.getElementById(emailId);
+  const couponInput = couponId ? document.getElementById(couponId) : null;
+
+  const url = window.location.href;
+  const encId = url.split("/").pop();
 
   const data = {
-    email: assignedemail.value,
+    email: emailInput.value,
     encId,
+    couponCode: couponInput ? couponInput.value : "",
   };
 
-  try {
-    assignBtn.disabled = true;
-    const result = await assignQrCode(data); // Call the API
+  const assignBtn = event.target;
+  assignBtn.disabled = true;
 
-    // Show themed popup on success
+  try {
+    const result = await assignQrCode(data);
+
     showThemePopup(
       "This MAGIC CODE has been assigned to you now. The Magic Link for Login has been sent to your e-mail address."
-    ); // Pass message if needed
+    );
 
-    // showToast(result.message, "success");
     assignBtn.disabled = false;
   } catch (error) {
     showToast(error.message || "An error occurred. Please try again.", "error");
