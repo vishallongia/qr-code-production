@@ -2419,7 +2419,9 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
 
     // Determine which ID to use for checking payment — user_id or assignedTo
     const userIdToCheck = codeData.user_id || codeData.assignedTo;
+    console.log(userIdToCheck)
 
+    
     const checkSubscription = await Payment.findOne({
       user_id: userIdToCheck,
       paymentStatus: "completed",
@@ -2427,7 +2429,9 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
       validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
     }).sort({ validUntil: -1 });
 
-    if (!checkSubscription) {
+    
+
+    if (!checkSubscription && userIdToCheck) {
       return res.render("expired-code");
     }
 
