@@ -2417,16 +2417,19 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
     // Find the record using the alphanumeric code
     const codeData = await QRCodeData.findOne({ code: alphanumericCode });
 
-    // const checkSubscription = await Payment.findOne({
-    //   user_id: codeData.user_id,
-    //   paymentStatus: "completed",
-    //   isActive: true,
-    //   validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
-    // }).sort({ validUntil: -1 });
+    // Determine which ID to use for checking payment — user_id or assignedTo
+    const userIdToCheck = codeData.user_id || codeData.assignedTo;
 
-    // if (!checkSubscription && codeData.assignedTo) {
-    //   return res.render("expired-code");
-    // }
+    const checkSubscription = await Payment.findOne({
+      user_id: userIdToCheck,
+      paymentStatus: "completed",
+      isActive: true,
+      validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
+    }).sort({ validUntil: -1 });
+
+    if (!checkSubscription) {
+      return res.render("expired-code");
+    }
 
     // ✅ If user ID matches and showEditOnScan is true, redirect to dummy link
     if (
