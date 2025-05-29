@@ -2419,7 +2419,7 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
 
     // Determine which ID to use for checking payment — user_id or assignedTo
     const userIdToCheck = codeData.user_id || codeData.assignedTo;
-    console.log(userIdToCheck)
+  
 
     
     const checkSubscription = await Payment.findOne({

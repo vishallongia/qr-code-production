@@ -42,7 +42,6 @@ const sendExpiryEmailForPayments = async () => {
             : Infinity;
 
           if (hoursSinceLastSent < 24) {
-            console.log(`Email already sent recently to ${user.email}`);
             continue;
           }
 
@@ -55,6 +54,17 @@ const sendExpiryEmailForPayments = async () => {
           const expiredDate =
             lastExpiredPlan?.validUntil?.toLocaleString() || "recently";
           const subject = "Your Plan Has Expired";
+
+          const coupons = user.couponCodes || [];
+
+          const hasCoupons = coupons.length > 0;
+
+          const couponBoxesHtml = hasCoupons
+            ? `
+    <p>Coupons which you can use:</p>
+    ${coupons.map((code) => `<div class="code-box">${code}</div>`).join("\n")}
+  `
+            : `<div class="code-box">No coupon codes used yet.</div>`;
 
           const htmlContent = `
             <!DOCTYPE html>
@@ -70,6 +80,17 @@ const sendExpiryEmailForPayments = async () => {
                   margin: 0;
                   padding: 0;
                 }
+
+              .code-box {
+                 font-size: 18px;
+                 background-color: #f0f0f0;
+                 padding: 10px 15px;
+                 border-radius: 5px;
+                 display: inline-block;
+                 margin-top: 10px;
+                font-weight: bold;
+                color: #d63384;
+               }
                 .container {
                   max-width: 600px;
                   margin: 30px auto;
@@ -100,6 +121,7 @@ const sendExpiryEmailForPayments = async () => {
                 <p>Hi ${user.fullName || "User"},</p>
                 <p>Your subscription plan has expired as of <strong>${expiredDate}</strong>.</p>
                 <p>Please renew or purchase a new plan to continue enjoying our services.</p>
+                ${couponBoxesHtml}
                 <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
               </div>
             </body>

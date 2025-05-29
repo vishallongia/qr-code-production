@@ -30,9 +30,11 @@ async function registerUser(data) {
 // Function to log in a user and receive a JWT token
 async function loginUser(data) {
   try {
-    // Set avoidAffiliate flag based on current pathname
-    const path = window.location.pathname;
-    data.avoidAffiliate = path === "/" ? true : false;
+    data.avoidAffiliate =
+      document.querySelector("#avoidAffiliate")?.value === "false"
+        ? false
+        : true;
+
     const response = await fetch("/login", {
       method: "POST",
       headers: {
