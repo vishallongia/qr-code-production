@@ -19,6 +19,31 @@
             </select>
         </div>
     </div>
+
+    <div id="theme-popup-have-cc" class="popup-overlay" style="display: none;">
+        <div class="popup-content" style="position: relative;">
+            <span id="close-popup-get-paid" style="
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 25px;
+            cursor: pointer;
+        ">&times;</span>
+            <p>Please Enter Coupon (Optional)</p>
+            <form onsubmit="return false;">
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <input type="text" style="width: 100%;" id="couponcode1" placeholder="Enter Coupon Code">
+                </div>
+                <button id="popup-ok-btn" type="button"
+                    onclick="handleAssignQrCode(event, 'assignedemail1', 'couponcode', false)"><span
+                        class="btn-text">Assign</span>
+                    <span class="spinner" style="display: none; margin-left: 8px;">
+                        <span class="loader"></span>
+                    </span></button>
+            </form>
+
+        </div>
+    </div>
     <% if (showPopup) { %>
         <div id="theme-popup" class="popup-overlay">
             <div class="popup-content">
@@ -107,11 +132,14 @@
                                     <form id="forgotPasswordForm"></form>
                                     <input type="email" id="assignedemail1" name="email"
                                         placeholder="Enter email address..." class="input" />
-                                    <input type="text" id="couponcode" name="couponcode1"
-                                        placeholder="Enter Coupon Code" class="input" />
+                                    <!-- <input type="text" id="couponcode" name="couponcode1" style="display: none;"
+                                        placeholder="Enter Coupon Code" class="input" /> -->
                                     <button class="button" type="submit" id="assignedemailbutton1"
-                                        onclick="return handleAssignQrCode(event, 'assignedemail1', 'couponcode1')">Get
-                                        Magic Link</button>
+                                        onclick="return handleAssignQrCode(event, 'assignedemail1', 'couponcode1')"><span
+                                            class="btn-text">Get Magic Link</span>
+                                        <span class="spinner" style="display: none; margin-left: 8px;">
+                                            <span class="loader"></span>
+                                        </span></button>
                                     </form>
                                 </div>
 
@@ -252,11 +280,16 @@
                                             <input type="email" id="assignedemail2" name="email"
                                                 placeholder="Enter email address..." class="input"
                                                 style="z-index: 1;" />
-                                            <input type="text" id="couponcode2" name="couponcode1"
-                                                placeholder="Enter Coupon Code" class="input" style="z-index: 1;" />
+                                            <!-- <input type="text" id="couponcode2" name="couponcode1"
+                                                style="display: none;" placeholder="Enter Coupon Code" class="input"
+                                                style="z-index: 1;" /> -->
                                             <button class="button" type="submit" id="assignedemailbutton1"
-                                                onclick="return handleAssignQrCode(event, 'assignedemail2', 'couponcode2')">Get
-                                                Magic Link</button>
+                                                style="z-index: 1;"
+                                                onclick="return handleAssignQrCode(event, 'assignedemail2', 'couponcode2')"><span
+                                                    class="btn-text">Get Magic Link</span>
+                                                <span class="spinner" style="display: none; margin-left: 8px;">
+                                                    <span class="loader"></span>
+                                                </span></button>
                                         </div>
                                     </form>
                                 </div>

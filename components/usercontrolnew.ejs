@@ -40,7 +40,7 @@
                 <h2>When Scanning My Magic Code</h2>
 
                 <div>
-                    <button class="btn" onclick="startScanner()">
+                    <button class="btn" onclick="BeforeStartCamera()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                             class="bi bi-qr-code-scan" viewBox="0 0 16 16">
                             <path
@@ -136,21 +136,25 @@
         // Display scanned result
 
 
+       
+
+        function BeforeStartCamera(){
         Html5Qrcode.getCameras().then(cameras => {
             if (cameras.length > 0) {
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
                 if (!isIOS) {
                     backCameraId = cameras.find(c => c.label.toLowerCase().includes("back"))?.id || cameras[0].id;
                 }
-                // startScanner();
+                startScanner();
             } else {
                 alert("No cameras found!");
             }
         }).catch(err => {
             console.error("Camera error:", err);
             // iOS fallback
-            // startScanner();
+            startScanner();
         });
+        }
 
 
         function startScanner() {

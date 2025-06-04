@@ -101,6 +101,12 @@
                 const planId = container.dataset.planId;
 
                 paypal.Buttons({
+                    style: {
+                        color: 'blue',       // 'gold', 'blue', 'silver', 'white', 'black'
+                        shape: 'pill',       // 'pill' or 'rect'
+                        label: 'pay',        // 'checkout', 'pay', 'buynow', 'paypal'
+                        height: 40
+                    },
                     createOrder: function () {
                         return fetch("/paypal/create-order", {
                             method: "POST",

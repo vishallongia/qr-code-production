@@ -30,8 +30,18 @@
         </div>
         <!-- Popup HTML -->
         <div id="theme-popup-activate-qr" class="popup-overlay" style="display: none;">
-            <div class="popup-content">
-                <p>This is a themed popup message!</p>
+
+            <div class="popup-content" style="position: relative;">
+                <span id="close-popup-btn-activate-qr" style="
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 20px;
+      cursor: pointer;
+      font-weight: bold;
+    ">&times;</span>
+
+                <p>This is a themed popup messages!</p>
                 <form>
                     <div class="form-group" style="margin-bottom: 24px;">
                         <!-- <label>Enter Magic Code Name</label> -->
@@ -184,6 +194,31 @@
                         <button class="nav-item" data-link="/coupons">
                             <img src="/icons-create-1-2.png" alt="Profile icon">
                             <span>Coupon Codes</span>
+                        </button>
+
+                        <button class="nav-item active" data-link="/dashboard">
+                            <img src="/icons-create-1.png" alt="Create icon">
+                            <span>Create MAGIC CODE</span>
+                        </button>
+                        <button class="nav-item" data-link="/magiccode">
+                            <img src="/icons-create-1-1.png" alt="My codes icon">
+                            <span>My MAGIC CODEs</span>
+                        </button>
+                        <button class="nav-item" data-link="/myprofile">
+                            <img src="/icons-create-1-2.png" alt="Profile icon">
+                            <span>My Profile</span>
+                        </button>
+                        <button class="nav-item" data-link="/usercontrol">
+                            <img src="/icons-create-1-3.png" alt="Scan icon">
+                            <span>Magic Code Control</span>
+                        </button>
+                        <button class="nav-item" data-link="#" id="installBtn">
+                            <img src="/images/INSTALLAPP.png" alt="Install App icon">
+                            <span>Install App</span>
+                        </button>
+                        <button class="nav-item" data-link="/plans">
+                            <img src="/images/SUBSCRIPTION.png" alt="Subscription icon">
+                            <span>Subscription</span>
                         </button>
                         <% } else { %>
                             <button class="nav-item active" data-link="/dashboard">

@@ -381,15 +381,15 @@
         }
 
         .main-figure {
-    width: 100%;
-    display: block;
-    position: relative;
-    z-index: 1;
-    top: 70px;
-    height: auto;
-    text-align: center;
-    left: 1%;
-}
+            width: 100%;
+            display: block;
+            position: relative;
+            z-index: 1;
+            top: 70px;
+            height: auto;
+            text-align: center;
+            left: 1%;
+        }
 
         .text-content {
             position: absolute;
@@ -431,26 +431,26 @@
             font-weight: normal;
         }
 
-        .subtitle a{
+        .subtitle a {
             text-decoration: none;
             color: white;
         }
 
         .back-button {
-                position: absolute;
-    bottom: 19px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 6;
-    background-color: white;
-    color: #333;
-    padding: 0px 12px;
-    border-radius: 30px;
-    text-decoration: none;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+            /* position: absolute; */
+            /* bottom: 19px; */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 6;
+            background-color: white;
+            color: #333;
+            padding: 0px 12px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            /* display: flex; */
+            /* align-items: center; */
+            gap: 8px;
         }
 
         .back-button .arrow {
@@ -502,72 +502,79 @@
 
         /* Random good-looking positioning of QR codes */
         .qr-wrapper1 {
-                top: 77%;
-    left: -7%;
-    transform: rotate(-25deg);
-    width: 80px;
-    height: 80px;
+            top: 77%;
+            left: -7%;
+            transform: rotate(-25deg);
+            width: 80px;
+            height: 80px;
         }
 
         .qr-wrapper2 {
-    top: 75%;
-    left: 83%;
-    transform: rotate(6deg);
-    width: 85px;
-    height: 85px;
+            top: 75%;
+            left: 83%;
+            transform: rotate(6deg);
+            width: 85px;
+            height: 85px;
         }
 
         .qr-wrapper3 {
-    top: 67%;
-    right: 74%;
-    transform: rotate(20deg);
-    width: 50px;
-    height: 50px;
+            top: 67%;
+            right: 74%;
+            transform: rotate(20deg);
+            width: 50px;
+            height: 50px;
         }
 
         .qr-wrapper4 {
-top: 52%;
-    right: -7%;
-    transform: rotate(17deg);
-    width: 80px;
-    height: 80px;
+            top: 52%;
+            right: -7%;
+            transform: rotate(17deg);
+            width: 80px;
+            height: 80px;
         }
 
         /* Position QR codes in the middle, overflowing beyond container */
         .qr-wrapper5 {
-    top: 53%;
-    left: -7%;
-    transform: rotate(-18deg);
-    width: 75px;
-    height: 75px;
-    overflow: visible;
+            top: 53%;
+            left: -7%;
+            transform: rotate(-18deg);
+            width: 75px;
+            height: 75px;
+            overflow: visible;
         }
 
         .qr-wrapper6 {
-    top: 66%;
-    right: 16%;
-    transform: rotate(-17deg);
-    width: 40px;
-    height: 40px;
-    overflow: visible;
+            top: 66%;
+            right: 16%;
+            transform: rotate(-17deg);
+            width: 40px;
+            height: 40px;
+            overflow: visible;
         }
 
         .qr-wrapper7 {
-                top: 55%;
-    left: 23%;
-    transform: rotate(-15deg);
-    width: 40px;
-    height: 40px;
-    overflow: visible;
+            top: 55%;
+            left: 23%;
+            transform: rotate(-15deg);
+            width: 40px;
+            height: 40px;
+            overflow: visible;
         }
 
         .qr-wrapper8 {
-    top: 53%;
-    right: 22%;
-    transform: rotate(-23deg);
-    width: 40px;
-    height: 40px;
-    overflow: visible;
+            top: 53%;
+            right: 22%;
+            transform: rotate(-23deg);
+            width: 40px;
+            height: 40px;
+            overflow: visible;
+        }
+
+        .BackDiv {
+            position: relative;
+            display: flex;
+            top: 86%;
+            left: 50%;
         }
     </style>
 </head>
@@ -628,10 +635,13 @@ top: 52%;
         </div>
 
         <!-- Back button -->
-        <a href="#" class="back-button" id="back-home-btn">
-            <span class="arrow">←</span>
-            Back
-        </a>
+        <div class="BackDiv">
+            <a href="#" class="back-button" id="back-home-btn">
+                <span class="arrow">←</span>
+                Back
+            </a>
+        </div>
+
     </div>
 
 
@@ -774,7 +784,7 @@ top: 52%;
 
                     window.location.href = check
                         ? "https://magic-code.net/magiccode"
-                        : "https://magic-code.net/";
+                        : "http://localhost:3000/mc-addon-login";
                 });
             }
         });

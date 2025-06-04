@@ -10,6 +10,7 @@ const { verifyAdminUser } = require("../middleware/verifyAdminUser"); // Import 
 const {
   checkSubscriptionMiddleware,
 } = require("../middleware/checkSubscriptionStatus"); // Import the middleware
+const { checkQrLimit } = require("../middleware/checkQrLimit"); // Import the middleware
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
 const Payment = require("../models/Payment");
 const AffiliatePayment = require("../models/AffiliatePayment");
@@ -68,19 +69,6 @@ function generateUniqueId() {
 }
 
 //All Routes
-
-// Home route
-router.get("/", authMiddleware, async (req, res) => {
-  try {
-    res.render("login"); // Send type as 'success'
-  } catch (error) {
-    console.error("Error generating Magic code:", error);
-    res.status(500).render("login", {
-      message: "Failed to load login page",
-      type: "error", // Send type as 'error'
-    });
-  }
-});
 
 // Home route
 router.get("/", authMiddleware, async (req, res) => {
@@ -351,7 +339,7 @@ router.get("/assign-mc-to-your/:qrCodeId?", async (req, res) => {
 
 //Assignment of QRCode
 router.post("/assign-qr-code", async (req, res) => {
-  const { email, encId, couponCode } = req.body;
+  const { email, encId, couponCode, checkFreeCoupon } = req.body;
 
   try {
     if (!email) {
@@ -393,7 +381,31 @@ router.post("/assign-qr-code", async (req, res) => {
     // Find the user by email
     user = await User.findOne({ email });
 
-    if (!user) {
+    if (user) {
+      // Count QR codes created or assigned to this user
+      const qrCount = await QRCodeData.countDocuments({
+        $or: [{ user_id: user._id }, { assignedTo: user._id }],
+      });
+
+      // Default allowed QR limit
+      let allowedQrLimit = 3;
+
+      if (
+        user.subscription?.isVip &&
+        user.subscription.validTill &&
+        new Date(user.subscription.validTill) > new Date()
+      ) {
+        allowedQrLimit = user.subscription.qrLimit || 3;
+      }
+
+      // If limit reached, prevent assignment
+      if (qrCount >= allowedQrLimit) {
+        return res.status(400).json({
+          message: `QR Code limit of ${allowedQrLimit} reached for this user.`,
+          type: "error",
+        });
+      }
+    } else {
       // Create a new user if the user does not exist
       const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
       let usernameAsPW = email.split("@")[0];
@@ -410,9 +422,44 @@ router.post("/assign-qr-code", async (req, res) => {
       await user.save();
     }
 
+    //Check if user has any isFirstQr: true QR code assigned
+    const hasFirstQr = await QRCodeData.exists({
+      user_id: user._id,
+      isFirstQr: true,
+    });
+
+    if (hasFirstQr && checkFreeCoupon) {
+      return res.status(200).json({
+        message: "Popup Shown",
+        type: "hidden",
+        hasFirstQr: Boolean(hasFirstQr),
+      });
+    }
+
     if (qrCodeData.assignedTo !== user._id) {
+      const existingFirstQr = await QRCodeData.findOne({
+        $or: [{ user_id: user._id }, { assignedTo: user._id }],
+        isFirstQr: true,
+      });
+
+      if (!existingFirstQr) {
+        qrCodeData.isFirstQr = true;
+      }
+
       qrCodeData.assignedTo = user._id; // Assign the user._id directly
       qrCodeData.isQrActivated = true;
+
+      // Update desired fields
+      qrCodeData.set({
+        type: "text",
+        text: "Enter Your Text",
+        isQrActivated: true,
+      });
+
+      // Remove the 'url' field if it exists
+      if ("url" in qrCodeData) {
+        qrCodeData.set("url", undefined);
+      }
       await qrCodeData.save();
     }
 
@@ -513,11 +560,11 @@ router.post("/assign-qr-code", async (req, res) => {
 </head>
 <body>
   <div class="container">
-    <h2>Login with Magic Link</h2>
+    <h2>Activate Your Magic Code</h2>
     <p>Hi ${user.fullName},</p>
-    <p>Click the magic link below to securely log in to your account. This link will expire in 30 minutes.</p>
-    <a href="${magicLink}" class="btn">Login Now</a>
-    <p>After login, set your password under <strong>My Profile</strong>.</p>
+    <p>Click the Magic Link below to securely log In to your account. </p>
+    <a href="${magicLink}" class="btn">ACTIVATE</a>
+    <p>Your Password is the characters before the @ in your e-mail address. You can change this any time.</p>
     <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
     <h2>Claim Your Free 15-Day Premium Plan!</h2>
     <p>Enjoy <strong>15 days of our premium plan — completely free!</strong> Use the coupon code below at checkout:</p>
@@ -537,9 +584,10 @@ router.post("/assign-qr-code", async (req, res) => {
     res.clearCookie("token", { httpOnly: false });
     res.clearCookie("userId", { httpOnly: false });
 
-    res
-      .status(200)
-      .json({ message: "Magic link sent to your email", type: "success" });
+    res.status(200).json({
+      message: "Magic link sent to your email",
+      type: "success",
+    });
   } catch (error) {
     console.error("Error processing magic link:", error);
     res.status(500).json({ message: "An error occurred", type: "error" });
@@ -634,6 +682,80 @@ router.post("/admindashboard/toggle-status", async (req, res) => {
   }
 });
 
+// Toggle VIP status
+router.post("/admindashboard/assign-vip", async (req, res) => {
+  const { userId, validTill, qrLimit } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found", type: "error" });
+    }
+
+    // If trying to set VIP and user is already VIP
+    if (user.subscription.isVip) {
+      return res.status(400).json({
+        message: "User is already a VIP",
+        type: "error",
+      });
+    }
+
+    // Update VIP-related fields
+    user.subscription.isVip = true;
+    if (validTill) {
+      user.subscription.validTill = new Date(validTill);
+    } else {
+      user.subscription.validTill = null;
+    }
+
+    // ✅ Set QR limit inside subscription
+    user.subscription.qrLimit = qrLimit ? parseInt(qrLimit, 10) : 3;
+
+    await user.save();
+
+    res.json({ message: "VIP status updated", user, type: "success" });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Error updating VIP status", type: "error" });
+  }
+});
+
+// Update existing VIP details
+router.post("/admindashboard/update-vip", async (req, res) => {
+  const { userId, validTill, qrLimit } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found", type: "error" });
+    }
+
+    // Update only if user is already VIP
+    if (!user.subscription.isVip) {
+      return res.status(400).json({
+        message: "User is not currently a VIP",
+        type: "error",
+      });
+    }
+
+    // Update VIP-related fields
+    user.subscription.validTill = validTill ? new Date(validTill) : null;
+    user.subscription.qrLimit = qrLimit ? parseInt(qrLimit, 10) : user.subscription.qrLimit;
+
+    await user.save();
+
+    res.json({ message: "VIP details updated", user, type: "success" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error updating VIP details", type: "error" });
+  }
+});
+
+
 // Admin Dashboard Page with Pagination and Decryption for Visible Users
 router.get("/admindashboard", authMiddleware, async (req, res) => {
   try {
@@ -641,8 +763,13 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
     const currentPage = parseInt(req.query.page) || 1;
     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
 
-    // Fetch total number of non-admin users to calculate total pages
-    const totalUsers = await User.countDocuments({ role: "user" });
+    const totalUsers = await User.countDocuments({
+      role: "user",
+      $or: [
+        { "subscription.isVip": { $exists: false } },
+        { "subscription.isVip": false },
+      ],
+    });
 
     // Calculate total pages (ceil to the nearest whole number)
     const totalPages = Math.ceil(totalUsers / recordsPerPage);
@@ -651,7 +778,15 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
     const skip = (currentPage - 1) * recordsPerPage;
 
     const users = await User.aggregate([
-      { $match: { role: "user" } }, // Exclude admin users
+      {
+        $match: {
+          role: "user",
+          $or: [
+            { "subscription.isVip": { $exists: false } },
+            { "subscription.isVip": false },
+          ],
+        },
+      }, // Exclude admin users
       {
         $lookup: {
           from: "qrcodedatas",
@@ -850,19 +985,19 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    if (avoidAffiliate && user.role === "affiliate") {
-      return res.status(403).json({
-        message: "Please go to affiliate login page",
-        type: "error",
-      });
-    }
+    // if (avoidAffiliate && user.role === "affiliate") {
+    //   return res.status(403).json({
+    //     message: "Please go to affiliate login page",
+    //     type: "error",
+    //   });
+    // }
 
-    if (!avoidAffiliate && user.role !== "affiliate") {
-      return res.status(403).json({
-        message: "Please go to the user login page",
-        type: "error",
-      });
-    }
+    // if (!avoidAffiliate && user.role !== "affiliate") {
+    //   return res.status(403).json({
+    //     message: "Please go to the user login page",
+    //     type: "error",
+    //   });
+    // }
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -1446,33 +1581,17 @@ router.get("/verify-magiclink/:token", async (req, res) => {
       const hasUsed15DayCouponPlan =
         used15DayCouponPlan && used15DayCouponPlan.plan_id;
 
-      if (qrCode) {
-        // Update desired fields
-        qrCode.set({
-          type: "text",
-          text: "YOUR MESSAGE",
-          isQrActivated: true,
-        });
-
-        // Remove the 'url' field if it exists
-        if ("url" in qrCode) {
-          qrCode.set("url", undefined);
-        }
-
-        // Save the updated document
-        await qrCode.save();
-        // 3. Decision based on both conditions
-        if (!activePlan && !hasUsed15DayCouponPlan) {
-          // No active plan and never used 15-day coupon — show popup
-          return res.redirect(
-            `${process.env.FRONTEND_URL}/dashboard?magiccode=${decryptedQrCodeId}&showPopup=true`
-          );
-        } else {
-          // Either active plan exists or 15-day coupon was used — no popup
-          return res.redirect(
-            `${process.env.FRONTEND_URL}/dashboard?magiccode=${decryptedQrCodeId}`
-          );
-        }
+      // 3. Decision based on both conditions
+      if (!activePlan && !hasUsed15DayCouponPlan && !qrCode.isFirstQr) {
+        // No active plan and never used 15-day coupon — show popup
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/dashboard?magiccode=${decryptedQrCodeId}&showPopup=true`
+        );
+      } else {
+        // Either active plan exists or 15-day coupon was used — no popup
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/dashboard?magiccode=${decryptedQrCodeId}`
+        );
       }
     }
 
@@ -1915,7 +2034,7 @@ router.post(
   "/generate",
   authMiddleware,
   checkSubscriptionMiddleware,
-
+  checkQrLimit,
   upload.fields([
     { name: "media-file", maxCount: 1 },
     { name: "text-file", maxCount: 1 },
@@ -1966,17 +2085,17 @@ router.post(
       const qrCodes = await QRCodeData.find({
         $or: [
           { user_id: user.id }, // QR codes created by the user
-          // { assignedTo: user.id }, // QR codes assigned to the user
+          { assignedTo: user.id }, // QR codes assigned to the user
         ],
       });
 
       // Check if user has already created 5 or more QR codes
-      if (qrCodes.length >= 5 && user.role !== "super-admin") {
-        return res.status(400).json({
-          message: "You can only create a maximum of 5 QR codes.",
-          type: "error",
-        });
-      }
+      // if (qrCodes.length >= 3 && user.role !== "super-admin") {
+      //   return res.status(400).json({
+      //     message: "You can only create a maximum of 3 QR codes.",
+      //     type: "error",
+      //   });
+      // }
       if (!qrName) {
         return res
           .status(400)
@@ -2034,6 +2153,14 @@ router.post(
         return res.status(400).json({ message: "Invalid type", type: "error" });
       }
 
+      // Check if any QR already assigned or created for this user
+      const existingQr = await QRCodeData.exists({
+        $or: [{ user_id: user.id }, { assignedTo: user.id }],
+        isFirstQr: true,
+      });
+
+      const isFirstQr = !existingQr;
+
       const qrCode = new QRCodeData({
         user_id,
         type,
@@ -2048,6 +2175,7 @@ router.post(
         applyGradient,
         logo: logoPath, // Save logo path if provided
         ColorList,
+        isFirstQr,
       });
       // Save additional media or text file paths if applicable
       if (type === "media") {
@@ -2419,17 +2547,13 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
 
     // Determine which ID to use for checking payment — user_id or assignedTo
     const userIdToCheck = codeData.user_id || codeData.assignedTo;
-  
 
-    
     const checkSubscription = await Payment.findOne({
       user_id: userIdToCheck,
       paymentStatus: "completed",
       isActive: true,
       validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
     }).sort({ validUntil: -1 });
-
-    
 
     if (!checkSubscription && userIdToCheck) {
       return res.render("expired-code");
@@ -3546,7 +3670,7 @@ router.post("/send-admin-email", authMiddleware, async (req, res) => {
       }
     }
 
-    const adminEmail = process.env.ADMIN_EMAIL || "rahul216000@gmail.com";
+    const adminEmail = process.env.ADMIN_EMAIL || "arnoldschmidt.com@gmail.com";
 
     const sender = {
       email: "textildruckschweiz.com@gmail.com",
@@ -3698,6 +3822,60 @@ router.post("/mc-details", authMiddleware, async (req, res) => {
 
 router.get("/admindashboard/scanner", authMiddleware, async (req, res) => {
   res.render("MCDeatilsByScanner");
+});
+
+router.get("/mc-addon-login", async (req, res) => {
+  try {
+    res.render("addon-login"); // Send type as 'success'
+  } catch (error) {
+    console.error("Error generating Magic code:", error);
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/admindashboard/vip-users", async (req, res) => {
+  try {
+    const currentPage = parseInt(req.query.page) || 1;
+    const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+
+    // Count users with subscription.isVip = true
+    const totalVipUsers = await User.countDocuments({
+      "subscription.isVip": true,
+    });
+    const totalPages = Math.ceil(totalVipUsers / recordsPerPage);
+    const skip = (currentPage - 1) * recordsPerPage;
+
+    // Fetch paginated VIP users
+    const users = await User.find({ "subscription.isVip": true })
+      .skip(skip)
+      .limit(recordsPerPage);
+
+    // Process user data (decrypt password and encrypt ID)
+    users.forEach((user) => {
+      if (user.userPasswordKey) {
+        user.userPasswordKey = decryptPassword(user.userPasswordKey);
+      }
+      user.encryptedId = encryptPassword(user._id.toString());
+    });
+
+    // Render a separate view or reuse affiliateusers with updated context
+    res.render("vipusers", {
+      users,
+      currentPage,
+      totalPages,
+      totalUsers: totalVipUsers,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+    });
+  } catch (error) {
+    console.error("Error loading VIP Users:", error);
+    res.status(500).render("login", {
+      message: "Failed to load VIP Users",
+      type: "error",
+    });
+  }
 });
 
 module.exports = router;

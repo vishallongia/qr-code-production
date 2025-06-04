@@ -16,41 +16,39 @@
     <!-- Include the Navbar Partial -->
     <%- include('../components/navbar') %>
 
-        <div id="theme-popup-vip-details" class="popup-overlay" style="display: none;">
+        <div id="theme-popup-update-vip" class="popup-overlay" style="display: none;">
             <div class="popup-content" style="position: relative;">
-                <span id="close-popup-get-paid" style="
-        position: absolute;
-        top: 10px;
-        right: 15px;
-        font-size: 25px;
-        cursor: pointer;
-    ">&times;</span>
+                <span id="close-popup-update-vip" style="
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 25px;
+            cursor: pointer;
+        ">&times;</span>
 
-                <p>Enter Details</p>
+                <p>Update VIP Details</p>
 
                 <form onsubmit="return false;">
-                    <!-- Coupon Code Input -->
-
-
                     <!-- Number of QR Codes Allowed -->
                     <div class="form-group" style="margin-bottom: 16px;">
-                        <input type="number" id="vip-qr-limit" placeholder="Enter number of QR Codes allowed"
+                        <input type="number" id="vip-update-qr-limit" placeholder="Enter number of QR Codes allowed"
                             style="width: 100%;" />
                     </div>
 
                     <!-- Subscription Valid Till Date -->
                     <div class="form-group" style="margin-bottom: 24px;">
-                        <input type="date" id="vip-valid-till" placeholder="Enter valid till date"
+                        <input type="date" id="vip-update-valid-till" placeholder="Enter valid till date"
                             style="width: 100%;" />
                     </div>
 
-                    <!-- Assign Button -->
-                    <button id="vip-assign-btn" type="button" onclick="handleAssignVip(event)">
-                        Assign
+                    <!-- Update Button -->
+                    <button id="vip-update-btn" type="button">
+                        Update
                     </button>
                 </form>
             </div>
         </div>
+
 
         <div class="modern-list-container">
             <% const pageNum=Number(currentPage); const invalidPage=isNaN(pageNum) || pageNum> totalPages || pageNum <
@@ -60,14 +58,17 @@
                         <%- include('../components/404') %>
                             <% } else if (users && users.length> 0) { %>
 
-                                <h2>Affiliate Users List</h2>
+                                <h2>Vip Users List</h2>
                                 <div class="list-wrapper">
                                     <div class="list-header">
                                         <span>Name</span>
                                         <span>Email</span>
                                         <span>Password</span>
-                                        <span>Action</span>
                                         <span>Vip</span>
+                                        <span>Action</span>
+                                        <span>End Date</span>
+                                        <span>Allowed QR</span>
+
                                     </div>
                                     <ul id="userList" class="user-list">
                                         <% users.forEach(user=> { %>
@@ -82,20 +83,30 @@
                                                     <%= user.userPasswordKey %>
                                                 </span>
                                                 <span>
-                                                    <a href="/admindashboard/affiliate/affiliate-user/<%= user._id %>">
-                                                        <button class="view-qr-btn">View</button>
-                                                    </a>
+                                                    <% if (user.subscription && user.subscription.isVip) { %>
+                                                        <span class="vip-badge">VIP</span>
+                                                        <% } else { %>
+                                                            <small style="color: #888;">No</small>
+                                                            <% } %>
                                                 </span>
                                                 <span>
-                                                    <% const now=new Date(); const validTillDate=new
-                                                        Date(user.subscription?.validTill); %>
-                                                        <% if (user.subscription?.isVip && validTillDate> now) { %>
-                                                            <span class="vip-badge">VIP</span>
+                                                    <button class="view-qr-btn update-vip-btn"
+                                                        data-user-id="<%= user._id %>">Update</button>
+                                                </span>
+                                                <span>
+                                                    <% if (user.subscription && user.subscription.validTill) { %>
+                                                        <%= new Date(user.subscription.validTill).toLocaleDateString()
+                                                            %>
                                                             <% } else { %>
-                                                                <button class="view-qr-btn make-vip-btn"
-                                                                    data-user-id="<%= user._id %>">
-                                                                    Make VIP
-                                                                </button>
+                                                                <small style="color: #888;">N/A</small>
+                                                                <% } %>
+                                                </span> <!-- ✅ New Column Data -->
+                                                <span>
+                                                    <% if (user.subscription && typeof user.subscription.qrLimit
+                                                        !=='undefined' ) { %>
+                                                        <%= user.subscription.qrLimit %>
+                                                            <% } else { %>
+                                                                <small style="color: #888;">N/A</small>
                                                                 <% } %>
                                                 </span>
                                             </li>
@@ -139,7 +150,7 @@
 
                                         <% } else { %>
                                             <div class="modern-list-container">
-                                                <p class="no-data-message">No affiliate users created yet.</p>
+                                                <p class="no-data-message">No Vip users created yet.</p>
                                             </div>
                                             <% } %>
         </div>
@@ -149,9 +160,84 @@
 <script src="/js/toastify-setup.js"></script>
 <script src="/js/admindashboard-api-calls.js"></script>
 <script>
-    function goToQR(userId) {
-        window.location.href = `/admindashboard/qr/${userId}`;
-    }
+    // Show popup when Update VIP button is clicked
+    document.querySelectorAll(".update-vip-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+            selectedUserId = this.getAttribute("data-user-id");
+            document.getElementById("theme-popup-update-vip").style.display = "flex";
+        });
+    });
+
+    // Close update popup
+    document
+        .getElementById("close-popup-update-vip")
+        .addEventListener("click", () => {
+            document.getElementById("theme-popup-update-vip").style.display = "none";
+            clearUpdateVipInputs();
+        });
+
+    // Handle VIP update
+    document
+        .getElementById("vip-update-btn")
+        .addEventListener("click", async function () {
+            const qrLimitInput = document.getElementById("vip-update-qr-limit").value.trim();
+            const validTillInput = document.getElementById("vip-update-valid-till").value;
+
+            const qrLimit = parseInt(qrLimitInput, 10);
+            const validTill = new Date(validTillInput);
+            const today = new Date();
+
+            if (!selectedUserId) {
+                showToast("User not selected", "error");
+                return;
+            }
+
+            if (!qrLimitInput || isNaN(qrLimit) || qrLimit <= 0) {
+                showToast("Please enter a valid number for QR limit", "error");
+                return;
+            }
+
+            if (!validTillInput) {
+                showToast("Please select a valid expiry date", "error");
+                return;
+            }
+
+            if (validTill <= today) {
+                showToast("Valid Till date must be in the future", "error");
+                return;
+            }
+
+            try {
+                const response = await fetch("/admindashboard/update-vip", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        userId: selectedUserId,
+                        qrLimit,
+                        validTill,
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || "Failed to update VIP details");
+                }
+
+                showToast(result.message, "success");
+                document.getElementById("theme-popup-update-vip").style.display = "none";
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } catch (error) {
+                console.error("VIP update error:", error);
+                showToast(error.message || "Something went wrong", "error");
+            }
+        });
+
+
 </script>
 
 </html>

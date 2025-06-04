@@ -55,9 +55,9 @@
                             Coupon Added
                         </div>
                         <div>
-                            <button id="checkout-button-<%= plan.encryptedId %>" class="checkout-btn subscribe-btn">
+                            <!-- <button id="checkout-button-<%= plan.encryptedId %>" class="checkout-btn subscribe-btn">
                                 Pay with Credit Card
-                            </button>
+                            </button> -->
                             <div id="paypal-button-container-<%= sanitizedId %>" class="paypal-button-container"
                                 style="margin-top: 20px;" data-plan-id="<%= plan.encryptedId %>">
 
@@ -105,7 +105,7 @@
     <script src="/js/toastify-setup.js"></script>
     <script src="https://js.stripe.com/v3/"></script>
     <script
-        src="https://www.paypal.com/sdk/js?client-id=AeUlyT2WmljAHqGaXytGewyz61xmfAJ4woW1wA_2TwjcaqbbjJTkPHy47FsEJhcH68BGlm9-AdDfmbrU&currency=CHF"></script>
+        src="https://www.paypal.com/sdk/js?client-id=ARlL9iKwH-ib4SALn8uUCwXs7yMUdALrHPYk8_5l6uETER8_3fMGUb3Fc0ulLyWA-LAlGFdFxtSXXEcQ&currency=CHF"></script>
     <script src="/js/plan.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {

@@ -247,15 +247,20 @@ body {
     justify-content: space-between;
     position: sticky;
     top: 72px;
-
+    overflow-y: auto;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
 }
 
 .nav-menu {
-    padding: 16px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
+
+
 
 .nav-item {
     display: flex;
@@ -334,6 +339,8 @@ select {
     border-radius: 4px;
     font-size: 16px;
 }
+
+
 
 input::placeholder,
 select {

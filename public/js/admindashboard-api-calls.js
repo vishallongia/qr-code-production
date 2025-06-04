@@ -5,6 +5,7 @@ const resetGeneratedUserButton = document.getElementById("resetgeneratedusser");
 // const couponCode = document.getElementById("couponcode");
 const assignBtn = document.getElementById("assignedemailbutton");
 const qrCodesMap = {};
+let selectedUserId = null;
 document.querySelectorAll(".toggle-checkbox").forEach((checkbox) => {
   checkbox.addEventListener("change", async function () {
     const userId = this.getAttribute("data-user-id");
@@ -323,7 +324,12 @@ function resetLocalStorageAndReload() {
 }
 
 // Handle QR Code assignment form submission
-async function handleAssignQrCode(event, emailId, couponId) {
+async function handleAssignQrCode(
+  event,
+  emailId,
+  couponId,
+  checkFreeCoupon = true
+) {
   event.preventDefault();
 
   const emailInput = document.getElementById(emailId);
@@ -336,22 +342,42 @@ async function handleAssignQrCode(event, emailId, couponId) {
     email: emailInput.value,
     encId,
     couponCode: couponInput ? couponInput.value : "",
+    checkFreeCoupon,
   };
 
-  const assignBtn = event.target;
+  const assignBtn = event.currentTarget;
+  const btnText = assignBtn.querySelector(".btn-text");
+  const spinner = assignBtn.querySelector(".spinner");
+
   assignBtn.disabled = true;
+  btnText.style.display = "none";
+  spinner.style.display = "inline-block";
 
   try {
     const result = await assignQrCode(data);
 
-    showThemePopup(
-      "This MAGIC CODE has been assigned to you now. The Magic Link for Login has been sent to your e-mail address."
-    );
+    if (result.hasFirstQr) {
+      // Show custom popup
+      document.getElementById("theme-popup-have-cc").style.display = "flex";
+      assignBtn.disabled = false;
+      btnText.style.display = "inline";
+      spinner.style.display = "none";
+    } else {
+      // Show regular popup
+      showThemePopup(
+        "This MAGIC CODE has been assigned to you now. The Magic Link for Login has been sent to your e-mail address."
+      );
+      assignBtn.disabled = false;
+      btnText.style.display = "inline";
+      spinner.style.display = "none";
+    }
 
     assignBtn.disabled = false;
   } catch (error) {
     showToast(error.message || "An error occurred. Please try again.", "error");
     assignBtn.disabled = false;
+    btnText.style.display = "inline";
+    spinner.style.display = "none";
   }
 }
 
@@ -499,3 +525,111 @@ const downloadAllCanvasesAsZip = () => {
       });
   });
 };
+
+// Clear input fields
+function clearVipInputs() {
+  document.getElementById("vip-qr-limit").value = "";
+  document.getElementById("vip-valid-till").value = "";
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  document
+    .getElementById("assignedemail2")
+    .addEventListener("input", function () {
+      document.getElementById("assignedemail1").value = this.value;
+    });
+  const closeBtn = document.getElementById("close-popup-get-paid");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", function () {
+      document.getElementById("theme-popup-have-cc").style.display = "none";
+    });
+  }
+});
+
+// Show popup when Make VIP button is clicked
+document.querySelectorAll(".make-vip-btn").forEach((btn) => {
+  btn.addEventListener("click", function () {
+    selectedUserId = this.getAttribute("data-user-id");
+    document.getElementById("theme-popup-vip-details").style.display = "flex";
+  });
+});
+
+// Close popup
+document
+  .getElementById("close-popup-get-paid")
+  .addEventListener("click", () => {
+    document.getElementById("theme-popup-vip-details").style.display = "none";
+    clearVipInputs();
+  });
+
+// Handle VIP assignment
+document
+  .getElementById("vip-assign-btn")
+  .addEventListener("click", async function () {
+    const qrLimitInput = document.getElementById("vip-qr-limit").value.trim();
+    const validTillInput = document.getElementById("vip-valid-till").value;
+
+    const qrLimit = parseInt(qrLimitInput, 10);
+    const validTill = new Date(validTillInput);
+    const today = new Date();
+
+    // Validate user selection
+    if (!selectedUserId) {
+      showToast("User not selected", "error");
+      return;
+    }
+
+    // Validate QR Limit
+    if (!qrLimitInput || isNaN(qrLimit) || qrLimit <= 0) {
+      showToast("Please enter a valid number for QR limit", "error");
+      return;
+    }
+
+    // Validate Valid Till Date
+    if (!validTillInput) {
+      showToast("Please select a valid expiry date", "error");
+      return;
+    }
+
+    // Ensure date is in future
+    if (validTill <= today) {
+      showToast("Valid Till date must be in the future", "error");
+      return;
+    }
+
+    // All validations passed, proceed with API call
+    try {
+      const response = await fetch("/admindashboard/assign-vip", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: selectedUserId,
+          qrLimit,
+          validTill,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to assign VIP status");
+      }
+
+      showToast(result.message, "success");
+      document.getElementById("theme-popup-vip-details").style.display = "none";
+      clearVipInputs();
+      // Reload the page after 1 minute (60,000 milliseconds)
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error("VIP assignment error:", error);
+      showToast(error.message || "Something went wrong", "error");
+    }
+  });
+
+
+
+  

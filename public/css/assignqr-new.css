@@ -303,6 +303,14 @@ body {
 }
 
 
+input,
+select {
+    padding: 8px 16px;
+    border: 1px solid #c4c3c3;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
 
 
 
@@ -714,9 +722,11 @@ body {
     color: var(--greygrey-5);
     font-weight: 300;
 }
-.bg-gray{
+
+.bg-gray {
     background: #565757;
 }
+
 /* EXCEPTION: Remove fixed width/height for the last .content-section */
 .content-section:last-child .section-image img {
     width: 400px;
@@ -775,6 +785,21 @@ body {
     margin-bottom: 16px;
 }
 
+
+.loader {
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #000; /* You can change the color */
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
 /* Responsive Design */
 @media (max-width: 1200px) {
@@ -872,6 +897,7 @@ body {
         font-size: var(--h2-heading-font-size-mobile);
         line-height: var(--h2-heading-line-height-mobile);
     }
+
     .icon-lost {
         width: 220px;
         height: auto;
@@ -1071,6 +1097,7 @@ body {
         height: auto;
         object-fit: contain;
     }
+
     .hero {
         height: 850px;
     }

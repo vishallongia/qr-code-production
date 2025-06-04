@@ -39,6 +39,7 @@ router.get("/plans", authMiddleware, async (req, res) => {
       validUntil: latestPayment ? latestPayment.validUntil : null,
       name: req.user.fullName, // Assuming req.user contains user data like name
       email: req.user.email, // Assuming req.user contains user data like email
+      role: req.user.role,
     };
 
     // Render the 'plans' EJS page and pass the encrypted plans data to it

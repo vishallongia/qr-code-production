@@ -19,10 +19,7 @@ const qrCodeSchema = new mongoose.Schema(
       type: String,
       // required: true, // The URL of the uploaded file or provided URL
     },
-    // qr_image: {
-    //   type: String,
-    //   required: true, // Path to the generated QR code image
-    // },
+
     media_url: {
       type: String, // URL to the media file if applicable
     },
@@ -81,18 +78,10 @@ const qrCodeSchema = new mongoose.Schema(
       type: String,
     },
 
-    // activatedUntil: {
-    //   type: Date,
-    //   default: null, // Will be set when QR is activated
-    // },
-    // isTrial: {
-    //   type: Boolean,
-    //   default: false, // Defaults to false for user-created QR codes
-    // },
-    // isFirstActivationFree: {
-    //   type: Boolean,
-    //   default: true, // Initially, the first activation is free
-    // },
+    isFirstQr: {
+      type: Boolean,
+      default: false, // Defaults to false for user-created QR codes
+    },
   },
   { timestamps: true }
 );

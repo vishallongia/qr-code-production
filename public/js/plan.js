@@ -2,9 +2,9 @@ let selectedPlanId = "";
 document.addEventListener("DOMContentLoaded", function () {
   const stripe = Stripe(
     // My Test
-    "pk_test_51Ntu4ySEDamMfxQSeDUBDU24c00cIiqL83DBtsyEe1SeMipKhHGqaRKBeCuHRohgURDjjaPdqh9Hsst3yd85RzAL00xWep0NsI"
+    // "pk_test_51Ntu4ySEDamMfxQSeDUBDU24c00cIiqL83DBtsyEe1SeMipKhHGqaRKBeCuHRohgURDjjaPdqh9Hsst3yd85RzAL00xWep0NsI"
     // Live public
-    // "pk_live_51RMaaSId4kz5U0VloeNDTyvwYw7Je4Vof8zROQ4KMIYblNW732YHA53rz7BI6CaujeWmvzVMGplooRYwEkpJpdp800YsPdNvsf"
+    "pk_live_51RMaaSId4kz5U0VloeNDTyvwYw7Je4Vof8zROQ4KMIYblNW732YHA53rz7BI6CaujeWmvzVMGplooRYwEkpJpdp800YsPdNvsf"
   ); // Replace with your real public key
 
   // Select all buttons with class 'checkout-btn'

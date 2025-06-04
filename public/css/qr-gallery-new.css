@@ -80,6 +80,37 @@
 }
 
 
+
+.card {
+    overflow: hidden;
+    /* ensure ribbon overflow is clipped neatly */
+    position: relative;
+}
+
+
+.ribbon-triangle {
+    width: 0;
+    height: 0;
+    border-top: 60px solid #28a745;
+    border-left: 60px solid transparent;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 10;
+}
+
+.ribbon-triangle span {
+    position: absolute;
+    top: -50px;
+    right: 2px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    transform: rotate(45deg);
+}
+
+
+
 @media (max-width: 1024px) {
     .grid {
         grid-template-columns: repeat(5, 1fr);

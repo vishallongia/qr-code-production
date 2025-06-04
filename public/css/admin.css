@@ -90,7 +90,6 @@ canvas {
 }
 
 .user-item span {
-  display: block;
   overflow: hidden;
   word-wrap: break-word;
   text-overflow: ellipsis;
@@ -406,6 +405,105 @@ input:checked+.toggle-slider:before {
   margin-top: 40px;
   /* Adjust the value as needed */
 }
+
+
+/* Overlay for the popup */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 80;
+  font-family: var(--font-family);
+}
+
+/* Popup content container */
+.popup-content {
+  background: var(--container-bg);
+  backdrop-filter: blur(var(--container-backdrop-blur));
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  color: var(--text-color);
+}
+
+/* Close button */
+.popup-content #close-popup-get-paid {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 25px;
+  font-weight: bold;
+  color: #444;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.popup-content #close-popup-get-paid:hover {
+  color: red;
+}
+
+/* Input fields */
+.popup-content input[type="text"],
+.popup-content input[type="number"],
+.popup-content input[type="date"] {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 6px;
+  font-size: 15px;
+  border: 1px solid var(--input-border-color);
+  border-radius: 6px;
+  transition: border-color 0.2s ease;
+  background-color: #fff;
+}
+
+.popup-content input:focus {
+  outline: none;
+  border-color: var(--input-focus-border-color);
+}
+
+/* Button */
+#vip-assign-btn , #vip-update-btn {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  background-color: var(--submit-btn-bg);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#vip-assign-btn:hover ,#vip-update-btn:hover {
+  background-color: var(--submit-btn-hover-bg);
+}
+
+/* Form group spacing */
+.popup-content .form-group {
+  margin-bottom: 18px;
+}
+
+.vip-badge {
+  background-color: #ffcc00;
+  color: #000;
+  font-weight: bold;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  display: inline-block;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
 
 /* Responsive styles */
 @media (max-width: 768px) {

@@ -1342,6 +1342,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const activationInput = document.getElementById("qr-name-activation");
   const qrName = document.getElementById("qr-name");
 
+  const closeBtn = document.getElementById("close-popup-btn-activate-qr");
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", function () {
+      document.getElementById("theme-popup-activate-qr").style.display = "none";
+    });
+  } else {
+    console.warn("Close button not found when DOMContentLoaded fired");
+  }
+
   if (activationInput && qrName) {
     activationInput.addEventListener("input", () => {
       qrName.value = activationInput.value;
@@ -1349,7 +1359,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get("showPopup") === "true") {
-    showThemePopup("Just enter the discount code you received in the e-mail with your magic link, and activate your account.");
+    showThemePopup(
+      "Just enter the discount code you received in the e-mail with your magic link, and activate your account."
+    );
   }
 });
 
@@ -1365,3 +1377,6 @@ function removeShowPopupParamAndRedirect() {
     window.location.href = currentUrl.toString();
   }, 1000); // 1000ms (1 second) delay
 }
+
+
+

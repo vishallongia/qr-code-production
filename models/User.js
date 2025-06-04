@@ -63,6 +63,25 @@ const userSchema = new mongoose.Schema(
         ...new Set(codes.map((code) => code.trim().toLowerCase())),
       ],
     },
+
+    subscription: {
+      isVip: {
+        type: Boolean,
+        default: false,
+      },
+      subscriptionCreatedAt: {
+        type: Date,
+        default: Date.now, // Note: Date.now (without parentheses) here means "call when creating default"
+      },
+      validTill: {
+        type: Date,
+        default: null, // admin can set this manually when toggling VIP
+      },
+      qrLimit: {
+        type: Number,
+        default: 3, // default for non-VIP
+      },
+    },
   },
   {
     timestamps: true, // adds createdAt and updatedAt automatically

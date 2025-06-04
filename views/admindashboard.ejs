@@ -16,6 +16,42 @@
     <!-- Include the Navbar Partial -->
     <%- include('../components/navbar') %>
 
+        <div id="theme-popup-vip-details" class="popup-overlay" style="display: none;">
+            <div class="popup-content" style="position: relative;">
+                <span id="close-popup-get-paid" style="
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 25px;
+        cursor: pointer;
+    ">&times;</span>
+
+                <p>Enter Details</p>
+
+                <form onsubmit="return false;">
+                    <!-- Coupon Code Input -->
+
+
+                    <!-- Number of QR Codes Allowed -->
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <input type="number" id="vip-qr-limit" placeholder="Enter number of QR Codes allowed"
+                            style="width: 100%;" />
+                    </div>
+
+                    <!-- Subscription Valid Till Date -->
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <input type="date" id="vip-valid-till" placeholder="Enter valid till date"
+                            style="width: 100%;" />
+                    </div>
+
+                    <!-- Assign Button -->
+                    <button id="vip-assign-btn" type="button" onclick="handleAssignVip(event)">
+                        Assign
+                    </button>
+                </form>
+            </div>
+        </div>
+
         <div class="modern-list-container">
             <% if (users && users.length> 0) { %>
                 <h2>User List</h2>
@@ -28,6 +64,7 @@
                         <span>QR Count</span>
                         <span>QR's</span>
                         <span>Active</span>
+                        <span>Vip</span>
                     </div>
                     <ul id="userList" class="user-list">
                         <% users.forEach(user=> { %>
@@ -59,6 +96,11 @@
                                             <%=user.isActive ? 'checked' : '' %>>
                                         <span class="toggle-slider"></span>
                                     </label>
+                                </span>
+
+                                <span>
+                                    <button class="view-qr-btn make-vip-btn" data-user-id="<%= user._id %>">Make
+                                        Vip</button>
                                 </span>
                             </li>
                             <% }); %>
