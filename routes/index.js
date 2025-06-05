@@ -424,7 +424,7 @@ router.post("/assign-qr-code", async (req, res) => {
 
     //Check if user has any isFirstQr: true QR code assigned
     const hasFirstQr = await QRCodeData.exists({
-      user_id: user._id,
+      $or: [{ user_id: user._id }, { assignedTo: user._id }],
       isFirstQr: true,
     });
 
@@ -723,6 +723,30 @@ router.post("/admindashboard/assign-vip", async (req, res) => {
   }
 });
 
+// Set user role to affiliate
+router.post("/admindashboard/make-affiliate", async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found", type: "error" });
+    }
+
+    user.role = "affiliate";
+    await user.save();
+
+    res.json({ message: "User role updated to affiliate", type: "success" });
+  } catch (error) {
+    console.error("Affiliate role update error:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      type: "error",
+    });
+  }
+});
+
 // Update existing VIP details
 router.post("/admindashboard/update-vip", async (req, res) => {
   const { userId, validTill, qrLimit } = req.body;
@@ -744,17 +768,20 @@ router.post("/admindashboard/update-vip", async (req, res) => {
 
     // Update VIP-related fields
     user.subscription.validTill = validTill ? new Date(validTill) : null;
-    user.subscription.qrLimit = qrLimit ? parseInt(qrLimit, 10) : user.subscription.qrLimit;
+    user.subscription.qrLimit = qrLimit
+      ? parseInt(qrLimit, 10)
+      : user.subscription.qrLimit;
 
     await user.save();
 
     res.json({ message: "VIP details updated", user, type: "success" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error updating VIP details", type: "error" });
+    res
+      .status(500)
+      .json({ message: "Error updating VIP details", type: "error" });
   }
 });
-
 
 // Admin Dashboard Page with Pagination and Decryption for Visible Users
 router.get("/admindashboard", authMiddleware, async (req, res) => {
@@ -1581,8 +1608,20 @@ router.get("/verify-magiclink/:token", async (req, res) => {
       const hasUsed15DayCouponPlan =
         used15DayCouponPlan && used15DayCouponPlan.plan_id;
 
+      // 🔒 Check for VIP access
+      const isVipActive =
+        user.subscription &&
+        user.subscription.isVip === true &&
+        user.subscription.validTill &&
+        new Date(user.subscription.validTill) > new Date();
+
       // 3. Decision based on both conditions
-      if (!activePlan && !hasUsed15DayCouponPlan && !qrCode.isFirstQr) {
+      if (
+        !activePlan &&
+        !hasUsed15DayCouponPlan &&
+        !qrCode.isFirstQr &&
+        !isVipActive
+      ) {
         // No active plan and never used 15-day coupon — show popup
         return res.redirect(
           `${process.env.FRONTEND_URL}/dashboard?magiccode=${decryptedQrCodeId}&showPopup=true`
@@ -2548,6 +2587,15 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
     // Determine which ID to use for checking payment — user_id or assignedTo
     const userIdToCheck = codeData.user_id || codeData.assignedTo;
 
+    const userQrCreator = await User.findById(userIdToCheck).lean();
+
+    // Safely check VIP status
+    const subscription = userQrCreator.subscription || {};
+    const isVip =
+      subscription.isVip === true &&
+      subscription.validTill &&
+      new Date(subscription.validTill) > new Date();
+
     const checkSubscription = await Payment.findOne({
       user_id: userIdToCheck,
       paymentStatus: "completed",
@@ -2555,7 +2603,7 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
       validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
     }).sort({ validUntil: -1 });
 
-    if (!checkSubscription && userIdToCheck) {
+    if (!checkSubscription && userIdToCheck && !isVip && !codeData.isFirstQr) {
       return res.render("expired-code");
     }
 

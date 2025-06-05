@@ -16,10 +16,14 @@
         <a href="/" class="back-home-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
 
         <!-- Tabs -->
-        <div class="tabs">
-            <div class="tab active" id="plans-tab">Subscription Plans</div>
-            <div class="tab" id="current-subscription-tab">Current Subscription</div>
-        </div>
+       <div class="tabs">
+    <% if (!user.subscription?.isVip) { %>
+        <div class="tab active" id="plans-tab">Subscription Plans</div>
+        <div class="tab" id="current-subscription-tab">Current Subscription</div>
+    <% } else { %>
+        <div class="tab active" id="current-subscription-tab">VIP Subscription</div>
+    <% } %>
+</div>
 
         <!-- Subscription Plans Tab -->
         <div class="tab-content active" id="plans-tab-content">

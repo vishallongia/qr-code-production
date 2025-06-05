@@ -35,13 +35,22 @@ router.get("/plans", authMiddleware, async (req, res) => {
       isActive: true,
     }).sort({ validUntil: -1 });
 
+    const subscription = req.user.subscription || {};
+
+    const validUntilVip = subscription.validTill ? new Date(subscription.validTill) : null;
+    const isVip = subscription.isVip === true && validUntilVip && validUntilVip > new Date();
+
+
     let userSubscription = {
       validUntil: latestPayment ? latestPayment.validUntil : null,
       name: req.user.fullName, // Assuming req.user contains user data like name
       email: req.user.email, // Assuming req.user contains user data like email
       role: req.user.role,
+      subscription : {
+        isVip,
+        validUntilVip
+      }
     };
-
     // Render the 'plans' EJS page and pass the encrypted plans data to it
     res.render("dashboardnew", {
       plans: encryptedPlans,

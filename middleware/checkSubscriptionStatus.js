@@ -16,6 +16,10 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
       return next();
     }
 
+    if (req.user?.subscription?.isVip === true) {
+      return next();
+    }
+
     const latestPayment = await Payment.findOne({
       user_id: userId,
       paymentStatus: "completed",

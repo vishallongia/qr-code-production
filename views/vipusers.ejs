@@ -91,7 +91,17 @@
                                                 </span>
                                                 <span>
                                                     <button class="view-qr-btn update-vip-btn"
-                                                        data-user-id="<%= user._id %>">Update</button>
+                                                        data-user-id="<%= user._id %>"
+                                                        data-qr-limit="<%= user.subscription?.qrLimit || '' %>"
+                                                        data-valid-till="<%= user.subscription?.validTill ? new Date(user.subscription.validTill).toISOString().split('T')[0] : '' %>">
+                                                        Update
+                                                    </button>
+                                                    <% if (user.role==="user" ) { %>
+                                                        <button class="view-qr-btn make-affiliate-btn"
+                                                            data-user-id="<%= user._id %>">
+                                                            Make Affiliate
+                                                        </button>
+                                                        <% } %>
                                                 </span>
                                                 <span>
                                                     <% if (user.subscription && user.subscription.validTill) { %>
@@ -155,6 +165,11 @@
                                             <% } %>
         </div>
         </div>
+
+         <div class="fullscreen-loader">
+            <div class="loader"></div>
+            <p class="animated-text">Please wait<span>.</span><span>.</span><span>.</span></p>
+        </div>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
@@ -164,6 +179,12 @@
     document.querySelectorAll(".update-vip-btn").forEach((btn) => {
         btn.addEventListener("click", function () {
             selectedUserId = this.getAttribute("data-user-id");
+            // Populate inputs from data attributes
+            const qrLimit = this.getAttribute("data-qr-limit") || "";
+            const validTill = this.getAttribute("data-valid-till") || "";
+
+            document.getElementById("vip-update-qr-limit").value = qrLimit;
+            document.getElementById("vip-update-valid-till").value = validTill;
             document.getElementById("theme-popup-update-vip").style.display = "flex";
         });
     });

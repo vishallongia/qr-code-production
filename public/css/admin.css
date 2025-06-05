@@ -13,8 +13,8 @@
   --link-color: #4db6ac;
   --link-hover-color: #26a69a;
   --text-color: #333333;
-  --grid-columns-7: 0.8fr 0.8fr 0.8fr 1.0fr 0.5fr 0.5fr 0.5fr;
-  --grid-columns-9: 0.7fr 0.7fr 0.7fr 1.0fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr;
+--grid-columns-7: 0.6fr 0.6fr 0.6fr 0.2fr 1.0fr 0.5fr 0.5fr;
+  --grid-columns-8: 0.7fr 0.7fr 0.7fr 0.4fr 0.7fr 0.7fr 0.7fr 0.8fr;
   --grid-columns-6: 0.7fr 0.7fr 0.7fr 0.5fr 0.5fr 0.5fr;
 }
 
@@ -55,7 +55,7 @@ canvas {
 .list-header,
 .user-item {
   display: grid;
-  grid-template-columns: var(--grid-columns-6);
+  grid-template-columns: var(--grid-columns-8);
   /* Default to 8 columns */
   gap: 15px;
   padding: 15px 0;

@@ -65,6 +65,7 @@
                         <span>QR's</span>
                         <span>Active</span>
                         <span>Vip</span>
+                        <span>Affiliate</span>
                     </div>
                     <ul id="userList" class="user-list">
                         <% users.forEach(user=> { %>
@@ -101,6 +102,11 @@
                                 <span>
                                     <button class="view-qr-btn make-vip-btn" data-user-id="<%= user._id %>">Make
                                         Vip</button>
+
+                                </span>
+                                <span>
+                                    <button class="view-qr-btn make-affiliate-btn" data-user-id="<%= user._id %>">Make
+                                        Affiliate</button>
                                 </span>
                             </li>
                             <% }); %>
@@ -144,6 +150,11 @@
                                                                 </a>
                                                                 <% } %>
                             </div>
+        </div>
+
+         <div class="fullscreen-loader">
+            <div class="loader"></div>
+            <p class="animated-text">Please wait<span>.</span><span>.</span><span>.</span></p>
         </div>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>

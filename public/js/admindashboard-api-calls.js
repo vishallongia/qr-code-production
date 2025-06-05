@@ -533,15 +533,21 @@ function clearVipInputs() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  document
-    .getElementById("assignedemail2")
-    .addEventListener("input", function () {
-      document.getElementById("assignedemail1").value = this.value;
+  const assignedEmail2 = document.getElementById("assignedemail2");
+  const assignedEmail1 = document.getElementById("assignedemail1");
+
+  if (assignedEmail2 && assignedEmail1) {
+    assignedEmail2.addEventListener("input", function () {
+      assignedEmail1.value = this.value;
     });
+  }
+
   const closeBtn = document.getElementById("close-popup-get-paid");
-  if (closeBtn) {
+  const popup = document.getElementById("theme-popup-have-cc");
+
+  if (closeBtn && popup) {
     closeBtn.addEventListener("click", function () {
-      document.getElementById("theme-popup-have-cc").style.display = "none";
+      popup.style.display = "none";
     });
   }
 });
@@ -555,81 +561,140 @@ document.querySelectorAll(".make-vip-btn").forEach((btn) => {
 });
 
 // Close popup
-document
-  .getElementById("close-popup-get-paid")
-  .addEventListener("click", () => {
-    document.getElementById("theme-popup-vip-details").style.display = "none";
+const closeVipBtn = document.getElementById("close-popup-get-paid");
+const vipPopup = document.getElementById("theme-popup-vip-details");
+
+if (closeVipBtn && vipPopup && typeof clearVipInputs === "function") {
+  closeVipBtn.addEventListener("click", () => {
+    vipPopup.style.display = "none";
     clearVipInputs();
   });
+}
 
-// Handle VIP assignment
-document
-  .getElementById("vip-assign-btn")
-  .addEventListener("click", async function () {
-    const qrLimitInput = document.getElementById("vip-qr-limit").value.trim();
-    const validTillInput = document.getElementById("vip-valid-till").value;
+document.addEventListener("DOMContentLoaded", function () {
+  // Handle VIP assignment
+  const vipAssignBtn = document.getElementById("vip-assign-btn");
 
-    const qrLimit = parseInt(qrLimitInput, 10);
-    const validTill = new Date(validTillInput);
-    const today = new Date();
+  if (vipAssignBtn) {
+    vipAssignBtn.addEventListener("click", async function () {
+      const qrLimitEl = document.getElementById("vip-qr-limit");
+      const validTillEl = document.getElementById("vip-valid-till");
 
-    // Validate user selection
-    if (!selectedUserId) {
-      showToast("User not selected", "error");
-      return;
-    }
-
-    // Validate QR Limit
-    if (!qrLimitInput || isNaN(qrLimit) || qrLimit <= 0) {
-      showToast("Please enter a valid number for QR limit", "error");
-      return;
-    }
-
-    // Validate Valid Till Date
-    if (!validTillInput) {
-      showToast("Please select a valid expiry date", "error");
-      return;
-    }
-
-    // Ensure date is in future
-    if (validTill <= today) {
-      showToast("Valid Till date must be in the future", "error");
-      return;
-    }
-
-    // All validations passed, proceed with API call
-    try {
-      const response = await fetch("/admindashboard/assign-vip", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: selectedUserId,
-          qrLimit,
-          validTill,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to assign VIP status");
+      if (!qrLimitEl || !validTillEl) {
+        showToast("Form inputs missing", "error");
+        return;
       }
 
-      showToast(result.message, "success");
-      document.getElementById("theme-popup-vip-details").style.display = "none";
-      clearVipInputs();
-      // Reload the page after 1 minute (60,000 milliseconds)
-      setTimeout(() => {
-        location.reload();
-      }, 1000);
-    } catch (error) {
-      console.error("VIP assignment error:", error);
-      showToast(error.message || "Something went wrong", "error");
-    }
-  });
+      const qrLimitInput = qrLimitEl.value.trim();
+      const validTillInput = validTillEl.value;
 
+      const qrLimit = parseInt(qrLimitInput, 10);
+      const validTill = new Date(validTillInput);
+      const today = new Date();
 
+      if (!selectedUserId) {
+        showToast("User not selected", "error");
+        return;
+      }
 
-  
+      if (!qrLimitInput || isNaN(qrLimit) || qrLimit <= 0) {
+        showToast("Please enter a valid number for QR limit", "error");
+        return;
+      }
+
+      if (!validTillInput) {
+        showToast("Please select a valid expiry date", "error");
+        return;
+      }
+
+      if (validTill <= today) {
+        showToast("Valid Till date must be in the future", "error");
+        return;
+      }
+      const loaderOverlay = document.querySelector(".fullscreen-loader");
+      loaderOverlay.style.display = "flex";
+      try {
+        const response = await fetch("/admindashboard/assign-vip", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: selectedUserId,
+            qrLimit,
+            validTill,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to assign VIP status");
+        }
+
+        showToast(result.message, "success");
+
+        const popup = document.getElementById("theme-popup-vip-details");
+        if (popup) popup.style.display = "none";
+
+        if (typeof clearVipInputs === "function") clearVipInputs();
+
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      } catch (error) {
+        console.error("VIP assignment error:", error);
+        showToast(error.message || "Something went wrong", "error");
+      } finally {
+        // Hide loader & enable button after operation
+        loaderOverlay.style.display = "none"; // Hide fullscreen loader
+      }
+    });
+  }
+
+  // Handle Make Affiliate button click
+  const affiliateBtns = document.querySelectorAll(".make-affiliate-btn");
+
+  if (affiliateBtns.length > 0) {
+    affiliateBtns.forEach((btn) => {
+      btn.addEventListener("click", async function () {
+        const userId = this.getAttribute("data-user-id");
+
+        if (!userId) {
+          showToast("User ID not found", "error");
+          return;
+        }
+
+        const loaderOverlay = document.querySelector(".fullscreen-loader");
+        loaderOverlay.style.display = "flex";
+        try {
+          const response = await fetch("/admindashboard/make-affiliate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userId }),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.message || "Failed to update user role");
+          }
+
+          showToast(result.message, "success");
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        } catch (error) {
+          console.error("Affiliate role assignment error:", error);
+          showToast(error.message || "Something went wrong", "error");
+        } finally {
+          // Hide loader & enable button after operation
+          loaderOverlay.style.display = "none"; // Hide fullscreen loader
+        }
+      });
+    });
+  }
+});

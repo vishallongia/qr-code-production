@@ -101,17 +101,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Enforce walletBalance only for affiliate users
-userSchema.pre("save", function (next) {
-  if (
-    this.role !== "affiliate" &&
-    this.isModified("walletBalance") &&
-    this.walletBalance !== 0
-  ) {
-    this.walletBalance = 0;
-  }
-  next();
-});
+
 
 // Create and export the user model
 const User = mongoose.model("User", userSchema);
