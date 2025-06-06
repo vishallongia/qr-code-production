@@ -2589,8 +2589,9 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
 
     const userQrCreator = await User.findById(userIdToCheck).lean();
 
+
     // Safely check VIP status
-    const subscription = userQrCreator.subscription || {};
+    const subscription = userQrCreator?.subscription || {};
     const isVip =
       subscription.isVip === true &&
       subscription.validTill &&
@@ -2602,6 +2603,7 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
       isActive: true,
       validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
     }).sort({ validUntil: -1 });
+
 
     if (!checkSubscription && userIdToCheck && !isVip && !codeData.isFirstQr) {
       return res.render("expired-code");
