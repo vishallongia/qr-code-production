@@ -32,7 +32,7 @@
             <p>Please Enter Coupon (Optional)</p>
             <form onsubmit="return false;">
                 <div class="form-group" style="margin-bottom: 24px;">
-                    <input type="text" style="width: 100%;" id="couponcode1" placeholder="Enter Coupon Code">
+                    <input type="text" style="width: 100%;" id="couponcode" placeholder="Enter Coupon Code">
                 </div>
                 <button id="popup-ok-btn" type="button"
                     onclick="handleAssignQrCode(event, 'assignedemail1', 'couponcode', false)"><span
@@ -40,6 +40,13 @@
                     <span class="spinner" style="display: none; margin-left: 8px;">
                         <span class="loader"></span>
                     </span></button>
+                     <button id="popup-ok-btn" type="button"
+                    onclick="handleAssignQrCode(event, 'assignedemail1', 'couponcode', false,true)"><span
+                        class="btn-text">Proceed Without Coupon</span>
+                    <span class="spinner" style="display: none; margin-left: 8px;">
+                        <span class="loader"></span>
+                    </span></button>
+                    
             </form>
 
         </div>

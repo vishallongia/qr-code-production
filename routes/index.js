@@ -500,13 +500,24 @@ router.post("/assign-qr-code", async (req, res) => {
             .join("\n")
         : `<div class="code-box">No coupon codes used yet.</div>`;
 
+    const couponSection = couponCode
+      ? `
+  <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+  <h2>Claim Your Free 15-Day Premium Plan!</h2>
+  <p>Enjoy <strong>15 days of our premium plan — completely free!</strong> Use the coupon code below at checkout:</p>
+  <p>Coupons which you can use:</p>
+  ${couponBoxesHtml}
+  <p>Don’t miss out — this offer is limited!</p>
+  `
+      : "";
+
     const contentCoupon = `
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login with Magic Link + Free 15-Day Plan</title>
+  <title>Login with Magic Link</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -565,12 +576,7 @@ router.post("/assign-qr-code", async (req, res) => {
     <p>Click the Magic Link below to securely log In to your account. </p>
     <a href="${magicLink}" class="btn">ACTIVATE</a>
     <p>Your Password is the characters before the @ in your e-mail address. You can change this any time.</p>
-    <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-    <h2>Claim Your Free 15-Day Premium Plan!</h2>
-    <p>Enjoy <strong>15 days of our premium plan — completely free!</strong> Use the coupon code below at checkout:</p>
-     <p>Coupons which you can use:</p>
-    ${couponBoxesHtml}
-    <p>Don’t miss out — this offer is limited!</p>
+    ${couponSection}
     <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
   </div>
 </body>
@@ -2589,7 +2595,6 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
 
     const userQrCreator = await User.findById(userIdToCheck).lean();
 
-
     // Safely check VIP status
     const subscription = userQrCreator?.subscription || {};
     const isVip =
@@ -2603,7 +2608,6 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
       isActive: true,
       validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
     }).sort({ validUntil: -1 });
-
 
     if (!checkSubscription && userIdToCheck && !isVip && !codeData.isFirstQr) {
       return res.render("expired-code");

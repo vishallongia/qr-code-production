@@ -16,6 +16,7 @@ const checkQrLimit = async (req, res, next) => {
 
     // Default QR code limit
     let allowedQrLimit = 3;
+    let isValidVip = false;
 
     if (
       user.subscription?.isVip &&
@@ -23,6 +24,12 @@ const checkQrLimit = async (req, res, next) => {
       new Date(user.subscription.validTill) > new Date()
     ) {
       allowedQrLimit = user.subscription.qrLimit || 3;
+      isValidVip = true;
+      req.isValidVip = true; // For Further use anywhere
+    }
+
+    if (req.path.startsWith("/update/") && isValidVip) {
+      return next();
     }
 
     if (qrCount >= allowedQrLimit && user.role !== "super-admin") {
@@ -42,4 +49,4 @@ const checkQrLimit = async (req, res, next) => {
   }
 };
 
-module.exports = {checkQrLimit};
+module.exports = { checkQrLimit };

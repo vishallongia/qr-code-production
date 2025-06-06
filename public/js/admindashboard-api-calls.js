@@ -328,12 +328,14 @@ async function handleAssignQrCode(
   event,
   emailId,
   couponId,
-  checkFreeCoupon = true
+  checkFreeCoupon = true,
+  withoutCoupon = false
 ) {
   event.preventDefault();
 
   const emailInput = document.getElementById(emailId);
   const couponInput = couponId ? document.getElementById(couponId) : null;
+  const couponCode = !withoutCoupon && couponInput ? couponInput.value.trim() : null;
 
   const url = window.location.href;
   const encId = url.split("/").pop();
@@ -341,7 +343,7 @@ async function handleAssignQrCode(
   const data = {
     email: emailInput.value,
     encId,
-    couponCode: couponInput ? couponInput.value : "",
+   couponCode,
     checkFreeCoupon,
   };
 

@@ -11,12 +11,29 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
         type: "error",
       });
     }
+    if (req.path.startsWith("/update/")) {
+      if (req.user?.subscription?.isVip === true) {
+        return next();
+      }
+      const qrCodeId = req.params.id;
+
+      const isFirstQr = await QRCodeData.exists({
+        code: qrCodeId,
+        isFirstQr: true,
+        $or: [{ user_id: userId }, { assignedTo: userId }],
+      });
+
+      if (isFirstQr) {
+        // If this QR code is a free "first QR", allow update without subscription check
+        return next();
+      }
+    }
 
     const existingFirstQr = await QRCodeData.exists({
       $or: [{ user_id: userId }, { assignedTo: userId }],
       isFirstQr: true,
     });
-console.log(existingFirstQr,"wm")
+
     if (!existingFirstQr) {
       return next();
     }
