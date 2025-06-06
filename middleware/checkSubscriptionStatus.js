@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
 const Payment = require("../models/Payment");
+const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
 
 const checkSubscriptionMiddleware = async (req, res, next) => {
   try {
@@ -10,6 +10,15 @@ const checkSubscriptionMiddleware = async (req, res, next) => {
         message: "Unauthorized: User not found",
         type: "error",
       });
+    }
+
+    const existingFirstQr = await QRCodeData.exists({
+      $or: [{ user_id: userId }, { assignedTo: userId }],
+      isFirstQr: true,
+    });
+console.log(existingFirstQr,"wm")
+    if (!existingFirstQr) {
+      return next();
     }
 
     if (req.user.role === "super-admin") {
