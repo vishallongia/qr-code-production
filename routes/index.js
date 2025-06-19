@@ -2836,7 +2836,7 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
       timeZone: geoData.timezone || "unknown",
       city: geoData.city || "unknown",
       region: geoData.region || "unknown",
-      country: geoData.country_name || "unknown",
+      country: geoData.country || "unknown",
       scannedAt: new Date(),
     });
 
