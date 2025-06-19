@@ -52,12 +52,18 @@
 
                                     </p>
 
-                                    <!-- <p><strong>History:</strong>
+                                    <p><strong>History:</strong>
                                         <a href="/qrhistory/<%= qr._id %>" class="track-history-btn">
                                             Track
                                         </a>
-                                    </p> -->
+                                    </p>
 
+                                    <p>
+                                        <strong>No. of Scans:</strong>
+                                        <a href="/qrscanlogs/<%= qr._id %>" class="track-history-btn">
+                                            <%= qr.totalScans || 0 %>
+                                        </a>
+                                    </p>
 
                                 </div>
                                 <% }) %>

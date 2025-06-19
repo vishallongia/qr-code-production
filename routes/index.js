@@ -626,16 +626,42 @@ router.get("/admindashboard/qr/:userId", authMiddleware, async (req, res) => {
     // Calculate records to skip
     const skip = (currentPage - 1) * recordsPerPage;
 
-    // Fetch paginated QR details for the user (created by or assigned to them)
-    const qrDetails = await QRCodeData.find({
-      $or: [
-        { user_id: userId }, // QR codes created by the user
-        { assignedTo: userId }, // QR codes assigned to the user (array check)f
-      ],
-    })
-      .select("qrName type code url text")
-      .skip(skip)
-      .limit(recordsPerPage);
+    const qrDetails = await QRCodeData.aggregate([
+      {
+        $match: {
+          $or: [
+            { user_id: new mongoose.Types.ObjectId(userId) },
+            { assignedTo: new mongoose.Types.ObjectId(userId) },
+          ],
+        },
+      },
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: recordsPerPage },
+      {
+        $lookup: {
+          from: "qrscanlogs", // ⬅ collection name in MongoDB (must match your actual collection)
+          localField: "_id",
+          foreignField: "qrCodeId",
+          as: "scans",
+        },
+      },
+      {
+        $addFields: {
+          totalScans: { $size: "$scans" },
+        },
+      },
+      {
+        $project: {
+          qrName: 1,
+          type: 1,
+          code: 1,
+          url: 1,
+          text: 1,
+          totalScans: 1,
+        },
+      },
+    ]);
 
     if (!qrDetails || qrDetails.length === 0) {
       return res.status(404).render("usersqr", {
@@ -4659,6 +4685,97 @@ router.post("/disconnect-special-offer", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Error disconnecting:", error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.get("/qrscanlogs/:qrCodeId", authMiddleware, async (req, res) => {
+  try {
+    const qrCodeId = req.params.qrCodeId;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = parseInt(req.query.skip) || 0;
+
+    // Step 1: Validate QR Code ID
+    if (!mongoose.Types.ObjectId.isValid(qrCodeId)) {
+      const errorResponse = {
+        type: "error",
+        message: "Invalid QR Code ID",
+        logs: [],
+        hasMore: false,
+        qrCodeId,
+      };
+
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(400).json(errorResponse);
+      }
+
+      return res.status(400).render("qr-scan-logs", errorResponse);
+    }
+
+    const query = { qrCodeId: new mongoose.Types.ObjectId(qrCodeId) };
+
+    const totalCount = await QRScanLog.countDocuments(query);
+    const logs = await QRScanLog.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .select(
+        "code ip language userAgent timeZone city region country scannedAt userId"
+      )
+      .populate("userId", "fullName email -_id") // Populate basic user info if available
+      .lean();
+
+ 
+
+    // Step 2: Handle not found
+    if (totalCount === 0) {
+      const notFoundResponse = {
+        type: "error",
+        message: "No scan logs found for this QR code.",
+        logs: [],
+        hasMore: false,
+        qrCodeId,
+      };
+
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(404).json(notFoundResponse);
+      }
+
+      return res.status(404).render("qr-scan-logs", notFoundResponse);
+    }
+
+    const hasMore = skip + limit < totalCount;
+
+    // Step 3: Return valid response
+    const successResponse = {
+      type: "success",
+      message: "",
+      logs,
+      hasMore,
+      skip: skip + limit,
+      qrCodeId,
+    };
+
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.json(successResponse);
+    }
+
+    res.render("qr-scan-logs", successResponse);
+  } catch (error) {
+    console.error("Error fetching QR Scan Logs:", error);
+
+    const errorResponse = {
+      type: "error",
+      message: "Internal server error while loading scan logs",
+      logs: [],
+      hasMore: false,
+      qrCodeId: req.params.qrCodeId,
+    };
+
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.status(500).json(errorResponse);
+    }
+
+    res.status(500).render("qr-scan-logs", errorResponse);
   }
 });
 
