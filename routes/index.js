@@ -2820,7 +2820,7 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
 
     let geoData = {};
     try {
-      const response = await fetch(`https://ip-api.com/docs/api:json`);
+      const response = await fetch(`http://ip-api.com/json/${ip}`);
       geoData = await response.json();
       console.log(geoData);
     } catch (err) {
