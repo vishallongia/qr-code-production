@@ -15,6 +15,8 @@ const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necess
 const Payment = require("../models/Payment");
 const QRCodeHistory = require("../models/QRCodeHistory"); // Adjust path as per your folder structure
 const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
+const UAParser = require("ua-parser-js");
+const locale = require("locale-code");
 const fetch = require("node-fetch");
 const AffiliatePayment = require("../models/AffiliatePayment");
 const Coupon = require("../models/Coupon");
@@ -2827,12 +2829,31 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
       console.error("Geo lookup failed:", err);
     }
 
+    // ✅ Parse Language for readability
+    const rawLang = req.headers["accept-language"] || "unknown";
+    const langCode = rawLang.split(",")[0]; // e.g., "en-IN"
+    const [langPart, countryPart] = langCode.split("-");
+    const language = locale.getLanguage(langPart);
+    const country = locale.getCountry(countryPart);
+    const displayLanguage =
+      language && country ? `${language} (${country})` : langCode;
+
+    // ✅ Parse User Agent
+    const parser = new UAParser(req.headers["user-agent"]);
+    const ua = parser.getResult();
+    const browser = `${ua.browser.name || "Unknown"} ${
+      ua.browser.version || ""
+    }`;
+    const os = ua.os.name || "Unknown";
+    const device = ua.device.type || "Desktop";
+    const userAgentDisplay = `${browser} on ${os} (${device})`;
+
     await QRScanLog.create({
       qrCodeId: codeData._id,
       code: alphanumericCode,
       ip: geoData.ip || ip,
-      language: req.headers["accept-language"] || "unknown",
-      userAgent: req.headers["user-agent"] || "unknown",
+      language: displayLanguage || "unknown",
+      userAgent: userAgentDisplay || "unknown",
       timeZone: geoData.timezone || "unknown",
       city: geoData.city || "unknown",
       region: geoData.region || "unknown",
