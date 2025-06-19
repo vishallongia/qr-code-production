@@ -7,6 +7,11 @@ const qrScanLogSchema = new mongoose.Schema(
       ref: "QRCodeData", // Reference to QR code document
       required: true,
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // Reference to your User model
+      required: false, // Optional
+    },
     code: {
       type: String,
       required: true,

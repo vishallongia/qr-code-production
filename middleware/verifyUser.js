@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User"); // Replace with your User model
-const verifyAdminUser = async (req, res, next) => {
+const verifyUser = async (req, res, next) => {
   const token = req.cookies.token;
 
   if (token) {
@@ -19,4 +19,4 @@ const verifyAdminUser = async (req, res, next) => {
   next(); // Always proceed
 };
 
-module.exports = { verifyAdminUser };
+module.exports = { verifyUser };

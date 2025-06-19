@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
 const { authMiddleware } = require("../middleware/auth"); // Import the middleware
-const { verifyAdminUser } = require("../middleware/verifyAdminUser"); // Import the middleware
+const { verifyUser } = require("../middleware/verifyUser"); // Import the middleware
 const {
   checkSubscriptionMiddleware,
 } = require("../middleware/checkSubscriptionStatus"); // Import the middleware
@@ -1433,10 +1433,10 @@ router.post("/reset-password/:token", async (req, res) => {
 });
 
 // Registration Route
-router.post("/register", verifyAdminUser, async (req, res) => {
+router.post("/register", verifyUser, async (req, res) => {
   const { fullName, email, password, role = "user" } = req.body;
   const currentUser = req.user || null; // Authenticated user who is trying to register someone
-  // Only set cookie and return token if it's self-registration (non-admin creating own account)
+
   const isSelfRegistration = !currentUser || currentUser.role !== "admin";
 
   try {
@@ -2748,141 +2748,174 @@ router.put(
 );
 
 // Route to handle alphanumeric codes
-router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
-  try {
-    const { alphanumericCode } = req.params; // Get alphanumericCode from the URL
-
-    const token = req.cookies?.token;
-    let decoded;
-    let user;
-    if (token) {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded?.userId) {
-        user = await User.findById(decoded.userId);
-      }
-    }
-
-    // Find the record using the alphanumeric code
-    const codeData = await QRCodeData.findOne({ code: alphanumericCode });
-
-    // If specialOfferCouponId exists, override content from coupon.specialOffer
-    let specialOfferData = null;
-
-    if (codeData?.specialOfferCouponId) {
-      const coupon = await Coupon.findById(codeData.specialOfferCouponId);
-      if (coupon && coupon.specialOffer) {
-        specialOfferData = coupon.specialOffer;
-      }
-    }
-
-    // Determine final type and content
-    const finalType = specialOfferData?.type || codeData.type;
-    const finalText = specialOfferData?.text || codeData.text;
-    const finalUrl = specialOfferData?.url || codeData.url;
-    const finalMedia = specialOfferData?.media_url || codeData.media_url;
-
-    // Determine which ID to use for checking payment — user_id or assignedTo
-    const userIdToCheck = codeData.user_id || codeData.assignedTo;
-
-    const userQrCreator = await User.findById(userIdToCheck).lean();
-
-    // Safely check VIP status
-    const subscription = userQrCreator?.subscription || {};
-    const isVip =
-      subscription.isVip === true &&
-      subscription.validTill &&
-      new Date(subscription.validTill) > new Date();
-
-    const checkSubscription = await Payment.findOne({
-      user_id: userIdToCheck,
-      paymentStatus: "completed",
-      isActive: true,
-      validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
-    }).sort({ validUntil: -1 });
-
-    if (!checkSubscription && userIdToCheck && !isVip && !codeData.isFirstQr) {
-      return res.render("expired-code");
-    }
-
-    // ✅ If user ID matches and showEditOnScan is true, redirect to dummy link
-    if (
-      user && // Check if user exists
-      codeData?.user_id?.toString() === user._id?.toString() &&
-      user.showEditOnScan
-    ) {
-      return res.redirect(
-        `${req.protocol}://${req.get("host")}/dashboard?magiccode=${
-          codeData._id
-        }`
-      ); // Replace with actual dummy link
-    }
-
-    const ip =
-      req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress;
-
-    let geoData = {};
+router.get(
+  "/:alphanumericCode([a-zA-Z0-9]{6})",
+  verifyUser,
+  async (req, res) => {
     try {
-      const response = await fetch(`http://ip-api.com/json/${ip}`);
-      geoData = await response.json();
-      console.log(geoData);
-    } catch (err) {
-      console.error("Geo lookup failed:", err);
-    }
+      const { alphanumericCode } = req.params; // Get alphanumericCode from the URL
 
-    // ✅ Parse Language for readability
-    const rawLang = req.headers["accept-language"] || "unknown";
-    const langCode = rawLang.split(",")[0]; // e.g., "en-IN"
-    const [langPart, countryPart] = langCode.split("-");
-    const language = locale.getLanguage(langPart);
-    const country = locale.getCountry(countryPart);
-    const displayLanguage =
-      language && country ? `${language} (${country})` : langCode;
+      const token = req.cookies?.token;
+      let decoded;
+      let user;
+      if (token) {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded?.userId) {
+          user = await User.findById(decoded.userId);
+        }
+      }
 
-    // ✅ Parse User Agent
-    const parser = new UAParser(req.headers["user-agent"]);
-    const ua = parser.getResult();
-    const browser = `${ua.browser.name || "Unknown"} ${
-      ua.browser.version || ""
-    }`;
-    const os = ua.os.name || "Unknown";
-    const device = ua.device.type || "Desktop";
-    const userAgentDisplay = `${browser} on ${os} (${device})`;
+      // Find the record using the alphanumeric code
+      const codeData = await QRCodeData.findOne({ code: alphanumericCode });
 
-    await QRScanLog.create({
-      qrCodeId: codeData._id,
-      code: alphanumericCode,
-      ip: geoData.ip || ip,
-      language: displayLanguage || "unknown",
-      userAgent: userAgentDisplay || "unknown",
-      timeZone: geoData.timezone || "unknown",
-      city: geoData.city || "unknown",
-      region: geoData.region || "unknown",
-      country: geoData.country || "unknown",
-      scannedAt: new Date(),
-    });
+      // If specialOfferCouponId exists, override content from coupon.specialOffer
+      let specialOfferData = null;
 
-    // Show dynamic content based on finalType
-    if (finalType === "url") {
-      return res.redirect(finalUrl);
-    } else if (finalType === "media") {
-      return res.redirect(`${req.protocol}://${req.get("host")}/${finalMedia}`);
-    } else if (finalType === "text") {
-      const isLoggedIn = !!token;
-      return res.render("content", { content: finalText, isLoggedIn });
-    } else {
-      return res.status(400).render("error", {
-        message: "Invalid type associated with this Magic Code.",
+      if (codeData?.specialOfferCouponId) {
+        const coupon = await Coupon.findById(codeData.specialOfferCouponId);
+        if (coupon && coupon.specialOffer) {
+          specialOfferData = coupon.specialOffer;
+        }
+      }
+
+      // Determine final type and content
+      const finalType = specialOfferData?.type || codeData.type;
+      const finalText = specialOfferData?.text || codeData.text;
+      const finalUrl = specialOfferData?.url || codeData.url;
+      const finalMedia = specialOfferData?.media_url || codeData.media_url;
+
+      // Determine which ID to use for checking payment — user_id or assignedTo
+      const userIdToCheck = codeData.user_id || codeData.assignedTo;
+
+      const userQrCreator = await User.findById(userIdToCheck).lean();
+
+      // Safely check VIP status
+      const subscription = userQrCreator?.subscription || {};
+      const isVip =
+        subscription.isVip === true &&
+        subscription.validTill &&
+        new Date(subscription.validTill) > new Date();
+
+      const checkSubscription = await Payment.findOne({
+        user_id: userIdToCheck,
+        paymentStatus: "completed",
+        isActive: true,
+        validUntil: { $gt: new Date() }, // Ensure validUntil is greater than the current date
+      }).sort({ validUntil: -1 });
+
+      if (
+        !checkSubscription &&
+        userIdToCheck &&
+        !isVip &&
+        !codeData.isFirstQr
+      ) {
+        return res.render("expired-code");
+      }
+
+      // ✅ If user ID matches and showEditOnScan is true, redirect to dummy link
+      if (
+        user && // Check if user exists
+        codeData?.user_id?.toString() === user._id?.toString() &&
+        user.showEditOnScan
+      ) {
+        return res.redirect(
+          `${req.protocol}://${req.get("host")}/dashboard?magiccode=${
+            codeData._id
+          }`
+        ); // Replace with actual dummy link
+      }
+
+      const ip =
+        req.headers["x-forwarded-for"]?.split(",")[0] ||
+        req.socket.remoteAddress;
+
+      let geoData = {};
+      try {
+        const response = await fetch(`http://ip-api.com/json/${ip}`);
+        geoData = await response.json();
+      } catch (err) {
+        console.error("Geo lookup failed:", err);
+      }
+
+      // ✅ Step 1: Get language header from request
+      const rawLang = req.headers["accept-language"] || "unknown";
+
+      // ✅ Step 2: Extract primary language code (e.g., "en-IN")
+      const langCode = rawLang.split(",")[0];
+      const [langPart, countryPart] = langCode.split("-") || [];
+
+      let language = langPart;
+      let country = countryPart;
+
+      try {
+        const languageDisplay = new Intl.DisplayNames(["en"], {
+          type: "language",
+        });
+        const countryDisplay = new Intl.DisplayNames(["en"], {
+          type: "region",
+        });
+
+        if (langPart) language = languageDisplay.of(langPart) || langPart;
+        if (countryPart)
+          country = countryDisplay.of(countryPart) || countryPart;
+      } catch (error) {
+        console.error("Failed to resolve language/country:", error.message);
+      }
+
+      const displayLanguage =
+        language && country ? `${language} (${country})` : langCode;
+
+      // ✅ Parse User Agent
+      const parser = new UAParser(req.headers["user-agent"]);
+      const ua = parser.getResult();
+
+      const browser = `${ua.browser.name || "Unknown"} ${
+        ua.browser.version || ""
+      }`;
+      const os = ua.os.name || "Unknown";
+      const device = ua.device.type || "Desktop";
+
+      const userAgentDisplay = `${browser} on ${os} (${device})`;
+
+      await QRScanLog.create({
+        qrCodeId: codeData._id,
+        code: alphanumericCode,
+        ip: geoData.ip || ip,
+        language: displayLanguage || "unknown",
+        userAgent: userAgentDisplay || "unknown",
+        timeZone: geoData.timezone || "unknown",
+        city: geoData.city || "unknown",
+        region: geoData.region || "unknown",
+        country: geoData.country || "unknown",
+        ...(req.user?._id && { userId: req.user._id }), // ✅ Conditional field
+        scannedAt: new Date(),
+      });
+
+      // Show dynamic content based on finalType
+      if (finalType === "url") {
+        return res.redirect(finalUrl);
+      } else if (finalType === "media") {
+        return res.redirect(
+          `${req.protocol}://${req.get("host")}/${finalMedia}`
+        );
+      } else if (finalType === "text") {
+        const isLoggedIn = !!token;
+        return res.render("content", { content: finalText, isLoggedIn });
+      } else {
+        return res.status(400).render("error", {
+          message: "Invalid type associated with this Magic Code.",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching code data:", error);
+      return res.status(500).render("error", {
+        message: "An error occurred while processing the code.",
         type: "error",
       });
     }
-  } catch (error) {
-    console.error("Error fetching code data:", error);
-    return res.status(500).render("error", {
-      message: "An error occurred while processing the code.",
-      type: "error",
-    });
   }
-});
+);
 
 // Home route
 router.get("/newqr", async (req, res) => {
