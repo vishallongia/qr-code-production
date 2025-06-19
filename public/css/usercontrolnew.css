@@ -1,129 +1,385 @@
 .qr-page {
-    --blue: rgba(26, 1, 97, 1);
-    --greygrey-6: rgba(30, 29, 33, 1);
-    --shadow-1: 0px 0px 23px 0px rgba(0, 0, 0, 0.07);
-    font-family: 'Poppins', sans-serif;
-    background-color: #f9f9f9;
-    min-height: 100vh;
+  --blue: rgba(26, 1, 97, 1);
+  --greygrey-6: rgba(30, 29, 33, 1);
+  --shadow-1: 0px 0px 23px 0px rgba(0, 0, 0, 0.07);
+  font-family: 'Poppins', sans-serif;
+  background-color: #f9f9f9;
+  min-height: 100vh;
 }
 
 .container-user-control {
-    padding: 20px
+  padding: 20px
 }
 
 
 /* Container */
 .qr-page .container {
-    background: white;
-    border-radius: 16px;
-    box-shadow: var(--shadow-1);
-    display: flex;
-    flex-direction: column;
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Section title */
 .qr-page .content-section h2 {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--greygrey-6);
-    margin-bottom: 8px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--greygrey-6);
+  margin-bottom: 8px;
 }
 
 /* Toggle group */
 .qr-page .toggle-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 /* Select dropdown */
 .qr-page #qr-update-select {
-    height: 48px;
-    padding: 0 16px;
-    font-size: 16px;
-    border: 1px solid #c4c3c3;
-    border-radius: 58px;
-    background: none;
-    color: var(--greygrey-6);
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 16px;
+  border: 1px solid #c4c3c3;
+  border-radius: 58px;
+  background: none;
+  color: var(--greygrey-6);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .qr-page #qr-update-select:focus {
-    outline: none;
-    border-color: var(--blue);
-    background: rgba(26, 1, 97, 0.08);
+  outline: none;
+  border-color: var(--blue);
+  background: rgba(26, 1, 97, 0.08);
 }
 
 .modern-radio-group {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 20px;
 }
 
 .modern-radio-group input[type="radio"] {
-    display: none;
+  display: none;
 }
 
 .modern-radio-group label {
-    padding: 10px 20px;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    color: #333;
-    background-color: #f1f1f1;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  padding: 10px 20px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #333;
+  background-color: #f1f1f1;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
 }
 
-.modern-radio-group input[type="radio"]:checked + label {
-    background: var(--blue);
-    color: #fff;
-    border-color: var(--blue);
-    font-weight: 600;
+.modern-radio-group input[type="radio"]:checked+label {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+  font-weight: 600;
 }
 
 .modern-radio-group label:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
+
+
+
+
 
 
 
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-    .main-container {
-        display: block;
-        height: 100vh;
-    }
+  .main-container {
+    display: block;
+    height: 100vh;
+  }
 
-    .qr-page .content-section h2 {
-        font-size: 18px;
-        text-align: center;
-    }
+  .qr-page .content-section h2 {
+    font-size: 18px;
+    text-align: center;
+  }
 
-    .qr-page #qr-update-select {
-        width: 100%;
-    }
+  .qr-page #qr-update-select {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
 
-    .main-container {
-        display: block;
-        height: 100vh;
-    }
+  .main-container {
+    display: block;
+    height: 100vh;
+  }
 
-    .qr-page .container {
-        border-radius: 12px;
-    }
+  .qr-page .container {
+    border-radius: 12px;
+  }
 
-    .qr-page #qr-update-select {
-        font-size: 15px;
-        height: 44px;
-    }
+  .qr-page #qr-update-select {
+    font-size: 15px;
+    height: 44px;
+  }
+}
+
+
+
+.popup-container-wrapper {
+  font-family: 'Poppins', sans-serif;
+  --primary: #2563eb;
+  --bg: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --hover: #f3f4f6;
+  --border: #e5e7eb;
+}
+
+.popup-container-wrapper .popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 99;
+}
+
+.popup-container-wrapper .popup-card {
+  background-color: var(--bg);
+  width: 100%;
+  max-width: 600px;
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: fadeIn 0.3s ease;
+}
+
+.popup-container-wrapper .popup-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.popup-container-wrapper .popup-header h2 {
+  font-size: 16px;
+  margin: 0;
+  color: var(--text);
+}
+
+.popup-container-wrapper .popup-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.popup-container-wrapper .popup-close:hover {
+  color: #ef4444;
+}
+
+.popup-container-wrapper .popup-body {
+  padding: 20px;
+}
+
+.popup-container-wrapper .popup-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.popup-container-wrapper .popup-table th,
+.popup-container-wrapper .popup-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.popup-container-wrapper .popup-table th {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.popup-container-wrapper .popup-table tr:hover {
+  background-color: var(--hover);
+}
+
+.popup-container-wrapper .popup-table input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 600px) {
+
+  .popup-container-wrapper .popup-header,
+  .popup-container-wrapper .popup-body {
+    padding: 14px;
+  }
+
+  .popup-container-wrapper .popup-table th,
+  .popup-container-wrapper .popup-table td {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+}
+
+
+.modern-radio-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.modern-radio-group .radio-button {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background-color: #f1f1f1;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #333;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  user-select: none;
+  position: relative;
+}
+
+.radio-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.radio-button input[type="radio"] {
+  display: none;
+}
+
+.radio-button img {
+  width: 20px;
+  height: 20px;
+}
+
+.radio-button span {
+  font-size: 14px;
+}
+
+/* ✅ Selected state */
+.radio-button input[type="radio"]:checked~img,
+.radio-button input[type="radio"]:checked~span {
+  filter: brightness(1.2);
+  font-weight: 600;
+}
+
+.radio-button:has(input[type="radio"]:checked) {
+  background-color: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+}
+
+@media (max-width: 480px) {
+  .radio-button img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .radio-button span {
+    font-size: 13px;
+  }
+}
+
+.start-camera {
+  display: flex;
+  align-items: center;
+  flex-flow: column;
+  gap: 10px;
+  margin: 20px auto;
+  padding: 10px 30px;
+  border: none;
+  background-color: rgba(26, 1, 97, 1);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Hide actual checkbox input */
+.hidden-checkbox {
+  display: none;
+}
+
+/* Tile-style label for each QR option */
+.qr-tile {
+  display: flex;
+  margin: 5px;
+  justify-content: center;
+  /* ✅ Add this line for spacing between tiles */
+  padding: 12px 20px;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  background-color: #f1f1f1;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: center;
+  min-width: 150px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Hover effect */
+.qr-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ Highlight tile when checkbox is checked */
+.hidden-checkbox:checked+.qr-tile {
+  background-color: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+  font-weight: 600;
+}
+
+.popup-table td {
+  margin: 5px 0;
+}
+
+.table-container {
+  display: flex;
+  justify-content: center;
 }

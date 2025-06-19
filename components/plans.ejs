@@ -16,114 +16,122 @@
 
         <div class="tabs">
             <% if (user?.subscription?.isVip) { %>
-                <div class="tab active" id="current-subscription-tab">VIP Subscription</div>
+                <div class="tab active" id="current-subscription-tab"
+                    style="display: flex; align-items: center; gap: 5px;"><img class="logo" alt="Logo"
+                        src="/Vip.png">VIP
+                    Subscription</div>
                 <% } else { %>
                     <div class="tab active" id="plans-tab">Subscription Plans</div>
                     <div class="tab" id="current-subscription-tab">Current Subscription</div>
                     <% } %>
         </div>
-  <% if (!user?.subscription?.isVip) { %>
-        <div class="tab-content active" id="plans-tab-content">
-            <div class="plans">
-                <% plans.forEach(plan=> {
-                    const sanitizedId = plan.encryptedId.replace(/[^a-zA-Z0-9-_]/g, ""); // Remove special characters
-                    %>
-                    <div class="plan-card">
-                        <div class="plan-duration">
-                            <%= plan.duration %>
-                        </div>
-                        <div class="plan-price" id="plan-price-<%= sanitizedId %>">
-                            <%= plan.price %>
-                                <%= plan.currency %>
-                        </div>
-                        <ul class="features">
-                            <% plan.features.forEach(feature=> { %>
-                                <li>
-                                    <%= feature %>
-                                </li>
-                                <% }); %>
-                        </ul>
-                        <!-- ✅ Coupon Code Input -->
-                        <div class="coupon-section" style="margin-bottom: 10px; display: none;">
-                            <input type="text" class="coupon-input" placeholder="Enter coupon code"
-                                id="coupon-code-<%= sanitizedId %>" />
-                        </div>
-                        <button id="add-coupon-button-<%= plan.encryptedId %>" class="subscribe-btn add-coupon-btn"
-                            data-plan-id="<%= plan.encryptedId %>" style="margin-bottom: 10px;">
-                            Add Coupon
-                        </button>
-                        <div id="coupon-success-message-<%= plan.encryptedId %>" style=" display: none;"
-                            class="coupon-success-message">
-                            Coupon Added
-                        </div>
-                        <div>
-                            <!-- <button id="checkout-button-<%= plan.encryptedId %>" class="checkout-btn subscribe-btn">
+        <% if (!user?.subscription?.isVip) { %>
+            <div class="tab-content active" id="plans-tab-content">
+                <div class="plans">
+                    <% plans.forEach(plan=> {
+                        const sanitizedId = plan.encryptedId.replace(/[^a-zA-Z0-9-_]/g, ""); // Remove special
+                        %>
+                        <div class="plan-card">
+                            <div class="plan-duration">
+                                <%= plan.duration %>
+                            </div>
+                            <div class="plan-price" id="plan-price-<%= sanitizedId %>">
+                                <%= plan.price %>
+                                    <%= plan.currency %>
+                            </div>
+                            <ul class="features">
+                                <% plan.features.forEach(feature=> { %>
+                                    <li>
+                                        <%= feature %>
+                                    </li>
+                                    <% }); %>
+                            </ul>
+                            <!-- ✅ Coupon Code Input -->
+                            <div class="coupon-section" style="margin-bottom: 10px; display: none;">
+                                <input type="text" class="coupon-input" placeholder="Enter coupon code"
+                                    id="coupon-code-<%= sanitizedId %>" />
+                            </div>
+                            <button id="add-coupon-button-<%= plan.encryptedId %>" class="subscribe-btn add-coupon-btn"
+                                data-plan-id="<%= plan.encryptedId %>" style="margin-bottom: 10px;">
+                                Add Coupon
+                            </button>
+                            <div id="coupon-success-message-<%= plan.encryptedId %>" style=" display: none;"
+                                class="coupon-success-message">
+                                Coupon Added
+                            </div>
+                            <div>
+                                <!-- <button id="checkout-button-<%= plan.encryptedId %>" class="checkout-btn subscribe-btn">
                                 Pay with Credit Card
                             </button> -->
-                            <div id="paypal-button-container-<%= sanitizedId %>" class="paypal-button-container"
-                                style="margin-top: 20px;" data-plan-id="<%= plan.encryptedId %>">
+                                <div id="paypal-button-container-<%= sanitizedId %>" class="paypal-button-container"
+                                    style="margin-top: 20px;" data-plan-id="<%= plan.encryptedId %>">
 
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <% }); %>
-            </div>
-        </div>
-          <% } %>
-
-      <div class="tab-content <%= user?.subscription?.isVip ? 'active' : '' %>" id="current-subscription-tab-content">
-            <% if (user?.subscription?.isVip) { %>
-                <div class="subscription-card">
-                    <div class="status-badge active">VIP Subscription</div>
-                    <div class="subscription-details">
-                        <p><i class="fas fa-user"></i> <strong>Name :&nbsp;</strong>
-                            <%= user.name %>
-                        </p>
-                        <p><i class="fas fa-envelope"></i> <strong>Email :&nbsp;</strong>
-                            <%= user.email %>
-                        </p>
-                        <p><i class="fas fa-calendar-alt"></i> <strong>Valid Until&nbsp;:&nbsp;</strong>
-                            <% if (user.subscription.validUntilVip) { const vipDate=new
-                                Date(user.subscription.validUntilVip); const
-                                dd=String(vipDate.getDate()).padStart(2, '0' ); const mm=String(vipDate.getMonth() +
-                                1).padStart(2, '0' ); const yy=vipDate.getFullYear(); %>
-                                <%= `${dd}-${mm}-${yy}` %>
-                                    <% } else { %>
-                                        N/A
-                                        <% } %>
-                        </p>
-                    </div>
+                        <% }); %>
                 </div>
-                <% } else { %>
-                    <div class="subscription-card">
-                        <% if (new Date(user.validUntil) < new Date()) { %>
-                            <div class="status-badge expired">No Active Subscription</div>
-                            <p class="no-subscription-message">Subscribe now to enjoy premium features.</p>
-                            <% } else { %>
-                                <div class="status-badge active">Active Subscription</div>
-                                <div class="subscription-details">
-                                    <p><i class="fas fa-user"></i> <strong>Name :&nbsp;</strong>
-                                        <%= user.name %>
-                                    </p>
-                                    <p><i class="fas fa-envelope"></i> <strong>Email :&nbsp;</strong>
-                                        <%= user.email %>
-                                    </p>
-                                    <p><i class="fas fa-calendar-alt"></i> <strong>Valid Until&nbsp;:&nbsp;</strong>
-                                        <% if (user.validUntil) { const date=new Date(user.validUntil); const
-                                            dd=String(date.getDate()).padStart(2, '0' ); const mm=String(date.getMonth()
-                                            + 1).padStart(2, '0' ); const yy=date.getFullYear(); %>
-                                            <%= `${dd}-${mm}-${yy}` %>
-                                                <% } else { %>
-                                                    N/A
-                                                    <% } %>
-                                    </p>
-                                    <p><i class="fas fa-clock"></i> <strong>Time Remaining&nbsp;:&nbsp;</strong> <span
-                                            id="time-remaining">Loading...</span></p>
-                                </div>
-                                <% } %>
-                    </div>
-                    <% } %>
-        </div>
+            </div>
+            <% } %>
+
+                <div class="tab-content <%= user?.subscription?.isVip ? 'active' : '' %>"
+                    id="current-subscription-tab-content">
+                    <% if (user?.subscription?.isVip) { %>
+                        <div class="subscription-card">
+                            <div class="status-badge active">VIP Subscription</div>
+                            <div class="subscription-details">
+                                <p><i class="fas fa-user"></i> <strong>Name :&nbsp;</strong>
+                                    <%= user.name %>
+                                </p>
+                                <p><i class="fas fa-envelope"></i> <strong>Email :&nbsp;</strong>
+                                    <%= user.email %>
+                                </p>
+                                <p><i class="fas fa-calendar-alt"></i> <strong>Valid Until&nbsp;:&nbsp;</strong>
+                                    <% if (user.subscription.validTill) { const vipDate=new
+                                        Date(user.subscription.validTill); const
+                                        dd=String(vipDate.getDate()).padStart(2, '0' ); const
+                                        mm=String(vipDate.getMonth() + 1).padStart(2, '0' ); const
+                                        yy=vipDate.getFullYear(); %>
+                                        <%= `${dd}-${mm}-${yy}` %>
+                                            <% } else { %>
+                                                N/A
+                                                <% } %>
+                                </p>
+                            </div>
+                        </div>
+                        <% } else { %>
+                            <div class="subscription-card">
+                                <% if (new Date(user.validUntil) < new Date()) { %>
+                                    <div class="status-badge expired">No Active Subscription</div>
+                                    <p class="no-subscription-message">Subscribe now to enjoy premium features.</p>
+                                    <% } else { %>
+                                        <div class="status-badge active">Active Subscription</div>
+                                        <div class="subscription-details">
+                                            <p><i class="fas fa-user"></i> <strong>Name :&nbsp;</strong>
+                                                <%= user.name %>
+                                            </p>
+                                            <p><i class="fas fa-envelope"></i> <strong>Email :&nbsp;</strong>
+                                                <%= user.email %>
+                                            </p>
+                                            <p><i class="fas fa-calendar-alt"></i> <strong>Valid
+                                                    Until&nbsp;:&nbsp;</strong>
+                                                <% if (user.validUntil) { const date=new Date(user.validUntil); const
+                                                    dd=String(date.getDate()).padStart(2, '0' ); const
+                                                    mm=String(date.getMonth() + 1).padStart(2, '0' ); const
+                                                    yy=date.getFullYear(); %>
+                                                    <%= `${dd}-${mm}-${yy}` %>
+                                                        <% } else { %>
+                                                            N/A
+                                                            <% } %>
+                                            </p>
+                                            <p><i class="fas fa-clock"></i> <strong>Time Remaining&nbsp;:&nbsp;</strong>
+                                                <span id="time-remaining">Loading...</span>
+                                            </p>
+                                        </div>
+                                        <% } %>
+                            </div>
+                            <% } %>
+                </div>
     </div>
 
 

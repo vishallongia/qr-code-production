@@ -48,7 +48,7 @@ router.get("/plans", authMiddleware, async (req, res) => {
       role: req.user.role,
       subscription : {
         isVip,
-        validUntilVip
+       validTill: validUntilVip
       }
     };
     // Render the 'plans' EJS page and pass the encrypted plans data to it

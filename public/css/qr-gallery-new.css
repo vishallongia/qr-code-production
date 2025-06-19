@@ -109,6 +109,23 @@
     transform: rotate(45deg);
 }
 
+.icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.action-icon {
+    width: 18px;
+    height: 18px;
+}
+
+
+canvas {
+    max-width: 120px;
+}
+
 
 
 @media (max-width: 1024px) {
@@ -160,6 +177,10 @@
     }
 
     #showqrcards canvas {
+        max-width: 90px;
+    }
+
+    #showcolorsqrcode canvas {
         max-width: 90px;
     }
 

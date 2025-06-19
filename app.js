@@ -14,8 +14,15 @@ require("./config/passport"); // Load Passport config
 const cron = require("node-cron");
 const sendExpiryEmailForPayments = require("./cronJobs/sendQrDeactivationEmails");
 const { authMiddleware } = require("./middleware/auth");
+const { updateIsFirstQrFlag } = require("./utils/qrUtils");
 
 connectDB(); //Make Conncetion to Database
+
+async function updateIsFirstQrFlagFn() {
+  await updateIsFirstQrFlag();
+}
+
+//updateIsFirstQrFlagFn();
 
 // 💡 REGISTER RAW PARSER ROUTE FIRST — BEFORE global JSON body parser
 app.use("/paypalwh", require("./routes/paypalWebhook"));

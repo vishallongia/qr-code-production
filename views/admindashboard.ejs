@@ -34,7 +34,7 @@
 
                     <!-- Number of QR Codes Allowed -->
                     <div class="form-group" style="margin-bottom: 16px;">
-                        <input type="number" id="vip-qr-limit" placeholder="Enter number of QR Codes allowed"
+                        <input type="number" id="vip-qr-limit" placeholder="Enter number of Magic Codes allowed"
                             style="width: 100%;" />
                     </div>
 
@@ -55,17 +55,36 @@
         <div class="modern-list-container">
             <% if (users && users.length> 0) { %>
                 <h2>User List</h2>
+                <div class="search-bar-container">
+                    <form method="GET" action="">
+                        <input type="text" name="search" class="search-input" placeholder="Search by name or email..."
+                            value="<%= typeof search !== 'undefined' ? search : '' %>">
+                        <button type="submit" class="search-btn">Search</button>
+
+                        <% if (typeof search !=='undefined' && search.trim() !=='' ) { %>
+                            <a href="/admindashboard" class="clear-btn">Clear</a>
+                            <% } %>
+                    </form>
+                </div>
+
                 <div class="list-wrapper">
                     <div class="list-header">
                         <span>Name</span>
                         <span>Email</span>
                         <span>Password</span>
                         <!-- <span>Update Details</span> -->
-                        <span>QR Count</span>
-                        <span>QR's</span>
+                        <span>MC Count</span>
+                        <span>MC's</span>
                         <span>Active</span>
                         <span>Vip</span>
                         <span>Affiliate</span>
+                        <span>Login</span>
+                    </div>
+                    <!-- Loader row inside the table -->
+                    <div id="search-loader-row"
+                        style="display: none; text-align: center; padding: 20px; font-family: var(--font-family); color: var(--text-color); font-size: 16px;">
+                        Searching... Please wait<span class="dot">.</span><span class="dot">.</span><span
+                            class="dot">.</span>
                     </div>
                     <ul id="userList" class="user-list">
                         <% users.forEach(user=> { %>
@@ -89,7 +108,7 @@
                                 </span>
                                 <span>
                                     <button class="view-qr-btn" data-user-id="<%= user._id %>"
-                                        onclick="goToQR('<%= user._id %>')">View QR</button>
+                                        onclick="goToQR('<%= user._id %>')">View MC Link</button>
                                 </span>
                                 <span>
                                     <label class="toggle-switch">
@@ -108,20 +127,43 @@
                                     <button class="view-qr-btn make-affiliate-btn" data-user-id="<%= user._id %>">Make
                                         Affiliate</button>
                                 </span>
+                                <span>
+                                    <button class="view-qr-btn"
+                                        onclick="window.open('<%= user.magicLink %>', '_blank')">
+                                        Login
+                                    </button>
+                                </span>
                             </li>
                             <% }); %>
                     </ul>
                 </div>
                 <% } else { %>
+                    <div class="search-bar-container">
+                        <form method="GET" action="">
+                            <input type="text" name="search" class="search-input"
+                                placeholder="Search by name or email..."
+                                value="<%= typeof search !== 'undefined' ? search : '' %>">
+                            <button type="submit" class="search-btn">Search</button>
+
+                            <% if (typeof search !=='undefined' && search.trim() !=='' ) { %>
+                                <a href="/admindashboard" class="clear-btn">Clear</a>
+                                <% } %>
+                        </form>
+                    </div>
+                    <div id="search-loader-row"
+                        style="display: none; text-align: center; padding: 20px; font-family: var(--font-family); color: var(--text-color); font-size: 16px;">
+                        Searching... Please wait<span class="dot">.</span><span class="dot">.</span><span
+                            class="dot">.</span>
+                    </div>
                     <%- include('../components/404') %>
                         <% } %>
 
                             <!-- Pagination Controls -->
-                            <div class="pagination-container">
+                            <div class="pagination-container" id="pagination-container">
                                 <% if (currentPage> 1) { %>
-                                    <a href="?page=<%= currentPage - 1 %>" class="pagination-btn prev-btn">
-                                        <svg width="22" height="22" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                    <a href="?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+                                        class="pagination-btn prev-btn">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M15 19L8 12L15 5" />
                                         </svg>
                                     </a>
@@ -133,29 +175,31 @@
                                                     <%= i %>
                                                 </span>
                                                 <% } else { %>
-                                                    <a href="?page=<%= i %>" class="pagination-btn">
+                                                    <a href="?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+                                                        class="pagination-btn">
                                                         <%= i %>
                                                     </a>
                                                     <% } %>
                                                         <% } %>
 
                                                             <% if (currentPage < totalPages) { %>
-                                                                <a href="?page=<%= currentPage + 1 %>"
+                                                                <a href="?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
                                                                     class="pagination-btn next-btn">
                                                                     <svg width="22" height="22" viewBox="0 0 24 24"
-                                                                        xmlns="http://www.w3.org/2000/svg"
                                                                         fill="currentColor">
                                                                         <path d="M9 5L16 12L9 19" />
                                                                     </svg>
                                                                 </a>
                                                                 <% } %>
                             </div>
+
         </div>
 
-         <div class="fullscreen-loader">
+        <div class="fullscreen-loader">
             <div class="loader"></div>
             <p class="animated-text">Please wait<span>.</span><span>.</span><span>.</span></p>
         </div>
+
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
@@ -165,5 +209,46 @@
         window.location.href = `/admindashboard/qr/${userId}`;
     }
 </script>
+
+<script>
+    const searchInput = document.querySelector('.search-input');
+    const searchLoading = document.getElementById('search-loader-row');
+    const userList = document.getElementById('userList');
+    const paginationContainer = document.getElementById('pagination-container');
+    const notFoundPage = document.getElementById('404');
+    let redirectTimer;
+
+    searchInput.addEventListener('input', () => {
+        if (redirectTimer) clearTimeout(redirectTimer);
+
+        // Hide elements if they exist
+        if (searchLoading) searchLoading.style.display = 'none';
+        if (userList) userList.style.display = 'none';
+        if (paginationContainer) paginationContainer.style.display = 'none';
+        if (notFoundPage) notFoundPage.style.display = 'none';
+
+        const value = searchInput.value.trim();
+
+        if (value !== '') {
+            // ✅ Show loading row only if it exists
+            if (searchLoading) searchLoading.style.display = 'block';
+
+            redirectTimer = setTimeout(() => {
+                window.location.href = `/admindashboard?search=${encodeURIComponent(value)}`;
+            }, 2000); // 1 second
+        }
+    });
+
+    // Blur event — redirect to dashboard if field left empty
+    searchInput.addEventListener('blur', () => {
+        const value = searchInput.value.trim();
+
+        if (value === '') {
+            window.location.href = '/admindashboard';
+        }
+    });
+</script>
+
+
 
 </html>

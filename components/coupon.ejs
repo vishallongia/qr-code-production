@@ -39,6 +39,7 @@
                                             <span>Code</span>
                                             <span>Discount (%)</span>
                                             <span>Commission (%)</span>
+                                            <span>Special Info</span>
 
                                         </div>
                                         <ul id="couponList" class="user-list">
@@ -53,6 +54,9 @@
                                                     <span>
                                                         <%= coupon.commissionPercent %>
                                                     </span>
+                                                    <span><button id="special-offer-btn"
+                                                            onclick="window.location.href='/special-offer-info/<%= coupon._id %>'">Special
+                                                            Info</button></span>
 
 
                                                 </li>

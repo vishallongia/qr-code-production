@@ -13,6 +13,9 @@ const {
 const { checkQrLimit } = require("../middleware/checkQrLimit"); // Import the middleware
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
 const Payment = require("../models/Payment");
+const QRCodeHistory = require("../models/QRCodeHistory"); // Adjust path as per your folder structure
+const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
+const fetch = require("node-fetch");
 const AffiliatePayment = require("../models/AffiliatePayment");
 const Coupon = require("../models/Coupon");
 const multer = require("multer");
@@ -452,7 +455,7 @@ router.post("/assign-qr-code", async (req, res) => {
       // Update desired fields
       qrCodeData.set({
         type: "text",
-        text: "Enter Your Text",
+        text: "Your Message",
         isQrActivated: true,
       });
 
@@ -475,7 +478,7 @@ router.post("/assign-qr-code", async (req, res) => {
 
     // Email configuration
     const sender = {
-      email: "textildruckschweiz.com@gmail.com",
+      email: "arnoldschmidt@magic-code.net",
       name: "Magic Code - Login Link",
     };
     if (couponCode) {
@@ -628,7 +631,7 @@ router.get("/admindashboard/qr/:userId", authMiddleware, async (req, res) => {
         { assignedTo: userId }, // QR codes assigned to the user (array check)f
       ],
     })
-      .select("qrName type code url")
+      .select("qrName type code url text")
       .skip(skip)
       .limit(recordsPerPage);
 
@@ -790,36 +793,126 @@ router.post("/admindashboard/update-vip", async (req, res) => {
 });
 
 // Admin Dashboard Page with Pagination and Decryption for Visible Users
+// router.get("/admindashboard", authMiddleware, async (req, res) => {
+//   try {
+//     // Get current page from query params, default to 1 if not provided
+//     const currentPage = parseInt(req.query.page) || 1;
+//     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+
+//     const totalUsers = await User.countDocuments({
+//       role: "user",
+//       $or: [
+//         { "subscription.isVip": { $exists: false } },
+//         { "subscription.isVip": false },
+//       ],
+//     });
+
+//     // Calculate total pages (ceil to the nearest whole number)
+//     const totalPages = Math.ceil(totalUsers / recordsPerPage);
+
+//     // Calculate the number of users to skip
+//     const skip = (currentPage - 1) * recordsPerPage;
+
+//     const users = await User.aggregate([
+//       {
+//         $match: {
+//           role: "user",
+//           $or: [
+//             { "subscription.isVip": { $exists: false } },
+//             { "subscription.isVip": false },
+//           ],
+//         },
+//       }, // Exclude admin users
+//       {
+//         $lookup: {
+//           from: "qrcodedatas",
+//           let: { userId: "$_id" },
+//           pipeline: [
+//             {
+//               $match: {
+//                 $expr: {
+//                   $or: [
+//                     { $eq: ["$user_id", "$$userId"] }, // Count QR codes the user created
+//                     { $eq: ["$assignedTo", "$$userId"] }, // Count QR codes assigned to them (direct equality), // Count QR codes assigned to them
+//                   ],
+//                 },
+//               },
+//             },
+//           ],
+//           as: "qrData",
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 1,
+//           fullName: 1,
+//           email: 1,
+//           role: 1,
+//           isActive: 1,
+//           userPasswordKey: 1,
+//           qrCount: { $size: "$qrData" }, // Total count (created + assigned)
+//         },
+//       },
+//     ])
+//       .skip(skip)
+//       .limit(recordsPerPage);
+//     // Decrypt passwords only for the users on the current page
+//     users.forEach((user) => {
+//       if (user.userPasswordKey) {
+//         user.userPasswordKey = decryptPassword(user.userPasswordKey); // Decrypt the password
+//       }
+//       user.encryptedId = encryptPassword(user._id.toString()); // Encrypt the ObjectId string
+//     });
+//     // Render the dashboard with the users data and pagination info
+//     res.render("admindashboard", {
+//       users,
+//       currentPage,
+//       totalPages,
+//       totalUsers,
+//       FRONTEND_URL: process.env.FRONTEND_URL,
+//     });
+//   } catch (error) {
+//     console.error("Error loading Admin Dashboard:", error);
+//     res.status(500).render("login", {
+//       message: "Failed to load Admin Dashboard",
+//       type: "error", // Send type as 'error'
+//     });
+//   }
+// });
+
 router.get("/admindashboard", authMiddleware, async (req, res) => {
   try {
-    // Get current page from query params, default to 1 if not provided
     const currentPage = parseInt(req.query.page) || 1;
     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+    const search = req.query.search ? req.query.search.trim() : "";
 
-    const totalUsers = await User.countDocuments({
+    // Base match conditions
+    const baseMatch = {
       role: "user",
       $or: [
         { "subscription.isVip": { $exists: false } },
         { "subscription.isVip": false },
       ],
-    });
+    };
 
-    // Calculate total pages (ceil to the nearest whole number)
+    // If search query exists, add regex filter on fullName or email
+    if (search) {
+      baseMatch.$and = [
+        {
+          $or: [
+            { fullName: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+          ],
+        },
+      ];
+    }
+
+    const totalUsers = await User.countDocuments(baseMatch);
     const totalPages = Math.ceil(totalUsers / recordsPerPage);
-
-    // Calculate the number of users to skip
     const skip = (currentPage - 1) * recordsPerPage;
 
     const users = await User.aggregate([
-      {
-        $match: {
-          role: "user",
-          $or: [
-            { "subscription.isVip": { $exists: false } },
-            { "subscription.isVip": false },
-          ],
-        },
-      }, // Exclude admin users
+      { $match: baseMatch },
       {
         $lookup: {
           from: "qrcodedatas",
@@ -829,8 +922,8 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
               $match: {
                 $expr: {
                   $or: [
-                    { $eq: ["$user_id", "$$userId"] }, // Count QR codes the user created
-                    { $eq: ["$assignedTo", "$$userId"] }, // Count QR codes assigned to them (direct equality), // Count QR codes assigned to them
+                    { $eq: ["$user_id", "$$userId"] },
+                    { $eq: ["$assignedTo", "$$userId"] },
                   ],
                 },
               },
@@ -847,32 +940,43 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
           role: 1,
           isActive: 1,
           userPasswordKey: 1,
-          qrCount: { $size: "$qrData" }, // Total count (created + assigned)
+          qrCount: { $size: "$qrData" },
         },
       },
     ])
       .skip(skip)
       .limit(recordsPerPage);
-    // Decrypt passwords only for the users on the current page
+
     users.forEach((user) => {
       if (user.userPasswordKey) {
-        user.userPasswordKey = decryptPassword(user.userPasswordKey); // Decrypt the password
+        user.userPasswordKey = decryptPassword(user.userPasswordKey);
       }
-      user.encryptedId = encryptPassword(user._id.toString()); // Encrypt the ObjectId string
+      user.encryptedId = encryptPassword(user._id.toString());
+
+      // Generate a JWT token for each user
+      const magicToken = jwt.sign(
+        { userId: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.MAGIC_LINK_JWT_EXPIRATION || "24h" }
+      );
+
+      // Append magic link to the user object
+      user.magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
     });
-    // Render the dashboard with the users data and pagination info
+
     res.render("admindashboard", {
       users,
       currentPage,
       totalPages,
       totalUsers,
       FRONTEND_URL: process.env.FRONTEND_URL,
+      search,
     });
   } catch (error) {
     console.error("Error loading Admin Dashboard:", error);
     res.status(500).render("login", {
       message: "Failed to load Admin Dashboard",
-      type: "error", // Send type as 'error'
+      type: "error",
     });
   }
 });
@@ -1176,7 +1280,7 @@ router.post("/reset-password", async (req, res) => {
     // await sendResetPasswordEmail(user.email, resetLink);
 
     const sender = {
-      email: "textildruckschweiz.com@gmail.com",
+      email: "arnoldschmidt@magic-code.net",
       name: `Magic Code - Password Reset`,
     };
 
@@ -1467,7 +1571,7 @@ router.post("/usemagiclink", async (req, res) => {
     const magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
 
     const sender = {
-      email: "textildruckschweiz.com@gmail.com",
+      email: "arnoldschmidt@magic-code.net",
       name: "Magic Code - Login Link",
     };
 
@@ -1908,17 +2012,80 @@ router.get("/myprofile", authMiddleware, async (req, res) => {
   }
 });
 
+// My Profile Route
+router.get("/color-qr", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    // Fetch user details
+    const user = await User.findById(userId).select("-password"); // Exclude password
+    if (!user) {
+      return res.status(404).json({ message: "User not found", type: "error" });
+    }
+
+    res.render("dashboardnew", { user, activeSection: "colors-qr" });
+  } catch (error) {
+    console.error("Error retrieving profile:", error);
+    res.status(500).render("dashboardnew", {
+      message: error.message,
+      type: "error", // Send type as 'error'
+      activeSection: "colors-qr",
+      user: {},
+    });
+  }
+});
+
 // My User Control
 router.get("/usercontrol", authMiddleware, async (req, res) => {
   try {
     const userId = req.user._id;
     // Fetch only the showEditOnScan field, excluding other sensitive data
-    const user = await User.findById(userId).select("showEditOnScan role");
+    const user = await User.findById(userId).select(
+      "showEditOnScan role subscription"
+    );
 
     if (!user) {
       return res.status(404).json({ message: "User not found", type: "error" });
     }
-    res.render("dashboardnew", { user, activeSection: "usercontrol" });
+
+    const [data = { qrNames: [], couponCode: null }] =
+      await QRCodeData.aggregate([
+        {
+          $match: {
+            specialOfferCouponId: { $ne: null },
+            $or: [{ user_id: userId }, { assignedTo: userId }],
+          },
+        },
+        {
+          $lookup: {
+            from: "coupons",
+            localField: "specialOfferCouponId",
+            foreignField: "_id",
+            as: "coupon",
+          },
+        },
+        { $unwind: "$coupon" },
+        {
+          $group: {
+            _id: "$coupon.code",
+            qrNames: { $addToSet: "$qrName" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            couponCode: "$_id",
+            qrNames: 1,
+          },
+        },
+      ]);
+
+    res.render("dashboardnew", {
+      user,
+      activeSection: "usercontrol",
+      isSpecialOffer: data.qrNames.length > 0,
+      qrNames: data.qrNames,
+      couponCode: data.couponCode,
+    });
   } catch (error) {
     console.error("Error retrieving profile:", error);
     res.status(500).render("dashboardnew", {
@@ -1926,6 +2093,7 @@ router.get("/usercontrol", authMiddleware, async (req, res) => {
       type: "error", // Send type as 'error'
       activeSection: "profile",
       user: {},
+      isSpecialOffer: false,
     });
   }
 });
@@ -2318,7 +2486,6 @@ router.delete("/delete/:id", authMiddleware, async (req, res) => {
     // Delete the associated media file if it exists
     if (existingMediaUrl) {
       const mediaFilePath = path.resolve(__dirname, "..", existingMediaUrl);
-      console.log(mediaFilePath, "new here");
       console.log(`Attempting to delete media file at: ${mediaFilePath}`);
       fs.unlink(mediaFilePath, (err) => {
         if (err) {
@@ -2415,18 +2582,8 @@ router.put(
           .json({ message: "Magic Code not found", type: "error" });
       }
 
-      // Check if QR trial has expired
-
-      // Check if QR trial has expired
-      // if (
-      //   qrCode.isTrial &&
-      //   qrCode.activatedUntil &&
-      //   new Date() > new Date(qrCode.activatedUntil)
-      // ) {
-      //   return res
-      //     .status(400)
-      //     .json({ message: "QR code has expired", type: "error" });
-      // }
+      const oldType = qrCode.type; // Save old type for history
+      let contentValue = ""; // Will store new value for history logging
 
       if (
         (!qrCode.user_id || qrCode.user_id.toString() !== user_id.toString()) &&
@@ -2472,6 +2629,7 @@ router.put(
           });
         }
         qrCode.url = newUrl; // Update the URL in the database
+        contentValue = newUrl;
 
         // Clear media_url and text_url if type is url
         qrCode.media_url = null;
@@ -2485,6 +2643,7 @@ router.put(
         // qrCode.text_url = req.files["text-file"][0].path; // Update text file path
 
         // Clear media_url if type is text
+        contentValue = text;
         qrCode.media_url = null;
         qrCode.url = null;
       } else if (type === "media") {
@@ -2496,6 +2655,7 @@ router.put(
 
         // Assuming req.files["media-file"] is correctly populated by your upload middleware
         const mediaFile = req.files["media-file"][0];
+        contentValue = `${process.env.FRONTEND_URL}/${qrCodeAlphanumeric}`;
 
         // Validate media file size
         if (mediaFile.size > MAX_FILE_SIZE) {
@@ -2545,6 +2705,19 @@ router.put(
       // Save the updated QR code data (keep the same QR image)
       await qrCode.save();
 
+      const historyEntry = new QRCodeHistory({
+        qrCodeId: qrCode._id,
+        modifiedBy: user_id,
+        change: {
+          oldType,
+          newType: type,
+          contentValue,
+        },
+        context: "user_edit",
+      });
+
+      await historyEntry.save();
+
       // Send a response back to the client
       res.status(200).json({
         message: "Magic Code updated successfully.",
@@ -2590,6 +2763,22 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
     // Find the record using the alphanumeric code
     const codeData = await QRCodeData.findOne({ code: alphanumericCode });
 
+    // If specialOfferCouponId exists, override content from coupon.specialOffer
+    let specialOfferData = null;
+
+    if (codeData?.specialOfferCouponId) {
+      const coupon = await Coupon.findById(codeData.specialOfferCouponId);
+      if (coupon && coupon.specialOffer) {
+        specialOfferData = coupon.specialOffer;
+      }
+    }
+
+    // Determine final type and content
+    const finalType = specialOfferData?.type || codeData.type;
+    const finalText = specialOfferData?.text || codeData.text;
+    const finalUrl = specialOfferData?.url || codeData.url;
+    const finalMedia = specialOfferData?.media_url || codeData.media_url;
+
     // Determine which ID to use for checking payment — user_id or assignedTo
     const userIdToCheck = codeData.user_id || codeData.assignedTo;
 
@@ -2626,25 +2815,40 @@ router.get("/:alphanumericCode([a-zA-Z0-9]{6})", async (req, res) => {
       ); // Replace with actual dummy link
     }
 
-    // Check the type of the code and handle accordingly
-    if (codeData.type === "url") {
-      // Redirect to the URL found in the database if type is 'url'
-      return res.redirect(codeData.url); // Redirects to the URL
-    } else if (codeData.type === "media") {
-      // Redirect to the media URL if type is 'media'
-      return res.redirect(
-        `${req.protocol}://${req.get("host")}/${codeData.media_url}`
-      ); // Assuming media_url is a relative path (e.g., uploads/)
-    } else if (codeData.type === "text") {
-      // Send plain HTML response to display the text content
-      let isLoggedIn = false;
-      if (token) {
-        isLoggedIn = true;
-      }
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress;
 
-      res.render("content", { content: codeData.text, isLoggedIn });
+    let geoData = {};
+    try {
+      const response = await fetch(`https://ip-api.com/docs/api:json`);
+      geoData = await response.json();
+      console.log(geoData);
+    } catch (err) {
+      console.error("Geo lookup failed:", err);
+    }
+
+    await QRScanLog.create({
+      qrCodeId: codeData._id,
+      code: alphanumericCode,
+      ip: geoData.ip || ip,
+      language: req.headers["accept-language"] || "unknown",
+      userAgent: req.headers["user-agent"] || "unknown",
+      timeZone: geoData.timezone || "unknown",
+      city: geoData.city || "unknown",
+      region: geoData.region || "unknown",
+      country: geoData.country_name || "unknown",
+      scannedAt: new Date(),
+    });
+
+    // Show dynamic content based on finalType
+    if (finalType === "url") {
+      return res.redirect(finalUrl);
+    } else if (finalType === "media") {
+      return res.redirect(`${req.protocol}://${req.get("host")}/${finalMedia}`);
+    } else if (finalType === "text") {
+      const isLoggedIn = !!token;
+      return res.render("content", { content: finalText, isLoggedIn });
     } else {
-      // If the type is not valid, return an error
       return res.status(400).render("error", {
         message: "Invalid type associated with this Magic Code.",
         type: "error",
@@ -3642,7 +3846,9 @@ router.get("/coupons", authMiddleware, async (req, res) => {
     const userId = req.user._id;
 
     // Fetch user with minimal fields (e.g., role)
-    const user = await User.findById(userId).select("role showEditOnScan");
+    const user = await User.findById(userId).select(
+      "role showEditOnScan subscription"
+    );
 
     if (!user || user.role !== "affiliate") {
       return res.status(403).render("viewaffiliateuser", {
@@ -3727,7 +3933,7 @@ router.post("/send-admin-email", authMiddleware, async (req, res) => {
     const adminEmail = process.env.ADMIN_EMAIL || "arnoldschmidt.com@gmail.com";
 
     const sender = {
-      email: "textildruckschweiz.com@gmail.com",
+      email: "arnoldschmidt@magic-code.net",
       name: "Magic Code - Admin Notification",
     };
 
@@ -3894,34 +4100,54 @@ router.get("/admindashboard/vip-users", async (req, res) => {
   try {
     const currentPage = parseInt(req.query.page) || 1;
     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+    const search = req.query.search ? req.query.search.trim() : "";
 
-    // Count users with subscription.isVip = true
-    const totalVipUsers = await User.countDocuments({
+    // Base query
+    const baseMatch = {
       "subscription.isVip": true,
-    });
+    };
+
+    // If search query exists, apply regex filters
+    if (search) {
+      baseMatch.$or = [
+        { fullName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Count total matching VIP users
+    const totalVipUsers = await User.countDocuments(baseMatch);
     const totalPages = Math.ceil(totalVipUsers / recordsPerPage);
     const skip = (currentPage - 1) * recordsPerPage;
 
     // Fetch paginated VIP users
-    const users = await User.find({ "subscription.isVip": true })
-      .skip(skip)
-      .limit(recordsPerPage);
+    const users = await User.find(baseMatch).skip(skip).limit(recordsPerPage);
 
-    // Process user data (decrypt password and encrypt ID)
+    // Process user data
     users.forEach((user) => {
       if (user.userPasswordKey) {
         user.userPasswordKey = decryptPassword(user.userPasswordKey);
       }
       user.encryptedId = encryptPassword(user._id.toString());
+      // Generate a JWT token for each user
+      const magicToken = jwt.sign(
+        { userId: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.MAGIC_LINK_JWT_EXPIRATION || "24h" }
+      );
+
+      // Append magic link to the user object
+      user.magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
     });
 
-    // Render a separate view or reuse affiliateusers with updated context
+    // Render the VIP users view
     res.render("vipusers", {
       users,
       currentPage,
       totalPages,
       totalUsers: totalVipUsers,
       FRONTEND_URL: process.env.FRONTEND_URL,
+      search, // ✅ Pass search back to EJS for displaying in input and keeping pagination context
     });
   } catch (error) {
     console.error("Error loading VIP Users:", error);
@@ -3929,6 +4155,456 @@ router.get("/admindashboard/vip-users", async (req, res) => {
       message: "Failed to load VIP Users",
       type: "error",
     });
+  }
+});
+
+// router.get("/admindashboard/vip-users", async (req, res) => {
+//   try {
+//     const currentPage = parseInt(req.query.page) || 1;
+//     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+
+//     // Count users with subscription.isVip = true
+//     const totalVipUsers = await User.countDocuments({
+//       "subscription.isVip": true,
+//     });
+//     const totalPages = Math.ceil(totalVipUsers / recordsPerPage);
+//     const skip = (currentPage - 1) * recordsPerPage;
+
+//     // Fetch paginated VIP users
+//     const users = await User.find({ "subscription.isVip": true })
+//       .skip(skip)
+//       .limit(recordsPerPage);
+
+//     // Process user data (decrypt password and encrypt ID)
+//     users.forEach((user) => {
+//       if (user.userPasswordKey) {
+//         user.userPasswordKey = decryptPassword(user.userPasswordKey);
+//       }
+//       user.encryptedId = encryptPassword(user._id.toString());
+//     });
+
+//     // Render a separate view or reuse affiliateusers with updated context
+//     res.render("vipusers", {
+//       users,
+//       currentPage,
+//       totalPages,
+//       totalUsers: totalVipUsers,
+//       FRONTEND_URL: process.env.FRONTEND_URL,
+//     });
+//   } catch (error) {
+//     console.error("Error loading VIP Users:", error);
+//     res.status(500).render("login", {
+//       message: "Failed to load VIP Users",
+//       type: "error",
+//     });
+//   }
+// });
+
+router.post("/set-first-qr", authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user._id;
+    const { qrId } = req.body;
+
+    if (!qrId) {
+      return res
+        .status(400)
+        .json({ message: "QR code ID is required", type: "error" });
+    }
+
+    const targetQr = await QRCodeData.findOne({
+      _id: qrId,
+      $or: [{ user_id }, { assignedTo: user_id }],
+    });
+
+    if (!targetQr) {
+      return res
+        .status(404)
+        .json({ message: "QR code not found or access denied", type: "error" });
+    }
+
+    await QRCodeData.updateMany(
+      { $or: [{ user_id }, { assignedTo: user_id }] },
+      { $set: { isFirstQr: false } }
+    );
+
+    targetQr.isFirstQr = true;
+    await targetQr.save();
+
+    res.json({
+      message: "Successfully updated the primary QR code.",
+      type: "success",
+    });
+  } catch (error) {
+    console.error("Error setting first QR:", error);
+    res.status(500).json({ message: "Internal server error", type: "error" });
+  }
+});
+
+router.get("/qrhistory/:qrCodeId", authMiddleware, async (req, res) => {
+  try {
+    const qrCodeId = req.params.qrCodeId;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = parseInt(req.query.skip) || 0;
+
+    // Step 1: Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(qrCodeId)) {
+      const errorResponse = {
+        type: "error",
+        message: "Invalid QR Code ID",
+        histories: [],
+        hasMore: false,
+        qrCodeId,
+      };
+
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(400).json(errorResponse);
+      }
+
+      return res.status(400).render("qr-history", errorResponse);
+    }
+
+    const query = { qrCodeId: new mongoose.Types.ObjectId(qrCodeId) };
+
+    const totalCount = await QRCodeHistory.countDocuments(query);
+    const histories = await QRCodeHistory.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .select("change qrCodeId createdAt")
+      .lean();
+
+    // Step 2: Handle not found
+    if (totalCount === 0) {
+      const notFoundResponse = {
+        type: "error",
+        message: "No history found for this QR code.",
+        histories: [],
+        hasMore: false,
+        qrCodeId,
+      };
+
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(404).json(notFoundResponse);
+      }
+
+      return res.status(404).render("qr-history", notFoundResponse);
+    }
+
+    const hasMore = skip + limit < totalCount;
+
+    // Step 3: Return valid response
+    const successResponse = {
+      type: "success",
+      message: "",
+      histories,
+      hasMore,
+      skip: skip + limit,
+      qrCodeId,
+    };
+
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.json(successResponse);
+    }
+
+    res.render("qr-history", successResponse);
+  } catch (error) {
+    console.error("Error fetching QR Code history:", error);
+
+    const errorResponse = {
+      type: "error",
+      message: "Internal server error while loading QR code history",
+      histories: [],
+      hasMore: false,
+      qrCodeId: req.params.qrCodeId,
+    };
+
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.status(500).json(errorResponse);
+    }
+
+    res.status(500).render("qr-history", errorResponse);
+  }
+});
+
+// Special Offer Info Page with couponId as a URL param
+router.get(
+  "/special-offer-info/:couponId",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { couponId } = req.params;
+      // You can use couponId to fetch related data if needed
+
+      res.render("dashboardnew", {
+        couponId, // Pass couponId to the view if needed
+        type: "success",
+        activeSection: "special-offer-info",
+        user: req.user,
+      });
+    } catch (error) {
+      console.error("Error loading Special Offer Info page:", error);
+      res.status(500).render("login", {
+        message: "Failed to load login page",
+        type: "error",
+      });
+    }
+  }
+);
+
+//Post Data in special Offer
+router.post(
+  "/special-offer-info/:couponId",
+  authMiddleware,
+  upload.fields([{ name: "media-file", maxCount: 1 }]),
+  multerErrorHandler,
+  async (req, res) => {
+    try {
+      const { couponId } = req.params;
+      const { type, text, url } = req.body;
+
+      // ✅ Validate MongoDB ObjectId
+      if (!mongoose.Types.ObjectId.isValid(couponId)) {
+        return res.status(400).json({ message: "Invalid Coupon ID" });
+      }
+
+      if (!["text", "url", "media"].includes(type)) {
+        return res.status(400).json({ message: "Invalid specialOffer type" });
+      }
+
+      const existingCoupon = await Coupon.findById(couponId);
+
+      if (!existingCoupon) {
+        return res.status(404).json({ message: "Coupon not found" });
+      }
+
+      // ✅ Always delete old media file if it exists
+      const oldOffer = existingCoupon.specialOffer;
+      if (oldOffer?.type === "media" && oldOffer.media_url) {
+        const fullPath = path.resolve(oldOffer.media_url);
+        fs.unlink(fullPath, (err) => {
+          if (err) {
+            console.warn("Failed to delete old media file:", err.message);
+          }
+        });
+      }
+
+      const specialOffer = { type };
+
+      if (type === "text") {
+        if (!text) {
+          return res
+            .status(400)
+            .json({ message: "Text is required for type 'text'" });
+        }
+        specialOffer.text = text;
+      }
+
+      if (type === "url") {
+        if (!url) {
+          return res
+            .status(400)
+            .json({ message: "URL is required for type 'url'" });
+        }
+        if (!/^https?:\/\//i.test(url)) {
+          return res
+            .status(400)
+            .json({ message: "URL must begin with http:// or https://" });
+        }
+        specialOffer.url = url;
+      }
+
+      if (type === "media") {
+        const mediaFile = req.files?.["media-file"]?.[0];
+
+        if (!mediaFile) {
+          return res
+            .status(400)
+            .json({ message: "Media file is required for type 'media'" });
+        }
+
+        if (mediaFile.size > MAX_FILE_SIZE) {
+          return res
+            .status(400)
+            .json({ message: "Media file should not exceed 50MB" });
+        }
+
+        specialOffer.media_url = mediaFile.path;
+      }
+
+      const updatedCoupon = await Coupon.findByIdAndUpdate(
+        couponId,
+        { specialOffer },
+        { new: true }
+      );
+
+      res.status(200).json({
+        message: "Special offer saved successfully",
+        coupon: updatedCoupon,
+      });
+    } catch (error) {
+      console.error("Error saving special offer:", error);
+      res.status(500).json({ message: "Failed to save special offer" });
+    }
+  }
+);
+
+//Get Data in Special Offer
+
+router.get(
+  "/special-offer-info-data/:couponId",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { couponId } = req.params;
+
+      // ✅ Validate MongoDB ObjectId
+      if (!mongoose.Types.ObjectId.isValid(couponId)) {
+        return res.status(400).json({ message: "Invalid Coupon ID" });
+      }
+
+      const coupon = await Coupon.findById(couponId);
+
+      if (!coupon) {
+        return res.status(404).json({ message: "Coupon not found" });
+      }
+
+      const { specialOffer } = coupon;
+
+      if (!specialOffer || !specialOffer.type) {
+        return res
+          .status(200)
+          .json({ message: "No special offer found", data: null });
+      }
+
+      res.status(200).json({
+        message: "Special offer retrieved successfully",
+        data: specialOffer,
+      });
+    } catch (error) {
+      console.error("Error fetching special offer:", error);
+      res.status(500).json({ message: "Failed to retrieve special offer" });
+    }
+  }
+);
+
+router.post("/validate-coupon-code", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { code } = req.body;
+
+    if (!code || typeof code !== "string") {
+      return res.status(400).json({ message: "Coupon code is required" });
+    }
+
+    // ✅ Find coupon by code (adjust field name if needed)
+    const coupon = await Coupon.findOne({ code: code.trim().toUpperCase() });
+
+    if (!coupon) {
+      return res.status(404).json({ message: "Coupon not found" });
+    }
+
+    const qrCodes = await QRCodeData.find({
+      $or: [
+        { user_id: userId }, // QR codes created by the user
+        { assignedTo: userId }, // QR codes assigned to the user
+      ],
+    }).sort({ createdAt: -1 });
+    const hasSpecialOffer =
+      coupon.specialOffer &&
+      Object.values(coupon.specialOffer).some(
+        (val) => val !== undefined && val !== null && val !== ""
+      );
+
+    return res.status(200).json({
+      message: "Coupon validated",
+      valid: true,
+      hasSpecialOffer,
+      qrCodes,
+      couponId: coupon._id,
+    });
+  } catch (error) {
+    console.error("Error validating coupon code:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/set-special-offer-qrs", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { couponId, qrCodeIds } = req.body;
+
+    if (!couponId || !Array.isArray(qrCodeIds) || qrCodeIds.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Coupon ID and QR Code IDs are required" });
+    }
+
+    // ✅ Check if couponId is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(couponId)) {
+      return res.status(400).json({ message: "Invalid coupon ID" });
+    }
+
+    // ✅ Validate coupon existence
+    const coupon = await Coupon.findById(couponId);
+    if (!coupon) {
+      return res.status(404).json({ message: "Coupon not found" });
+    }
+
+    // ✅ Optional: Check if coupon has a special offer
+    const hasSpecialOffer =
+      coupon.specialOffer &&
+      Object.values(coupon.specialOffer).some(
+        (val) => val !== undefined && val !== null && val !== ""
+      );
+
+    if (!hasSpecialOffer) {
+      return res
+        .status(400)
+        .json({ message: "This coupon does not have a special offer" });
+    }
+
+    // ✅ Update only QR codes that belong to the user
+    const result = await QRCodeData.updateMany(
+      {
+        _id: { $in: qrCodeIds },
+        $or: [{ user_id: userId }, { assignedTo: userId }],
+      },
+      { $set: { specialOfferCouponId: couponId } }
+    );
+
+    return res.status(200).json({
+      message: `${result.modifiedCount} QR code(s) updated with special offer coupon`,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error assigning coupon to QR codes:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/disconnect-special-offer", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Remove `specialOfferCouponId` from all QR documents owned by or assigned to the user
+    const result = await QRCodeData.updateMany(
+      {
+        $or: [{ user_id: userId }, { assignedTo: userId }],
+        specialOfferCouponId: { $exists: true },
+      },
+      {
+        $unset: { specialOfferCouponId: "" },
+      }
+    );
+
+    res.json({
+      success: true,
+      message: "Disconnected successfully.",
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error("Error disconnecting:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 

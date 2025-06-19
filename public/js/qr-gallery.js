@@ -110,3 +110,5 @@ function createInput(type, id, labelText) {
 }
 
 updateInputFields();
+
+

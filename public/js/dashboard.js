@@ -1080,29 +1080,50 @@ document.getElementById("PrintMyQR").addEventListener("click", function () {
   try {
     const jsonData = JSON.parse(hiddenInput);
 
-    let fgColor = jsonData.qrDotColor;
-    let bgColor = jsonData.backgroundColor;
+    let finalURL = `https://textildruck-schweiz.com/products/magic-code`
 
-    fgColor = fgColor.replace("#", "");
-    bgColor = bgColor.replace("#", "");
+    if (jsonData.user_id) {
+      console.log("This code is created by the user.");
 
-    const urlToPass = `https://analog-magic-code.netlify.app/magic-code-image/?code=${jsonData.code}&qrColor=%23${fgColor}&qrBgColor=%23${bgColor}`;
-    const encodedURL = encodeURIComponent(urlToPass);
+      let fgColor = jsonData.qrDotColor;
+      let bgColor = jsonData.backgroundColor;
 
-    let finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
+      fgColor = fgColor.replace("#", "");
+      bgColor = bgColor.replace("#", "");
 
-    if (type == "sticker") {
-      finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker?image=${encodedURL}`;
+      const urlToPass = `https://analog-magic-code.netlify.app/magic-code-image/?code=${jsonData.code}&qrColor=%23${fgColor}&qrBgColor=%23${bgColor}`;
+      const encodedURL = encodeURIComponent(urlToPass);
+
+      finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
+
+      if (type == "sticker") {
+        finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker`;
+      }
+
+      if (type == "tattoo") {
+        finalURL = `https://magicprints.studio/products/magic-tattoo?image=${encodedURL}`;
+      }
+
+      window.open(finalURL, "_blank");
+    } else {
+      console.log("This is an analog code.");
+
+      if (type == "sticker") {
+        finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker`;
+      }
+
+      if (type == "tattoo") {
+        finalURL = `https://magicprints.studio/products/magic-tattoo`;
+      }
+
+      window.open(finalURL, "_blank");
+
     }
 
-    if (type == "tattoo") {
-      finalURL = `https://textildruck-schweiz.com/products/magic-tattoo?image=${encodedURL}`;
-    }
 
-    console.log(finalURL);
-    window.open(finalURL, "_blank");
 
-    console.log(jsonData);
+    // console.log(finalURL);
+    // console.log(jsonData);
   } catch (error) {
     console.error("Invalid JSON data:", error);
   }
@@ -1120,29 +1141,46 @@ document
     try {
       const jsonData = JSON.parse(hiddenInput);
 
-      let fgColor = jsonData.qrDotColor;
-      let bgColor = jsonData.backgroundColor;
+      let finalURL = `https://textildruck-schweiz.com/products/magic-code`
 
-      fgColor = fgColor.replace("#", "");
-      bgColor = bgColor.replace("#", "");
+      if (jsonData.user_id) {
+        console.log("This code is created by the user.");
 
-      const urlToPass = `https://analog-magic-code.netlify.app/magic-code-image/?code=${jsonData.code}&qrColor=%23${fgColor}&qrBgColor=%23${bgColor}`;
-      const encodedURL = encodeURIComponent(urlToPass);
+        let fgColor = jsonData.qrDotColor;
+        let bgColor = jsonData.backgroundColor;
 
-      let finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
+        fgColor = fgColor.replace("#", "");
+        bgColor = bgColor.replace("#", "");
 
-      if (type == "sticker") {
-        finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker?image=${encodedURL}`;
-      }
+        const urlToPass = `https://analog-magic-code.netlify.app/magic-code-image/?code=${jsonData.code}&qrColor=%23${fgColor}&qrBgColor=%23${bgColor}`;
+        const encodedURL = encodeURIComponent(urlToPass);
 
-      if (type == "tattoo") {
-        finalURL = `https://textildruck-schweiz.com/products/magic-tattoo?image=${encodedURL}`;
-      }
+        finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
 
-      console.log(finalURL);
+        if (type == "sticker") {
+          finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker`;
+        }
+
+        if (type == "tattoo") {
+          finalURL = `https://magicprints.studio/products/magic-tattoo?image=${encodedURL}`;
+        }
+
+        window.open(finalURL, "_blank");
+      } else {
+        console.log("This is an analog code.");
+
+        if (type == "sticker") {
+          finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker`;
+        }
+
+        if (type == "tattoo") {
+          finalURL = `https://magicprints.studio/products/magic-tattoo`;
+        }
+
       window.open(finalURL, "_blank");
 
-      console.log(jsonData);
+      }
+
     } catch (error) {
       console.error("Invalid JSON data:", error);
     }
@@ -1160,29 +1198,46 @@ document
     try {
       const jsonData = JSON.parse(hiddenInput);
 
-      let fgColor = jsonData.qrDotColor;
-      let bgColor = jsonData.backgroundColor;
+      let finalURL = `https://textildruck-schweiz.com/products/magic-code`
 
-      fgColor = fgColor.replace("#", "");
-      bgColor = bgColor.replace("#", "");
+      if (jsonData.user_id) {
+        console.log("This code is created by the user.");
 
-      const urlToPass = `https://analog-magic-code.netlify.app/magic-code-image/?code=${jsonData.code}&qrColor=%23${fgColor}&qrBgColor=%23${bgColor}`;
-      const encodedURL = encodeURIComponent(urlToPass);
+        let fgColor = jsonData.qrDotColor;
+        let bgColor = jsonData.backgroundColor;
 
-      let finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
+        fgColor = fgColor.replace("#", "");
+        bgColor = bgColor.replace("#", "");
 
-      if (type == "sticker") {
-        finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker?image=${encodedURL}`;
-      }
+        const urlToPass = `https://analog-magic-code.netlify.app/magic-code-image/?code=${jsonData.code}&qrColor=%23${fgColor}&qrBgColor=%23${bgColor}`;
+        const encodedURL = encodeURIComponent(urlToPass);
 
-      if (type == "tattoo") {
-        finalURL = `https://magicprints.studio/products/magic-tattoo?image=${encodedURL}`;
-      }
+        finalURL = `https://textildruck-schweiz.com/products/magic-code?image=${encodedURL}`;
 
-      console.log(finalURL);
+        if (type == "sticker") {
+          finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker`;
+        }
+
+        if (type == "tattoo") {
+          finalURL = `https://magicprints.studio/products/magic-tattoo?image=${encodedURL}`;
+        }
+
+        window.open(finalURL, "_blank");
+      } else {
+        console.log("This is an analog code.");
+
+        if (type == "sticker") {
+          finalURL = `https://textildruck-schweiz.com/products/magic-safety-sticker`;
+        }
+
+        if (type == "tattoo") {
+          finalURL = `https://magicprints.studio/products/magic-tattoo`;
+        }
+
       window.open(finalURL, "_blank");
 
-      console.log(jsonData);
+      }
+
     } catch (error) {
       console.error("Invalid JSON data:", error);
     }
@@ -1378,5 +1433,25 @@ function removeShowPopupParamAndRedirect() {
   }, 1000); // 1000ms (1 second) delay
 }
 
+async function makeItFree(qrId) {
+  try {
+    const response = await fetch("/set-first-qr", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ qrId }),
+    });
 
+    const data = await response.json();
 
+    if (data.type === "success") {
+      showToast(data.message, "success"); // Show success message
+      // Optionally reload or update the UI to reflect changes:
+      window.location.reload();
+    } else {
+      showToast(data.message || "Something went wrong", "error");
+    }
+  } catch (error) {
+    showToast(error.message || "Something went wrong", "error");
+    console.error(error);
+  }
+}

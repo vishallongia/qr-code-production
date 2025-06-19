@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Magic Code Creator</title>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:400,600" rel="stylesheet">
+    <link href="/css/showandupdateqr.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</head>
+
+<body>
+    <div id="show-section" class="fade-in">
+        <div class="qr-page" id="showandupdateqr">
+            <div class="container">
+
+                <!-- Content Section -->
+                <div class="content-section" id="content-section-1">
+                    <h2>Magic Code Message</h2>
+
+                    <!-- Content Type Selection -->
+                    <div class="content-types">
+                        <button class="content-type-button">Link</button>
+                        <button class="content-type-button">Text</button>
+                        <button class="content-type-button">Photo/Video</button>
+                    </div>
+                    <div id="media-section">
+                        <div class="form-group">
+                            <label for="media-file-update">Upload Your File</label>
+                            <div class="upload-box" onclick="document.getElementById('media-file-update').click();">
+                                <img src="/vuesax-linear-export.svg" alt="Upload icon">
+                                <p>Drag & Drop or <span class="browse-text">Browse</span></p>
+                            </div>
+                            <input type="file" id="media-file-update" name="MediaLang" style="display:none;">
+                        </div>
+                    </div>
+
+                    <div id="text-section">
+                        <div class="form-group">
+                            <label for="text-file-update">Enter Your Text</label>
+                            <textarea id="text-file-update" name="TextLang" placeholder="Write your text here"
+                                class="input-group"></textarea>
+                        </div>
+                    </div>
+
+                    <div id="url-section">
+                        <div class="form-group">
+                            <label for="url-update">Enter Link URL</label>
+                            <input type="text" id="url-update" name="UrlLang" placeholder="Paste your link here"
+                                class="input-group">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <button class="save-button" id="submit-btn-update">Save Content</button>
+            </div>
+        </div>
+</body>
+<script src="/js/dashboard.js"></script>
+<script src="/js/generateqr-api.js"></script>
+<script src="/js/special-offer-info.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const contentSections = [
+            document.getElementById("content-section-2"),
+            document.getElementById("content-section-3")
+        ];
+
+        const submitButton = document.getElementById("submit-btn-update");
+        const printMyQrButton = document.getElementById("PrintMyQR");
+
+        const actionCards = document.querySelectorAll(".action-buttons .action-card");
+
+        contentSections.forEach(section => {
+            section.style.display = "none";
+        });
+
+        actionCards.forEach((card, index) => {
+            card.addEventListener("click", function () {
+                actionCards.forEach(c => c.classList.remove("active"));
+                card.classList.add("active");
+
+                contentSections.forEach(section => {
+                    section.style.display = "none";
+                });
+
+
+
+                if (contentSections[index]) {
+                    if (index === 1) {
+                        contentSections[index].style.display = "flex";
+                        contentSections[index].style.flexFlow = "column";
+                        contentSections[index].style.gap = "24px";
+                        submitButton.style.display = "block";
+                        printMyQrButton.style.display = "none"
+                    }
+                    if (index === 2) {
+                        contentSections[index].style.display = "block";
+                        contentSections[index].style.flexFlow = "";
+                        contentSections[index].style.gap = "";
+                        submitButton.style.display = "none";
+                        printMyQrButton.style.display = "block"
+
+                    } else {
+                        contentSections[index].style.display = "flex";
+                        contentSections[index].style.flexFlow = "column";
+                        contentSections[index].style.gap = "24px";
+                        submitButton.style.display = "block";
+                        printMyQrButton.style.display = "none"
+                    }
+
+
+                    // Call the input check on tab switch
+                    checkAndUpdateActiveContentType();
+                }
+            });
+        });
+
+        const contentTypeButtons = document.querySelectorAll(".content-type-button");
+        const urlInput = document.getElementById("url-update");
+        const textInput = document.getElementById("text-file-update");
+        const mediaInput = document.getElementById("media-file-update");
+
+        let initialActiveType = null;
+        let lastUserIntentType = null;
+
+        function setActiveButton(type) {
+            contentTypeButtons.forEach(btn => {
+                if (btn.textContent === type) {
+                    if (!btn.classList.contains("active")) {
+                        btn.classList.add("active");
+                        btn.click(); // Trigger the click
+
+                    }
+                } else {
+                    btn.classList.remove("active");
+                }
+            });
+
+            if (!initialActiveType) {
+                initialActiveType = type;
+            }
+        }
+
+        function checkAndUpdateActiveContentType() {
+            const hasLink = !!urlInput.value.trim();
+            const hasText = !!textInput.value.trim();
+            const hasMedia = mediaInput.files.length > 0;
+
+            const inputStatus = {
+                "Link": hasLink,
+                "Text": hasText,
+                "Photo/Video": hasMedia
+            };
+
+            const activeType = document.querySelector(".content-type-button.active")?.textContent;
+
+            // If user has explicitly selected a type (via click), honor it if it has value
+            if (lastUserIntentType && inputStatus[lastUserIntentType]) {
+                setActiveButton(lastUserIntentType);
+                return;
+            }
+
+            // If initial type has value, stick to it
+            if (initialActiveType && inputStatus[initialActiveType]) {
+                setActiveButton(initialActiveType);
+                return;
+            }
+
+            // Fallback - pick any filled input
+            if (hasMedia) {
+                setActiveButton("Photo/Video");
+            } else if (hasText) {
+                setActiveButton("Text");
+            } else if (hasLink) {
+                setActiveButton("Link");
+            } else {
+                contentTypeButtons.forEach(btn => btn.classList.remove("active"));
+                initialActiveType = null;
+            }
+        }
+
+        // Track user intent when they click a button
+        contentTypeButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                lastUserIntentType = btn.textContent;
+                checkAndUpdateActiveContentType();
+            });
+        });
+
+        // Input listeners
+        urlInput.addEventListener("input", checkAndUpdateActiveContentType);
+        textInput.addEventListener("input", checkAndUpdateActiveContentType);
+        mediaInput.addEventListener("change", checkAndUpdateActiveContentType);
+
+        // Initial check
+        checkAndUpdateActiveContentType();
+
+    });
+
+</script>
+
+
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const contentTypeButtons = document.querySelectorAll(".content-type-button");
+        const mediaSection = document.getElementById("media-section");
+        const textSection = document.getElementById("text-section");
+        const urlSection = document.getElementById("url-section");
+
+        // Initially hide all sections
+        mediaSection.style.display = "none";
+        textSection.style.display = "none";
+        urlSection.style.display = "none";
+
+        // Function to hide all sections
+        function hideAllSections() {
+            mediaSection.style.display = "none";
+            textSection.style.display = "none";
+            urlSection.style.display = "none";
+        }
+
+        // Function to show the corresponding section
+        function showSection(section) {
+            hideAllSections();
+            section.style.display = "block";
+        }
+
+        // Handle content type button click
+        contentTypeButtons.forEach(btn => {
+            btn.addEventListener("click", function () {
+                // Remove active class from all buttons
+                contentTypeButtons.forEach(b => b.classList.remove("active"));
+
+                // Add active class to the clicked button
+                this.classList.add("active");
+
+                const type = this.textContent.trim().toLowerCase();
+
+                // Show the corresponding section based on the clicked button
+                if (type === "photo/video") {
+                    showSection(mediaSection);
+                } else if (type === "text") {
+                    showSection(textSection);
+                } else if (type === "link") {
+                    showSection(urlSection);
+                }
+            });
+        });
+
+        // Check if any button already has the active class and trigger a click event
+        contentTypeButtons.forEach(btn => {
+            if (btn.classList.contains("active")) {
+                btn.click();  // Trigger click on the active button
+            }
+        });
+
+        const mediaInput = document.getElementById("media-file-update");
+        const uploadText = document.querySelector("#media-section .upload-box p");
+
+        mediaInput.addEventListener("change", function () {
+            if (this.files.length > 0) {
+                const fileName = this.files[0].name;
+                uploadText.innerHTML = `Selected: <strong>${fileName}</strong>`;
+            } else {
+                uploadText.innerHTML = `Drag & Drop or <span class="browse-text">Browse</span>`;
+            }
+        });
+    });
+</script>
+
+
+
+<html>
+
+</html>

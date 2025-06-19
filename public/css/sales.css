@@ -15,7 +15,7 @@
     --text-color: #333333;
     --grid-columns-7: 0.8fr 0.8fr 0.8fr 1.0fr 0.5fr 0.5fr 0.5fr;
     --grid-columns-9: 0.7fr 0.7fr 0.7fr 1.0fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr;
-    --grid-columns-6: 0.7fr 0.7fr 0.7fr 0.5fr 0.5fr 0.5fr;
+    --grid-columns-6: 0.7fr 0.7fr 0.7fr 0.7fr 0.5fr 0.5fr;
 }
 
 body {

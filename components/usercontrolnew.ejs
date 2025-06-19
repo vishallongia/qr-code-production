@@ -22,6 +22,7 @@
             cursor: pointer;
             display: block;
             font-size: 16px;
+            width: fit-content;
         }
 
         .btn:hover {
@@ -33,6 +34,60 @@
 
 <body class="qr-page">
 
+    <div class="popup-container-wrapper" id="popup-container-wrapper" style="display: none;">
+        <!-- 🔒 Hidden input for coupon ID -->
+        <input type="hidden" id="hidden-coupon-id" name="couponId" value="" />
+        <div class="popup-overlay">
+            <div class="popup-content" style="position: relative;">
+                <div class="popup-header">
+                    <h2>Select Options</h2>
+                    <span id="close-popup-special-offer-a" style="
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 25px;
+            cursor: pointer;" onclick="closeSpecialOfferPopup()" s>&times;</span>
+                </div>
+                <div class="table-container">
+                    <table class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>Qr Name</th>
+                            </tr>
+                        </thead>
+                        <tbody id="qr-table-body">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn" onclick="authenticateQRCodes()">Authority</button>
+            </div>
+        </div>
+    </div>
+    <!-- Outside of theme-popup-get-paid -->
+    <div id="theme-popup-special-offer" class="popup-overlay" style="display: none;">
+        <div class="popup-content" style="position: relative;">
+            <span id="close-popup-special-offer" style="
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 25px;
+            cursor: pointer;">&times;</span>
+
+            <p>Activate Your Special Info</p>
+            <form>
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <input type="text" id="coupon-code" placeholder="Enter Coupon Code">
+                </div>
+                <button id="popup-ok-btn-special-offer" type="button" class="btn">Activate Offer</button>
+            </form>
+        </div>
+    </div>
+
+
+
+
+
+
     <div class="container-user-control">
         <div class="content-section">
 
@@ -40,7 +95,7 @@
                 <h2>When Scanning My Magic Code</h2>
 
                 <div>
-                    <button class="btn" onclick="BeforeStartCamera()">
+                    <button class=" start-camera" onclick="BeforeStartCamera()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                             class="bi bi-qr-code-scan" viewBox="0 0 16 16">
                             <path
@@ -59,22 +114,68 @@
 
 
             <div class="modern-radio-group">
-                <input type="radio" id="show-edit" name="qr-update-option" value="ShowEdit"
-                    <%=user.showEditOnScan===true ? 'checked' : '' %>
-                onchange="SetUserControl()">
-                <label for="show-edit">Show Content Change</label>
+                <label class="radio-button">
+                    <input type="radio" name="qr-update-option" value="ShowEdit" <%=user.showEditOnScan===true &&
+                        isSpecialOffer===false ? "checked" : "" %>
+                    onchange="SetUserControl(<%= isSpecialOffer===true ? 'true' : 'false' %>)">
+                        <img src="/icons/edit-icon.png" alt="Edit Icon">
+                        <span>Show Content Change</span>
+                </label>
 
-                <input type="radio" id="show-content" name="qr-update-option" value="ShowContent"
-                    <%=user.showEditOnScan===false ? 'checked' : '' %>
-                onchange="SetUserControl()">
-                <label for="show-content">Show Content</label>
+                <label class="radio-button">
+                    <input type="radio" name="qr-update-option" value="ShowContent" <%=user.showEditOnScan===false &&
+                        isSpecialOffer===false ? "checked" : "" %>
+                    onchange="SetUserControl(<%= isSpecialOffer===true ? 'true' : 'false' %>)">
+                        <img src="/icons/content-icon.png" alt="Content Icon">
+                        <span>Show Content</span>
+                </label>
 
-                <input type="radio" id="emergency" name="qr-update-option" value="Emergency">
-                <label for="emergency">Emergency</label>
+                <label class="radio-button">
+                    <input type="radio" name="qr-update-option" value="SpecialOffer" <%=isSpecialOffer===true
+                        ? "checked" : "" %>
+                    onchange="handleSpecialOfferToggle()">
+                    <img src="/icons/special-icon.png" alt="Special Offer Icon">
+                    <span>Special Info</span>
+                </label>
             </div>
+            <% if (isSpecialOffer===true) { %>
+                <div style="margin-top: 30px; text-align: center;">
 
+                    <% if (couponCode) { %>
+                        <p style="font-weight: 500; font-size: 16px; margin-bottom: 12px;">
+                            You’ve currently connected with Event Organizer using coupon: <strong>
+                                <%= couponCode %>
+                            </strong>
+                        </p>
+                        <% } %>
 
+                            <% if (qrNames && qrNames.length> 0) { %>
+                                <div style="margin-bottom: 10px;">
+                                    <p><strong>QR Codes with Special Info:</strong></p>
+                                    <ul style="list-style: none; padding: 0;">
+                                        <% for (let i=0; i < qrNames.length; i++) { %>
+                                            <li class="btn">
+                                                <%= qrNames[i] %>
+                                            </li>
+                                            <% } %>
+                                    </ul>
+                                </div>
+                                <% } %>
 
+                                    <button onclick="disconnectFromEvent()" style="
+      background-color: #d93025;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    ">
+                                        Disconnect
+                                    </button>
+                </div>
+                <% } %>
 
         </div>
     </div>
@@ -136,24 +237,24 @@
         // Display scanned result
 
 
-       
 
-        function BeforeStartCamera(){
-        Html5Qrcode.getCameras().then(cameras => {
-            if (cameras.length > 0) {
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                if (!isIOS) {
-                    backCameraId = cameras.find(c => c.label.toLowerCase().includes("back"))?.id || cameras[0].id;
+
+        function BeforeStartCamera() {
+            Html5Qrcode.getCameras().then(cameras => {
+                if (cameras.length > 0) {
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                    if (!isIOS) {
+                        backCameraId = cameras.find(c => c.label.toLowerCase().includes("back"))?.id || cameras[0].id;
+                    }
+                    startScanner();
+                } else {
+                    alert("No cameras found!");
                 }
+            }).catch(err => {
+                console.error("Camera error:", err);
+                // iOS fallback
                 startScanner();
-            } else {
-                alert("No cameras found!");
-            }
-        }).catch(err => {
-            console.error("Camera error:", err);
-            // iOS fallback
-            startScanner();
-        });
+            });
         }
 
 

@@ -172,3 +172,55 @@
         font-size: 18px;
     }
 }
+
+
+#popup-ok-btn-special-offer {
+    background-color: var(--submit-btn-bg);
+    color: white;
+    font-family: var(--font-family);
+    font-size: 16px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#popup-ok-btn-special-offer:hover {
+    background-color: var(--submit-btn-hover-bg);
+}
+
+#coupon-code {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--input-border-color);
+    border-radius: var(--border-radius);
+    font-family: var(--font-family);
+    font-size: 14px;
+    color: var(--text-color);
+    outline: none;
+    box-sizing: border-box;
+    background: white;
+}
+
+#coupon-code:focus {
+    border-color: var(--input-focus-border-color);
+}
+
+
+#special-offer-btn {
+    background-color: rgba(26, 1, 97, 1);
+    color: white;
+    font-family: var(--font-family);
+    font-size: 16px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#special-offer-btn:hover {
+    background-color: rgba(26, 1, 97, 0.85) /* 85% opacity */
+
+}

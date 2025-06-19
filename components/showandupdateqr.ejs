@@ -31,6 +31,12 @@
                             <!-- <button class="icon-button">
                             <img src="/vuesax-linear-trash.svg" alt="Delete" />
                         </button> -->
+                            <% if (!qrCode.isFirstQr) { %>
+                                <button class="icon-button" title="Make It Free"
+                                    onclick="makeItFree('<%= qrCode._id %>')">
+                                    <img src="\images\free.png" alt="Make It Free" class="action-icon" style="width: 60px; height: auto;" />
+                                </button>
+                                <% } %>
                         </div>
                     </div>
                 </div>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Magic Code Cards</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="/css/qr-gallery-new.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <style>
+        .subtext {
+            text-align: center;
+            font-size: 16px;
+            color: #555;
+            margin: 19px auto 30px;
+            line-height: 1.6;
+            width: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-qr-custom">
+        <span style="font-family: Poppins; font-weight: 600; font-size: 20px; line-height: 20px;">My Magic
+            Stickers</span>
+
+        <p class="subtext">
+            This is your inactive Magic Code as a Sticker in all available colors. You can order these here online, or
+            pick them up at an affiliate store near you. <br> After you receive your physical Magic Sticker and you hold it
+            in your hand, you will be able to activate it by holding your mobile phone camera at it.
+            <br> Then it will become
+            your personal Magic Code, and it will belong to you <b>FOREVER.</b> 
+        </p>
+
+        <div class="grid" id="showcolorsqrcode">
+            <!-- Card 1 to 6 -->
+            <div class="card">
+                <p class="card-title">QR Code 1</p>
+                <a class="qr-code" id="qr-container-1" href="#"></a>
+                <!-- <div class="button-group">
+                    <button class="icon-button" title="Edit">
+                        <img src="/vuesax-linear-edit.svg" alt="Edit">
+                    </button>
+                    <button class="icon-button" title="Delete">
+                        <img src="/vuesax-linear-trash.svg" alt="Delete">
+                    </button>
+                </div> -->
+            </div>
+
+            <div class="card">
+                <p class="card-title">QR Code 2</p>
+                <a class="qr-code" id="qr-container-2" href="#"></a>
+                <!-- <div class="button-group">
+                    <button class="icon-button" title="Edit">
+                        <img src="/vuesax-linear-edit.svg" alt="Edit">
+                    </button>
+                    <button class="icon-button" title="Delete">
+                        <img src="/vuesax-linear-trash.svg" alt="Delete">
+                    </button>
+                </div> -->
+            </div>
+
+            <div class="card">
+                <p class="card-title">QR Code 3</p>
+                <a class="qr-code" id="qr-container-3" href="#"></a>
+                <!-- <div class="button-group">
+                    <button class="icon-button" title="Edit">
+                        <img src="/vuesax-linear-edit.svg" alt="Edit">
+                    </button>
+                    <button class="icon-button" title="Delete">
+                        <img src="/vuesax-linear-trash.svg" alt="Delete">
+                    </button>
+                </div> -->
+            </div>
+
+            <div class="card">
+                <p class="card-title">QR Code 4</p>
+                <a class="qr-code" id="qr-container-4" href="#"></a>
+                <!-- <div class="button-group">
+                    <button class="icon-button" title="Edit">
+                        <img src="/vuesax-linear-edit.svg" alt="Edit">
+                    </button>
+                    <button class="icon-button" title="Delete">
+                        <img src="/vuesax-linear-trash.svg" alt="Delete">
+                    </button>
+                </div> -->
+            </div>
+
+            <div class="card">
+                <p class="card-title">QR Code 5</p>
+                <a class="qr-code" id="qr-container-5" href="#"></a>
+                <!-- <div class="button-group">
+                    <button class="icon-button" title="Edit">
+                        <img src="/vuesax-linear-edit.svg" alt="Edit">
+                    </button>
+                    <button class="icon-button" title="Delete">
+                        <img src="/vuesax-linear-trash.svg" alt="Delete">
+                    </button>
+                </div> -->
+            </div>
+
+            <div class="card">
+                <p class="card-title">QR Code 6</p>
+                <a class="qr-code" id="qr-container-6" href="#"></a>
+            </div>
+
+            <div class="card">
+                <p class="card-title">QR Code 6</p>
+                <a class="qr-code" id="qr-container-7" href="#"></a>
+            </div>
+
+            <div class="card">
+                <p class="card-title">QR Code 6</p>
+                <a class="qr-code" id="qr-container-8" href="#"></a>
+            </div>
+
+            <div class="card">
+                <p class="card-title">QR Code 6</p>
+                <a class="qr-code" id="qr-container-9" href="#"></a>
+            </div>
+
+            <div class="card">
+                <p class="card-title">QR Code 6</p>
+                <a class="qr-code" id="qr-container-10" href="#"></a>
+            </div>
+
+            <div class="card">
+                <p class="card-title">QR Code 6</p>
+                <a class="qr-code" id="qr-container-11" href="#"></a>
+            </div>
+
+
+
+
+        </div>
+    </div>
+
+    <script>
+        const qrCodesMap = {};
+        const qrCodes = [
+            { _id: 1, qrName: "Black", code: "https://magic-code.net/OSN6U4", qrDotColor: "black" },
+            { _id: 2, qrName: "White", code: "https://magic-code.net/AT91GS", qrDotColor: "white", backgroundColor: "black" },
+            { _id: 3, qrName: "Magenta", code: "https://magic-code.net/HFT9P4", qrDotColor: "#FF0093" },
+            { _id: 4, qrName: "Violet", code: "https://magic-code.net/KCIRDK", qrDotColor: "#835EC7" },
+            { _id: 5, qrName: "Green", code: "https://magic-code.net/YDD268", qrDotColor: "#00B760" },
+            { _id: 6, qrName: "Pink", code: "https://magic-code.net/FVFLUW", qrDotColor: "#FC70BA" },
+            { _id: 7, qrName: "Blue", code: "https://magic-code.net/0JM9HX", qrDotColor: "#1C00FF" },
+            { _id: 8, qrName: "Red", code: "https://magic-code.net/666YK6", qrDotColor: "#FF0000" },
+            { _id: 9, qrName: "Orange", code: "https://magic-code.net/IZIKZM", qrDotColor: "#FFC62C" },
+            { _id: 10, qrName: "Cyan", code: "https://magic-code.net/DOV8Z0", qrDotColor: "#00AEEF" },
+            { _id: 11, qrName: "Turquoise", code: "https://magic-code.net/A2KPPA", qrDotColor: "#4CCED1" },
+        ];
+
+        const titles = document.querySelectorAll('.card-title');
+
+        qrCodes.forEach((data, index) => {
+            // Set name
+            if (titles[index]) {
+                titles[index].innerHTML = data.qrName;
+            }
+
+            // Set URL in anchor
+            const link = document.getElementById(`qr-container-${data._id}`);
+            if (link) {
+                link.href = data.code;
+                link.target = "_blank";
+            }
+        });
+
+        function showQrCodes(qrCodes) {
+            qrCodes.forEach((qrCodeData) => {
+                const qrContainer = document.getElementById(`qr-container-${qrCodeData._id}`);
+
+                if (qrContainer) {
+                    const qrCode = new QRCodeStyling({
+                        width: 400,
+                        height: 400,
+                        type: "canvas",
+                        image: '/images/logo.jpg',
+                        data: qrCodeData.code,
+                        dotsOptions: {
+                            color: qrCodeData.qrDotColor || "#000000",
+                            type: 'rounded' // Change 'square' to 'rounded'
+                        },
+                        cornersSquareOptions: {
+                            type: 'dot' // Set corners to dot style
+                        },
+                        backgroundOptions: {
+                            color: qrCodeData.backgroundColor || "#ffffff"
+                        },
+                        imageOptions: {
+                            crossOrigin: 'anonymous',
+                            margin: 10
+                        }
+                    });
+
+                    qrContainer.innerHTML = "";
+
+                    const wrapper = document.createElement("div");
+                    wrapper.style.position = "relative";
+                    wrapper.style.display = "inline-block";
+
+                    const qrCanvasDiv = document.createElement("div");
+                    wrapper.appendChild(qrCanvasDiv);
+
+                    qrCode.append(qrCanvasDiv);
+                    qrContainer.appendChild(wrapper);
+
+                    qrCodesMap[qrCodeData._id] = qrCode;
+                }
+            });
+        }
+
+        showQrCodes(qrCodes);
+    </script>
+</body>
+
+</html>

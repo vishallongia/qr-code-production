@@ -82,6 +82,11 @@ const qrCodeSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // Defaults to false for user-created QR codes
     },
+    specialOfferCouponId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Coupon", // Assuming you are referencing the Coupon model
+      default: null, // Optional and defaults to empty
+    },
   },
   { timestamps: true }
 );

@@ -244,6 +244,18 @@ select {
     border-radius: 5px;
 }
 
+.icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.action-icon {
+    width: 18px;
+    height: 18px;
+}
+
 
 @media (max-width: 768px) {
     .qr-page .container {

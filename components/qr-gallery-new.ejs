@@ -30,18 +30,22 @@
                                     <img src="/vuesax-linear-edit.svg" alt="Edit">
                                 </a>
                             </button>
-                            <!-- <button class="icon-button" title="Download"
-                                onclick="downloadQRCodeShowed('<%= qrCode._id %>')">
-                                <img src="/vuesax-linear-frame.svg" alt="Download">
-                            </button> -->
-                            <button class="icon-button" title="Delete" onclick="deleteQRCode('<%= qrCode._id %>')">
-                                <img src="/vuesax-linear-trash.svg" alt="Delete">
-                            </button>
+                            <% if (!qrCode.isFirstQr) { %>
+                                <button class="icon-button" title="Make It Free"
+                                    onclick="makeItFree('<%= qrCode._id %>')">
+                                    <img src="\images\free.png" alt="Make It Free" class="action-icon" style="width: 50px;"/>
+                                </button>
+                                <% } %>
+
+                                    <button class="icon-button" title="Delete"
+                                        onclick="deleteQRCode('<%= qrCode._id %>')">
+                                        <img src="/vuesax-linear-trash.svg" alt="Delete">
+                                    </button>
                         </div>
                     </div>
                     <% }) %>
                         <% } else { %>
-                            <p id="NoQR">No QR codes found.</p>
+                            <p id="NoQR">No Magic codes found.</p>
                             <% } %>
         </div>
     </div>

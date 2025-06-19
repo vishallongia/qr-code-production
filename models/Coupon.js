@@ -10,6 +10,15 @@ const couponSchema = new mongoose.Schema({
   },
   isActive: { type: Boolean, default: true },
   usageCount: { type: Number, default: 0 },
+  specialOffer: {
+    type: {
+      type: String,
+      enum: ["text", "url", "media"],
+    },
+    text: { type: String },
+    url: { type: String },
+    media_url: { type: String },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

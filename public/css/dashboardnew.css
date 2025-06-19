@@ -207,8 +207,8 @@ body {
 
 
 .logo {
-    width: 55px;
-    height: 55px;
+    width: 60px;
+    height: 60px;
     object-fit: cover;
 }
 
@@ -251,6 +251,8 @@ body {
     scrollbar-width: none;
     /* Firefox */
     -ms-overflow-style: none;
+    -webkit-overflow-scrolling:touch;
+
 }
 
 .nav-menu {

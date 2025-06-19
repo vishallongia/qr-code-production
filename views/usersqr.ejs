@@ -32,7 +32,7 @@
                                     <p><strong>Code:</strong>
                                         <%= qr.code %>
                                     </p>
-                                    <p><strong>QR Type:</strong>
+                                    <p><strong>MC Type:</strong>
                                         <%= qr.type %>
                                     </p>
                                     <p><strong>Context Value:</strong>
@@ -40,12 +40,24 @@
                                             <a href="<%= qr.url %>" target="_blank">
                                                 <%= qr.url %>
                                             </a>
-                                            <% } else { %>
-                                                <a href="<%= FRONTEND_URL %>/<%= qr.code %>" target="_blank">
-                                                    <%= FRONTEND_URL %>/<%= qr.code %>
+                                            <% } else if (qr.type==='text' ) { %>
+                                                <a target="_blank">
+                                                    <%= qr.text %>
                                                 </a>
-                                                <% } %>
+                                                <% } else { %>
+                                                    <a href="<%= FRONTEND_URL %>/<%= qr.code %>" target="_blank">
+                                                        <%= FRONTEND_URL %>/<%= qr.code %>
+                                                    </a>
+                                                    <% } %>
+
                                     </p>
+
+                                    <!-- <p><strong>History:</strong>
+                                        <a href="/qrhistory/<%= qr._id %>" class="track-history-btn">
+                                            Track
+                                        </a>
+                                    </p> -->
+
 
                                 </div>
                                 <% }) %>

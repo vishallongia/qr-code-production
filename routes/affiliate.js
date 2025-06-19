@@ -6,6 +6,7 @@ const User = require("../models/User");
 const Coupon = require("../models/Coupon");
 const Payment = require("../models/Payment");
 const AffiliatePayment = require("../models/AffiliatePayment");
+const jwt = require("jsonwebtoken");
 const {
   encryptPassword,
   decryptPassword,
@@ -25,37 +26,56 @@ router.get("/create-affiliate-user", async (req, res) => {
   }
 });
 
-// create affiliate user
 router.get("/affiliate-users", async (req, res) => {
   try {
     const currentPage = parseInt(req.query.page) || 1;
     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+    const search = req.query.search ? req.query.search.trim() : "";
 
-    // Fetch total number of affiliate users
-    const totalAffiliates = await User.countDocuments({ role: "affiliate" });
+    // Base match condition for affiliate users
+    const baseMatch = { role: "affiliate" };
+
+    // If search query exists, add regex filter on fullName or email
+    if (search) {
+      baseMatch.$and = [
+        {
+          $or: [
+            { fullName: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+          ],
+        },
+      ];
+    }
+
+    const totalAffiliates = await User.countDocuments(baseMatch);
     const totalPages = Math.ceil(totalAffiliates / recordsPerPage);
     const skip = (currentPage - 1) * recordsPerPage;
 
-    // Fetch paginated affiliate users
-    const users = await User.find({ role: "affiliate" })
-      .skip(skip)
-      .limit(recordsPerPage);
+    const users = await User.find(baseMatch).skip(skip).limit(recordsPerPage);
 
-    // Add encrypted ID if needed
     users.forEach((user) => {
       if (user.userPasswordKey) {
-        user.userPasswordKey = decryptPassword(user.userPasswordKey); // Decrypt the password
+        user.userPasswordKey = decryptPassword(user.userPasswordKey);
       }
-      user.encryptedId = encryptPassword(user._id.toString()); // Encrypt the ObjectId string
+      user.encryptedId = encryptPassword(user._id.toString());
+      // Generate a JWT token for each user
+      const magicToken = jwt.sign(
+        { userId: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.MAGIC_LINK_JWT_EXPIRATION || "24h" }
+      );
+
+      // Append magic link to the user object
+      user.magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
     });
 
-    // Render the affiliate dashboard with data
     res.render("affiliateusers", {
       users,
       currentPage,
       totalPages,
       totalUsers: totalAffiliates,
       FRONTEND_URL: process.env.FRONTEND_URL,
+      search, // include the search term to retain in UI
     });
   } catch (error) {
     console.error("Error loading Affiliate Dashboard:", error);
@@ -66,46 +86,87 @@ router.get("/affiliate-users", async (req, res) => {
   }
 });
 
+// // create affiliate user
+// router.get("/affiliate-users", async (req, res) => {
+//   try {
+//     const currentPage = parseInt(req.query.page) || 1;
+//     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+
+//     // Fetch total number of affiliate users
+//     const totalAffiliates = await User.countDocuments({ role: "affiliate" });
+//     const totalPages = Math.ceil(totalAffiliates / recordsPerPage);
+//     const skip = (currentPage - 1) * recordsPerPage;
+
+//     // Fetch paginated affiliate users
+//     const users = await User.find({ role: "affiliate" })
+//       .skip(skip)
+//       .limit(recordsPerPage);
+
+//     // Add encrypted ID if needed
+//     users.forEach((user) => {
+//       if (user.userPasswordKey) {
+//         user.userPasswordKey = decryptPassword(user.userPasswordKey); // Decrypt the password
+//       }
+//       user.encryptedId = encryptPassword(user._id.toString()); // Encrypt the ObjectId string
+//     });
+
+//     // Render the affiliate dashboard with data
+//     res.render("affiliateusers", {
+//       users,
+//       currentPage,
+//       totalPages,
+//       totalUsers: totalAffiliates,
+//       FRONTEND_URL: process.env.FRONTEND_URL,
+//     });
+//   } catch (error) {
+//     console.error("Error loading Affiliate Dashboard:", error);
+//     res.status(500).render("login", {
+//       message: "Failed to load Affiliate Dashboard",
+//       type: "error",
+//     });
+//   }
+// });
+
 // create affiliate user
-router.get("/affiliate-users", async (req, res) => {
-  try {
-    const currentPage = parseInt(req.query.page) || 1;
-    const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
+// router.get("/affiliate-users", async (req, res) => {
+//   try {
+//     const currentPage = parseInt(req.query.page) || 1;
+//     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
 
-    // Fetch total number of affiliate users
-    const totalAffiliates = await User.countDocuments({ role: "affiliate" });
-    const totalPages = Math.ceil(totalAffiliates / recordsPerPage);
-    const skip = (currentPage - 1) * recordsPerPage;
+//     // Fetch total number of affiliate users
+//     const totalAffiliates = await User.countDocuments({ role: "affiliate" });
+//     const totalPages = Math.ceil(totalAffiliates / recordsPerPage);
+//     const skip = (currentPage - 1) * recordsPerPage;
 
-    // Fetch paginated affiliate users
-    const users = await User.find({ role: "affiliate" })
-      .skip(skip)
-      .limit(recordsPerPage);
+//     // Fetch paginated affiliate users
+//     const users = await User.find({ role: "affiliate" })
+//       .skip(skip)
+//       .limit(recordsPerPage);
 
-    // Add encrypted ID if needed
-    users.forEach((user) => {
-      if (user.userPasswordKey) {
-        user.userPasswordKey = decryptPassword(user.userPasswordKey); // Decrypt the password
-      }
-      user.encryptedId = encryptPassword(user._id.toString()); // Encrypt the ObjectId string
-    });
+//     // Add encrypted ID if needed
+//     users.forEach((user) => {
+//       if (user.userPasswordKey) {
+//         user.userPasswordKey = decryptPassword(user.userPasswordKey); // Decrypt the password
+//       }
+//       user.encryptedId = encryptPassword(user._id.toString()); // Encrypt the ObjectId string
+//     });
 
-    // Render the affiliate dashboard with data
-    res.render("affiliateusers", {
-      users,
-      currentPage,
-      totalPages,
-      totalUsers: totalAffiliates,
-      FRONTEND_URL: process.env.FRONTEND_URL,
-    });
-  } catch (error) {
-    console.error("Error loading Affiliate Dashboard:", error);
-    res.status(500).render("login", {
-      message: "Failed to load Affiliate Dashboard",
-      type: "error",
-    });
-  }
-});
+//     // Render the affiliate dashboard with data
+//     res.render("affiliateusers", {
+//       users,
+//       currentPage,
+//       totalPages,
+//       totalUsers: totalAffiliates,
+//       FRONTEND_URL: process.env.FRONTEND_URL,
+//     });
+//   } catch (error) {
+//     console.error("Error loading Affiliate Dashboard:", error);
+//     res.status(500).render("login", {
+//       message: "Failed to load Affiliate Dashboard",
+//       type: "error",
+//     });
+//   }
+// });
 
 router.get("/affiliate-user/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -845,6 +906,5 @@ router.get("/sales/:id", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;

@@ -61,6 +61,19 @@
                             <% } else if (users && users.length> 0) { %>
 
                                 <h2>Affiliate Users List</h2>
+                                <div class="search-bar-container">
+                                    <form method="GET" action="">
+                                        <input type="text" name="search" class="search-input"
+                                            placeholder="Search by name or email..."
+                                            value="<%= typeof search !== 'undefined' ? search : '' %>">
+                                        <button type="submit" class="search-btn">Search</button>
+
+                                        <% if (typeof search !=='undefined' && search.trim() !=='' ) { %>
+                                            <a href="/admindashboard/affiliate/affiliate-users"
+                                                class="clear-btn">Clear</a>
+                                            <% } %>
+                                    </form>
+                                </div>
                                 <div class="list-wrapper">
                                     <div class="list-header">
                                         <span>Name</span>
@@ -68,6 +81,13 @@
                                         <span>Password</span>
                                         <span>Action</span>
                                         <span>Vip</span>
+                                        <span>MC's</span>
+                                        <span>Login </span>
+                                    </div>
+                                    <div id="search-loader-row"
+                                        style="display: none; text-align: center; padding: 20px; font-family: var(--font-family); color: var(--text-color); font-size: 16px;">
+                                        Searching... Please wait<span class="dot">.</span><span
+                                            class="dot">.</span><span class="dot">.</span>
                                     </div>
                                     <ul id="userList" class="user-list">
                                         <% users.forEach(user=> { %>
@@ -98,15 +118,29 @@
                                                                 </button>
                                                                 <% } %>
                                                 </span>
+
+                                                <span>
+                                                    <button class="view-qr-btn"
+                                                        onclick="window.location.href='/admindashboard/qr/<%= user._id %>'">
+                                                        View MC Link
+                                                    </button>
+                                                </span>
+                                                <span>
+                                                    <button class="view-qr-btn"
+                                                        onclick="window.open('<%= user.magicLink %>', '_blank')">
+                                                        Login
+                                                    </button>
+                                                </span>
                                             </li>
                                             <% }) %>
                                     </ul>
                                 </div>
 
                                 <% if (totalPages> 1) { %>
-                                    <div class="pagination-container">
+                                    <div class="pagination-container" id="pagination-container">
                                         <% if (pageNum> 1) { %>
-                                            <a href="?page=<%= pageNum - 1 %>" class="pagination-btn prev-btn">
+                                            <a href="?page=<%= pageNum - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+                                                class="pagination-btn prev-btn">
                                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                                                     <path d="M15 19L8 12L15 5" />
                                                 </svg>
@@ -119,14 +153,15 @@
                                                             <%= i %>
                                                         </span>
                                                         <% } else { %>
-                                                            <a href="?page=<%= i %>" class="pagination-btn">
+                                                            <a href="?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+                                                                class="pagination-btn">
                                                                 <%= i %>
                                                             </a>
                                                             <% } %>
                                                                 <% } %>
 
                                                                     <% if (pageNum < totalPages) { %>
-                                                                        <a href="?page=<%= pageNum + 1 %>"
+                                                                        <a href="?page=<%= pageNum + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
                                                                             class="pagination-btn next-btn">
                                                                             <svg width="22" height="22"
                                                                                 viewBox="0 0 24 24" fill="currentColor">
@@ -135,11 +170,37 @@
                                                                         </a>
                                                                         <% } %>
                                     </div>
+
                                     <% } %>
 
                                         <% } else { %>
                                             <div class="modern-list-container">
-                                                <p class="no-data-message">No affiliate users created yet.</p>
+                                                <div class="search-bar-container">
+                                                    <form method="GET" action="">
+                                                        <input type="text" name="search" class="search-input"
+                                                            placeholder="Search by name or email..."
+                                                            value="<%= typeof search !== 'undefined' ? search : '' %>">
+                                                        <button type="submit" class="search-btn">Search</button>
+
+                                                        <% if (typeof search !=='undefined' && search.trim() !=='' ) {
+                                                            %>
+                                                            <a href="/admindashboard/affiliate/affiliate-users"
+                                                                class="clear-btn">Clear</a>
+                                                            <% } %>
+                                                    </form>
+                                                </div>
+                                                <% if (typeof search !=='undefined' && search.trim() !=='' ) { %>
+                                                    <div id="search-loader-row"
+                                                        style="display: none; text-align: center; padding: 20px; font-family: var(--font-family); color: var(--text-color); font-size: 16px;">
+                                                        Searching... Please wait<span class="dot">.</span><span
+                                                            class="dot">.</span><span class="dot">.</span>
+                                                    </div>
+                                                    <p class="no-data-message" id="no-user-found">No affiliate user
+                                                        found for your search.
+                                                    </p>
+                                                    <% } else { %>
+                                                        <p class="no-data-message">No affiliate user created yet.</p>
+                                                        <% } %>
                                             </div>
                                             <% } %>
         </div>
@@ -157,6 +218,45 @@
     function goToQR(userId) {
         window.location.href = `/admindashboard/qr/${userId}`;
     }
+</script>
+
+<script>
+    const searchInput = document.querySelector('.search-input');
+    const searchLoading = document.getElementById('search-loader-row');
+    const userList = document.getElementById('userList');
+    const paginationContainer = document.getElementById('pagination-container');
+    const notFoundPage = document.getElementById('no-user-found');
+    let redirectTimer;
+
+    searchInput.addEventListener('input', () => {
+        if (redirectTimer) clearTimeout(redirectTimer);
+
+        // Hide elements if they exist
+        if (searchLoading) searchLoading.style.display = 'none';
+        if (userList) userList.style.display = 'none';
+        if (paginationContainer) paginationContainer.style.display = 'none';
+        if (notFoundPage) notFoundPage.style.display = 'none';
+
+        const value = searchInput.value.trim();
+
+        if (value !== '') {
+            // ✅ Show loading row only if it exists
+            if (searchLoading) searchLoading.style.display = 'block';
+
+            redirectTimer = setTimeout(() => {
+                window.location.href = `/admindashboard/affiliate/affiliate-users?search=${encodeURIComponent(value)}`;
+            }, 2000); // 2 second
+        }
+    });
+
+    // Blur event — redirect to dashboard if field left empty
+    searchInput.addEventListener('blur', () => {
+        const value = searchInput.value.trim();
+
+        if (value === '') {
+            window.location.href = '/admindashboard/affiliate/affiliate-users';
+        }
+    });
 </script>
 
 </html>
