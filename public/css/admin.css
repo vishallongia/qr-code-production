@@ -15,7 +15,7 @@
   --text-color: #333333;
   --grid-columns-7: 0.6fr 0.6fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr;
   --grid-columns-8: 0.5fr 0.5fr 0.5fr 0.5fr 0.9fr 0.6fr 0.6fr 0.8fr 0.5fr;
-  --grid-columns-3: 1fr 1fr 1fr;
+  --grid-columns-3: 0.4fr 0.4fr 0.4fr 0.4fr;
   --grid-columns-6: 0.7fr 0.7fr 0.7fr 0.5fr 0.5fr 0.5fr;
 }
 
@@ -64,7 +64,8 @@ canvas {
 }
 
 /*For Track history page */
-#list-header-history , #qr-history-item {
+#list-header-history,
+#qr-history-item {
   display: grid;
   grid-template-columns: var(--grid-columns-3) !important;
 }
@@ -596,6 +597,13 @@ input:checked+.toggle-slider:before {
 
 #search-loading .dot:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+.track-history-link {
+  color: var(--link-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
+  word-break: break-all;
 }
 
 @keyframes blink {

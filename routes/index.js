@@ -4351,7 +4351,13 @@ router.get("/qrhistory/:qrCodeId", authMiddleware, async (req, res) => {
       .skip(skip)
       .limit(limit)
       .select("change qrCodeId createdAt")
+      .populate({
+        path: "qrCodeId",
+        select: "qrName", // Fetch only the qrNAme field
+      })
       .lean();
+
+ 
 
     // Step 2: Handle not found
     if (totalCount === 0) {
@@ -4369,6 +4375,8 @@ router.get("/qrhistory/:qrCodeId", authMiddleware, async (req, res) => {
 
       return res.status(404).render("qr-history", notFoundResponse);
     }
+
+    console.log(histories);
 
     const hasMore = skip + limit < totalCount;
 
@@ -4396,6 +4404,7 @@ router.get("/qrhistory/:qrCodeId", authMiddleware, async (req, res) => {
       histories: [],
       hasMore: false,
       qrCodeId: req.params.qrCodeId,
+      qrName,
     };
 
     if (req.xhr || req.headers.accept.indexOf("json") > -1) {
@@ -4688,6 +4697,31 @@ router.post("/disconnect-special-offer", authMiddleware, async (req, res) => {
   }
 });
 
+// Publically available landing page
+
+router.get("/broadcasters", async (req, res) => {
+  try {
+    res.render("magic-world"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+
+router.get("/admin-login", async (req, res) => {
+  try {
+    res.render("admin-login"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
 router.get("/qrscanlogs/:qrCodeId", authMiddleware, async (req, res) => {
   try {
     const qrCodeId = req.params.qrCodeId;
@@ -4722,9 +4756,8 @@ router.get("/qrscanlogs/:qrCodeId", authMiddleware, async (req, res) => {
         "code ip language userAgent timeZone city region country scannedAt userId"
       )
       .populate("userId", "fullName email -_id") // Populate basic user info if available
+      .populate("qrCodeId", "qrName -_id") // ✅ this line fetches qrName from QRCodeData
       .lean();
-
- 
 
     // Step 2: Handle not found
     if (totalCount === 0) {

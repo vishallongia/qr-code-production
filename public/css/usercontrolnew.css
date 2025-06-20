@@ -289,8 +289,13 @@
 }
 
 .radio-button img {
-  width: 20px;
-  height: 20px;
+  width: 47px;
+  height: auto;
+}
+
+.start-camera img {
+  width: 75px;
+  height: auto;
 }
 
 .radio-button span {
@@ -305,19 +310,36 @@
 }
 
 .radio-button:has(input[type="radio"]:checked) {
-  background-color: var(--blue);
-  color: #fff;
+  /* background-color: var(--blue);
+  color: #fff; */
   border-color: var(--blue);
 }
 
 @media (max-width: 480px) {
   .radio-button img {
-    width: 18px;
-    height: 18px;
+    width: 47px;
+    height: auto;
+  }
+
+  .start-camera img {
+    width: 75px;
+    height: auto;
   }
 
   .radio-button span {
     font-size: 13px;
+    width: 76px;
+  }
+
+  .modern-radio-group {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .modern-radio-group .radio-button {
+    gap: 8px;
+    padding: 8px;
   }
 }
 
@@ -329,11 +351,14 @@
   margin: 20px auto;
   padding: 10px 30px;
   border: none;
-  background-color: rgba(26, 1, 97, 1);
+  /* background-color: rgba(26, 1, 97, 1); */
   color: white;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 25px;
+  background: none;
+  color: rgba(26, 1, 97, 1);
+  ;
 }
 
 /* Hide actual checkbox input */

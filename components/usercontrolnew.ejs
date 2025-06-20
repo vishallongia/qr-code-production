@@ -73,12 +73,12 @@
             font-size: 25px;
             cursor: pointer;">&times;</span>
 
-            <p>Activate Your Special Info</p>
+            <p>Let's show partner message on you magic code to help other :)</p>
             <form>
                 <div class="form-group" style="margin-bottom: 24px;">
                     <input type="text" id="coupon-code" placeholder="Enter Coupon Code">
                 </div>
-                <button id="popup-ok-btn-special-offer" type="button" class="btn">Activate Offer</button>
+                <button id="popup-ok-btn-special-offer" type="button" class="btn">Next</button>
             </form>
         </div>
     </div>
@@ -95,17 +95,8 @@
                 <h2>When Scanning My Magic Code</h2>
 
                 <div>
-                    <button class=" start-camera" onclick="BeforeStartCamera()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                            class="bi bi-qr-code-scan" viewBox="0 0 16 16">
-                            <path
-                                d="M0 .5A.5.5 0 0 1 .5 0h3a.5.5 0 0 1 0 1H1v2.5a.5.5 0 0 1-1 0zm12 0a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V1h-2.5a.5.5 0 0 1-.5-.5M.5 12a.5.5 0 0 1 .5.5V15h2.5a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5v-3a.5.5 0 0 1 .5-.5m15 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1H15v-2.5a.5.5 0 0 1 .5-.5M4 4h1v1H4z" />
-                            <path d="M7 2H2v5h5zM3 3h3v3H3zm2 8H4v1h1z" />
-                            <path d="M7 9H2v5h5zm-4 1h3v3H3zm8-6h1v1h-1z" />
-                            <path
-                                d="M9 2h5v5H9zm1 1v3h3V3zM8 8v2h1v1H8v1h2v-2h1v2h1v-1h2v-1h-3V8zm2 2H9V9h1zm4 2h-1v1h-2v1h3zm-4 2v-1H8v1z" />
-                            <path d="M12 9h2V8h-2z" />
-                        </svg>
+                    <button class="start-camera" onclick="BeforeStartCamera()">
+                        <img src="/images/Scan.png" alt="Edit Icon">
 
                         SCAN
                     </button>
@@ -118,24 +109,24 @@
                     <input type="radio" name="qr-update-option" value="ShowEdit" <%=user.showEditOnScan===true &&
                         isSpecialOffer===false ? "checked" : "" %>
                     onchange="SetUserControl(<%= isSpecialOffer===true ? 'true' : 'false' %>)">
-                        <img src="/icons/edit-icon.png" alt="Edit Icon">
-                        <span>Show Content Change</span>
+                        <img src="/images/ShowChangeMessage.png" alt="Edit Icon">
+                        <span>Show Change Message</span>
                 </label>
 
                 <label class="radio-button">
                     <input type="radio" name="qr-update-option" value="ShowContent" <%=user.showEditOnScan===false &&
                         isSpecialOffer===false ? "checked" : "" %>
                     onchange="SetUserControl(<%= isSpecialOffer===true ? 'true' : 'false' %>)">
-                        <img src="/icons/content-icon.png" alt="Content Icon">
-                        <span>Show Content</span>
+                        <img src="/images/ShowMyMessage.png" alt="Content Icon">
+                        <span>Show My Message</span>
                 </label>
 
                 <label class="radio-button">
                     <input type="radio" name="qr-update-option" value="SpecialOffer" <%=isSpecialOffer===true
                         ? "checked" : "" %>
                     onchange="handleSpecialOfferToggle()">
-                    <img src="/icons/special-icon.png" alt="Special Offer Icon">
-                    <span>Special Info</span>
+                    <img src="/images/ShowPartnerMessage.png" alt="Special Offer Icon">
+                    <span>Show Partner Message</span>
                 </label>
             </div>
             <% if (isSpecialOffer===true) { %>

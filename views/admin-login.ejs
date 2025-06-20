@@ -8,7 +8,6 @@
   <link href="/css/login.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-
 </head>
 
 
@@ -24,10 +23,10 @@
 
   <div class="container">
     <form class="login-box" method="POST" action="/login" onsubmit="return handleLogin(event)">
-      <h2 id="LoginText">Activate Your Account</h2>
+      <h2 id="LoginText">Login to Magic Code</h2>
 
       <input type="email" name="email" placeholder="Enter email address..." id="EmailText" required />
-      <div class="password-wrapper" >
+      <div class="password-wrapper">
         <input type="password" name="password" id="PasswordText" placeholder="Enter password..." required />
         <span class="toggle-password" id="togglePassword">
           <!-- Eye Slash Icon SVG -->
@@ -41,7 +40,7 @@
 
       <div class="options">
         <label><input type="checkbox" /> Remember me</label>
-        <a href="/forgotpassword/">Reset My Password</a>
+        <a href="/forgotpassword/">Set My Password</a>
       </div>
 
       <button type="submit" class="login-btn" id="LoginBtnText">Login</button>
@@ -53,11 +52,11 @@
         Magic Link (No
         password Needed)</button>
 
-      <!-- <p class="signup-text">
+      <p class="signup-text">
         <span id="DontHaveAccountText">
           Don’t have an account?</span>
         <a href="/register" id="register-toggle">Signup</a>
-      </p> -->
+      </p>
 
       <!-- <p class="signup-text">
         <span id="AffiliateAccountNoteText">
@@ -103,12 +102,7 @@
     showToast("<%= message %>", "<%= type || 'success' %>");
   <% } %>
 </script>
-
-<script>
-  toggleMagicLink('login')
-  document.getElementById("magicLinkText").style.display = "none"
-</script>
-<!-- <script src="/js/translations.js"></script> -->
+<script src="/js/translations.js"></script>
 
 
 </html>

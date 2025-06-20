@@ -27,6 +27,7 @@
                 <% } else if (histories && histories.length> 0) { %>
                     <div class="list-wrapper">
                         <div class="list-header" id="list-header-history">
+                            <span>Qr Name</span>
                             <span>Type</span>
                             <span>Content</span>
                             <span>Modified At</span>
@@ -47,11 +48,24 @@
                                 <li class="user-item" id="qr-history-item">
                                     <span>
                                         <span class="magic-history-badge">
+                                            <%= item.qrCodeId?.qrName || "-" %>
+                                        </span>
+                                    </span>
+
+                                    <span>
+                                        <span class="magic-history-badge">
                                             <%= item.change?.newType || "Note" %>
                                         </span>
                                     </span>
                                     <span>
-                                        <%= item.change?.contentValue || "-" %>
+                                        <% if (item.change?.newType==='url' ) { %>
+                                            <a href="<%= item.change.contentValue %>" class="track-history-link" target="_blank"
+                                                rel="noopener noreferrer">
+                                                <%= item.change.contentValue %>
+                                            </a>
+                                            <% } else { %>
+                                                <%= item.change?.contentValue || "-" %>
+                                                    <% } %>
                                     </span>
                                     <span>
                                         <%= formatDate(item.createdAt) %>
@@ -85,7 +99,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
-<script src="/js/admindashboard-api-calls.js"></script>
 
 <script>
     const loadMoreBtn = document.getElementById('loadMoreBtn');
@@ -131,12 +144,16 @@
                     data.histories.forEach(item => {
                         const li = document.createElement('li');
                         li.className = 'user-item';
+                        li.id = 'qr-history-item';
                         const createdAt = new Date(item.createdAt);
                         const options = {
                             day: '2-digit', month: '2-digit', year: 'numeric',
                             hour: '2-digit', minute: '2-digit', hour12: true
                         };
                         li.innerHTML = `
+                        <span>
+        <span class="magic-history-badge"> ${item.qrCodeId?.qrName || "NA"}</span> 
+    </span>
     <span>
         <span class="magic-history-badge"> ${item.change?.newType || "Note"}</span> 
     </span>
