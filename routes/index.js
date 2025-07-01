@@ -14,7 +14,7 @@ const { checkQrLimit } = require("../middleware/checkQrLimit"); // Import the mi
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
 const Payment = require("../models/Payment");
 const QRCodeHistory = require("../models/QRCodeHistory"); // Adjust path as per your folder structure
-const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
+const QRScanLog = require("../models/QrScanLog"); // Adjust path if needed
 const UAParser = require("ua-parser-js");
 const locale = require("locale-code");
 const fetch = require("node-fetch");
@@ -969,6 +969,7 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
           isActive: 1,
           userPasswordKey: 1,
           qrCount: { $size: "$qrData" },
+          createdAt: 1,
         },
       },
     ])
@@ -2066,16 +2067,18 @@ router.get("/color-qr", authMiddleware, async (req, res) => {
 router.get("/usercontrol", authMiddleware, async (req, res) => {
   try {
     const userId = req.user._id;
-    // Fetch only the showEditOnScan field, excluding other sensitive data
+
+    // Fetch minimal user data
     const user = await User.findById(userId).select(
-      "showEditOnScan role subscription"
+      "showEditOnScan role subscription fullName"
     );
 
     if (!user) {
       return res.status(404).json({ message: "User not found", type: "error" });
     }
 
-    const [data = { qrNames: [], couponCode: null }] =
+    // Aggregate to fetch special offer coupon info
+    const [data = { qrNames: [], couponCode: null, endDate: null }] =
       await QRCodeData.aggregate([
         {
           $match: {
@@ -2096,6 +2099,8 @@ router.get("/usercontrol", authMiddleware, async (req, res) => {
           $group: {
             _id: "$coupon.code",
             qrNames: { $addToSet: "$qrName" },
+            endDate: { $first: "$coupon.specialOffer.endDate" },
+            name: { $first: "$coupon.specialOffer.name" },
           },
         },
         {
@@ -2103,22 +2108,46 @@ router.get("/usercontrol", authMiddleware, async (req, res) => {
             _id: 0,
             couponCode: "$_id",
             qrNames: 1,
+            endDate: 1,
+            name: 1,
           },
         },
       ]);
 
+    // ✅ Disconnect expired special offer if applicable
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (data.endDate && new Date(data.endDate) < today) {
+      await QRCodeData.updateMany(
+        {
+          $or: [{ user_id: userId }, { assignedTo: userId }],
+          specialOfferCouponId: { $exists: true },
+        },
+        { $unset: { specialOfferCouponId: "" } }
+      );
+
+      // Reset data after disconnect
+      data.qrNames = [];
+      data.couponCode = null;
+    }
+
+    console.log(data);
+
+    // Final render with updated info
     res.render("dashboardnew", {
       user,
       activeSection: "usercontrol",
       isSpecialOffer: data.qrNames.length > 0,
       qrNames: data.qrNames,
       couponCode: data.couponCode,
+      name: data.name,
     });
   } catch (error) {
     console.error("Error retrieving profile:", error);
     res.status(500).render("dashboardnew", {
       message: error.message,
-      type: "error", // Send type as 'error'
+      type: "error",
       activeSection: "profile",
       user: {},
       isSpecialOffer: false,
@@ -2800,7 +2829,26 @@ router.get(
       if (codeData?.specialOfferCouponId) {
         const coupon = await Coupon.findById(codeData.specialOfferCouponId);
         if (coupon && coupon.specialOffer) {
-          specialOfferData = coupon.specialOffer;
+          const now = new Date();
+
+          const startDate = coupon.specialOffer.startDate
+            ? new Date(coupon.specialOffer.startDate)
+            : null;
+
+          const endDate = coupon.specialOffer.endDate
+            ? new Date(coupon.specialOffer.endDate)
+            : null;
+
+          // Normalize startDate and endDate
+          if (startDate) startDate.setHours(0, 0, 0, 0); // Beginning of the day
+          if (endDate) endDate.setHours(23, 59, 59, 999); // End of the day
+
+          const isValidDate =
+            (!startDate || startDate <= now) && (!endDate || endDate >= now);
+
+          if (isValidDate) {
+            specialOfferData = coupon.specialOffer;
+          }
         }
       }
 
@@ -2814,6 +2862,12 @@ router.get(
       const userIdToCheck = codeData.user_id || codeData.assignedTo;
 
       const userQrCreator = await User.findById(userIdToCheck).lean();
+
+      const latestCouponCode =
+        Array.isArray(userQrCreator?.couponCodes) &&
+        userQrCreator.couponCodes.length > 0
+          ? userQrCreator.couponCodes[userQrCreator.couponCodes.length - 1]
+          : "Hello Magic World"; // or '' or any default value you prefer
 
       // Safely check VIP status
       const subscription = userQrCreator?.subscription || {};
@@ -2926,7 +2980,11 @@ router.get(
         );
       } else if (finalType === "text") {
         const isLoggedIn = !!token;
-        return res.render("content", { content: finalText, isLoggedIn });
+        return res.render("content", {
+          content: finalText,
+          isLoggedIn,
+          latestCouponCode,
+        });
       } else {
         return res.status(400).render("error", {
           message: "Invalid type associated with this Magic Code.",
@@ -3927,7 +3985,7 @@ router.get("/coupons", authMiddleware, async (req, res) => {
 
     // Fetch user with minimal fields (e.g., role)
     const user = await User.findById(userId).select(
-      "role showEditOnScan subscription"
+      "role showEditOnScan subscription fullName"
     );
 
     if (!user || user.role !== "affiliate") {
@@ -4182,12 +4240,10 @@ router.get("/admindashboard/vip-users", async (req, res) => {
     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
     const search = req.query.search ? req.query.search.trim() : "";
 
-    // Base query
     const baseMatch = {
       "subscription.isVip": true,
     };
 
-    // If search query exists, apply regex filters
     if (search) {
       baseMatch.$or = [
         { fullName: { $regex: search, $options: "i" } },
@@ -4195,39 +4251,76 @@ router.get("/admindashboard/vip-users", async (req, res) => {
       ];
     }
 
-    // Count total matching VIP users
     const totalVipUsers = await User.countDocuments(baseMatch);
     const totalPages = Math.ceil(totalVipUsers / recordsPerPage);
     const skip = (currentPage - 1) * recordsPerPage;
 
-    // Fetch paginated VIP users
-    const users = await User.find(baseMatch).skip(skip).limit(recordsPerPage);
+    const users = await User.aggregate([
+      { $match: baseMatch },
+      {
+        $lookup: {
+          from: "qrcodedatas",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $eq: ["$user_id", "$$userId"] },
+                    { $eq: ["$assignedTo", "$$userId"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "qrData",
+        },
+      },
+      {
+        $addFields: {
+          qrCount: { $size: "$qrData" },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          fullName: 1,
+          email: 1,
+          userPasswordKey: 1,
+          subscription: 1,
+          createdAt: 1,
+          qrCount: 1,
+          role: 1,
+        },
+      },
+      { $skip: skip },
+      { $limit: recordsPerPage },
+    ]);
 
-    // Process user data
+    // Add remaining fields
     users.forEach((user) => {
       if (user.userPasswordKey) {
         user.userPasswordKey = decryptPassword(user.userPasswordKey);
       }
+
       user.encryptedId = encryptPassword(user._id.toString());
-      // Generate a JWT token for each user
+
       const magicToken = jwt.sign(
         { userId: user._id, email: user.email },
         process.env.JWT_SECRET,
         { expiresIn: process.env.MAGIC_LINK_JWT_EXPIRATION || "24h" }
       );
 
-      // Append magic link to the user object
       user.magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
     });
 
-    // Render the VIP users view
     res.render("vipusers", {
       users,
       currentPage,
       totalPages,
       totalUsers: totalVipUsers,
       FRONTEND_URL: process.env.FRONTEND_URL,
-      search, // ✅ Pass search back to EJS for displaying in input and keeping pagination context
+      search,
     });
   } catch (error) {
     console.error("Error loading VIP Users:", error);
@@ -4357,8 +4450,6 @@ router.get("/qrhistory/:qrCodeId", authMiddleware, async (req, res) => {
       })
       .lean();
 
- 
-
     // Step 2: Handle not found
     if (totalCount === 0) {
       const notFoundResponse = {
@@ -4440,7 +4531,6 @@ router.get(
   }
 );
 
-//Post Data in special Offer
 router.post(
   "/special-offer-info/:couponId",
   authMiddleware,
@@ -4449,24 +4539,60 @@ router.post(
   async (req, res) => {
     try {
       const { couponId } = req.params;
-      const { type, text, url } = req.body;
+      const { type, text, url, name, startDate, endDate } = req.body;
 
       // ✅ Validate MongoDB ObjectId
       if (!mongoose.Types.ObjectId.isValid(couponId)) {
         return res.status(400).json({ message: "Invalid Coupon ID" });
       }
 
+      // ✅ Validate content type
       if (!["text", "url", "media"].includes(type)) {
         return res.status(400).json({ message: "Invalid specialOffer type" });
       }
 
-      const existingCoupon = await Coupon.findById(couponId);
+      // ✅ Validate name
+      if (!name || name.trim() === "") {
+        return res.status(400).json({ message: "Name is required" });
+      }
 
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+      const now = new Date(); // current UTC time
+
+      if ((start && !end) || (!start && end)) {
+        return res
+          .status(400)
+          .json({ message: "Both startDate and endDate are required" });
+      }
+
+      if (start && isNaN(start)) {
+        return res.status(400).json({ message: "Invalid startDate" });
+      }
+
+      if (end && isNaN(end)) {
+        return res.status(400).json({ message: "Invalid endDate" });
+      }
+
+      if (start && end && start > end) {
+        return res
+          .status(400)
+          .json({ message: "startDate cannot be after endDate" });
+      }
+
+      if (start && start < now) {
+        return res
+          .status(400)
+          .json({ message: "startDate cannot be in the past" });
+      }
+
+      // ✅ Find coupon
+      const existingCoupon = await Coupon.findById(couponId);
       if (!existingCoupon) {
         return res.status(404).json({ message: "Coupon not found" });
       }
 
-      // ✅ Always delete old media file if it exists
+      // ✅ Delete old media file (if any)
       const oldOffer = existingCoupon.specialOffer;
       if (oldOffer?.type === "media" && oldOffer.media_url) {
         const fullPath = path.resolve(oldOffer.media_url);
@@ -4477,8 +4603,15 @@ router.post(
         });
       }
 
-      const specialOffer = { type };
+      // ✅ Prepare new specialOffer object
+      const specialOffer = {
+        type,
+        name,
+        ...(start && { startDate: start }),
+        ...(end && { endDate: end }),
+      };
 
+      // ✅ Handle content-type-specific fields
       if (type === "text") {
         if (!text) {
           return res
@@ -4504,7 +4637,6 @@ router.post(
 
       if (type === "media") {
         const mediaFile = req.files?.["media-file"]?.[0];
-
         if (!mediaFile) {
           return res
             .status(400)
@@ -4520,6 +4652,7 @@ router.post(
         specialOffer.media_url = mediaFile.path;
       }
 
+      // ✅ Save update
       const updatedCoupon = await Coupon.findByIdAndUpdate(
         couponId,
         { specialOffer },
@@ -4701,7 +4834,7 @@ router.post("/disconnect-special-offer", authMiddleware, async (req, res) => {
 
 router.get("/broadcasters", async (req, res) => {
   try {
-    res.render("magic-world"); // Send type as 'success'
+    res.render("broadcaster.ejs"); // Send type as 'success'
   } catch (error) {
     res.status(500).render("login", {
       message: "Failed to load login page",
@@ -4710,6 +4843,16 @@ router.get("/broadcasters", async (req, res) => {
   }
 });
 
+router.get("/broadcaster-sheet", async (req, res) => {
+  try {
+    res.render("sheet.ejs"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
 
 router.get("/admin-login", async (req, res) => {
   try {
@@ -4809,6 +4952,278 @@ router.get("/qrscanlogs/:qrCodeId", authMiddleware, async (req, res) => {
     }
 
     res.status(500).render("qr-scan-logs", errorResponse);
+  }
+});
+
+router.get("/admindashboard/search-users", async (req, res) => {
+  try {
+    const currentPage = parseInt(req.query.page) || 1;
+    const recordsPerPage = Number(process.env.USER_PER_PAGE) || 10;
+    const search = req.query.search?.trim() || "";
+
+    if (!search) {
+      return res.render("searchusers", {
+        users: [],
+        currentPage,
+        totalPages: 0,
+        totalUsers: 0,
+        FRONTEND_URL: process.env.FRONTEND_URL,
+        search,
+      });
+    }
+
+    const skip = (currentPage - 1) * recordsPerPage;
+
+    const baseMatch = {
+      $or: [
+        { fullName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    const totalUsers = await User.countDocuments(baseMatch);
+    const totalPages = Math.ceil(totalUsers / recordsPerPage);
+
+    const users = await User.aggregate([
+      { $match: baseMatch },
+      {
+        $lookup: {
+          from: "qrcodedatas",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $eq: ["$user_id", "$$userId"] },
+                    { $eq: ["$assignedTo", "$$userId"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "qrData",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          fullName: 1,
+          email: 1,
+          role: 1,
+          isActive: 1,
+          userPasswordKey: 1,
+          createdAt: 1,
+          subscription: 1,
+          qrCount: { $size: "$qrData" },
+        },
+      },
+    ])
+      .skip(skip)
+      .limit(recordsPerPage);
+
+    users.forEach((user) => {
+      if (user.userPasswordKey) {
+        user.userPasswordKey = decryptPassword(user.userPasswordKey);
+      }
+      user.encryptedId = encryptPassword(user._id.toString());
+
+      const magicToken = jwt.sign(
+        { userId: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.MAGIC_LINK_JWT_EXPIRATION || "24h" }
+      );
+
+      user.magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
+
+      // Optional: Add tag for UI display
+      if (user.subscription?.isVip) {
+        user.userType = "VIP";
+      } else if (user.role === "affiliate") {
+        user.userType = "Affiliate";
+      } else {
+        user.userType = "User";
+      }
+    });
+
+    res.render("searchusers", {
+      users,
+      currentPage,
+      totalPages,
+      totalUsers,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+      search,
+    });
+  } catch (error) {
+    console.error("Global User Search Error:", error);
+    res.status(500).render("login", {
+      message: "Failed to search users",
+      type: "error",
+    });
+  }
+});
+
+router.get("/special-offers", authMiddleware, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 6;
+    const skip = (page - 1) * limit;
+    const searchName = req.query.name?.trim();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of today
+
+    // Build query object
+    const query = {
+      "specialOffer.name": { $exists: true, $ne: "" },
+      "specialOffer.endDate": { $gte: today }, // ❌ exclude expired
+    };
+
+    if (searchName) {
+      query["specialOffer.name"] = {
+        $regex: searchName,
+        $options: "i", // Case-insensitive
+      };
+    }
+
+    const totalOffers = await Coupon.countDocuments(query);
+    const totalPages = Math.ceil(totalOffers / limit);
+
+    const coupons = await Coupon.find(query, { specialOffer: 1, _id: 1 })
+      .sort({ "specialOffer.startDate": -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.render("dashboardnew", {
+      user: req.user,
+      coupons,
+      currentPage: page,
+      totalPages,
+      activeSection: "special-offer-info-page",
+      searchName: searchName || "", // Optional: send back for UI state
+    });
+  } catch (err) {
+    console.error("Failed to fetch special offers:", err);
+    res.status(500).send("Error loading special offers");
+  }
+});
+
+// Home route
+router.get("/authenticateqr/:couponId", authMiddleware, async (req, res) => {
+  let user;
+  try {
+    const userId = req.user._id; // Assuming the auth middleware adds the user object to the request
+    // Query for QR codes where the user either created them or is assigned to them
+    const qrCodes = await QRCodeData.find({
+      $or: [
+        { user_id: userId }, // QR codes created by the user
+        { assignedTo: userId }, // QR codes assigned to the user
+      ],
+    }).sort({ createdAt: -1 });
+
+    // Find the user by ID
+    user = await User.findById(userId);
+
+    if (qrCodes.length > 0) {
+      // QR codes found for the user
+      res.render("dashboardnew", {
+        qrCodes, // Pass the QR codes to the template
+        message: "Welcome! Here are your Magic Codes.",
+        activeSection: "authenticateqr",
+        user,
+        type: "hidden",
+      });
+    } else {
+      // No QR codes found for the user
+      res.render("dashboardnew", {
+        qrCodes: [], // Pass an empty array for QR codes
+        message: "No Magic Codes found.",
+        activeSection: "authenticateqr",
+        user,
+        type: "hidden",
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching Magic Code data:", error);
+    res.status(500).render("dashboardnew", {
+      qrCodes: [],
+      message: "An error occurred while fetching your Magic Codes.",
+      type: "error", // Send type as 'error' to trigger toast notification
+      user,
+      activeSection: "authenticateqr",
+    });
+  }
+});
+
+router.post("/update-discount/:couponId", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { couponId } = req.params;
+    const { discountPercent } = req.body;
+
+    // ✅ Validate required fields
+    if (!discountPercent) {
+      return res
+        .status(400)
+        .json({ message: "Discount value is required", success: false });
+    }
+
+    const parsedDiscount = Number(discountPercent);
+    if (isNaN(parsedDiscount) || parsedDiscount < 1 || parsedDiscount > 100) {
+      return res.status(400).json({
+        message: "Discount must be a number between 1 and 100",
+        success: false,
+      });
+    }
+
+    // ✅ Check for valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(couponId)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid coupon ID", success: false });
+    }
+
+    // ✅ Validate coupon existence
+    const coupon = await Coupon.findById(couponId);
+    if (!coupon) {
+      return res
+        .status(404)
+        .json({ message: "Coupon not found", success: false });
+    }
+
+    // ✅ Optional: check user permission if needed (e.g., assignedToAffiliate === userId)
+    if (coupon.assignedToAffiliate?.toString() !== userId.toString()) {
+      return res.status(403).json({
+        message: "Not authorized to update this coupon",
+        success: false,
+      });
+    }
+
+    // ✅ Ensure discount does not exceed commission
+    if (parsedDiscount > coupon.commissionPercent) {
+      return res.status(400).json({
+        message: `Discount (${parsedDiscount}%) cannot be greater than commission (${coupon.commissionPercent}%)`,
+        success: false,
+      });
+    }
+
+    // ✅ Update discount
+    coupon.discountPercent = parsedDiscount;
+    await coupon.save();
+
+    return res.status(200).json({
+      message: "Discount updated successfully",
+      success: true,
+      updatedCoupon: {
+        _id: coupon._id,
+        code: coupon.code,
+        discountPercent: coupon.discountPercent,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating discount:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", success: false });
   }
 });
 

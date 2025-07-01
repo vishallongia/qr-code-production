@@ -16,8 +16,8 @@ async function handleCreateCoupon(event) {
     return;
   }
 
-  if (isNaN(discountPercent) || discountPercent <= 0 || discountPercent > 100) {
-    showToast("Discount must be a number between 1 and 100", "error");
+  if (isNaN(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+    showToast("Discount must be a number between 0 and 100", "error");
     return;
   }
 
@@ -125,8 +125,8 @@ async function handleUpdateCoupon(event) {
     return;
   }
 
-  if (isNaN(discountPercent) || discountPercent <= 0 || discountPercent > 100) {
-    showToast("Discount must be a number between 1 and 100", "error");
+  if (isNaN(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+    showToast("Discount must be a number between 0 and 100", "error");
     return;
   }
 

@@ -177,11 +177,10 @@
                                         <label for="code">Coupon Code</label>
                                         <input type="text" id="code" name="code" required />
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-group" style="display: none;">
                                         <label for="discountPercent">Discount (%)</label>
                                         <input type="number" id="discountPercent" name="discountPercent" step="0.01"
-                                            min="0" max="100" required
-                                            value="<%= typeof discountPercent !== 'undefined' ? discountPercent : '' %>" />
+                                            min="0" max="100" required value="0" />
                                     </div>
 
                                     <div class="form-group">

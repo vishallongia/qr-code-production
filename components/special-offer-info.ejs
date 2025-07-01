@@ -20,6 +20,9 @@
                 <div class="content-section" id="content-section-1">
                     <h2>Magic Code Message</h2>
 
+                    <div id="event-status" class="event-status"></div>
+
+
                     <!-- Content Type Selection -->
                     <div class="content-types">
                         <button class="content-type-button">Link</button>
@@ -54,6 +57,20 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label for="event-start-date">Event Name</label>
+                    <input type="text" id="event-name" name="EventName" class="input-group" placeholder="Event Name">
+                </div>
+
+                <div class="form-group">
+                    <label for="event-start-date">Event Start Date</label>
+                    <input type="datetime-local" id="event-start-date" name="EventStartDate" class="input-group">
+                </div>
+
+                <div class="form-group">
+                    <label for="event-end-date">Event End Date</label>
+                    <input type="datetime-local" id="event-end-date" name="EventEndDate" class="input-group">
+                </div>
                 <!-- Save Button -->
                 <button class="save-button" id="submit-btn-update">Save Content</button>
             </div>
@@ -64,6 +81,11 @@
 <script src="/js/special-offer-info.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+
+        const loader = document.getElementById("loader");
+        if (loader) loader.style.display = "flex"; // Show loader
+
+
         const contentSections = [
             document.getElementById("content-section-2"),
             document.getElementById("content-section-3")
@@ -115,6 +137,8 @@
 
                     // Call the input check on tab switch
                     checkAndUpdateActiveContentType();
+
+                    if (loader) loader.style.display = "none"; // Hide loader
                 }
             });
         });
@@ -198,6 +222,8 @@
 
         // Initial check
         checkAndUpdateActiveContentType();
+
+
 
     });
 

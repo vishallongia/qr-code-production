@@ -49,6 +49,7 @@ togglePasswordIcon.addEventListener("click", function () {
 // Function to toggle Magic Link for both login and register
 function toggleMagicLink(formType) {
   let passwordField, loginButton, magicLinkText, fullNameField;
+  let MagicLinkBtnText = "Send Magic Link"
 
   if (formType === "login") {
     passwordField = document
@@ -60,6 +61,7 @@ function toggleMagicLink(formType) {
       "onclick",
       "return handleMagicLink(event,'EmailText', 'LoginBtnText')"
     );
+    MagicLinkBtnText = "Send Magic Link"
   } else if (formType === "register") {
     passwordField = document
       .getElementById("RegisterPasswordText")
@@ -71,6 +73,7 @@ function toggleMagicLink(formType) {
       "onclick",
       "return handleMagicLink(event,'EmailText', 'RegisterBtnText')"
     );
+    MagicLinkBtnText = "Activate via Magic Link"
   }
 
   if (passwordField.style.display === "none") {
@@ -81,15 +84,15 @@ function toggleMagicLink(formType) {
     passwordField.style.display = "flex";
     loginButton.textContent = formType === "login" ? "Login" : "Register";
     loginButton.removeAttribute("onclick");
-    magicLinkText.textContent = "Use Magic Link";
+    magicLinkText.textContent = "Login with Magic Link";
   } else {
     // Switch to Magic Link Login/Register
     if (fullNameField) {
       fullNameField.style.display = "none";
     }
     passwordField.style.display = "none";
-    loginButton.textContent = "Send Magic Link";
+    loginButton.textContent = MagicLinkBtnText;
 
-    magicLinkText.textContent = "Use Password";
+    magicLinkText.textContent = "Login by Email and Password";
   }
 }

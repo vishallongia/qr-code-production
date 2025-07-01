@@ -406,6 +406,159 @@ input:checked+.toggle-slider:before {
     /* Adjust the value as needed */
 }
 
+
+.tiles-wrapper {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 10px;
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    /* ✅ Allows wrapping to next line */
+    /* prevents shrinking */
+
+
+}
+
+.tile {
+    position: relative;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: none;
+    min-width: 250px;
+    cursor: pointer;
+    /* Disable hover shadow */
+}
+
+
+/* Select Event button overlay */
+.tile::after {
+    content: "Select Event";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #0d6efd;
+    padding: 10px 20px;
+    border-radius: 30px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 3;
+}
+
+
+
+.tile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.tile-header h3 {
+    font-size: 18px;
+    margin: 0;
+    color: #333;
+}
+
+.status {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 8px;
+    text-transform: uppercase;
+}
+
+.status.running {
+    background-color: #d4edda;
+    color: #2e7d32;
+}
+
+.status.expired {
+    background-color: #f8d7da;
+    color: #c62828;
+}
+
+.status.scheduled {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.tile-body {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.tile-body p {
+    margin: 6px 0;
+}
+
+.tile-footer {
+    text-align: right;
+}
+
+.tile-footer button {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.tile-footer button:hover {
+    background-color: #084298;
+}
+
+.offer-search-form {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.offer-search-input {
+    padding: 8px 12px;
+    font-size: 14px;
+    width: 250px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.offer-search-btn {
+    padding: 8px 14px;
+    font-size: 14px;
+    background-color: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-hint {
+    display: none;
+    font-size: 14px;
+    color: #555;
+    margin-top: 10px;
+    text-align: center;
+}
+
+
 /* Responsive styles */
 @media (max-width: 768px) {
     .modern-list-container {
@@ -437,6 +590,10 @@ input:checked+.toggle-slider:before {
 
     .view-qr-btn {
         text-align: center;
+    }
+
+    .mobile-hint {
+        display: block;
     }
 }
 
@@ -516,6 +673,15 @@ input:checked+.toggle-slider:before {
         border-right: 10px solid black;
     }
 
+    .tiles-wrapper {
+        flex-flow: column;
+        justify-content: center;
+        margin: 20px 0;
+        /* ✅ Allows wrapping to next line */
+        /* prevents shrinking */
+
+
+    }
 }
 
 
@@ -558,6 +724,42 @@ input:checked+.toggle-slider:before {
 }
 
 
+/* Responsive layout for mobile */
+@media screen and (max-width: 600px) {
+    .modern-list-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .offer-search-form {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .offer-search-input,
+    .offer-search-btn {
+        width: 100%;
+    }
+}
+
+
+@media (min-width: 769px) {
+    /* .tile:hover::after {
+        cursor: pointer;
+        opacity: 1;
+    }
+
+    .tile:hover .tile-header,
+    .tile:hover .tile-body,
+    .tile:hover .tile-footer {
+        filter: blur(3px);
+        transition: filter 0.2s ease;
+    } */
+}
+
+
+
+
 .status-sticker {
     display: inline-block;
     padding: 6px 14px;
@@ -590,4 +792,17 @@ input:checked+.toggle-slider:before {
 
 .status-sticker:hover {
     transform: scale(1.05);
+}
+
+
+#popup-ok-btn-discount {
+    background-color: var(--blue);
+    color: white;
+    font-family: var(--h2-heading-font-family);
+    font-size: 16px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
 }

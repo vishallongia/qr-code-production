@@ -82,7 +82,9 @@
                                         <span>Action</span>
                                         <span>Vip</span>
                                         <span>MC's</span>
+                                        <span>MC Count</span>
                                         <span>Login </span>
+                                        <span>Registration Time</span>
                                     </div>
                                     <div id="search-loader-row"
                                         style="display: none; text-align: center; padding: 20px; font-family: var(--font-family); color: var(--text-color); font-size: 16px;">
@@ -106,6 +108,7 @@
                                                         <button class="view-qr-btn">View</button>
                                                     </a>
                                                 </span>
+
                                                 <span>
                                                     <% const now=new Date(); const validTillDate=new
                                                         Date(user.subscription?.validTill); %>
@@ -125,11 +128,28 @@
                                                         View MC Link
                                                     </button>
                                                 </span>
+                                                <span style="display: flex; justify-content: center;">
+                                                    <%= user.qrCount %>
+                                                </span>
                                                 <span>
                                                     <button class="view-qr-btn"
                                                         onclick="window.open('<%= user.magicLink %>', '_blank')">
                                                         Login
                                                     </button>
+                                                </span>
+                                                <span>
+                                                    <%= (()=> {
+                                                        const d = new Date(user.createdAt);
+                                                        if (isNaN(d)) return "Invalid Date";
+                                                        const day = d.getDate().toString().padStart(2, '0');
+                                                        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+                                                        const year = d.getFullYear();
+                                                        let hours = d.getHours();
+                                                        const minutes = d.getMinutes().toString().padStart(2, '0');
+                                                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                                                        hours = hours % 12 || 12;
+                                                        return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
+                                                        })() %>
                                                 </span>
                                             </li>
                                             <% }) %>

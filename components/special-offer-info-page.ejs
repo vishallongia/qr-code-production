@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Special Offers</title>
+    <link rel="stylesheet" href="/css/sales.css">
+    <link rel="stylesheet" href="/css/viewaffiliateuser.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="modern-list-container">
+        <h2>Please select event</h2>
+        <!-- ✅ Search Bar -->
+        <form method="GET" action="/special-offers" class="offer-search-form">
+            <input type="text" name="name" placeholder="Search by offer name"
+                value="<%= typeof searchName !== 'undefined' ? searchName : '' %>" class="offer-search-input" />
+            <button type="submit" class="offer-search-btn" title="Search">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+        <% if (coupons.length===0) { %>
+            <p class="no-data">No special offers found.</p>
+            <% } else { %>
+                <div class="tiles-wrapper">
+                    <% coupons.forEach(coupon=> {
+                        const offer = coupon.specialOffer || {};
+                        const name = offer.name || 'Unnamed Offer';
+                        const start = offer.startDate ? new Date(offer.startDate) : null;
+                        const end = offer.endDate ? new Date(offer.endDate) : null;
+
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        let status = '';
+
+                        if (start && end) {
+                        start.setHours(0, 0, 0, 0);
+                        end.setHours(0, 0, 0, 0);
+                        if (end < today) status='Expired' ; else if (start> today) status = 'Scheduled';
+                            else status = 'Running';
+                            } else {
+                            status = 'N/A';
+                            }
+                            %>
+                            <div class="tile">
+                                <a href="/authenticateqr/<%= coupon._id %>" style="text-decoration: none;">
+                                    <div class="tile-header">
+                                        <h3>
+                                            <%= name %>
+                                        </h3>
+                                        <span class="status <%= status.toLowerCase() %>">
+                                            <%= status %>
+                                        </span>
+                                    </div>
+                                    <div class="tile-body">
+                                        <% if (start) { %>
+                                            <p><strong>Start:</strong>
+                                                <%= start.toDateString() %>
+                                            </p>
+                                            <% } %>
+                                                <% if (end) { %>
+                                                    <p><strong>End:</strong>
+                                                        <%= end.toDateString() %>
+                                                    </p>
+                                                    <% } %>
+                                                        <% if (offer.type) { %>
+                                                            <p><strong>Type:</strong>
+                                                                <%= offer.type %>
+                                                            </p>
+                                                            <% } %>
+                                    </div>
+                                </a>
+                                <p class="mobile-hint">Tap on a card to select event</p>
+                            </div>
+                            <% }) %>
+                </div>
+
+                <!-- Pagination -->
+                <% if (totalPages> 1) { %>
+                    <div class="pagination">
+                        <% if (currentPage> 1) { %>
+                            <a href="?page=<%= currentPage - 1 %><%= searchName ? '&name=' + encodeURIComponent(searchName) : '' %>"
+                                class="pagination-btn">&laquo; Prev</a>
+                            <% } %>
+
+                                <% for (let i=1; i <=totalPages; i++) { %>
+                                    <% if (i===currentPage) { %>
+                                        <span class="pagination-btn active">
+                                            <%= i %>
+                                        </span>
+                                        <% } else { %>
+                                            <a href="?page=<%= i %><%= searchName ? '&name=' + encodeURIComponent(searchName) : '' %>"
+                                                class="pagination-btn">
+                                                <%= i %>
+                                            </a>
+                                            <% } %>
+                                                <% } %>
+
+                                                    <% if (currentPage < totalPages) { %>
+                                                        <a href="?page=<%= currentPage + 1 %><%= searchName ? '&name=' + encodeURIComponent(searchName) : '' %>"
+                                                            class="pagination-btn">Next &raquo;</a>
+
+                                                        <% } %>
+                    </div>
+                    <% } %>
+                        <% } %>
+    </div>
+</body>
+
+</html>

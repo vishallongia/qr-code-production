@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Magic Code Cards</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="/css/qr-gallery-new.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container-qr-custom">
+        <span style="font-family: Poppins;
+        font-weight: 600;
+        font-size: 20px;
+        line-height: 20px;">My Magic Codes</span>
+
+        <div class="grid">
+            <% if (qrCodes.length> 0) { %>
+                <% qrCodes.forEach(function(qrCode) { %>
+                    <div class="card" id="showqrcards" data-id="<%= qrCode._id %>">
+                        <p class="card-title">
+                            <%= qrCode.qrName %>
+                        </p>
+                        <div class="qr-code" id="qr-container-<%= qrCode._id %>"></div>
+
+
+                    </div>
+                    <% }) %>
+                        <% } else { %>
+                            <p id="NoQR">No Magic codes found.</p>
+                            <% } %>
+        </div>
+
+    </div>
+    <button class="btn" onclick="authenticateQRCodes()">Authenticate</button>
+
+
+    <script>
+        const qrCodesMap = {};
+
+        function showQrCodes(qrCodes) {
+            qrCodes.forEach((qrCodeData) => {
+                const qrContainer = document.getElementById(`qr-container-${qrCodeData._id}`);
+                let logoUrl = qrCodeData.logo ? `${window.location.protocol}//${window.location.host}/${qrCodeData.logo}` : "";
+
+
+                if (qrContainer) {
+                    const qrCode = new QRCodeStyling({
+                        width: 3000,
+                        height: 3000,
+                        type: "canvas",
+                        data: `${window.location.protocol}//${window.location.host}/${qrCodeData.code}`,
+                        dotsOptions: {
+                            color: qrCodeData.qrDotColor || "#000000",
+                            type: qrCodeData.dotStyle || "square",
+                            gradient: qrCodeData.applyGradient === "linear" ? {
+                                type: "linear",
+                                colorStops: [
+                                    { offset: 0, color: "#ff0000" },
+                                    { offset: 1, color: qrCodeData.qrDotColor || "#000000" }
+                                ]
+                            } : qrCodeData.applyGradient === "radial" ? {
+                                type: "radial",
+                                colorStops: [
+                                    { offset: 0, color: "#ff0000" },
+                                    { offset: 1, color: qrCodeData.qrDotColor || "#000000" }
+                                ]
+                            } : null
+                        },
+                        backgroundOptions: {
+                            color: qrCodeData.backgroundColor || "#ffffff"
+                        },
+                        cornersSquareOptions: {
+                            type: qrCodeData.cornerStyle || "square"
+                        },
+                        image: logoUrl,
+                        imageOptions: {
+                            crossOrigin: "anonymous",
+                            margin: 10
+                        }
+                    });
+
+
+
+                    // Clear existing content to avoid duplicates
+                    qrContainer.innerHTML = "";
+
+                    // Create wrapper to hold QR and optional badge
+                    const wrapper = document.createElement("div");
+                    wrapper.style.position = "relative";
+                    wrapper.style.display = "inline-block";
+
+                    // Create a div to hold the QR code canvas
+                    const qrCanvasDiv = document.createElement("div");
+                    wrapper.appendChild(qrCanvasDiv);
+                    if (qrCodeData.isFirstQr) {
+                        const cardElement = qrContainer.closest(".card");
+                        if (cardElement && !cardElement.querySelector(".ribbon-triangle")) {
+                            const ribbon = document.createElement("div");
+                            ribbon.className = "ribbon-triangle";
+
+                            const text = document.createElement("span");
+                            text.textContent = "FREE";
+
+                            ribbon.appendChild(text);
+                            cardElement.appendChild(ribbon);
+                        }
+                    }
+
+                    qrCode.append(qrCanvasDiv);
+                    qrContainer.appendChild(wrapper);
+                    qrCodesMap[qrCodeData._id] = qrCode;
+
+                }
+            });
+        }
+
+        function downloadQRCodeShowed(qrCodeId) {
+            const qrCode = qrCodesMap[qrCodeId];
+            if (qrCode) {
+                qrCode.download({ name: "qr-code", extension: "png", width: 1600, height: 1600 });
+            }
+        }
+
+        // Initialize QR codes
+        const qrCodesFromServer = <%- JSON.stringify(qrCodes) %>;
+        showQrCodes(qrCodesFromServer);
+    </script>
+
+    <script>
+        const selectedQrIds = new Set();
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll(".card[data-id]").forEach(card => {
+                card.addEventListener("click", () => {
+                    const id = card.getAttribute("data-id");
+
+                    if (card.classList.contains("tile-selected")) {
+                        card.classList.remove("tile-selected");
+                        selectedQrIds.delete(id);
+                    } else {
+                        card.classList.add("tile-selected");
+                        selectedQrIds.add(id);
+                    }
+
+                    console.log("Selected QR IDs:", [...selectedQrIds]);
+                    // You can send this array to your API when needed
+                });
+            });
+        });
+    </script>
+
+    <script>
+        async function authenticateQRCodes() {
+            const pathParts = window.location.pathname.split("/");
+            const couponId = pathParts[pathParts.length - 1]; // last part of URL
+
+            const selectedQRs = Array.from(document.querySelectorAll(".tile-selected"))
+                .map(card => card.getAttribute("data-id"));
+
+            if (!couponId || selectedQRs.length === 0) {
+                showToast("Please select at least one QR and ensure coupon ID is available.", "error");
+                return;
+            }
+
+            try {
+                const res = await fetch("/set-special-offer-qrs", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        couponId,
+                        qrCodeIds: selectedQRs,
+                    }),
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message, "success");
+                    setTimeout(() => {
+                        window.location.href = "/usercontrol";
+                    }, 1000);
+                } else {
+                    showToast(data.message || "Failed to authenticate QR codes.", "error");
+                }
+            } catch (err) {
+                console.error("Request error:", err);
+                showToast("Something went wrong.", "error");
+            }
+        }
+    </script>
+
+</body>
+
+
+</html>

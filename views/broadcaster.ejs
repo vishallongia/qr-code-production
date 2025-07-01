@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>MAGIC TV – For Magic People</title>
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;600&amp;display=swap" rel="stylesheet" />
+  <!-- Standard favicon -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+  <!-- Apple Touch Icon (for iOS home screen) -->
+  <link rel="apple-touch-icon" href="/app-icon-192.png">
+
+  <!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
+  <link rel="manifest" href="/manifest.json">
+
+  <style>
+    :root {
+      --primary-color: #5D3FD3;
+      --accent-color: #FFD700;
+      --bg: #F9F9F9;
+      --text: #1A1A1A;
+      --white: #FFFFFF;
+      --radius: 12px;
+      --transition: 0.3s ease;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Raleway', sans-serif;
+      background: #fdfcff;
+      color: #222;
+      line-height: 1.7;
+    }
+
+    header {
+      background: linear-gradient(120deg, #caa5ff, #a3e3ff);
+      text-align: center;
+      padding: 5rem 2rem;
+    }
+
+    header h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    header p {
+      font-size: 1.25rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    section {
+      padding: 1rem 2rem;
+      max-width: 960px;
+      margin: auto;
+    }
+
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .app-box {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      margin-bottom: 1.5rem;
+    }
+
+    .highlight {
+      background: #f2eaff;
+      border-left: 4px solid #a270ff;
+      padding: 1rem 1.5rem;
+      margin: 2rem 0;
+    }
+
+    footer {
+      background: #eee;
+      padding: 2rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .clickable {
+      cursor: pointer;
+    }
+
+
+    .cta-button {
+      display: inline-block;
+      background-color: var(--white);
+      color: var(--primary-color);
+      padding: 0.8rem 1.5rem;
+      border-radius: var(--radius);
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .cta-button:hover {
+      background-color: var(--primary-color);
+      color: var(--white);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+      background-color: #eee;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      font-weight: 600;
+      border-radius: var(--radius);
+      font-size: 1.2rem;
+      transition: var(--transition);
+    }
+
+    .tab-btn.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.6rem;
+      margin-bottom: 1rem;
+      border-radius: var(--radius);
+      border: 1px solid #ccc;
+    }
+
+    section {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: var(--white);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    section h2 {
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+
+    form label {
+      font-weight: 700;
+    }
+
+    .header-image {
+      width: 350px;
+      height: auto;
+    }
+
+    @media (max-width: 600px) {
+      .header-image {
+        width: 300px;
+        height: auto;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+  <header style="text-align: center;">
+    <!-- <h1>✨ MAGIC TV</h1>
+    <p>For Magic Broadcasters. In a Magic World.</p> -->
+    <img class="header-image" src="\images\mtv-logo.png" alt="Mtv Apps">
+  </header>
+  <section>
+    <h2>📈 Why Magic TV is Smarter Broadcasting?</h2>
+    <p>Because it is a revenue engine built for modern TV that requires no financial investment from the broadcaster.
+      Magic TV is a smart and compelling present-time revenue generator that no broadcaster can afford to overlook. It
+      seamlessly integrates into the viewing experience while opening up powerful monetization channels. The Magic Code
+      itself is a high-end, highly practical product for customers — enhancing everyday life with convenience, privacy,
+      and purpose. Magic TV enriches the television experience, delivering not just more content, but better content —
+      more emotional, more interactive, and more valuable to your audience. Magic TV is the perfect business opportunity
+      for making revenue without any investment need on behalf of the broadcasters.</p>
+  </section>
+
+  <section>
+    <h2>📱📺 A Synergy of Screens</h2>
+    <p>Generating a powerful and appealing synergy within today’s visual culture and the evolving habits of content
+      consumption via the mobile device, Magic TV is a welcomed user experience since it creates a hybrid visual
+      involvement, combining the TV and the mobile device screen, thus seamlessly bringing the otherwise not
+      personalized television content into the users intimate, confidential, and personalized environment.</p>
+  </section>
+
+  <section>
+    <h2>Global Interactive Broadcasting - Powered by the Magic Code</h2>
+    <p>Magic TV empowers broadcasters to transform television into a gateway for meaningful interaction. Through the
+      display of a subtle but powerful Magic Code on-screen, viewers connect, engage, and participate — using only their
+      smartphone camera. No app needed. Any format, any screen, any audience. It’s a soft awakening — built on trust,
+      intention, and shared value.</p>
+  </section>
+
+
+  <section>
+    <h2>✨ Magic TV Formats</h2>
+    <div class="app-box">
+      <strong>🎯 Magic Quiz</strong><br />
+      A knowledge-based quiz triggered by the Magic Code during the program. Viewers can participate instantly using
+      their smartphone.
+      This application operates on a revenue share model between Magic TV and the broadcaster — with no third-party
+      involvement.
+      Viewers can choose to participate for fun or opt into a jackpot contest, which requires a legally compliant entry
+      fee depending on their country.
+    </div>
+    <div class="app-box">
+      <strong>🗳️ Magic Votes</strong><br />
+      This real-time voting tool allows viewers to express their choices during shows, talent contests, and live debates
+      by scanning the Magic Code.
+      Revenue is transparently shared with broadcasters without external intermediaries. Participation in contest-based
+      voting is optional and subject to local entry fee regulations.
+    </div>
+    <div class="app-box">
+      <strong>💲 Magic Shopping</strong><br />
+      Products featured in a show can be instantly explored or purchased by scanning the Magic Code.
+      All leads and transactions are tracked, and advertising partners are charged per lead.
+      There is no paid participation for viewers — this is a free, seamless experience. Broadcasters receive a share of
+      the advertising revenue.
+    </div>
+    <div class="app-box">
+      <strong>🏷️ Magic Brands</strong><br />
+      Magic Brands turns commercial breaks into direct experiences. The same Magic Code adapts contextually to the brand
+      on screen, directing viewers to relevant websites or shops.
+      There is no entry fee for viewers. Advertising partners are billed per qualified lead. Revenue is shared directly
+      with broadcasters through this lead-based model.
+    </div>
+    <div class="app-box">
+      <strong>⏱️ TV Miles</strong><br />
+      Viewers collect TV Miles by scanning the Magic Code at the beginning and end of the show. The more people
+      participate, the higher the shared jackpot.
+      Broadcasters earn from user activity through Magic Coin transactions. Users may watch passively or pay a small fee
+      to compete for the prize, depending on national legal frameworks.
+    </div>
+    <div class="highlight">
+      <p>All Magic TV applications are designed to generate revenue for broadcasters based on a fair and transparent
+        affiliate model — no third parties involved.
+        Magic Quiz, Magic Votes, and TV Miles offer optional contest participation via legal entry fees.
+        Magic Shopping and Magic Brands do not require any payment from viewers; instead, they monetize through
+        lead-based advertising fees paid by brands and sponsors.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>📺 Television – The Magic Friend</h2>
+    <div class="highlight">
+      <p>Not more content — but more context.<br />
+        Not more noise — but more attention.<br />
+        Not more information — but more emotion.<br />
+        Not more distraction — but opt-in engagement.<br />
+        Not more investment — but more revenue.</p>
+    </div>
+  </section>
+
+  <section onclick="OpenSheet()" class="clickable">
+    <h2>💰 Revenue Sharing &amp; Magic Coins</h2>
+    <p>
+      Magic TV introduces a native currency: Magic Coins. Viewers register and set up their Magic Wallet to participate.
+      Broadcasters receive a revenue share of every transaction during their airtime — no infrastructure needed.
+      We provide the wallet. You provide the screen. Together, we create a self-sustaining economy of trust and
+      interaction.
+    </p>
+  </section>
+  <!-- <section>
+    <h2>🔐 Privacy by Design</h2>
+    <ul>
+      <li>No cross-platform tracking</li>
+      <li>No third-party surveillance</li>
+      <li>No targeted advertising</li>
+      <li>Only the data needed for wallet security</li>
+    </ul>
+    <p>Magic TV respects its viewers. It earns their trust — never exploits it.</p>
+  </section> -->
+  <section>
+    <h2>🧩 What is the Magic Code?</h2>
+    <p>The Magic Code is auto-ID technology brought to the magic people of the world, turning the technology into an
+      innovative and simple-to-use product that becomes part of everyday life, helping and serving people's needs at the
+      highest possible level of convenience. The Magic Code provides a combination of usefulness, entertainment, and
+      safety — while maintaining privacy. What this means to broadcasters: Through Magic TV broadcasters take advantage
+      of the business opportunity and revenue potential of the Magic Code.</p>
+  </section>
+
+  <!-- <section>
+    <h2>💡 The Vision Behind Magic TV</h2>
+    <p>
+      Magic TV is not a product. It’s a philosophy. In a world of noise, it offers silence. In data excess, it offers
+      human connection.
+      In a culture of attention economy, it offers presence.
+      <br /><br />
+      Magic TV doesn’t demand. It invites. It doesn’t track. It cares.
+    </p>
+    <div class="highlight">
+      <p>“You are not alone.”<br />“There is more here.”<br />“This moment matters.”</p>
+    </div>
+  </section> -->
+  <section>
+    <h2>🌍 Let’s Create a Magic World</h2>
+    <p>
+      If you believe your screen can do more than broadcast — if you believe in interaction, not manipulation — then
+      Magic TV is your partner.
+      Let your audience become magic people. Let your country join the Magic World.
+    </p>
+  </section>
+  <section>
+    <h2>🌐 A Universal Invitation</h2>
+    <p>Magic TV is designed for every broadcaster in every country. A system for every screen — television becomes the
+      companion of human presence.</p>
+  </section>
+
+  <section id="request">
+    <h2>Get Started</h2>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active">Become a Magic TV Partner</button>
+    </div>
+
+    <!-- Sticker Request Form -->
+    <div id="stickerForm" class="tab-content" style="display: block;">
+
+      <div id="affiliateForm" class="tab-content">
+        <h3>Apply to Become a Magic TV Partner</h3>
+        <form method="POST" enctype="text/plain">
+          <label for="affiliate-name">Full Name</label><br />
+          <input type="text" id="affiliate-name" name="name" required class="form-input"><br />
+
+          <label for="affiliate-email">Email Address</label><br />
+          <input type="email" id="affiliate-email" name="email" required class="form-input"><br />
+
+          <label for="affiliate-platform">Broadcaster, TV Station and Country </label><br />
+          <input type="text" id="affiliate-platform" name="platform" required class="form-input"><br />
+
+          <label for="affiliate-experience">Send us a Note</label><br />
+          <textarea id="affiliate-experience" name="experience" rows="4" required class="form-input"></textarea><br />
+
+          <button type="submit" class="cta-button">Get in Touch Now</button>
+        </form>
+      </div>
+  </section>
+
+
+  <footer>
+    © 2025 Magic TV. Made for Magic People, by Magic People.
+  </footer>
+
+  <script>
+    function OpenSheet() {
+      window.open("/broadcaster-sheet", "_blank");
+
+    }
+  </script>
+</body>
+
+</html>

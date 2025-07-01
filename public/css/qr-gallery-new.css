@@ -87,6 +87,23 @@
     position: relative;
 }
 
+.btn {
+    margin: 20px auto;
+    padding: 10px 30px;
+    border: none;
+    background-color: rgba(26, 1, 97, 1);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    display: block;
+    font-size: 16px;
+    width: fit-content;
+}
+
+.btn:hover {
+    background-color: rgb(45, 18, 117);
+    ;
+}
 
 .ribbon-triangle {
     width: 0;
@@ -124,6 +141,11 @@
 
 canvas {
     max-width: 120px;
+}
+
+.tile-selected {
+    outline: 3px solid #4CAF50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
 }
 
 

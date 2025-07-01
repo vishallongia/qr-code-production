@@ -208,7 +208,7 @@
 }
 
 
-#special-offer-btn {
+.btn {
     background-color: rgba(26, 1, 97, 1);
     color: white;
     font-family: var(--font-family);
@@ -220,7 +220,8 @@
     transition: background-color 0.3s ease;
 }
 
-#special-offer-btn:hover {
-    background-color: rgba(26, 1, 97, 0.85) /* 85% opacity */
+.btn:hover {
+    background-color: rgba(26, 1, 97, 0.85)
+        /* 85% opacity */
 
 }

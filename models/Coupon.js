@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const couponSchema = new mongoose.Schema({
   code: { type: String, required: true, unique: true },
   discountPercent: { type: Number, required: true }, // Discount for user
-  commissionPercent: { type: Number, required: true }, // Commission for affiliate
+  commissionPercent: { type: Number, required: true, default: 0 }, // Commission for affiliate
   assignedToAffiliate: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -15,9 +15,12 @@ const couponSchema = new mongoose.Schema({
       type: String,
       enum: ["text", "url", "media"],
     },
+    name: { type: String },
     text: { type: String },
     url: { type: String },
     media_url: { type: String },
+    startDate: { type: Date }, // Added: Offer start date
+    endDate: { type: Date },
   },
   createdAt: { type: Date, default: Date.now },
 });

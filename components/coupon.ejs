@@ -14,6 +14,29 @@
 </head>
 
 <body>
+    <!-- Hidden Input Field for Coupon ID -->
+    <input type="hidden" id="coupon-id-update-discount">
+
+    <!-- POPUP HTML -->
+    <div id="theme-popup-update-discount" class="popup-overlay" style="display: none;">
+        <div class="popup-content" style="position: relative;">
+            <span id="close-popup-update-discount" style="
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 25px;
+            cursor: pointer;">&times;</span>
+            <p>Please Enter Discount</p>
+            <form>
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <input type="number" id="discount-update-discount" placeholder="Enter Discount" min="1" max="100"
+                        step="1">
+                </div>
+                <button id="popup-ok-btn-discount" type="button">Update Discount</button>
+            </form>
+        </div>
+    </div>
+
     <% const pageNum=currentPage ? Number(currentPage) : 1; const invalidPage=isNaN(pageNum) || pageNum < 1 || pageNum>
         totalPages;
         %>
@@ -40,6 +63,7 @@
                                             <span>Discount (%)</span>
                                             <span>Commission (%)</span>
                                             <span>Special Info</span>
+                                            <span>Update Discount</span>
 
                                         </div>
                                         <ul id="couponList" class="user-list">
@@ -54,10 +78,14 @@
                                                     <span>
                                                         <%= coupon.commissionPercent %>
                                                     </span>
-                                                    <span><button id="special-offer-btn"
+                                                    <span><button id="special-offer-btn" class="btn"
                                                             onclick="window.location.href='/special-offer-info/<%= coupon._id %>'">Special
                                                             Info</button></span>
 
+                                                    <span>
+                                                        <button class="btn"
+                                                            onclick="openUpdateDiscountPopup('<%= coupon._id %>')">Update</button>
+                                                    </span>
 
                                                 </li>
                                                 <% }) %>
@@ -107,6 +135,57 @@
             </div>
         </div>
 </body>
+<script>
+    function openUpdateDiscountPopup(couponId) {
+        document.getElementById("coupon-id-update-discount").value = couponId;
+        document.getElementById("discount-update-discount").value = ""; // clear previous
+        document.getElementById("theme-popup-update-discount").style.display = "flex";
+    }
+
+    function closeUpdateDiscountPopup() {
+        document.getElementById("theme-popup-update-discount").style.display = "none";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const closeBtn = document.getElementById("close-popup-update-discount");
+        const updateBtn = document.getElementById("popup-ok-btn-discount");
+
+        closeBtn?.addEventListener("click", closeUpdateDiscountPopup);
+
+        updateBtn?.addEventListener("click", async () => {
+            const couponId = document.getElementById("coupon-id-update-discount").value;
+            const discount = document.getElementById("discount-update-discount").value;
+
+            if (!discount || discount < 1 || discount > 100) {
+                showToast("Please enter a valid discount between 1 and 100", "error");
+                return;
+            }
+
+            try {
+                const response = await fetch(`/update-discount/${couponId}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ discountPercent: discount })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast(data.message || "Discount updated successfully!", "success");
+                    closeUpdateDiscountPopup();
+                    setTimeout(() => window.location.reload(), 1000); // Optional: refresh to update list
+                } else {
+                    showToast(data.message || "Failed to update discount", "error");
+                }
+            } catch (err) {
+                showToast("Something went wrong. Please try again.", "error");
+                console.error(err);
+            }
+        });
+    });
+</script>
 
 
 </html>

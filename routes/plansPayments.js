@@ -37,19 +37,23 @@ router.get("/plans", authMiddleware, async (req, res) => {
 
     const subscription = req.user.subscription || {};
 
-    const validUntilVip = subscription.validTill ? new Date(subscription.validTill) : null;
-    const isVip = subscription.isVip === true && validUntilVip && validUntilVip > new Date();
-
+    const validUntilVip = subscription.validTill
+      ? new Date(subscription.validTill)
+      : null;
+    const isVip =
+      subscription.isVip === true &&
+      validUntilVip &&
+      validUntilVip > new Date();
 
     let userSubscription = {
       validUntil: latestPayment ? latestPayment.validUntil : null,
       name: req.user.fullName, // Assuming req.user contains user data like name
       email: req.user.email, // Assuming req.user contains user data like email
       role: req.user.role,
-      subscription : {
+      subscription: {
         isVip,
-       validTill: validUntilVip
-      }
+        validTill: validUntilVip,
+      },
     };
     // Render the 'plans' EJS page and pass the encrypted plans data to it
     res.render("dashboardnew", {
@@ -291,14 +295,40 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
         discountAmount = plan.price;
         isCouponUsed = true;
       } else {
-        discountAmount = (coupon.discountPercent / 100) * plan.price;
-        finalPrice = parseFloat((plan.price - discountAmount).toFixed(2));
         isCouponUsed = true;
 
+        // ⚠️ Affiliate-Funded Discount Logic
+        // - commissionAmount is based on plan price
+        // - discountAmount is a percentage of commissionAmount
+        // - finalPrice = plan price - discountAmount
+        // - commissionAmount is adjusted after discount
+
         if (coupon.commissionPercent) {
+          // Step 1: Calculate full commission from plan price
+          const fullCommission = (coupon.commissionPercent / 100) * plan.price;
+
+          // Step 2: Discount is a percentage of the commission
+          discountAmount = (coupon.discountPercent / 100) * plan.price;
+
+          if (discountAmount > commissionAmount) {
+            return res.status(400).json({
+              message: "Discount exceeds affiliate commission. Not allowed.",
+              type: "error",
+            });
+          }
+
+          // Step 3: Final price user pays
+          finalPrice = parseFloat((plan.price - discountAmount).toFixed(2));
+
+          // Step 4: Commission after deducting discount
           commissionAmount = parseFloat(
-            ((coupon.commissionPercent / 100) * finalPrice).toFixed(2)
+            (fullCommission - discountAmount).toFixed(2)
           );
+        } else {
+          // Fallback: if no commissionPercent, calculate discount normally
+          discountAmount = (coupon.discountPercent / 100) * plan.price;
+          finalPrice = parseFloat((plan.price - discountAmount).toFixed(2));
+          commissionAmount = 0;
         }
       }
     }
@@ -514,6 +544,14 @@ router.post("/validate-coupon", authMiddleware, async (req, res) => {
         });
       }
 
+      if (discountAmount > commissionAmount) {
+        return res.status(400).json({
+          message: "Discount exceeds affiliate commission. Not allowed.",
+          type: "error",
+          data: null,
+        });
+      }
+
       // // No previous coupon used on 15-day plan → Activate for free
       const paymentRecord = await Payment.create({
         user_id: req.user._id,
@@ -549,11 +587,31 @@ router.post("/validate-coupon", authMiddleware, async (req, res) => {
       });
     }
 
-    // For other plans: allow same/different coupon multiple times
+    // ⚠️ Affiliate-Funded Discount Logic
+    // In this model, the discount given to the user is funded from the affiliate's commission.
+    // - commissionAmount: Full commission based on the plan price.
+    // - discountAmount: A portion of the commission used as a discount for the user.
+    // - discountedPrice: Final amount user pays after discount.
+    // Note: This ensures the site owner keeps full revenue, and the affiliate sacrifices part of their commission to offer a discount.
+
+    const commissionAmount = (coupon.commissionPercent / 100) * plan.price;
     const discountAmount = (coupon.discountPercent / 100) * plan.price;
     const discountedPrice = parseFloat(
       (plan.price - discountAmount).toFixed(2)
     );
+
+    if (discountAmount > commissionAmount) {
+      return res.status(400).json({
+        message: "Discount exceeds affiliate commission. Not allowed.",
+        type: "error",
+      });
+    }
+
+    // For other plans: allow same/different coupon multiple times
+    // const discountAmount = (coupon.discountPercent / 100) * plan.price;
+    // const discountedPrice = parseFloat(
+    //   (plan.price - discountAmount).toFixed(2)
+    // );
 
     return res.status(200).json({
       message: "Coupon applied.",

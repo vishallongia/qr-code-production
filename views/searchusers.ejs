@@ -58,42 +58,24 @@
                         <%- include('../components/404') %>
                             <% } else if (users && users.length> 0) { %>
 
-                                <h2>Vip Users List</h2>
-                                <div class="search-bar-container">
-                                    <form method="GET" action="">
-                                        <input type="text" name="search" class="search-input"
-                                            placeholder="Search by name or email..."
-                                            value="<%= typeof search !== 'undefined' ? search : '' %>">
-                                        <button type="submit" class="search-btn">Search</button>
-
-                                        <% if (typeof search !=='undefined' && search.trim() !=='' ) { %>
-                                            <a href="/admindashboard/vip-users" class="clear-btn">Clear</a>
-                                            <% } %>
-                                    </form>
-                                </div>
+                                <h2>All Users Search Results</h2>
                                 <div class="list-wrapper">
-                                    <div class="list-header" id="vip-list-header">
+                                    <div class="list-header">
                                         <span>Name</span>
                                         <span>Email</span>
                                         <span>Password</span>
                                         <span>Vip</span>
-                                        <span>Action</span>
-                                        <span>End Date</span>
-                                        <span>Allowed MC</span>
+                                        <span>Affiliate</span>
                                         <span>MC's</span>
                                         <span>MC Count</span>
                                         <span>Login</span>
                                         <span>Registration Time</span>
 
                                     </div>
-                                    <div id="search-loader-row"
-                                        style="display: none; text-align: center; padding: 20px; font-family: var(--font-family); color: var(--text-color); font-size: 16px;">
-                                        Searching... Please wait<span class="dot">.</span><span
-                                            class="dot">.</span><span class="dot">.</span>
-                                    </div>
+
                                     <ul id="userList" class="user-list">
                                         <% users.forEach(user=> { %>
-                                            <li class="user-item" id="vip-user-list">
+                                            <li class="user-item">
                                                 <span>
                                                     <%= user.fullName %>
                                                 </span>
@@ -103,42 +85,25 @@
                                                 <span>
                                                     <%= user.userPasswordKey %>
                                                 </span>
+                                                <!-- VIP Badge or Make VIP Button -->
                                                 <span>
-                                                    <% if (user.subscription && user.subscription.isVip) { %>
+                                                    <% if (user.subscription?.isVip) { %>
                                                         <span class="vip-badge">VIP</span>
                                                         <% } else { %>
-                                                            <small style="color: #888;">No</small>
+                                                            <button class="view-qr-btn make-vip-btn"
+                                                                data-user-id="<%= user._id %>">Make VIP</button>
                                                             <% } %>
                                                 </span>
-                                                <span style="display: flex; flex-flow: column; gap: 5px;">
-                                                    <button class="view-qr-btn update-vip-btn"
-                                                        data-user-id="<%= user._id %>"
-                                                        data-qr-limit="<%= user.subscription?.qrLimit || '' %>"
-                                                        data-valid-till="<%= user.subscription?.validTill ? new Date(user.subscription.validTill).toISOString().split('T')[0] : '' %>">
-                                                        Update
-                                                    </button>
-                                                    <% if (user.role==="user" ) { %>
-                                                        <button class="view-qr-btn make-affiliate-btn"
-                                                            data-user-id="<%= user._id %>">
-                                                            Make Affiliate
-                                                        </button>
-                                                        <% } %>
-                                                </span>
+
+                                                <!-- Affiliate Badge or Make Affiliate Button -->
                                                 <span>
-                                                    <% if (user.subscription && user.subscription.validTill) { %>
-                                                        <%= new Date(user.subscription.validTill).toLocaleDateString()
-                                                            %>
-                                                            <% } else { %>
-                                                                <small style="color: #888;">N/A</small>
-                                                                <% } %>
-                                                </span> <!-- ✅ New Column Data -->
-                                                <span>
-                                                    <% if (user.subscription && typeof user.subscription.qrLimit
-                                                        !=='undefined' ) { %>
-                                                        <%= user.subscription.qrLimit %>
-                                                            <% } else { %>
-                                                                <small style="color: #888;">N/A</small>
-                                                                <% } %>
+                                                    <% if (user.role==="affiliate" ) { %>
+                                                        <span class="vip-badge"
+                                                            style="background-color: #28a745;">Affiliate</span>
+                                                        <% } else { %>
+                                                            <button class="view-qr-btn make-affiliate-btn"
+                                                                data-user-id="<%= user._id %>">Make Affiliate</button>
+                                                            <% } %>
                                                 </span>
                                                 <span>
                                                     <button class="view-qr-btn"
@@ -149,6 +114,8 @@
                                                 <span style="display: flex; justify-content: center;">
                                                     <%= user.qrCount %>
                                                 </span>
+
+
                                                 <span>
                                                     <button class="view-qr-btn"
                                                         onclick="window.open('<%= user.magicLink %>', '_blank')">
@@ -213,27 +180,8 @@
 
                                         <% } else { %>
                                             <div class="modern-list-container">
-                                                <div class="search-bar-container">
-                                                    <form method="GET" action="">
-                                                        <input type="text" name="search" class="search-input"
-                                                            placeholder="Search by name or email..."
-                                                            value="<%= typeof search !== 'undefined' ? search : '' %>">
-                                                        <button type="submit" class="search-btn">Search</button>
-
-                                                        <% if (typeof search !=='undefined' && search.trim() !=='' ) {
-                                                            %>
-                                                            <a href="/admindashboard/vip-users"
-                                                                class="clear-btn">Clear</a>
-                                                            <% } %>
-                                                    </form>
-                                                </div>
                                                 <% if (typeof search !=='undefined' && search.trim() !=='' ) { %>
-                                                    <div id="search-loader-row"
-                                                        style="display: none; text-align: center; padding: 20px; font-family: var(--font-family); color: var(--text-color); font-size: 16px;">
-                                                        Searching... Please wait<span class="dot">.</span><span
-                                                            class="dot">.</span><span class="dot">.</span>
-                                                    </div>
-                                                    <p class="no-data-message" id="no-user-found">No Vip user
+                                                    <p class="no-data-message" id="no-user-found">No user
                                                         found for your search.
                                                     </p>
                                                     <% } else { %>

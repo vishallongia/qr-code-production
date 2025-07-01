@@ -37,7 +37,7 @@
     <div class="popup-container-wrapper" id="popup-container-wrapper" style="display: none;">
         <!-- 🔒 Hidden input for coupon ID -->
         <input type="hidden" id="hidden-coupon-id" name="couponId" value="" />
-        <div class="popup-overlay">
+        <!-- <div class="popup-overlay">
             <div class="popup-content" style="position: relative;">
                 <div class="popup-header">
                     <h2>Select Options</h2>
@@ -61,10 +61,10 @@
                 </div>
                 <button class="btn" onclick="authenticateQRCodes()">Authority</button>
             </div>
-        </div>
+        </div> -->
     </div>
     <!-- Outside of theme-popup-get-paid -->
-    <div id="theme-popup-special-offer" class="popup-overlay" style="display: none;">
+    <!-- <div id="theme-popup-special-offer" class="popup-overlay" style="display: none;">
         <div class="popup-content" style="position: relative;">
             <span id="close-popup-special-offer" style="
             position: absolute;
@@ -81,7 +81,7 @@
                 <button id="popup-ok-btn-special-offer" type="button" class="btn">Next</button>
             </form>
         </div>
-    </div>
+    </div> -->
 
 
 
@@ -124,7 +124,7 @@
                 <label class="radio-button">
                     <input type="radio" name="qr-update-option" value="SpecialOffer" <%=isSpecialOffer===true
                         ? "checked" : "" %>
-                    onchange="handleSpecialOfferToggle()">
+                    onchange="location.href='/special-offers'">
                     <img src="/images/ShowPartnerMessage.png" alt="Special Offer Icon">
                     <span>Show Partner Message</span>
                 </label>
@@ -134,8 +134,8 @@
 
                     <% if (couponCode) { %>
                         <p style="font-weight: 500; font-size: 16px; margin-bottom: 12px;">
-                            You’ve currently connected with Event Organizer using coupon: <strong>
-                                <%= couponCode %>
+                            You’ve currently connected with Event Organizer using event: <strong>
+                                <%= name %>
                             </strong>
                         </p>
                         <% } %>

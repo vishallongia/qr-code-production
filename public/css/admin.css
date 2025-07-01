@@ -14,7 +14,8 @@
   --link-hover-color: #26a69a;
   --text-color: #333333;
   --grid-columns-7: 0.6fr 0.6fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr;
-  --grid-columns-8: 0.5fr 0.5fr 0.5fr 0.5fr 0.9fr 0.6fr 0.6fr 0.8fr 0.5fr;
+  --grid-columns-9: 0.5fr 0.5fr 0.5fr 0.5fr 0.9fr 0.6fr 0.6fr 0.8fr 0.5fr 0.5fr;
+  --grid-columns-10: 0.5fr 0.5fr 0.5fr 0.4fr 0.8fr 0.5fr 0.3fr 0.5fr 0.3fr 0.5fr 0.5fr;
   --grid-columns-3: 0.4fr 0.4fr 0.4fr 0.4fr;
   --grid-columns-6: 0.7fr 0.7fr 0.7fr 0.5fr 0.5fr 0.5fr;
 }
@@ -56,11 +57,17 @@ canvas {
 .list-header,
 .user-item {
   display: grid;
-  grid-template-columns: var(--grid-columns-8);
+  grid-template-columns: var(--grid-columns-9);
   /* Default to 8 columns */
   gap: 15px;
   padding: 15px 0;
   min-width: 950px;
+}
+
+#vip-list-header,
+#vip-user-list {
+  display: grid;
+  grid-template-columns: var(--grid-columns-10) !important;
 }
 
 /*For Track history page */

@@ -32,10 +32,8 @@ router.get("/affiliate-users", async (req, res) => {
     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 1;
     const search = req.query.search ? req.query.search.trim() : "";
 
-    // Base match condition for affiliate users
     const baseMatch = { role: "affiliate" };
 
-    // If search query exists, add regex filter on fullName or email
     if (search) {
       baseMatch.$and = [
         {
@@ -51,21 +49,61 @@ router.get("/affiliate-users", async (req, res) => {
     const totalPages = Math.ceil(totalAffiliates / recordsPerPage);
     const skip = (currentPage - 1) * recordsPerPage;
 
-    const users = await User.find(baseMatch).skip(skip).limit(recordsPerPage);
+    // 🟩 Use aggregation to preserve structure and include QR count
+    const users = await User.aggregate([
+      { $match: baseMatch },
+      {
+        $lookup: {
+          from: "qrcodedatas",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $eq: ["$user_id", "$$userId"] },
+                    { $eq: ["$assignedTo", "$$userId"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "qrData",
+        },
+      },
+      {
+        $addFields: {
+          qrCount: { $size: "$qrData" },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          fullName: 1,
+          email: 1,
+          role: 1,
+          isActive: 1,
+          userPasswordKey: 1,
+          createdAt: 1,
+          qrCount: 1,
+        },
+      },
+    ])
+      .skip(skip)
+      .limit(recordsPerPage);
 
     users.forEach((user) => {
       if (user.userPasswordKey) {
         user.userPasswordKey = decryptPassword(user.userPasswordKey);
       }
       user.encryptedId = encryptPassword(user._id.toString());
-      // Generate a JWT token for each user
+
       const magicToken = jwt.sign(
         { userId: user._id, email: user.email },
         process.env.JWT_SECRET,
         { expiresIn: process.env.MAGIC_LINK_JWT_EXPIRATION || "24h" }
       );
 
-      // Append magic link to the user object
       user.magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
     });
 
@@ -75,7 +113,7 @@ router.get("/affiliate-users", async (req, res) => {
       totalPages,
       totalUsers: totalAffiliates,
       FRONTEND_URL: process.env.FRONTEND_URL,
-      search, // include the search term to retain in UI
+      search,
     });
   } catch (error) {
     console.error("Error loading Affiliate Dashboard:", error);
@@ -291,12 +329,12 @@ router.post("/create-coupon/:affiliateId", async (req, res) => {
 
   if (
     typeof discountPercent !== "number" ||
-    discountPercent <= 0 ||
+    discountPercent < 0 ||
     discountPercent > 100
   ) {
     return res.status(400).json({
       message:
-        "Discount percent must be a positive number between 0.01 and 100",
+        "Discount percent must be a positive number between 0 and 100",
       type: "error",
     });
   }

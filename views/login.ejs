@@ -8,6 +8,15 @@
   <link href="/css/login.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <!-- Standard favicon -->
+<link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+<!-- Apple Touch Icon (for iOS home screen) -->
+<link rel="apple-touch-icon" href="/app-icon-192.png">
+
+<!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
+<link rel="manifest" href="/manifest.json">
+
 
 </head>
 
@@ -24,10 +33,10 @@
 
   <div class="container">
     <form class="login-box" method="POST" action="/login" onsubmit="return handleLogin(event)">
-      <h2 id="LoginText">Activate Your Account</h2>
+      <h2 id="LoginText"> Login to Your Account</h2>
 
       <input type="email" name="email" placeholder="Enter email address..." id="EmailText" required />
-      <div class="password-wrapper" >
+      <div class="password-wrapper">
         <input type="password" name="password" id="PasswordText" placeholder="Enter password..." required />
         <span class="toggle-password" id="togglePassword">
           <!-- Eye Slash Icon SVG -->
@@ -39,19 +48,28 @@
         </span>
       </div>
 
-      <div class="options">
-        <label><input type="checkbox" /> Remember me</label>
-        <a href="/forgotpassword/">Reset My Password</a>
-      </div>
 
       <button type="submit" class="login-btn" id="LoginBtnText">Login</button>
 
       <div class="divider"><span>OR</span></div>
 
-      <button type="button" class="google-btn" onclick="window.location.href='/google'">Login With Google</button>
-      <button type="button" class="magic-link-btn" id="magicLinkText" onclick="toggleMagicLink('login')">Login With
+
+      <button type="button" class="google-btn" onclick="window.location.href='/google'">Login With Gmail</button>
+
+      <div class="divider"><span>OR</span></div>
+
+      <button type="button" class="google-btn" onclick="window.location.href='/register'">Activate a New Account</button>
+
+            <!-- <button type="button" class="magic-link-btn" id="magicLinkText" onclick="toggleMagicLink('login')">Login With
         Magic Link (No
-        password Needed)</button>
+        password Needed)</button> -->
+
+
+      <div class="options">
+        <label><input type="checkbox" /> Remember me</label>
+        <a href="/forgotpassword/">Reset My Password</a>
+      </div>
+
 
       <!-- <p class="signup-text">
         <span id="DontHaveAccountText">
@@ -105,8 +123,8 @@
 </script>
 
 <script>
-  toggleMagicLink('login')
-  document.getElementById("magicLinkText").style.display = "none"
+  //   toggleMagicLink('login')
+  // document.getElementById("magicLinkText").style.display = "none"
 </script>
 <!-- <script src="/js/translations.js"></script> -->
 

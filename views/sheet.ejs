@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Magic TV Revenue Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Standard favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+    <!-- Apple Touch Icon (for iOS home screen) -->
+    <link rel="apple-touch-icon" href="/app-icon-192.png">
+
+    <!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
+    <link rel="manifest" href="/manifest.json">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --purple-light: #caa5ff;
+            --blue-light: #a3e3ff;
+            --highlight-bg: #f2eaff;
+            --highlight-border: #a270ff;
+            --white: #fff;
+            --light-bg: #fdfcff;
+            --grey: #eee;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            background: var(--light-bg);
+            color: #222;
+        }
+
+        header {
+            background: linear-gradient(120deg, var(--purple-light), var(--blue-light));
+            text-align: center;
+            padding: 2.5rem 1rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin: 0;
+            color: #fff;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            background: var(--white);
+            border-radius: 1rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: var(--highlight-border);
+            color: white;
+            font-weight: 600;
+        }
+
+        tfoot {
+            background: var(--highlight-bg);
+            font-weight: bold;
+        }
+
+        input[type="number"] {
+            width: 100px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-family: 'Poppins', sans-serif;
+            text-align: right;
+        }
+
+        @media (max-width: 600px) {
+            input[type="number"] {
+                width: 80px;
+            }
+
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            th,
+            td {
+                padding: 0.6rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        #password-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.6);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .popup-content {
+            background: var(--white);
+            border: 2px solid var(--highlight-border);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+            max-width: 330px;
+            width: 100%;
+        }
+
+        .popup-content h2 {
+            margin-bottom: 1rem;
+            color: var(--highlight-border);
+        }
+
+        .popup-content input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .popup-content button {
+            background: var(--highlight-border);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+
+        .popup-content button:hover {
+            background: #915eff;
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+    <header>
+        <h1>Magic TV Revenue Calculator</h1>
+    </header>
+
+    <main>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Application</th>
+                        <th>Monthly Users</th>
+                        <th>Conversion Rate</th>
+                        <th>Entry Fee / Lead (€)</th>
+                        <th>Broadcaster Share (%)</th>
+                        <th>Monthly Gross Revenue (€)</th>
+                        <th>Monthly Broadcaster Earnings (€)</th>
+                        <th>Yearly Broadcaster Earnings (€)</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5">TOTAL</td>
+                        <td id="total-gross">€0</td>
+                        <td id="total-monthly">€0</td>
+                        <td id="total-yearly">€0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </main>
+
+    <div id="password-popup">
+        <div class="popup-content">
+            <h2>Magic TV Revenue Model</h2>
+            <input type="password" id="password-input" placeholder="Enter Password..." />
+            <button onclick="checkPassword()">Unlock</button>
+            <p id="error-msg" style="color: red; display: none; margin-top: 10px;">Incorrect password</p>
+        </div>
+    </div>
+
+
+    <script>
+        const apps = [
+            { name: "TV Miles", users: 200000, rate: 1.0, value: 12.0, share: 40 },
+            { name: "Magic Quiz", users: 400000, rate: 0.1, value: 0.5, share: 60 },
+            { name: "Magic Votes", users: 350000, rate: 0.12, value: 0.5, share: 60 },
+            { name: "Magic Shopping", users: 250000, rate: 0.08, value: 1.0, share: 60 },
+            { name: "Magic Brands", users: 300000, rate: 0.10, value: 1.0, share: 60 }
+        ];
+
+        function formatCurrency(value) {
+            return "€" + value.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function updateCalculations() {
+            let totalGross = 0, totalMonthly = 0, totalYearly = 0;
+
+            apps.forEach((app, i) => {
+                const users = +document.getElementById(`users-${i}`).value;
+                const rate = +document.getElementById(`rate-${i}`).value;
+                const value = +document.getElementById(`value-${i}`).value;
+                const share = +document.getElementById(`share-${i}`).value;
+
+                const gross = users * rate * value;
+                const monthly = (share * gross) / 100;
+                const yearly = monthly * 12;
+
+                document.getElementById(`gross-${i}`).innerText = formatCurrency(gross);
+                document.getElementById(`monthly-${i}`).innerText = formatCurrency(monthly);
+                document.getElementById(`yearly-${i}`).innerText = formatCurrency(yearly);
+
+                totalGross += gross;
+                totalMonthly += monthly;
+                totalYearly += yearly;
+            });
+
+            document.getElementById("total-gross").innerText = formatCurrency(totalGross);
+            document.getElementById("total-monthly").innerText = formatCurrency(totalMonthly);
+            document.getElementById("total-yearly").innerText = formatCurrency(totalYearly);
+        }
+
+        function createTable() {
+            const tbody = document.getElementById("table-body");
+            apps.forEach((app, i) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+        <td>${app.name}</td>
+        <td><input type="number" id="users-${i}" value="${app.users}" oninput="updateCalculations()" /></td>
+        <td><input type="number" id="rate-${i}" step="0.001" value="${app.rate}" oninput="updateCalculations()" /></td>
+        <td><input type="number" id="value-${i}" step="0.01" value="${app.value}" oninput="updateCalculations()" /></td>
+        <td><input type="number" id="share-${i}" step="0.1" value="${app.share}" oninput="updateCalculations()" /></td>
+        <td id="gross-${i}">€0</td>
+        <td id="monthly-${i}">€0</td>
+        <td id="yearly-${i}">€0</td>
+      `;
+                tbody.appendChild(row);
+            });
+            updateCalculations();
+        }
+
+        createTable();
+
+
+        // Show password popup on load
+        window.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("password-popup").style.display = "flex";
+            document.body.style.overflow = "hidden"; // prevent scroll while locked
+        });
+
+        function checkPassword() {
+            const correctPassword = "magic"; // Change this to your real password
+            const input = document.getElementById("password-input").value.trim();
+            const errorMsg = document.getElementById("error-msg");
+
+            if (input === correctPassword) {
+                document.getElementById("password-popup").style.display = "none";
+                document.body.style.overflow = "auto";
+            } else {
+                errorMsg.style.display = "block";
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
