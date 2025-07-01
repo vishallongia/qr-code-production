@@ -310,13 +310,6 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
           // Step 2: Discount is a percentage of the commission
           discountAmount = (coupon.discountPercent / 100) * plan.price;
 
-          if (discountAmount > commissionAmount) {
-            return res.status(400).json({
-              message: "Discount exceeds affiliate commission. Not allowed.",
-              type: "error",
-            });
-          }
-
           // Step 3: Final price user pays
           finalPrice = parseFloat((plan.price - discountAmount).toFixed(2));
 
@@ -324,6 +317,13 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
           commissionAmount = parseFloat(
             (fullCommission - discountAmount).toFixed(2)
           );
+
+          if (discountAmount > commissionAmount) {
+            return res.status(400).json({
+              message: "Discount exceeds affiliate commission. Not allowed.",
+              type: "error",
+            });
+          }
         } else {
           // Fallback: if no commissionPercent, calculate discount normally
           discountAmount = (coupon.discountPercent / 100) * plan.price;
