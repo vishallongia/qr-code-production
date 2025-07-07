@@ -82,6 +82,10 @@ const userSchema = new mongoose.Schema(
         default: 3, // default for non-VIP
       },
     },
+    isTvStation: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true, // adds createdAt and updatedAt automatically
@@ -100,8 +104,6 @@ userSchema.pre("save", async function (next) {
   }
   next();
 });
-
-
 
 // Create and export the user model
 const User = mongoose.model("User", userSchema);

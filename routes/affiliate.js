@@ -86,6 +86,7 @@ router.get("/affiliate-users", async (req, res) => {
           userPasswordKey: 1,
           createdAt: 1,
           qrCount: 1,
+          isTvStation : 1
         },
       },
     ])
@@ -483,7 +484,7 @@ router.put("/update-coupon/:couponId", async (req, res) => {
 
   if (
     typeof discountPercent !== "number" ||
-    discountPercent <= 0 ||
+    discountPercent < 0 ||
     discountPercent > 100
   ) {
     return res.status(400).json({
@@ -528,6 +529,7 @@ router.put("/update-coupon/:couponId", async (req, res) => {
       });
     }
 
+    
     // Update the coupon fields
     coupon.code = code.trim().toUpperCase();
     coupon.discountPercent = discountPercent;

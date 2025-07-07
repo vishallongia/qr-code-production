@@ -9,13 +9,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <!-- Standard favicon -->
-<link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
 
-<!-- Apple Touch Icon (for iOS home screen) -->
-<link rel="apple-touch-icon" href="/app-icon-192.png">
+  <!-- Apple Touch Icon (for iOS home screen) -->
+  <link rel="apple-touch-icon" href="/app-icon-192.png">
 
-<!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
-<link rel="manifest" href="/manifest.json">
+  <!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
+  <link rel="manifest" href="/manifest.json">
+
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZNB2G4J8G"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-0ZNB2G4J8G');
+  </script>
 
 
 </head>
@@ -58,9 +69,10 @@
 
       <div class="divider"><span>OR</span></div>
 
-      <button type="button" class="google-btn" onclick="window.location.href='/register'">Activate a New Account</button>
+      <button type="button" class="google-btn" onclick="window.location.href='/register'">Activate a New
+        Account</button>
 
-            <!-- <button type="button" class="magic-link-btn" id="magicLinkText" onclick="toggleMagicLink('login')">Login With
+      <!-- <button type="button" class="magic-link-btn" id="magicLinkText" onclick="toggleMagicLink('login')">Login With
         Magic Link (No
         password Needed)</button> -->
 

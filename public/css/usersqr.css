@@ -30,7 +30,7 @@ body {
     var(--bg-gradient-start),
     var(--bg-gradient-end)
   );
-  padding: 20px;
+  padding: 10px;
 }
 
 .container-custom {

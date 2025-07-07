@@ -14,8 +14,8 @@
   --link-hover-color: #26a69a;
   --text-color: #333333;
   --grid-columns-7: 0.6fr 0.6fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr;
-  --grid-columns-9: 0.5fr 0.5fr 0.5fr 0.5fr 0.9fr 0.6fr 0.6fr 0.8fr 0.5fr 0.5fr;
-  --grid-columns-10: 0.5fr 0.5fr 0.5fr 0.4fr 0.8fr 0.5fr 0.3fr 0.5fr 0.3fr 0.5fr 0.5fr;
+  --grid-columns-9: 0.5fr 0.5fr 0.5fr 0.5fr 0.9fr 0.7fr 0.7fr 0.6fr 0.8fr 0.6fr 0.5fr;
+  --grid-columns-10: 0.5fr 0.5fr 0.5fr 0.8fr 0.5fr 0.5fr 0.5fr 0.3fr 0.5fr 0.5fr;
   --grid-columns-3: 0.4fr 0.4fr 0.4fr 0.4fr;
   --grid-columns-6: 0.7fr 0.7fr 0.7fr 0.5fr 0.5fr 0.5fr;
 }
@@ -39,7 +39,7 @@ canvas {
   box-shadow: var(--box-shadow);
   padding: 20px;
   width: 90%;
-  max-width: 1000px;
+  /* max-width: 1000px; */
   margin: 20px auto;
 }
 
@@ -514,9 +514,9 @@ input:checked+.toggle-slider:before {
   background-color: #ffcc00;
   color: #000;
   font-weight: bold;
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 12px;
   display: inline-block;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
@@ -679,6 +679,12 @@ input:checked+.toggle-slider:before {
 
   .view-qr-btn {
     text-align: center;
+  }
+
+  .vip-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 18px;
   }
 }
 

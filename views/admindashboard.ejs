@@ -5,14 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern List View</title>
+
     <!-- Standard favicon -->
-<link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
 
-<!-- Apple Touch Icon (for iOS home screen) -->
-<link rel="apple-touch-icon" href="/app-icon-192.png">
+    <!-- Apple Touch Icon (for iOS home screen) -->
+    <link rel="apple-touch-icon" href="/app-icon-192.png">
 
-<!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
-<link rel="manifest" href="/manifest.json">
+    <!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
+    <link rel="manifest" href="/manifest.json">
 
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -87,6 +88,7 @@
                         <span>Active</span>
                         <span>Vip</span>
                         <span>Affiliate</span>
+                        <span>Tv Station</span>
                         <span>Login</span>
                         <span>Registration Time</span>
                     </div>
@@ -137,7 +139,13 @@
                                     <button class="view-qr-btn make-affiliate-btn" data-user-id="<%= user._id %>">Make
                                         Affiliate</button>
                                 </span>
+
                                 <span>
+                                    <button class="view-qr-btn make-tvstation-btn" data-user-id="<%= user._id %>">Make
+                                        Tv Station</button>
+                                </span>
+                                <span>
+
                                     <button class="view-qr-btn"
                                         onclick="window.open('<%= user.magicLink %>', '_blank')">
                                         Login

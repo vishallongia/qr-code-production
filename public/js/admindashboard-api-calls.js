@@ -335,7 +335,8 @@ async function handleAssignQrCode(
 
   const emailInput = document.getElementById(emailId);
   const couponInput = couponId ? document.getElementById(couponId) : null;
-  const couponCode = !withoutCoupon && couponInput ? couponInput.value.trim() : null;
+  const couponCode =
+    !withoutCoupon && couponInput ? couponInput.value.trim() : null;
 
   const url = window.location.href;
   const encId = url.split("/").pop();
@@ -343,7 +344,7 @@ async function handleAssignQrCode(
   const data = {
     email: emailInput.value,
     encId,
-   couponCode,
+    couponCode,
     checkFreeCoupon,
   };
 
@@ -700,3 +701,51 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+// Handle Make TV Station button click
+const tvStationBtns = document.querySelectorAll(".make-tvstation-btn");
+
+if (tvStationBtns.length > 0) {
+  tvStationBtns.forEach((btn) => {
+    btn.addEventListener("click", async function () {
+      const userId = this.getAttribute("data-user-id");
+
+      if (!userId) {
+        showToast("User ID not found", "error");
+        return;
+      }
+
+      const loaderOverlay = document.querySelector(".fullscreen-loader");
+      loaderOverlay.style.display = "flex";
+
+      try {
+        const response = await fetch("/admindashboard/tvstation/make-tvstation", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.message || "Failed to update TV Station status"
+          );
+        }
+
+        showToast(result.message, "success");
+
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      } catch (error) {
+        console.error("TV Station assignment error:", error);
+        showToast(error.message || "Something went wrong", "error");
+      } finally {
+        loaderOverlay.style.display = "none";
+      }
+    });
+  });
+}

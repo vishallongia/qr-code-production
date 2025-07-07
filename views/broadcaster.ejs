@@ -8,13 +8,25 @@
   <title>MAGIC TV – For Magic People</title>
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;600&amp;display=swap" rel="stylesheet" />
   <!-- Standard favicon -->
-  <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="\images\mtv-logo.png">
 
   <!-- Apple Touch Icon (for iOS home screen) -->
-  <link rel="apple-touch-icon" href="/app-icon-192.png">
+  <link rel="apple-touch-icon" href="\images\mtv-logo.png">
 
   <!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
   <link rel="manifest" href="/manifest.json">
+
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZNB2G4J8G"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-0ZNB2G4J8G');
+  </script>
+
 
   <style>
     :root {
@@ -206,7 +218,7 @@
 
 
   <section>
-    <h2>✨ Magic TV Formats</h2>
+    <h2>✨ Magic Formats</h2>
     <div class="app-box">
       <strong>🎯 Magic Quiz</strong><br />
       A knowledge-based quiz triggered by the Magic Code during the program. Viewers can participate instantly using
@@ -305,6 +317,24 @@
       <p>“You are not alone.”<br />“There is more here.”<br />“This moment matters.”</p>
     </div>
   </section> -->
+
+  <section>
+    <h2>📣 From One Broadcaster to Another</h2>
+    <p>As a former TV executive and Grand Jury member of PROMAX/BDA, I deeply understand the expectations of brand
+      integrity in broadcasting. I know how unsettling the idea of adding a new visual element can be. But I also know
+      this: the visual habits of our most critical audience have changed. And we haven’t kept up.
+
+      We must acknowledge that today’s media landscape is shaped by mobile-first content and the dominance of social
+      media — while television’s visual identity has remained largely static. Many professionals express frustration,
+      rightly defending TV’s standards over the chaos of social media. But viewers have moved on. They now expect
+      immediacy, emotional depth, and layered interaction — and TV, even when live, often appears ‘vintage.’
+
+      Magic TV offers a way forward. It introduces a subtle, elegant symbol — the Magic Code — that enhances the viewer
+      experience without disrupting it. It adds a modern, emotionally engaging layer that today’s audience not only
+      expects but responds to. Magic TV is not a disruption of broadcasting tradition — it’s an enhancement. A
+      respectful evolution. A way to speak to the next generation in a language they understand.</p>
+  </section>
+
   <section>
     <h2>🌍 Let’s Create a Magic World</h2>
     <p>
@@ -330,24 +360,26 @@
     <!-- Sticker Request Form -->
     <div id="stickerForm" class="tab-content" style="display: block;">
 
-      <div id="affiliateForm" class="tab-content">
+      <div id="Broadcaster" class="tab-content">
         <h3>Apply to Become a Magic TV Partner</h3>
-        <form method="POST" enctype="text/plain">
+        <form action="/api/request-broadcaster" method="POST">
           <label for="affiliate-name">Full Name</label><br />
           <input type="text" id="affiliate-name" name="name" required class="form-input"><br />
 
           <label for="affiliate-email">Email Address</label><br />
           <input type="email" id="affiliate-email" name="email" required class="form-input"><br />
 
-          <label for="affiliate-platform">Broadcaster, TV Station and Country </label><br />
-          <input type="text" id="affiliate-platform" name="platform" required class="form-input"><br />
+          <label for="affiliate-platform">Broadcaster, TV Station and Country</label><br />
+          <input type="text" id="affiliate-platform" name="BroadcasterTVStationandCountry" required
+            class="form-input"><br />
 
           <label for="affiliate-experience">Send us a Note</label><br />
-          <textarea id="affiliate-experience" name="experience" rows="4" required class="form-input"></textarea><br />
+          <textarea id="affiliate-experience" name="Note" rows="4" required class="form-input"></textarea><br />
 
           <button type="submit" class="cta-button">Get in Touch Now</button>
         </form>
       </div>
+
   </section>
 
 
@@ -355,12 +387,61 @@
     © 2025 Magic TV. Made for Magic People, by Magic People.
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <script>
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+          const response = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          const message = await response.text();
+
+          if (!response.ok) {
+            // If response status is not OK, show error
+            Swal.fire({
+              icon: 'error',
+              title: 'Submission Failed',
+              text: message || 'Server responded with an error.',
+              confirmButtonColor: '#d33'
+            });
+            return;
+          }
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Thank you!',
+            text: message,
+            confirmButtonColor: '#456bb2'
+          });
+
+          form.reset();
+        } catch (err) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Network error. Please try again later.',
+            confirmButtonColor: '#d33'
+          });
+        }
+      });
+    });
+
     function OpenSheet() {
       window.open("/broadcaster-sheet", "_blank");
 
     }
   </script>
+
 </body>
 
 </html>

@@ -10,6 +10,17 @@
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZNB2G4J8G"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-0ZNB2G4J8G');
+    </script>
+
     <!-- Standard favicon -->
     <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
 
@@ -217,80 +228,88 @@
             <aside class="sidebar">
                 <nav class="nav-menu">
                     <% if (user.role==='affiliate' ) { %>
-                        <button class="nav-item active" data-link="/sales">
+                        <button class="nav-item-custom active" data-link="/sales">
                             <img src="/icons-create-1.png" alt="Create icon">
                             <span>Sales</span>
                         </button>
-                        <button class="nav-item" data-link="/walletstatus">
+                        <button class="nav-item-custom" data-link="/walletstatus">
                             <img src="/icons-create-1-1.png" alt="My codes icon">
                             <span>Wallet</span>
                         </button>
-                        <button class="nav-item" data-link="/coupons">
+                        <button class="nav-item-custom" data-link="/coupons">
                             <img src="/icons-create-1-2.png" alt="Profile icon">
                             <span>Coupon Codes</span>
                         </button>
 
-                        <button class="nav-item" data-link="/color-qr">
+                        <button class="nav-item-custom" data-link="/color-qr">
                             <img src="/images/MyMagicStickers.png" alt="Subscription icon">
                             <span>My Magic Stickers</span>
                         </button>
 
-                        <button class="nav-item" data-link="/magiccode">
+                        <button class="nav-item-custom" data-link="/magiccode">
                             <img src="/images/MyMagicCodes.png" alt="My codes icon">
                             <span>My MAGIC CODEs</span>
                         </button>
 
-                        <button class="nav-item active" data-link="/dashboard">
+                        <button class="nav-item-custom active" data-link="/dashboard">
                             <img src="/images/CreateMagicCodes.png" alt="Create icon">
                             <span>Create MAGIC CODE</span>
                         </button>
 
-                        <button class="nav-item" data-link="/myprofile">
+                        <button class="nav-item-custom" data-link="/myprofile">
                             <img src="/images/MyProfile.png" alt="Profile icon">
                             <span>My Profile</span>
                         </button>
-                        <button class="nav-item" data-link="/usercontrol">
+                        <button class="nav-item-custom" data-link="/usercontrol">
                             <img src="/images/MagicCodeControl.png" alt="Scan icon">
                             <span>Magic Code Control</span>
                         </button>
-                        <button class="nav-item" data-link="#" id="installBtn">
+                        <button class="nav-item-custom" data-link="#" id="installBtn">
                             <img src="/images/INSTALLAPP.png" alt="Install App icon">
                             <span>Install App</span>
                         </button>
-                        <button class="nav-item" data-link="/plans">
+                        <button class="nav-item-custom" data-link="/plans">
                             <img src="/images/SUBSCRIPTION.png" alt="Subscription icon">
                             <span>Subscription</span>
                         </button>
+                        <button class="nav-item-custom" data-link="/magic-coin-wallet">
+                            <img src="/images/SUBSCRIPTION.png" alt="Subscription icon">
+                            <span>Magic Coin Wallet</span>
+                        </button>
                         <% } else { %>
 
-                            <button class="nav-item" data-link="/color-qr">
+                            <button class="nav-item-custom" data-link="/color-qr">
                                 <img src="/images/MyMagicStickers.png" alt="My Magic Stickers">
                                 <span>My Magic Stickers</span>
                             </button>
 
-                            <button class="nav-item" data-link="/magiccode">
+                            <button class="nav-item-custom" data-link="/magiccode">
                                 <img src="/images/MyMagicCodes.png" alt="My codes icon">
                                 <span>My MAGIC CODEs</span>
                             </button>
-                            <button class="nav-item active" data-link="/dashboard">
+                            <button class="nav-item-custom active" data-link="/dashboard">
                                 <img src="/images/CreateMagicCodes.png" alt="Create icon">
                                 <span>Create MAGIC CODE</span>
                             </button>
-                            <button class="nav-item" data-link="/myprofile">
+                            <button class="nav-item-custom" data-link="/myprofile">
                                 <img src="/images/MyProfile.png" alt="Profile icon">
                                 <span>My Profile</span>
                             </button>
-                            <button class="nav-item" data-link="/usercontrol">
+                            <button class="nav-item-custom" data-link="/usercontrol">
                                 <img src="/images/MagicCodeControl.png" alt="Scan icon">
                                 <span>Magic Code Control</span>
                             </button>
-                            <button class="nav-item" data-link="#" id="installBtn">
+                            <button class="nav-item-custom" data-link="#" id="installBtn">
                                 <img src="/images/INSTALLAPP.png" alt="Install App icon">
                                 <span>Install App</span>
                             </button>
-                            <button class="nav-item" data-link="/plans">
+                            <button class="nav-item-custom" data-link="/plans">
                                 <img src="/images/SUBSCRIPTION.png" alt="Subscription icon">
                                 <span>Subscription</span>
+                            </button>
+                            <button class="nav-item-custom" data-link="/magic-coin-wallet">
+                                <img src="/images/SUBSCRIPTION.png" alt="Subscription icon">
+                                <span>Magic Coin Wallet</span>
                             </button>
 
                             <% } %>
@@ -376,6 +395,13 @@
                     <%- include('../components/qr-gallery-new'); -%>
                 </div>
                 <% } %>
+                 <% if (activeSection==='magic-coin' ) { %>
+                <!-- Include the header partial -->
+                <div id="show-section" class="fade-in" style="width: 100%;">
+                    <%- include('../components/magic-coin'); -%>
+                </div>
+                <% } %>
+                
 
                     <% if (activeSection==='authenticateqr' ) { %>
                         <!-- Include the header partial -->
@@ -785,8 +811,6 @@
 
 
                                                                                                                                 </div>
-
-
         </div>
     </div>
 </body>
@@ -797,7 +821,7 @@
 <script src="/js/generateqr-api.js"></script>
 <script src="/js/api-calls.js"></script>
 <script>
-    const navItems = document.querySelectorAll(".nav-item");
+    const navItems = document.querySelectorAll(".nav-item-custom");
 
     // Get current actual path from the browser
     const currentPath = window.location.pathname;

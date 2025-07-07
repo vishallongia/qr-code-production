@@ -5,6 +5,7 @@ const connectDB = require("./db"); // Import the database connection
 const indexRouter = require("./routes/index");
 const plansPaymentsRouter = require("./routes/plansPayments");
 const affiliateUserRouter = require("./routes/affiliate");
+const tvStationUserRouter = require("./routes/tvstation");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -69,9 +70,10 @@ app.set("view engine", "ejs");
 app.use("/", indexRouter);
 app.use("/", plansPaymentsRouter); // Handles both plans and payments
 app.use("/admindashboard/affiliate", authMiddleware, affiliateUserRouter); // Handles both plans and payments
+app.use("/admindashboard/tvstation", authMiddleware, tvStationUserRouter); // Handles both plans and payments
 
 // Run every 5 minutes
-cron.schedule("*/1 * * * *", () => {
+cron.schedule("*/5 * * * *", () => {
   sendExpiryEmailForPayments();
 });
 

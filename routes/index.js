@@ -14,7 +14,7 @@ const { checkQrLimit } = require("../middleware/checkQrLimit"); // Import the mi
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
 const Payment = require("../models/Payment");
 const QRCodeHistory = require("../models/QRCodeHistory"); // Adjust path as per your folder structure
-const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
+const QRScanLog = require("../models/QrScanLog"); // Adjust path if needed
 const UAParser = require("ua-parser-js");
 const locale = require("locale-code");
 const fetch = require("node-fetch");
@@ -81,6 +81,17 @@ router.get("/", authMiddleware, async (req, res) => {
     res.render("login"); // Send type as 'success'
   } catch (error) {
     console.error("Error generating Magic code:", error);
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/events", async (req, res) => {
+  try {
+    res.render("EventsForPromotion.ejs"); // Send type as 'success'
+  } catch (error) {
     res.status(500).render("login", {
       message: "Failed to load login page",
       type: "error", // Send type as 'error'
@@ -917,9 +928,16 @@ router.get("/admindashboard", authMiddleware, async (req, res) => {
     // Base match conditions
     const baseMatch = {
       role: "user",
-      $or: [
-        { "subscription.isVip": { $exists: false } },
-        { "subscription.isVip": false },
+      $and: [
+        {
+          $or: [
+            { "subscription.isVip": { $exists: false } },
+            { "subscription.isVip": false },
+          ],
+        },
+        {
+          $or: [{ isTvStation: { $exists: false } }, { isTvStation: false }],
+        },
       ],
     };
 
@@ -2116,7 +2134,6 @@ router.get("/usercontrol", authMiddleware, async (req, res) => {
 
     // ✅ Disconnect expired special offer if applicable
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     if (data.endDate && new Date(data.endDate) < today) {
       await QRCodeData.updateMany(
@@ -2131,8 +2148,6 @@ router.get("/usercontrol", authMiddleware, async (req, res) => {
       data.qrNames = [];
       data.couponCode = null;
     }
-
-    console.log(data);
 
     // Final render with updated info
     res.render("dashboardnew", {
@@ -2840,8 +2855,8 @@ router.get(
             : null;
 
           // Normalize startDate and endDate
-          if (startDate) startDate.setHours(0, 0, 0, 0); // Beginning of the day
-          if (endDate) endDate.setHours(23, 59, 59, 999); // End of the day
+          if (startDate) startDate; // Beginning of the day
+          if (endDate) endDate; // End of the day
 
           const isValidDate =
             (!startDate || startDate <= now) && (!endDate || endDate >= now);
@@ -4291,6 +4306,7 @@ router.get("/admindashboard/vip-users", async (req, res) => {
           createdAt: 1,
           qrCount: 1,
           role: 1,
+          isTvStation: 1,
         },
       },
       { $skip: skip },
@@ -4580,10 +4596,16 @@ router.post(
           .json({ message: "startDate cannot be after endDate" });
       }
 
-      if (start && start < now) {
+      // if (start && start < now) {
+      //   return res
+      //     .status(400)
+      //     .json({ message: "startDate cannot be in the past" });
+      // }
+
+      if (end && end < now) {
         return res
           .status(400)
-          .json({ message: "startDate cannot be in the past" });
+          .json({ message: "endDate cannot be in the past" });
       }
 
       // ✅ Find coupon
@@ -4785,6 +4807,15 @@ router.post("/set-special-offer-qrs", authMiddleware, async (req, res) => {
         .json({ message: "This coupon does not have a special offer" });
     }
 
+    // ✅ Check if special offer end date is valid and not expired
+    const endDate = coupon.specialOffer?.endDate;
+
+    if (!endDate || new Date(endDate) < new Date()) {
+      return res
+        .status(400)
+        .json({ message: "Special offer has expired or no end date set" });
+    }
+
     // ✅ Update only QR codes that belong to the user
     const result = await QRCodeData.updateMany(
       {
@@ -4843,6 +4874,17 @@ router.get("/broadcasters", async (req, res) => {
   }
 });
 
+router.get("/stingray", async (req, res) => {
+  try {
+    res.render("stingray.ejs"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
 router.get("/broadcaster-sheet", async (req, res) => {
   try {
     res.render("sheet.ejs"); // Send type as 'success'
@@ -4863,6 +4905,348 @@ router.get("/admin-login", async (req, res) => {
       type: "error", // Send type as 'error'
     });
   }
+});
+
+router.post("/api/request-stickers", (req, res) => {
+  const { name, email, event, event_date, attendees } = req.body;
+
+  const adminEmail = process.env.ADMIN_EMAIL || "arnoldschmidt.com@gmail.com";
+  // const adminEmail = process.env.ADMIN_EMAIL || "rahul21600@gmail.com";
+
+  const sender = {
+    email: "arnoldschmidt@magic-code.net",
+    name: "Magic Code - Admin Notification",
+  };
+
+  const emailContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>New Sticker Request</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      padding: 30px 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+      color: #2c3e50;
+      border-top: 6px solid #456bb2;
+    }
+    h2 {
+      color: #456bb2;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .section {
+      margin: 20px 0;
+      text-align: left;
+    }
+    .label {
+      font-weight: bold;
+      margin-bottom: 6px;
+      display: block;
+      color: #7ab9da;
+    }
+    .value {
+      background-color: #2c3e50;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 15px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 13px;
+      color: #999;
+    }
+    .highlight {
+      background-color: #456bb2;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #ffffff;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🎉 New Sticker Request</h2>
+
+    <div class="section">
+      <span class="label">Name</span>
+      <div class="value">${name}</div>
+    </div>
+
+    <div class="section">
+      <span class="label">Email</span>
+      <div class="value">${email}</div>
+    </div>
+
+    <div class="section">
+      <span class="label">Event Name</span>
+      <div class="value">${event}</div>
+    </div>
+
+    <div class="section">
+      <span class="label">Event Date</span>
+      <div class="value">${event_date}</div>
+    </div>
+
+    <div class="section">
+      <span class="label">Expected Attendees</span>
+      <div class="value">${attendees}</div>
+    </div>
+
+    <p class="footer">© 2025 Magic Code | <span class="highlight">Sticker Request Notification</span></p>
+  </div>
+</body>
+</html>
+`;
+
+  // Send the email
+  SendEmail(sender, adminEmail, "New Sticker Request", emailContent);
+
+  res.status(200).send("Sticker request received. We’ll get back to you soon!");
+});
+
+// API to handle affiliate applications
+router.post("/api/request-affiliate", (req, res) => {
+  const { name, email, platform, experience } = req.body;
+
+  const adminEmail = process.env.ADMIN_EMAIL || "arnoldschmidt.com@gmail.com";
+  // const adminEmail = process.env.ADMIN_EMAIL || "rahul21600@gmail.com";
+
+  const sender = {
+    email: "arnoldschmidt@magic-code.net",
+    name: "Magic Code - Admin Notification",
+  };
+
+  const emailContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>New Affiliate Application</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      padding: 30px 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+      color: #2c3e50;
+      border-top: 6px solid #456bb2;
+    }
+    h2 {
+      color: #456bb2;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .section {
+      margin: 20px 0;
+      text-align: left;
+    }
+    .label {
+      font-weight: bold;
+      margin-bottom: 6px;
+      display: block;
+      color: #7ab9da;
+    }
+    .value {
+      background-color: #2c3e50;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 15px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+      white-space: pre-line;
+    }
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 13px;
+      color: #999;
+    }
+    .highlight {
+      background-color: #456bb2;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #ffffff;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🚀 New Affiliate Application</h2>
+
+    <div class="section">
+      <span class="label">Full Name</span>
+      <div class="value">${name}</div>
+    </div>
+
+    <div class="section">
+      <span class="label">Email Address</span>
+      <div class="value">${email}</div>
+    </div>
+
+    <div class="section">
+      <span class="label">Platform / Business Type</span>
+      <div class="value">${platform}</div>
+    </div>
+
+    <div class="section">
+      <span class="label">Experience with Events or Communities</span>
+      <div class="value">${experience}</div>
+    </div>
+
+    <p class="footer">© 2025 Magic Code | <span class="highlight">Affiliate Application Notification</span></p>
+  </div>
+</body>
+</html>
+`;
+
+  // Send the email
+  SendEmail(sender, adminEmail, "New Affiliate Request", emailContent);
+
+  res
+    .status(200)
+    .send(
+      "Affiliate application received. We’ll review and contact you shortly."
+    );
+});
+
+router.post("/api/request-broadcaster", (req, res) => {
+  const { name, email, BroadcasterTVStationandCountry, Note } = req.body;
+
+  const adminEmail = process.env.ADMIN_EMAIL || "arnoldschmidt.com@gmail.com";
+  // const adminEmail = process.env.ADMIN_EMAIL || "rahul21600@gmail.com";
+
+  const sender = {
+    email: "arnoldschmidt@magic-code.net",
+    name: "Magic Code - Admin Notification",
+  };
+
+  const emailContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>New Broadcaster Request</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      padding: 30px 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+      color: #2c3e50;
+      border-top: 6px solid #456bb2;
+    }
+    h2 {
+      color: #456bb2;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .section {
+      margin: 20px 0;
+      text-align: left;
+    }
+    .label {
+      font-weight: bold;
+      margin-bottom: 6px;
+      display: block;
+      color: #7ab9da;
+    }
+    .value {
+      background-color: #2c3e50;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 15px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+      white-space: pre-line;
+    }
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 13px;
+      color: #999;
+    }
+    .highlight {
+      background-color: #456bb2;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #ffffff;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📺 New Broadcaster Application</h2>
+
+    <div class="section">
+      <span class="label">Full Name</span>
+      <div class="value">${name}</div>
+    </div>
+
+    <div class="section">
+      <span class="label">Email Address</span>
+      <div class="value">${email}</div>
+    </div>
+
+    <div class="section">
+      <span class="label">TV Station, Broadcaster & Country</span>
+      <div class="value">${BroadcasterTVStationandCountry}</div>
+    </div>
+
+    <div class="section">
+      <span class="label">Note</span>
+      <div class="value">${Note}</div>
+    </div>
+
+    <p class="footer">© 2025 Magic Code | <span class="highlight">TV Partnership Request</span></p>
+  </div>
+</body>
+</html>
+`;
+
+  // Send the email
+  SendEmail(sender, adminEmail, "New Broadcaster Request", emailContent);
+
+  res.status(200).send("Your broadcaster request has been received!");
 });
 
 router.get("/qrscanlogs/:qrCodeId", authMiddleware, async (req, res) => {
@@ -5070,7 +5454,6 @@ router.get("/special-offers", authMiddleware, async (req, res) => {
     const skip = (page - 1) * limit;
     const searchName = req.query.name?.trim();
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Start of today
 
     // Build query object
     const query = {
@@ -5088,7 +5471,11 @@ router.get("/special-offers", authMiddleware, async (req, res) => {
     const totalOffers = await Coupon.countDocuments(query);
     const totalPages = Math.ceil(totalOffers / limit);
 
-    const coupons = await Coupon.find(query, { specialOffer: 1, _id: 1 })
+    const coupons = await Coupon.find(query, {
+      specialOffer: 1,
+      _id: 1,
+      code: 1,
+    })
       .sort({ "specialOffer.startDate": -1 })
       .skip(skip)
       .limit(limit);
@@ -5161,16 +5548,16 @@ router.post("/update-discount/:couponId", authMiddleware, async (req, res) => {
     const { discountPercent } = req.body;
 
     // ✅ Validate required fields
-    if (!discountPercent) {
+    if (discountPercent === undefined) {
       return res
         .status(400)
         .json({ message: "Discount value is required", success: false });
     }
 
     const parsedDiscount = Number(discountPercent);
-    if (isNaN(parsedDiscount) || parsedDiscount < 1 || parsedDiscount > 100) {
+    if (isNaN(parsedDiscount) || parsedDiscount < 0 || parsedDiscount > 100) {
       return res.status(400).json({
-        message: "Discount must be a number between 1 and 100",
+        message: "Discount must be a number between 0 and 100",
         success: false,
       });
     }
@@ -5190,7 +5577,7 @@ router.post("/update-discount/:couponId", authMiddleware, async (req, res) => {
         .json({ message: "Coupon not found", success: false });
     }
 
-    // ✅ Optional: check user permission if needed (e.g., assignedToAffiliate === userId)
+    // ✅ Optional: check user permission
     if (coupon.assignedToAffiliate?.toString() !== userId.toString()) {
       return res.status(403).json({
         message: "Not authorized to update this coupon",
@@ -5198,25 +5585,30 @@ router.post("/update-discount/:couponId", authMiddleware, async (req, res) => {
       });
     }
 
-    // ✅ Ensure discount does not exceed commission
-    if (parsedDiscount > coupon.commissionPercent) {
+    // ✅ Calculate total (commission + discount)
+    const totalPercent = coupon.commissionPercent + coupon.discountPercent;
+
+    if (parsedDiscount > totalPercent) {
       return res.status(400).json({
-        message: `Discount (${parsedDiscount}%) cannot be greater than commission (${coupon.commissionPercent}%)`,
+        message: `Discount (${parsedDiscount}%) cannot exceed available total percent (${totalPercent}%)`,
         success: false,
       });
     }
 
-    // ✅ Update discount
+    // ✅ Update both discount and commission
     coupon.discountPercent = parsedDiscount;
+    coupon.commissionPercent = totalPercent - parsedDiscount;
+
     await coupon.save();
 
     return res.status(200).json({
-      message: "Discount updated successfully",
+      message: "Discount and commission updated successfully",
       success: true,
       updatedCoupon: {
         _id: coupon._id,
         code: coupon.code,
         discountPercent: coupon.discountPercent,
+        commissionPercent: coupon.commissionPercent,
       },
     });
   } catch (error) {
@@ -5226,5 +5618,9 @@ router.post("/update-discount/:couponId", authMiddleware, async (req, res) => {
       .json({ message: "Internal server error", success: false });
   }
 });
+
+
+
+
 
 module.exports = router;

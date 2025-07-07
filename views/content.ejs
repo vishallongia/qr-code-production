@@ -6,6 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Magic Code Message</title>
 
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZNB2G4J8G"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-0ZNB2G4J8G');
+    </script>
+
+    <!-- Standard favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+    <!-- Apple Touch Icon (for iOS home screen) -->
+    <link rel="apple-touch-icon" href="/app-icon-192.png">
+
+    <!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
     <link rel="manifest" href="/manifest.json">
 
     <script>
@@ -625,7 +643,9 @@
         <!-- Text content -->
         <div class="text-content">
             <div class="text-line">
-                <h1 class="title"><%= latestCouponCode %></h1>
+                <h1 class="title">
+                    <%= latestCouponCode %>
+                </h1>
             </div>
             <div class="text-line">
                 <h2 class="subtitle">

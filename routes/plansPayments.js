@@ -3,6 +3,7 @@ const router = express.Router();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Use your Stripe secret key
 const Plan = require("../models/Plan");
 const Payment = require("../models/Payment");
+const MagicCoinPlan = require("../models/MagicCoinPlan");
 const {
   encryptPassword,
   decryptPassword,
@@ -246,9 +247,15 @@ router.get("/successpayment", async (req, res) => {
 // Route to create PayPal order
 router.post("/paypal/create-order", authMiddleware, async (req, res) => {
   try {
-    const { planId, couponCode } = req.body;
+    const { planId, couponCode, isMagicPlan = false } = req.body;
     const decryptedPlanId = decryptPassword(planId);
-    const plan = await Plan.findById(decryptedPlanId);
+    let plan;
+
+    if (isMagicPlan) {
+      plan = await MagicCoinPlan.findById(decryptedPlanId);
+    } else {
+      plan = await Plan.findById(decryptedPlanId);
+    }
 
     if (!plan) {
       return res.status(404).json({ error: "Plan not found" });
@@ -305,7 +312,7 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
 
         if (coupon.commissionPercent) {
           // Step 1: Calculate full commission from plan price
-          const fullCommission = (coupon.commissionPercent / 100) * plan.price;
+          commissionAmount = (coupon.commissionPercent / 100) * plan.price;
 
           // Step 2: Discount is a percentage of the commission
           discountAmount = (coupon.discountPercent / 100) * plan.price;
@@ -314,16 +321,16 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
           finalPrice = parseFloat((plan.price - discountAmount).toFixed(2));
 
           // Step 4: Commission after deducting discount
-          commissionAmount = parseFloat(
-            (fullCommission - discountAmount).toFixed(2)
-          );
+          // commissionAmount = parseFloat(
+          //   (fullCommission - discountAmount).toFixed(2)
+          // );
 
-          if (discountAmount > commissionAmount) {
-            return res.status(400).json({
-              message: "Discount exceeds affiliate commission. Not allowed.",
-              type: "error",
-            });
-          }
+          // if (discountAmount > commissionAmount) {
+          //   return res.status(400).json({
+          //     message: "Discount exceeds affiliate commission. Not allowed.",
+          //     type: "error",
+          //   });
+          // }
         } else {
           // Fallback: if no commissionPercent, calculate discount normally
           discountAmount = (coupon.discountPercent / 100) * plan.price;
@@ -414,6 +421,7 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
     const { orderID, planId, metaToken } = req.body;
     const decryptedPlanId = decryptPassword(planId);
     const plan = await Plan.findById(decryptedPlanId);
+
 
     if (!plan) {
       return res.status(404).json({ error: "Plan not found" });
@@ -600,12 +608,12 @@ router.post("/validate-coupon", authMiddleware, async (req, res) => {
       (plan.price - discountAmount).toFixed(2)
     );
 
-    if (discountAmount > commissionAmount) {
-      return res.status(400).json({
-        message: "Discount exceeds affiliate commission. Not allowed.",
-        type: "error",
-      });
-    }
+    // if (discountAmount > commissionAmount) {
+    //   return res.status(400).json({
+    //     message: "Discount exceeds affiliate commission. Not allowed.",
+    //     type: "error",
+    //   });
+    // }
 
     // For other plans: allow same/different coupon multiple times
     // const discountAmount = (coupon.discountPercent / 100) * plan.price;
@@ -629,6 +637,50 @@ router.post("/validate-coupon", authMiddleware, async (req, res) => {
       type: "error",
       data: null,
     });
+  }
+});
+
+// GET /magic-coin-wallet
+router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
+  try {
+    // Fetch active coin plans
+    const plans = await MagicCoinPlan.find({ active: true }).sort({ price: 1 });
+
+    // Encrypt plan IDs
+    const encryptedPlans = plans.map((plan) => ({
+      ...plan.toObject(),
+      encryptedId: encryptPassword(plan._id.toString()),
+    }));
+
+    // Get total coins
+    const coinResult = await Payment.aggregate([
+      {
+        $match: {
+          user_id: req.user._id,
+          paymentStatus: "completed",
+          type: "coin",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalCoins: { $sum: "$magicCoins" },
+        },
+      },
+    ]);
+
+    const totalMagicCoins = coinResult[0]?.totalCoins || 0;
+
+    // Render view with encrypted plan IDs
+    res.render("dashboardnew", {
+      plans: encryptedPlans, // 👈 now contains encryptedId
+      user: req.user,
+      activeSection: "magic-coin",
+      totalMagicCoins,
+    });
+  } catch (error) {
+    console.error("Error fetching magic coin plans:", error);
+    res.status(500).send("Failed to load magic coin plans.");
   }
 });
 

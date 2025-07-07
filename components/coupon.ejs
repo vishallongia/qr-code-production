@@ -156,8 +156,8 @@
             const couponId = document.getElementById("coupon-id-update-discount").value;
             const discount = document.getElementById("discount-update-discount").value;
 
-            if (!discount || discount < 1 || discount > 100) {
-                showToast("Please enter a valid discount between 1 and 100", "error");
+            if (!discount || discount < 0 || discount > 100) {
+                showToast("Please enter a valid discount between 0 and 100", "error");
                 return;
             }
 

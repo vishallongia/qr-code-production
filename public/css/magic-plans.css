@@ -1,0 +1,107 @@
+:root {
+    --background-color: #f9fafb;
+    --primary-color: #1a0161;
+    --hover-primary-color: #350d85;
+    --text-color: #374151;
+    --heading-color: #111827;
+    --card-background: #ffffff;
+    --card-shadow: rgba(0, 0, 0, 0.08);
+    --card-hover-shadow: rgba(0, 0, 0, 0.15);
+    --button-text-color: #ffffff;
+    --transition-speed: 0.3s;
+    --radius: 16px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+    padding: 0 1rem;
+}
+
+.plan-card {
+    background: var(--card-background);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 16px var(--card-shadow);
+    padding: 2rem;
+    text-align: center;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    position: relative;
+    overflow: hidden;
+}
+
+.plan-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px var(--card-hover-shadow);
+}
+
+.plan-price {
+    font-size: 2.2rem;
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.plan-coins {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--heading-color);
+    margin-bottom: 1.5rem;
+}
+
+.subscribe-btn {
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+    border: none;
+    padding: 0.8rem 1.6rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+    width: 100%;
+}
+
+.subscribe-btn:hover {
+    background-color: var(--hover-primary-color);
+}
+
+
+
+.container-custom-wallet {
+    background: var(--container-bg);
+    backdrop-filter: blur(var(--container-backdrop-blur));
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 2rem 3rem;
+    text-align: center;
+    font-family: var(--font-family);
+}
+
+.label {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 2rem;
+    display: block;
+}
+
+.wallet-balance {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: black;
+}
+

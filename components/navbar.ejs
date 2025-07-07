@@ -5,6 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Responsive Navbar</title>
+    <!-- Standard favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+    <!-- Apple Touch Icon (for iOS home screen) -->
+    <link rel="apple-touch-icon" href="/app-icon-192.png">
+
+    <!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
+    <link rel="manifest" href="/manifest.json">
     <!-- Link Bootstrap CSS -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -78,9 +86,23 @@
                 <div class="navbar-nav nav-items-group">
                     <a class="nav-link" href="/admindashboard/generateusers">Create Analog MC</a>
                     <a class="nav-link" href="/admindashboard/demo-user-dashboard">Analog MC</a>
-                    <a class="nav-link" href="/admindashboard/affiliate/create-affiliate-user">Create Affiliate User</a>
-                    <a class="nav-link" href="/admindashboard/affiliate/affiliate-users">Affiliate Users</a>
+
+                    <!-- Affiliate Options Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="affiliateDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Affiliate Options
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="affiliateDropdown">
+                            <li><a class="dropdown-item" href="/admindashboard/affiliate/create-affiliate-user">Create
+                                    Affiliate User</a></li>
+                            <li><a class="dropdown-item" href="/admindashboard/affiliate/affiliate-users">Affiliate
+                                    Users</a></li>
+                        </ul>
+                    </div>
+
                     <a class="nav-link" href="/admindashboard/vip-users">Vip Users</a>
+                    <a class="nav-link" href="/admindashboard/tvstation/tvstation-users">Tv Station Users</a>
                     <a class="nav-link" href="/admindashboard/scanner">Scanner</a>
                 </div>
 
@@ -99,7 +121,7 @@
                         <!-- Inline Search Bar (absolute positioned) -->
                         <div id="searchBar">
                             <div class="input-group">
-                                <input type="text" class="form-control" placeholder="Search..." id="searchInput">
+                                <input type="text" class="form-control" placeholder="Search..." id="searchInputGlobal">
                                 <button class="btn btn-outline-secondary" id="closeSearch">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
@@ -123,18 +145,18 @@
         const closeSearchBtn = document.getElementById("closeSearch");
         const searchBar = document.getElementById("searchBar");
         const authButtons = document.getElementById("authButtons");
-        const searchInput = document.getElementById("searchInput");
+        const searchInputGlobal = document.getElementById("searchInputGlobal");
 
         openSearchBtn.addEventListener("click", () => {
             searchBar.classList.add("active");
             authButtons.classList.add("d-none");
-            searchInput.focus();
+            searchInputGlobal.focus();
         });
 
         closeSearchBtn.addEventListener("click", () => {
             searchBar.classList.remove("active");
             authButtons.classList.remove("d-none");
-            searchInput.value = ""; // Optional: clear search input
+            searchInputGlobal.value = ""; // Optional: clear search input
         });
 
         document.addEventListener("keydown", (e) => {
@@ -145,7 +167,7 @@
         });
 
         // 👇 Hide search bar when input loses focus
-        searchInput.addEventListener("blur", () => {
+        searchInputGlobal.addEventListener("blur", () => {
             // Delay is needed to prevent conflict with clicking the close button
             setTimeout(() => {
                 if (!searchBar.contains(document.activeElement)) {
@@ -155,11 +177,11 @@
             }, 150);
         });
 
-        searchInput.addEventListener("keydown", function (e) {
+        searchInputGlobal.addEventListener("keydown", function (e) {
             console.log(e.key)
             if (e.key === "Enter") {
                 e.preventDefault();
-                const query = searchInput.value.trim();
+                const query = searchInputGlobal.value.trim();
                 if (query) {
                     window.location.href = `/admindashboard/search-users?search=${encodeURIComponent(query)}`;
                 }
@@ -168,7 +190,7 @@
 
         if (openSearchBtn) {
             openSearchBtn.addEventListener("click", () => {
-                const query = searchInput.value.trim();
+                const query = searchInputGlobal.value.trim();
 
                 // If input is already visible and has value, redirect
                 if (searchBar.classList.contains("active") && query !== "") {
@@ -176,7 +198,7 @@
                 } else {
                     searchBar.classList.add("active");
                     authButtons.classList.add("d-none");
-                    searchInput.focus();
+                    searchInputGlobal.focus();
                 }
             });
         }

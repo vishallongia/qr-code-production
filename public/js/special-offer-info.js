@@ -57,9 +57,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (startDate && endDate && statusBox) {
         let status = "";
+
         if (endDate < now) {
           status = "Expired";
           statusBox.style.color = "red";
+
+          // ❌ Clear all fields
+          document.getElementById("text-file-update").value = "";
+          document.getElementById("url-update").value = "";
+          document.getElementById("event-name").value = "";
+          document.getElementById("event-start-date").value = "";
+          document.getElementById("event-end-date").value = "";
+
+          // Clear media preview
+          const uploadText = document.querySelector(
+            "#media-section .upload-box p"
+          );
+          if (uploadText) uploadText.innerHTML = "";
+
+          // Optional: Disable fields
         } else if (startDate > now) {
           status = "Scheduled";
           statusBox.style.color = "blue";
@@ -67,6 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
           status = "Running";
           statusBox.style.color = "green";
         }
+
         statusBox.textContent = `Status: ${status}`;
       } else {
         statusBox.textContent = "";
@@ -168,13 +185,13 @@ document
         return;
       }
 
-      if (start < today) {
-        showToast("Start date cannot be in the past", "error");
+      if (start > end) {
+        showToast("Start date cannot be after end date", "error");
         return;
       }
 
-      if (start > end) {
-        showToast("Start date cannot be after end date", "error");
+      if (end < today) {
+        showToast("End date cannot be in the past", "error");
         return;
       }
     }

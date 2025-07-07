@@ -8,8 +8,18 @@ const paymentSchema = new mongoose.Schema({
   },
   plan_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Plan", // Reference to the Plan schema
+    refPath: "planRef", // dynamic reference
     required: [true, "Plan ID is required"],
+  },
+  planRef: {
+    type: String,
+    enum: ["Plan", "MagicCoinPlan"],
+    default: "Plan", // 👈 default to Plan for backward compatibility
+  },
+  type: {
+    type: String,
+    enum: ["subscription", "coin"],
+    default: "subscription", // 👈 helps identify purpose
   },
   paymentMethod: {
     type: String,
@@ -75,7 +85,7 @@ const paymentSchema = new mongoose.Schema({
 });
 
 paymentSchema.pre("save", async function (next) {
-  if (this.paymentStatus === "completed") {
+  if (this.paymentStatus === "completed" && this.type === "subscription") {
     const plan = await mongoose.model("Plan").findById(this.plan_id);
     if (!plan) return next(new Error("Plan not found"));
 

@@ -5,16 +5,11 @@
     <meta charset="UTF-8" />
     <title>Magic TV Revenue Calculator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Standard favicon -->
     <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
-
-    <!-- Apple Touch Icon (for iOS home screen) -->
     <link rel="apple-touch-icon" href="/app-icon-192.png">
-
-    <!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
     <link rel="manifest" href="/manifest.json">
-
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+
     <style>
         :root {
             --purple-light: #caa5ff;
@@ -95,6 +90,10 @@
             text-align: right;
         }
 
+        .output {
+            font-weight: bold;
+        }
+
         @media (max-width: 600px) {
             input[type="number"] {
                 width: 80px;
@@ -169,8 +168,6 @@
 
 <body>
 
-
-
     <header>
         <h1>Magic TV Revenue Calculator</h1>
     </header>
@@ -182,10 +179,12 @@
                     <tr>
                         <th>Application</th>
                         <th>Monthly Users</th>
-                        <th>Conversion Rate</th>
-                        <th>Entry Fee / Lead (€)</th>
+                        <th>Conversion Rate (%)</th>
+                        <th>Entry Fee (€)</th>
                         <th>Broadcaster Share (%)</th>
-                        <th>Monthly Gross Revenue (€)</th>
+                        <th>Conv. Users/Month</th>
+                        <th>Conv. Users/Year</th>
+                        <th>Monthly Gross Revenue(€)</th>
                         <th>Monthly Broadcaster Earnings (€)</th>
                         <th>Yearly Broadcaster Earnings (€)</th>
                     </tr>
@@ -194,15 +193,18 @@
                 <tfoot>
                     <tr>
                         <td colspan="5">TOTAL</td>
-                        <td id="total-gross">€0</td>
-                        <td id="total-monthly">€0</td>
-                        <td id="total-yearly">€0</td>
+                        <td id="totalConvMonth" class="output"></td>
+                        <td id="totalConvYear" class="output"></td>
+                        <td id="totalGrossMonth" class="output"></td>
+                        <td id="totalBroadMonth" class="output"></td>
+                        <td id="totalBroadYear" class="output"></td>
                     </tr>
                 </tfoot>
             </table>
         </div>
     </main>
 
+    <!-- Password popup -->
     <div id="password-popup">
         <div class="popup-content">
             <h2>Magic TV Revenue Model</h2>
@@ -212,93 +214,119 @@
         </div>
     </div>
 
-
     <script>
         const apps = [
-            { name: "TV Miles", users: 200000, rate: 1.0, value: 12.0, share: 40 },
-            { name: "Magic Quiz", users: 400000, rate: 0.1, value: 0.5, share: 60 },
-            { name: "Magic Votes", users: 350000, rate: 0.12, value: 0.5, share: 60 },
-            { name: "Magic Shopping", users: 250000, rate: 0.08, value: 1.0, share: 60 },
-            { name: "Magic Brands", users: 300000, rate: 0.10, value: 1.0, share: 60 }
+            { name: "TV Miles", users: 800000, rate: 0.10, fee: 0.5, share: 60 },
+            { name: "Magic Quiz", users: 600000, rate: 0.10, fee: 0.5, share: 60 },
+            { name: "Magic Votes", users: 1200000, rate: 0.02, fee: 0.5, share: 60 },
+            { name: "Magic Shopping", users: 400000, rate: 0.80, fee: 1.0, share: 60 },
+            { name: "Magic Brands", users: 300000, rate: 0.10, fee: 1.0, share: 60 },
+            { name: "MC=50% Total", users: 1650000, rate: 2.00, fee: 29.9, share: 40 },
         ];
 
-        function formatCurrency(value) {
-            return "€" + value.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+        // const euroFormat = new Intl.NumberFormat('de-DE', {
+        //   minimumFractionDigits: 2,
+        //   maximumFractionDigits: 2
+        // });
+
+        const euroFormat = new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+
+        // const intFormat = new Intl.NumberFormat('de-DE');
+
+        const intFormat = new Intl.NumberFormat('en-US');
+
+
+        function calculate(app) {
+            const rate = app.rate / 100;
+            const convMonth = app.users * rate;
+            const convYear = convMonth * 12;
+            const grossMonth = convMonth * app.fee;
+            const broadMonth = grossMonth * (app.share / 100);
+            const broadYear = broadMonth * 12;
+            return { convMonth, convYear, grossMonth, broadMonth, broadYear };
         }
 
-        function updateCalculations() {
-            let totalGross = 0, totalMonthly = 0, totalYearly = 0;
-
-            apps.forEach((app, i) => {
-                const users = +document.getElementById(`users-${i}`).value;
-                const rate = +document.getElementById(`rate-${i}`).value;
-                const value = +document.getElementById(`value-${i}`).value;
-                const share = +document.getElementById(`share-${i}`).value;
-
-                const gross = users * rate * value;
-                const monthly = (share * gross) / 100;
-                const yearly = monthly * 12;
-
-                document.getElementById(`gross-${i}`).innerText = formatCurrency(gross);
-                document.getElementById(`monthly-${i}`).innerText = formatCurrency(monthly);
-                document.getElementById(`yearly-${i}`).innerText = formatCurrency(yearly);
-
-                totalGross += gross;
-                totalMonthly += monthly;
-                totalYearly += yearly;
-            });
-
-            document.getElementById("total-gross").innerText = formatCurrency(totalGross);
-            document.getElementById("total-monthly").innerText = formatCurrency(totalMonthly);
-            document.getElementById("total-yearly").innerText = formatCurrency(totalYearly);
-        }
-
-        function createTable() {
+        function renderTable() {
             const tbody = document.getElementById("table-body");
             apps.forEach((app, i) => {
                 const row = document.createElement("tr");
                 row.innerHTML = `
-        <td>${app.name}</td>
-        <td><input type="number" id="users-${i}" value="${app.users}" oninput="updateCalculations()" /></td>
-        <td><input type="number" id="rate-${i}" step="0.001" value="${app.rate}" oninput="updateCalculations()" /></td>
-        <td><input type="number" id="value-${i}" step="0.01" value="${app.value}" oninput="updateCalculations()" /></td>
-        <td><input type="number" id="share-${i}" step="0.1" value="${app.share}" oninput="updateCalculations()" /></td>
-        <td id="gross-${i}">€0</td>
-        <td id="monthly-${i}">€0</td>
-        <td id="yearly-${i}">€0</td>
-      `;
+          <td>${app.name}</td>
+          <td><input type="number" value="${app.users}" data-index="${i}" data-key="users" /></td>
+          <td><input type="number" step="0.01" value="${app.rate}" data-index="${i}" data-key="rate" /></td>
+          <td><input type="number" value="${app.fee}" data-index="${i}" data-key="fee" /></td>
+          <td><input type="number" value="${app.share}" data-index="${i}" data-key="share" /></td>
+          <td class="output" id="convMonth-${i}"></td>
+          <td class="output" id="convYear-${i}"></td>
+          <td class="output" id="grossMonth-${i}"></td>
+          <td class="output" id="broadMonth-${i}"></td>
+          <td class="output" id="broadYear-${i}"></td>
+        `;
                 tbody.appendChild(row);
             });
-            updateCalculations();
+
+            document.querySelectorAll("input").forEach(input =>
+                input.addEventListener("input", handleInputChange)
+            );
+
+            updateOutputs();
         }
 
-        createTable();
+        function handleInputChange(e) {
+            const index = +e.target.dataset.index;
+            const key = e.target.dataset.key;
+            apps[index][key] = parseFloat(e.target.value) || 0;
+            updateOutputs();
+        }
 
+        function updateOutputs() {
+            let total = { convMonth: 0, convYear: 0, grossMonth: 0, broadMonth: 0, broadYear: 0 };
 
-        // Show password popup on load
-        window.addEventListener("DOMContentLoaded", () => {
-            document.getElementById("password-popup").style.display = "flex";
-            document.body.style.overflow = "hidden"; // prevent scroll while locked
-        });
+            apps.forEach((app, i) => {
+                const res = calculate(app);
+                document.getElementById(`convMonth-${i}`).innerText = intFormat.format(res.convMonth);
+                document.getElementById(`convYear-${i}`).innerText = intFormat.format(res.convYear);
+                document.getElementById(`grossMonth-${i}`).innerText = "€" + euroFormat.format(res.grossMonth);
+                document.getElementById(`broadMonth-${i}`).innerText = "€" + euroFormat.format(res.broadMonth);
+                document.getElementById(`broadYear-${i}`).innerText = "€" + euroFormat.format(res.broadYear);
+
+                total.convMonth += res.convMonth;
+                total.convYear += res.convYear;
+                total.grossMonth += res.grossMonth;
+                total.broadMonth += res.broadMonth;
+                total.broadYear += res.broadYear;
+            });
+
+            document.getElementById("totalConvMonth").innerText = intFormat.format(total.convMonth);
+            document.getElementById("totalConvYear").innerText = intFormat.format(total.convYear);
+            document.getElementById("totalGrossMonth").innerText = "€" + euroFormat.format(total.grossMonth);
+            document.getElementById("totalBroadMonth").innerText = "€" + euroFormat.format(total.broadMonth);
+            document.getElementById("totalBroadYear").innerText = "€" + euroFormat.format(total.broadYear);
+        }
 
         function checkPassword() {
-            const correctPassword = "magic"; // Change this to your real password
+            const correct = "magic"; // change as needed
             const input = document.getElementById("password-input").value.trim();
-            const errorMsg = document.getElementById("error-msg");
-
-            if (input === correctPassword) {
+            const error = document.getElementById("error-msg");
+            if (input === correct) {
                 document.getElementById("password-popup").style.display = "none";
                 document.body.style.overflow = "auto";
             } else {
-                errorMsg.style.display = "block";
+                error.style.display = "block";
             }
         }
 
+        // Run on load
+        window.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("password-popup").style.display = "flex";
+            document.body.style.overflow = "hidden";
+            renderTable();
+        });
     </script>
-
 </body>
 
 </html>

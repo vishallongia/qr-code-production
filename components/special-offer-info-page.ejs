@@ -33,14 +33,12 @@
                         const name = offer.name || 'Unnamed Offer';
                         const start = offer.startDate ? new Date(offer.startDate) : null;
                         const end = offer.endDate ? new Date(offer.endDate) : null;
+                        const couponName = coupon?.code?.trim() || "No Name";
 
                         const today = new Date();
-                        today.setHours(0, 0, 0, 0);
                         let status = '';
 
                         if (start && end) {
-                        start.setHours(0, 0, 0, 0);
-                        end.setHours(0, 0, 0, 0);
                         if (end < today) status='Expired' ; else if (start> today) status = 'Scheduled';
                             else status = 'Running';
                             } else {
@@ -60,12 +58,12 @@
                                     <div class="tile-body">
                                         <% if (start) { %>
                                             <p><strong>Start:</strong>
-                                                <%= start.toDateString() %>
+                                                <%= start.toLocaleString() %>
                                             </p>
                                             <% } %>
                                                 <% if (end) { %>
                                                     <p><strong>End:</strong>
-                                                        <%= end.toDateString() %>
+                                                        <%= end.toLocaleString() %>
                                                     </p>
                                                     <% } %>
                                                         <% if (offer.type) { %>
@@ -73,6 +71,12 @@
                                                                 <%= offer.type %>
                                                             </p>
                                                             <% } %>
+
+                                                                <% if (couponName) { %>
+                                                                    <p><strong>Coupon:</strong>
+                                                                        <%= couponName %>
+                                                                    </p>
+                                                                    <% } %>
                                     </div>
                                 </a>
                                 <p class="mobile-hint">Tap on a card to select event</p>
