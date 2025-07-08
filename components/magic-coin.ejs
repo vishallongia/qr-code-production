@@ -73,7 +73,7 @@
                         headers: {
                             "Content-Type": "application/json"
                         },
-                        body: JSON.stringify({ planId,isMagicPlan:true })
+                        body: JSON.stringify({ planId, isMagicPlan: true })
                     })
                         .then(async res => {
                             if (!res.ok) {
@@ -119,6 +119,7 @@
                             orderID: data.orderID,
                             planId,
                             metaToken,
+                            isMagicPlan: true
                         })
                     })
                         .then(res => res.json())

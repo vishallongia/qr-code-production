@@ -418,10 +418,9 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
 // Route to capture PayPal order
 router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
   try {
-    const { orderID, planId, metaToken } = req.body;
+    const { orderID, planId, metaToken, isMagicPlan = false } = req.body;
     const decryptedPlanId = decryptPassword(planId);
     const plan = await Plan.findById(decryptedPlanId);
-
 
     if (!plan) {
       return res.status(404).json({ error: "Plan not found" });
@@ -462,18 +461,22 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
     const paymentData = {
       user_id: req.user._id,
       plan_id: plan._id,
+      planRef: isMagicPlan ? "MagicCoinPlan" : "Plan",
+      type: isMagicPlan ? "coin" : "subscription",
       paymentMethod: "paypal",
       paymentStatus: captureDetails.status.toLowerCase(),
       amount,
       currency: captureDetails.amount.currency_code,
       transactionId: captureDetails.id,
       paymentDetails: captureData,
-      coupon: couponCode,
-      isCouponUsed,
-      originalAmount: Number(originalAmount),
-      discountAmount: Number(discountAmount),
-      commissionAmount: Number(commissionAmount),
-      ...(coupon_id && { coupon_id }),
+      ...(!isMagicPlan && {
+        coupon: couponCode,
+        isCouponUsed,
+        originalAmount: Number(originalAmount),
+        discountAmount: Number(discountAmount),
+        commissionAmount: Number(commissionAmount),
+        ...(coupon_id && { coupon_id }),
+      }),
     };
 
     await Payment.create(paymentData);
