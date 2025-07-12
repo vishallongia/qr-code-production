@@ -101,9 +101,12 @@ async function handleLogin(event) {
 
     showToast(result.message, "success");
     loginBtn.disabled = false;
+    console.log(result);
     // Redirect to login page after successful logout
     setTimeout(() => {
-      if (result.role === "admin") {
+      if (result.redirectUrl) {
+        window.location.href = result.redirectUrl;
+      } else if (result.role === "admin") {
         window.location.href = "/admindashboard";
       } else if (result.role === "demo-user") {
         window.location.href = `/dashboard?magiccode=${result.qrCodeDataId}`;

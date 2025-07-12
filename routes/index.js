@@ -14,7 +14,7 @@ const { checkQrLimit } = require("../middleware/checkQrLimit"); // Import the mi
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
 const Payment = require("../models/Payment");
 const QRCodeHistory = require("../models/QRCodeHistory"); // Adjust path as per your folder structure
-const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
+const QRScanLog = require("../models/QrScanLog"); // Adjust path if needed
 const Channel = require("../models/Channel");
 const UAParser = require("ua-parser-js");
 const fetch = require("node-fetch");
@@ -1150,7 +1150,7 @@ router.get("/admindashboard/export-users", authMiddleware, async (req, res) => {
 
 // Login route
 router.post("/login", async (req, res) => {
-  const { email, password, avoidAffiliate } = req.body;
+  const { email, password, avoidAffiliate, redirectUrl = null } = req.body;
 
   try {
     // Check if user exists
@@ -1233,6 +1233,7 @@ router.post("/login", async (req, res) => {
       type: "success",
       role: user.role,
       qrCodeDataId,
+      redirectUrl,
     });
   } catch (error) {
     console.error("Error during login:", error);
@@ -2835,15 +2836,23 @@ router.get(
         }
       }
 
+      // Find the record using the alphanumeric code
+      const codeData = await QRCodeData.findOne({ code: alphanumericCode });
+
       // ✅ Check Channel code if user is still not found
       if (!user) {
         const channel = await Channel.findOne({ code: alphanumericCode });
         if (channel) {
-          return res.render("login"); // or res.redirect('/login') if needed
+          if (!user) {
+            const channel = await Channel.findOne({ code: alphanumericCode });
+            if (channel) {
+              return res.render("login", {
+                redirectUrl: codeData?.url, // send the original path
+              });
+            }
+          }
         }
       }
-      // Find the record using the alphanumeric code
-      const codeData = await QRCodeData.findOne({ code: alphanumericCode });
 
       // If specialOfferCouponId exists, override content from coupon.specialOffer
       let specialOfferData = null;

@@ -44,6 +44,8 @@
 
   <div class="container">
     <form class="login-box" method="POST" action="/login" onsubmit="return handleLogin(event)">
+      <input type="hidden" name="redirectUrl" id="redirectUrl"
+        value="<%= typeof redirectUrl !== 'undefined' ? redirectUrl : '' %>">
       <h2 id="LoginText"> Login to Your Account</h2>
 
       <input type="email" name="email" placeholder="Enter email address..." id="EmailText" required />
