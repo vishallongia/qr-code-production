@@ -1151,7 +1151,7 @@ router.post("/channel/:channelId/qr", async (req, res) => {
     const qrUrl = `${BASE_URL}/tvstation/channels/${channelId}/quiz-play`;
 
     // Step 2: Find QR by code
-    let qr = await QRCodeData.findOne({ code: channelCode });
+    let qr = await QRCodeData.findOne({ code: channelCode }).lean();
 
     if (qr) {
       // Step 3a: If QR exists and colors provided, update them
@@ -1190,6 +1190,7 @@ router.post("/channel/:channelId/qr", async (req, res) => {
         usedId: null,
       });
     }
+    qr.redirectUrl = `${BASE_URL}/${channelCode}`;
 
     // Step 4: Return response
     res.json({ success: true, qr });

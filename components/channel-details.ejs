@@ -317,11 +317,13 @@
         return;
       }
 
+
+
       const qrData = data.qr;
-      const qrUrl = qrData.url;
+      const qrUrl = qrData.redirectUrl;
       const qrCode = new QRCodeStyling({
-        width: 1600,
-        height: 1600,
+        width: 16000,
+        height: 16000,
         type: "canvas",
         data: qrUrl,
         dotsOptions: {
