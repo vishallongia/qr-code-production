@@ -127,6 +127,7 @@
                             // Clear the metaToken no matter what
                             delete window.paypalMetaTokens[data.orderID];
                             if (response.status === 'COMPLETED') {
+
                                 if (response.transactionId) {
                                     if (couponInput) couponInput.value = ""; // Clear the coupon input
                                     // ✅ Redirect to success page with transaction ID
@@ -135,7 +136,7 @@
                                     alert("Transaction ID not found.");
                                 }
                             } else {
-                                showToast(response.message, "error");
+                                showToast(response.error, "error");
                                 setTimeout(() => {
                                     window.location.href = `/cancel`;
                                 }, 1000); // 1000 milliseconds = 1 second delay

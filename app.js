@@ -5,7 +5,8 @@ const connectDB = require("./db"); // Import the database connection
 const indexRouter = require("./routes/index");
 const plansPaymentsRouter = require("./routes/plansPayments");
 const affiliateUserRouter = require("./routes/affiliate");
-const tvStationUserRouter = require("./routes/tvstation");
+const tvStationAdminRouter = require("./routes/tvstationadmin");
+const tvStationUserRouter = require("./routes/tvstationuser");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -62,15 +63,20 @@ app.use(express.static("public"));
 // app.use(express.static("qr_images"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/logos", express.static(path.join(__dirname, "logos")));
+app.use(
+  "/questions-image",
+  express.static(path.join(__dirname, "questions-image"))
+);
 
 // Set EJS as the view engine
 app.set("view engine", "ejs");
 
-// Use routes from the index.js file
+// // Use routes from the index.js file
 app.use("/", indexRouter);
 app.use("/", plansPaymentsRouter); // Handles both plans and payments
 app.use("/admindashboard/affiliate", authMiddleware, affiliateUserRouter); // Handles both plans and payments
-app.use("/admindashboard/tvstation", authMiddleware, tvStationUserRouter); // Handles both plans and payments
+app.use("/admindashboard/tvstation", authMiddleware, tvStationAdminRouter); // Handles both plans and payments
+app.use("/tvstation", authMiddleware, tvStationUserRouter); // Handles both plans and payments
 
 // Run every 5 minutes
 cron.schedule("*/5 * * * *", () => {

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Quiz Questions</title>
+    <link rel="stylesheet" href="/css/add-quiz-question.css" />
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+    </div>
+    <% if (error) { %>
+        <div class="quiz-error-message">
+            <%= error %>
+        </div>
+        <% } else { %>
+            <div class="quiz-container">
+                <h2>Add a Quiz Question</h2>
+                <form id="questions-form">
+                    <div id="questions-wrapper"></div>
+                    <button type="submit" class="quiz-btn-submit">Submit Question</button>
+                </form>
+            </div>
+
+
+
+            <template id="question-template">
+                <div class="quiz-question-wrapper">
+                    <div class="quiz-question-header">
+                        <span class="quiz-question-title">New Question</span>
+                        <div class="quiz-question-actions">
+                            <button type="button" class="quiz-btn-collapse" style="display: none;">Collapse</button>
+                            <button type="button" style="display: none;" class="quiz-btn-delete">Delete</button>
+                        </div>
+                    </div>
+                    <div class="quiz-question-block">
+                        <hr />
+                        <div class="quiz-form-group">
+                            <label>Question</label>
+                            <input type="text" name="question" placeholder="Enter your question" required />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Question Image (optional)</label>
+                            <label class="quiz-file-label">
+                                <span class="quiz-file-label-text">Choose File</span>
+                                <input type="file" class="quiz-questionImage quiz-hidden-file" accept="image/*" />
+                            </label>
+                            <img class="preview-img quiz-questionImagePreview" style="display: none;" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Question Image Link (optional)</label>
+                            <input type="url" name="questionImageLink" placeholder="https://example.com" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Question Logo (optional)</label>
+                            <label class="quiz-file-label">
+                                <span class="quiz-file-label-text">Choose File</span>
+                                <input type="file" class="quiz-questionLogo quiz-hidden-file" accept="image/*" />
+                            </label>
+                            <img class="preview-img quiz-questionLogoPreview" style="display: none;" />
+                        </div>
+
+                        <div class="quiz-option-wrapper">
+                            <div class="quiz-option-controls">
+                                <button type="button" class="quiz-btn-add-option">+ Add Option</button>
+                            </div>
+                            <div class="quiz-option-blocks quiz-options-grid"></div>
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Correct Answer</label>
+                            <select name="correctAnswerIndex" class="quiz-correct-answer-select" required>
+                                <option value="">-- Select --</option>
+                            </select>
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Magic Coins Deducted</label>
+                            <input type="number" name="magicCoinDeducted" min="0" required />
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <% } %>
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+
+<script>
+    const wrapper = document.getElementById("questions-wrapper");
+    const template = document.getElementById("question-template");
+
+    function setupImagePreview(block) {
+        const fileInputs = [
+            { selector: ".quiz-questionImage", previewSelector: ".quiz-questionImagePreview" },
+            { selector: ".quiz-questionLogo", previewSelector: ".quiz-questionLogoPreview" }
+        ];
+
+        fileInputs.forEach(({ selector, previewSelector }) => {
+            const fileInput = block.querySelector(selector);
+            const previewImg = block.querySelector(previewSelector);
+            const labelText = fileInput?.previousElementSibling;
+            const clearBtn = document.createElement("button");
+
+            clearBtn.type = "button";
+            clearBtn.innerText = "✕";
+            clearBtn.className = "quiz-clear-btn";
+            fileInput.parentElement.appendChild(clearBtn);
+
+            fileInput?.addEventListener("change", function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    previewImg.src = URL.createObjectURL(file);
+                    previewImg.style.display = "block";
+                    labelText.textContent = file.name;
+                    clearBtn.style.display = "inline-block";
+                }
+            });
+
+            clearBtn.addEventListener("click", () => {
+                fileInput.value = "";
+                previewImg.src = "";
+                previewImg.style.display = "none";
+                labelText.textContent = "Choose File";
+                clearBtn.style.display = "none";
+            });
+
+            clearBtn.style.display = "none"; // Initially hidden
+        });
+    }
+
+    function generateOptionBlock(block, index) {
+        const optDiv = document.createElement("div");
+        optDiv.className = "quiz-option-block";
+
+        const label = document.createElement("label");
+        label.innerText = `Option ${index + 1}`;
+
+        const inputText = document.createElement("input");
+        inputText.type = "text";
+        inputText.required = true;
+
+        const fileLabel = document.createElement("label");
+        fileLabel.className = "quiz-file-label";
+        const fileText = document.createElement("span");
+        fileText.className = "quiz-file-label-text";
+        fileText.innerText = "Choose Image";
+        const inputFile = document.createElement("input");
+        inputFile.type = "file";
+        inputFile.accept = "image/*";
+        inputFile.className = "quiz-option-image-input quiz-hidden-file";
+        inputFile.dataset.index = index;
+        fileLabel.append(fileText, inputFile);
+
+        const clearBtn = document.createElement("button");
+        clearBtn.type = "button";
+        clearBtn.className = "quiz-clear-btn";
+        clearBtn.innerText = "✕";
+        clearBtn.style.display = "none";
+        fileLabel.appendChild(clearBtn);
+
+        const previewImg = document.createElement("img");
+        previewImg.className = `preview-img quiz-optionPreview${index}`;
+        previewImg.style.display = "none";
+
+        inputFile.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                previewImg.src = URL.createObjectURL(file);
+                previewImg.style.display = "block";
+                fileText.innerText = file.name;
+                clearBtn.style.display = "inline-block";
+            }
+        });
+
+        clearBtn.addEventListener("click", () => {
+            inputFile.value = "";
+            previewImg.src = "";
+            previewImg.style.display = "none";
+            fileText.innerText = "Choose Image";
+            clearBtn.style.display = "none";
+        });
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "quiz-option-delete-btn";
+        deleteBtn.innerText = "✕";
+        deleteBtn.addEventListener("click", () => {
+            const allOptions = block.querySelectorAll(".quiz-option-block");
+            if (allOptions.length > 2) {
+                optDiv.remove();
+                renumberOptions(block);
+                updateCorrectAnswerOptions(block);
+            } else {
+                alert("At least two options are required.");
+            }
+        });
+
+        optDiv.append(label, inputText, fileLabel, previewImg, deleteBtn);
+        return optDiv;
+    }
+
+    function updateCorrectAnswerOptions(block) {
+        const correctAnswerSelect = block.querySelector(".quiz-correct-answer-select");
+        const allOptionBlocks = block.querySelectorAll(".quiz-option-block");
+        correctAnswerSelect.innerHTML = '<option value="">-- Select --</option>';
+
+        allOptionBlocks.forEach((opt, i) => {
+            const option = document.createElement("option");
+            option.value = i;
+            option.innerText = `Option ${i + 1}`;
+            correctAnswerSelect.appendChild(option);
+        });
+    }
+
+    function renumberOptions(block) {
+        const optionBlocks = block.querySelectorAll(".quiz-option-block");
+        optionBlocks.forEach((optBlock, index) => {
+            const label = optBlock.querySelector("label");
+            if (label) label.innerText = `Option ${index + 1}`;
+
+            const previewImg = optBlock.querySelector(".preview-img");
+            if (previewImg) previewImg.className = `preview-img quiz-optionPreview${index}`;
+        });
+    }
+
+    function generateOptions(block, count = 0) {
+        const optionContainer = block.querySelector(".quiz-option-blocks");
+        optionContainer.innerHTML = "";
+
+        for (let i = 0; i < count; i++) {
+            const optDiv = generateOptionBlock(block, i);
+            optionContainer.appendChild(optDiv);
+        }
+
+        updateCorrectAnswerOptions(block);
+    }
+
+    function createQuestionBlock() {
+        wrapper.innerHTML = ""; // only one question per form
+
+        const clone = template.content.cloneNode(true);
+        const block = clone.querySelector(".quiz-question-wrapper");
+
+        const collapseBtn = block.querySelector(".quiz-btn-collapse");
+        const deleteBtn = block.querySelector(".quiz-btn-delete");
+        const questionBlock = block.querySelector(".quiz-question-block");
+
+        collapseBtn.addEventListener("click", () => {
+            questionBlock.style.display = questionBlock.style.display === "none" ? "block" : "none";
+            collapseBtn.textContent = questionBlock.style.display === "none" ? "Expand" : "Collapse";
+        });
+
+        deleteBtn.addEventListener("click", () => {
+            block.remove();
+        });
+
+        const addOptionBtn = block.querySelector(".quiz-btn-add-option");
+        addOptionBtn.addEventListener("click", () => {
+            const currentOptions = block.querySelectorAll(".quiz-option-block").length;
+            const newOption = generateOptionBlock(block, currentOptions);
+            block.querySelector(".quiz-option-blocks").appendChild(newOption);
+            updateCorrectAnswerOptions(block);
+        });
+
+        generateOptions(block, 2); // start with 2 options
+        setupImagePreview(block);
+        wrapper.appendChild(block);
+    }
+
+    document.getElementById("questions-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const block = document.querySelector(".quiz-question-wrapper");
+        const formData = new FormData();
+
+        const channelId = "<%= channel?._id %>";
+        formData.append("channelId", channelId);
+        formData.append("question", block.querySelector('input[name="question"]').value.trim());
+        formData.append("magicCoinDeducted", block.querySelector('input[name="magicCoinDeducted"]').value);
+        formData.append("correctAnswerIndex", block.querySelector('.quiz-correct-answer-select').value);
+
+        const questionImage = block.querySelector(".quiz-questionImage")?.files[0];
+        const questionLogo = block.querySelector(".quiz-questionLogo")?.files[0];
+        const questionImageLink = block.querySelector('input[name="questionImageLink"]').value.trim();
+
+        if (questionImage) formData.append("questionImage", questionImage);
+        if (questionLogo) formData.append("questionLogo", questionLogo);
+        if (questionImageLink) formData.append("questionImageLink", questionImageLink);
+
+        const options = block.querySelectorAll(".quiz-option-block");
+        const optionData = [];
+
+        options.forEach((opt, index) => {
+            const text = opt.querySelector('input[type="text"]').value.trim();
+            const file = opt.querySelector('input[type="file"]')?.files[0];
+            const imageName = file ? file.name : null;
+
+            optionData.push({ text, imageName });
+
+            if (file) {
+                formData.append("optionsImages", file); // all images under same key
+            }
+        });
+
+        formData.append("options", JSON.stringify(optionData));
+        const loader = document.getElementById("loader");
+        loader.style.display = "flex"; // show loader
+
+        try {
+            const res = await fetch("/tvstation/quiz-question/create", {
+                method: "POST",
+                body: formData,
+            });
+
+            const result = await res.json();
+            if (result.type === "success") {
+                showToast(result.message || "Question saved successfully!", "success");
+                createQuestionBlock();
+            } else {
+                showToast(result.message || "Something went wrong.", "error");
+            }
+        } catch (err) {
+            console.error("Error submitting question:", err);
+            showToast("Failed to submit question. Please try again.", "error");
+        }
+        finally {
+            loader.style.display = "none"; // hide loader after fetch is done
+        }
+    });
+
+    createQuestionBlock();
+</script>
+
+
+</html>

@@ -17,7 +17,7 @@ const sendExpiryEmailForPayments = async () => {
     for (const userId of userIdsWithPayments) {
       // Step 2: Deactivate expired plans for this user
       await Payment.updateMany(
-        { user_id: userId, validUntil: { $lt: now } },
+        { user_id: userId, validUntil: { $lt: now }, type: "subscription" },
         { $set: { isActive: false } }
       );
 
@@ -25,6 +25,7 @@ const sendExpiryEmailForPayments = async () => {
       const latestValidPlan = await Payment.findOne({
         user_id: userId,
         validUntil: { $gte: now },
+        type: "subscription",
       })
         .sort({ validUntil: -1 })
         .exec();
@@ -49,6 +50,7 @@ const sendExpiryEmailForPayments = async () => {
           const lastExpiredPlan = await Payment.findOne({
             user_id: userId,
             validUntil: { $lt: now },
+            type: "subscription",
           }).sort({ validUntil: -1 });
 
           const expiredDate =

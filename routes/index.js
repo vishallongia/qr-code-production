@@ -14,9 +14,9 @@ const { checkQrLimit } = require("../middleware/checkQrLimit"); // Import the mi
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
 const Payment = require("../models/Payment");
 const QRCodeHistory = require("../models/QRCodeHistory"); // Adjust path as per your folder structure
-const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
+const QRScanLog = require("../models/QrScanLog"); // Adjust path if needed
+const Channel = require("../models/Channel");
 const UAParser = require("ua-parser-js");
-const locale = require("locale-code");
 const fetch = require("node-fetch");
 const AffiliatePayment = require("../models/AffiliatePayment");
 const Coupon = require("../models/Coupon");
@@ -2835,6 +2835,13 @@ router.get(
         }
       }
 
+      // ✅ Check Channel code if user is still not found
+      if (!user) {
+        const channel = await Channel.findOne({ code: alphanumericCode });
+        if (channel) {
+          return res.render("login"); // or res.redirect('/login') if needed
+        }
+      }
       // Find the record using the alphanumeric code
       const codeData = await QRCodeData.findOne({ code: alphanumericCode });
 
@@ -5618,9 +5625,5 @@ router.post("/update-discount/:couponId", authMiddleware, async (req, res) => {
       .json({ message: "Internal server error", success: false });
   }
 });
-
-
-
-
 
 module.exports = router;

@@ -78,6 +78,23 @@ body {
     background-color: rgba(26, 1, 97, 0.9);
 }
 
+.btn {
+    background-color: var(--blue);
+    color: white;
+    font-family: inherit;
+    font-size: 16px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn:hover {
+    background-color: rgba(26, 1, 97, 0.9);
+}
+
+
 #popup-ok-btn-add-coupon {
     background-color: var(--blue);
     color: white;
@@ -753,6 +770,10 @@ textarea {
         left: 0;
     }
 
+    .btn {
+        font-size: 15px;
+        padding: 9px 18px;
+    }
 
 }
 
@@ -774,6 +795,13 @@ textarea {
         font-size: 0.9rem;
         padding: 6px 28px 6px 10px;
         background-size: 12px;
+    }
+
+    .btn {
+        font-size: 14px;
+        padding: 8px 16px;
+        width: 100%;
+        /* full width on small screens */
     }
 }
 

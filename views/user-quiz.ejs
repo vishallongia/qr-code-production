@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz</title>
+    <link rel="stylesheet" href="/css/user-quiz.css" />
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+</head>
+
+<body class="user-quiz-page">
+
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="coin-popup-overlay" id="coinPopup" style="display: none;">
+        <div class="coin-popup">
+            <h3>Confirm Answer</h3>
+            <p>This question costs <%= currentQuestion?.magicCoinDeducted %> coins. Do you want to deduct coins?</p>
+            <label class="coin-toggle">
+                <input type="checkbox" id="deductCoinSwitch" checked>
+                <span class="slider"></span>
+                Deduct Coins
+            </label>
+            <div class="coin-popup-buttons">
+                <button onclick="confirmAnswer(true)">Submit</button>
+                <button onclick="closeCoinPopup()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div class="uq-header">
+        <div class="uq-logo">Magic Code</div>
+        <div class="uq-coins">🪙 Magic Coins: <%= availableCoins || 0 %>
+        </div>
+    </div>
+
+    <div class="uq-container">
+        <% if (currentQuestion) { %>
+            <form action="/submit-answer" method="POST">
+                <input type="hidden" name="channelId" value="<%= channel._id %>">
+                <input type="hidden" name="questionId" value="<%= currentQuestion._id %>">
+                <input type="hidden" name="index" value="<%= index %>">
+
+                <!-- Question Header -->
+                <div class="uq-question-header">
+                    <% if (currentQuestion.questionLogo) { %>
+                        <img class="uq-question-logo" src="<%= currentQuestion.questionLogo %>" alt="Question Logo" />
+                        <% } %>
+                </div>
+
+                <!-- Question Text -->
+                <div class="uq-question-number">Question <%= index + 1 %> of <%= total %>
+                </div>
+                <div class="uq-question-text">
+                    <%= currentQuestion.question %>
+                </div>
+
+                <!-- Move Question Image BELOW the text -->
+                <% if (currentQuestion.questionImage) { %>
+                    <div class="uq-question-image-wrapper">
+                        <a href="<%= currentQuestion.questionImageLink || '#' %>" target="_blank">
+                            <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"
+                                alt="Question Image" />
+                        </a>
+                    </div>
+                    <% } %>
+
+                        <!-- Options -->
+                        <div class="uq-options">
+                            <% currentQuestion.options.forEach((opt, i)=> { %>
+                                <div class="uq-option">
+                                    <input type="radio" name="selectedOptionIndex" id="opt<%= i %>" value="<%= i %>">
+                                    <label for="opt<%= i %>">
+                                        <% if (opt.image) { %>
+                                            <img class="uq-option-inline-image" src="<%= opt.image %>"
+                                                alt="Option Image" />
+                                            <% } %>
+                                                <span>
+                                                    <%= opt.text %>
+                                                </span>
+                                    </label>
+                                </div>
+                                <% }) %>
+                        </div>
+
+                        <!-- Navigation -->
+                        <% const prevIndex=index> 0 ? index - 1 : 0; %>
+                            <% const nextIndex=index + 1 < total ? index + 1 : index; %>
+
+                                <div class="uq-navigation">
+                                    <button type="button" onclick="window.location.href='?index=<%= prevIndex %>'" <% if
+                                        (index <=0) { %> disabled <% } %>>Back</button>
+                                    <button type="button" onclick="window.location.href='?index=<%= nextIndex %>'" <% if
+                                        (index + 1>= total) { %> disabled <% } %>>Next</button>
+                                </div>
+            </form>
+            <% } else { %>
+                <p>No question found or quiz ended.</p>
+                <% } %>
+    </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+<script>
+    let selectedOptionIndex = null;
+
+    const options = document.querySelectorAll('input[name="selectedOptionIndex"]');
+    const coinPopup = document.getElementById("coinPopup");
+    const deductCoinSwitch = document.getElementById("deductCoinSwitch");
+
+    // Capture selected option and open popup
+    options.forEach((opt) => {
+        opt.addEventListener("change", (e) => {
+            selectedOptionIndex = parseInt(e.target.value);
+            openCoinPopup();
+        });
+    });
+
+    function openCoinPopup() {
+        coinPopup.style.display = "flex";
+    }
+
+    function closeCoinPopup() {
+        coinPopup.style.display = "none";
+        selectedOptionIndex = null;
+        // Optional: Unselect the radio if popup is canceled
+        const selected = document.querySelector('input[name="selectedOptionIndex"]:checked');
+        if (selected) selected.checked = false;
+    }
+
+    function confirmAnswer() {
+        const questionId = document.querySelector('input[name="questionId"]').value;
+        const channelId = document.querySelector('input[name="channelId"]').value;
+        const deductCoin = deductCoinSwitch.checked;
+
+        const loader = document.getElementById("loader");
+        loader.style.display = "flex"; // show loader
+
+        fetch("/tvstation/quiz-response", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                questionId,
+                channelId,
+                selectedOptionIndex,
+                deductCoin,
+            }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.success) {
+                    showToast(
+                        data.isCorrect ? "Correct Answer!" : "Wrong Answer!",
+                        data.isCorrect ? "success" : "error"
+                    );
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast(data.message || "Failed to save response", "error");
+                }
+            })
+            .catch((err) => {
+                console.error(err);
+                showToast("Something went wrong", "error");
+            })
+            .finally(() => {
+                closeCoinPopup();
+                loader.style.display = "none"; // hide loader after fetch is done
+            });
+    }
+</script>
+
+
+</html>

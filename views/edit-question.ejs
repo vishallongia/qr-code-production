@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Quiz Question</title>
+    <link rel="stylesheet" href="/css/add-quiz-question.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+    </div>
+    <% if (error) { %>
+        <div class="quiz-error-message">
+            <%= error %>
+        </div>
+        <% } else { %>
+            <div class="quiz-container">
+                <h2>Edit Quiz Question</h2>
+                <form id="edit-question-form" enctype="multipart/form-data">
+                    <input type="hidden" name="channelId" value="<%= channel._id %>" />
+                    <input type="hidden" name="questionId" value="<%= question._id %>" />
+                    <input type="hidden" id="clearedImagesInput" name="clearedImages" />
+
+
+                    <div class="quiz-form-group">
+                        <label>Question</label>
+                        <input type="text" name="question" value="<%= question.question %>" required />
+                    </div>
+
+                    <div class="quiz-form-group">
+                        <label>Question Image (optional)</label>
+                        <label class="quiz-file-label">
+                            <span class="quiz-file-label-text">
+                                <%= question.questionImage ? question.questionImage.split('/').pop() : 'Choose File' %>
+                            </span>
+                            <input type="file" name="questionImage" class="quiz-hidden-file" accept="image/*" />
+                        </label>
+                        <% if (question.questionImage) { %>
+                            <img class="preview-img" src="<%= question.questionImage %>" style="display: block;" />
+                            <% } else { %>
+                                <img class="preview-img" style="display: none;" />
+                                <% } %>
+                    </div>
+
+                    <div class="quiz-form-group">
+                        <label>Question Image Link (optional)</label>
+                        <input type="url" name="questionImageLink" value="<%= question.questionImageLink || '' %>" />
+                    </div>
+
+                    <div class="quiz-form-group">
+                        <label>Question Logo (optional)</label>
+                        <label class="quiz-file-label">
+                            <span class="quiz-file-label-text">
+                                <%= question.questionLogo ? question.questionLogo.split('/').pop() : 'Choose File' %>
+                            </span>
+                            <input type="file" name="questionLogo" class="quiz-hidden-file" accept="image/*" />
+                        </label>
+                        <% if (question.questionLogo) { %>
+                            <img class="preview-img" src="<%= question.questionLogo %>" style="display: block;" />
+                            <% } else { %>
+                                <img class="preview-img" style="display: none;" />
+                                <% } %>
+                    </div>
+
+                    <div class="quiz-option-wrapper">
+                        <div class="quiz-option-controls">
+                            <button type="button" id="btn-add-option" class="quiz-btn-add-option">+ Add Option</button>
+                        </div>
+                        <div id="option-blocks" class="quiz-option-blocks quiz-options-grid">
+                            <% question.options.forEach((opt, index)=> { %>
+                                <div class="quiz-option-block">
+                                    <label>Option <%= index + 1 %></label>
+                                    <input type="text" name="optionTexts[]" value="<%= opt.text %>" required />
+
+                                    <label class="quiz-file-label">
+                                        <span class="quiz-file-label-text">
+                                            <%= opt.image ? opt.image.split('/').pop() : 'Choose Image' %>
+                                        </span>
+                                        <input type="file" class="quiz-hidden-file option-image-input"
+                                            name="optionImages" accept="image/*" />
+                                    </label>
+                                    <% if (opt.image) { %>
+                                        <img class="preview-img" src="<%= opt.image %>" style="display: block;" />
+                                        <% } else { %>
+                                            <img class="preview-img" style="display: none;" />
+                                            <% } %>
+
+                                                <button type="button" class="quiz-option-delete-btn">✕</button>
+                                </div>
+                                <% }); %>
+                        </div>
+                    </div>
+
+                    <div class="quiz-form-group">
+                        <label>Correct Answer</label>
+                        <select name="correctAnswerIndex" id="correct-answer-select" required>
+                            <option value="">-- Select --</option>
+                            <% question.options.forEach((opt, i)=> { %>
+                                <option value="<%= i %>" <%=question.correctAnswerIndex===i ? 'selected' : '' %>>Option
+                                    <%= i + 1 %>
+                                </option>
+                                <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="quiz-form-group">
+                        <label>Magic Coins Deducted</label>
+                        <input type="number" name="magicCoinDeducted" value="<%= question.magicCoinDeducted %>" min="0"
+                            required />
+                    </div>
+
+                    <button type="submit" class="quiz-btn-submit">Update Question</button>
+                </form>
+            </div>
+            <% } %>
+
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+                <script src="/js/toastify-setup.js"></script>
+</body>
+
+<script>
+    function setupImagePreviewAndClear(fileInput, previewImg, labelTextEl, clearBtn = null, existingImage = false) {
+        const originalName = fileInput.name;
+        const originalClass = fileInput.className;
+        const accept = fileInput.accept;
+        const clearedInputField = document.getElementById("clearedImagesInput");
+
+        if (!clearBtn) {
+            clearBtn = document.createElement("button");
+            clearBtn.type = "button";
+            clearBtn.textContent = "✕";
+            clearBtn.className = "quiz-clear-btn";
+            fileInput.closest(".quiz-file-label").appendChild(clearBtn);
+        }
+
+        const showClear = () => clearBtn.style.display = "inline-block";
+        const hideClear = () => clearBtn.style.display = "none";
+        if (!existingImage) hideClear();
+
+        const attachChangeHandler = (inputEl) => {
+            inputEl.addEventListener("change", function () {
+                const file = inputEl.files[0];
+                if (file) {
+                    previewImg.src = URL.createObjectURL(file);
+                    previewImg.style.display = "block";
+                    labelTextEl.textContent = file.name;
+                    showClear();
+
+                    // Remove from clearedImages if re-added
+                    const current = clearedInputField.value ? clearedInputField.value.split(",") : [];
+                    clearedInputField.value = current.filter(name => name !== originalName).join(",");
+                }
+            });
+        };
+
+        attachChangeHandler(fileInput);
+
+        clearBtn.addEventListener("click", () => {
+            const current = clearedInputField.value ? clearedInputField.value.split(",") : [];
+            if (!current.includes(originalName)) {
+                current.push(originalName);
+                clearedInputField.value = current.join(",");
+            }
+
+            // Replace input with same name (to allow new upload)
+            const newInput = document.createElement("input");
+            newInput.type = "file";
+            newInput.className = originalClass;
+            newInput.name = originalName; // <== name retained
+            newInput.accept = accept;
+
+            const labelContainer = fileInput.closest(".quiz-file-label");
+            labelContainer.replaceChild(newInput, fileInput);
+            fileInput = newInput;
+
+            previewImg.src = "";
+            previewImg.style.display = "none";
+            labelTextEl.textContent = "Choose Image";
+            hideClear();
+
+            attachChangeHandler(fileInput);
+            setupImagePreviewAndClear(fileInput, previewImg, labelTextEl, clearBtn, false);
+        });
+    }
+
+    function renumberOptions() {
+        const blocks = document.querySelectorAll(".quiz-option-block");
+        const select = document.getElementById("correct-answer-select");
+        select.innerHTML = '<option value="">-- Select --</option>';
+        blocks.forEach((block, index) => {
+            block.querySelector("label").innerText = `Option ${index + 1}`;
+            const option = document.createElement("option");
+            option.value = index;
+            option.innerText = `Option ${index + 1}`;
+            select.appendChild(option);
+        });
+    }
+
+    function initOptionBlock(block) {
+        const input = block.querySelector('input[type="file"]');
+        const label = block.querySelector(".quiz-file-label-text");
+        const img = block.querySelector("img.preview-img");
+        const hasImage = img?.src && !img.src.endsWith("/") && img.style.display !== "none";
+
+        setupImagePreviewAndClear(input, img, label, null, hasImage);
+
+        const deleteBtn = block.querySelector(".quiz-option-delete-btn");
+        deleteBtn?.addEventListener("click", () => {
+            const total = document.querySelectorAll(".quiz-option-block").length;
+            if (total > 2) {
+                block.remove();
+                renumberOptions();
+            } else {
+                alert("Minimum 2 options required.");
+            }
+        });
+    }
+
+    function addOptionBlock(text = "", imageUrl = "") {
+        const block = document.createElement("div");
+        block.className = "quiz-option-block";
+        const index = document.querySelectorAll(".quiz-option-block").length;
+
+        block.innerHTML = `
+            <label>Option ${index + 1}</label>
+            <input type="text" name="optionTexts[]" value="${text}" required />
+            <label class="quiz-file-label">
+                <span class="quiz-file-label-text">${imageUrl ? imageUrl.split('/').pop() : "Choose Image"}</span>
+                <input type="file" name="optionImages" class="quiz-hidden-file option-image-input" accept="image/*" />
+            </label>
+            <img class="preview-img" style="display: ${imageUrl ? 'block' : 'none'};" src="${imageUrl || ''}" />
+            <button type="button" class="quiz-clear-btn" style="display: ${imageUrl ? 'inline-block' : 'none'};">✕</button>
+            <button type="button" class="quiz-option-delete-btn">✕</button>
+        `;
+
+        initOptionBlock(block);
+        document.getElementById("option-blocks").appendChild(block);
+        renumberOptions();
+    }
+
+    function initExistingOptionBlocks() {
+        document.querySelectorAll(".quiz-option-block").forEach(initOptionBlock);
+    }
+
+    document.getElementById("btn-add-option").addEventListener("click", () => {
+        addOptionBlock();
+    });
+
+    // Setup for question image/logo
+    ["questionImage", "questionLogo"].forEach(name => {
+        const input = document.querySelector(`input[name="${name}"]`);
+        const label = input?.closest(".quiz-file-label")?.querySelector(".quiz-file-label-text");
+        const img = input?.closest(".quiz-form-group")?.querySelector("img.preview-img");
+        const hasImage = img?.src && !img.src.endsWith("/") && img.style.display !== "none";
+
+        if (input && label && img) {
+            setupImagePreviewAndClear(input, img, label, null, hasImage);
+        }
+    });
+
+    initExistingOptionBlocks();
+
+    async function fetchImageAsFile(url, name) {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        return new File([blob], name, { type: blob.type });
+    }
+
+    document.getElementById("edit-question-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        formData.delete("optionImages"); // Remove all default ones
+        const cleared = document.getElementById("clearedImagesInput").value.split(",").filter(Boolean);
+
+        for (const name of ["questionImage", "questionLogo"]) {
+            const isCleared = cleared.includes(name);
+            const input = form.querySelector(`input[name="${name}"]`);
+
+            if (!input || isCleared) continue;
+
+            const img = input.closest(".quiz-form-group")?.querySelector("img.preview-img");
+            const fileExists = formData.getAll(name).some(val => val instanceof File && val.name);
+
+            if (!fileExists && img?.src && !img.src.startsWith("blob:")) {
+                const fileName = img.src.split("/").pop();
+                const file = await fetchImageAsFile(img.src, fileName);
+                formData.append(name, file);
+            }
+        }
+
+        // Add option images that were populated from EJS
+        const optionBlocks = document.querySelectorAll(".quiz-option-block");
+        for (let i = 0; i < optionBlocks.length; i++) {
+            const block = optionBlocks[i];
+            const input = block.querySelector("input[type='file']");
+            const fileExists = input?.files[0];
+            const img = block.querySelector("img.preview-img");
+
+            const name = `optionImages[${i}]`; // ⬅️ send with index
+            if (!fileExists && img?.src && !img.src.startsWith("blob:") && img.style.display !== "none") {
+                const fileName = img.src.split("/").pop();
+                const file = await fetchImageAsFile(img.src, fileName);
+                formData.append(name, file);
+            } else if (fileExists) {
+                formData.append(name, input.files[0]);
+            }
+        }
+
+
+        const loader = document.getElementById("loader");
+        loader.style.display = "flex"; // show loader
+
+        try {
+            const response = await fetch("/tvstation/quiz-question/update", {
+                method: "POST",
+                body: formData,
+            });
+            const result = await response.json();
+            if (result.type === "success") {
+                showToast(result.message || "Question updated successfully", "success");
+                setTimeout(() => {
+                    location.reload(); // reloads current page
+                    // Or use: window.location.href = "/tvstation/quiz-questions"; to redirect
+                }, 1000); // 1000ms = 1 second
+            } else {
+                showToast(result.message || "Update failed", "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Server error", "error");
+        }
+        finally {
+            loader.style.display = "none"; // hide loader after fetch is done
+        }
+    });
+</script>
+
+
+
+</html>

@@ -1,4 +1,7 @@
 const mongoose = require("mongoose");
+const generateCode = require("../utils/codeGenerator");
+
+
 
 const qrCodeSchema = new mongoose.Schema(
   {
@@ -91,5 +94,28 @@ const qrCodeSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const QRCodeData = mongoose.model("QRCodeData", qrCodeSchema);
+qrCodeSchema.pre("validate", async function (next) {
+  if (this.code) return next();
+
+  let unique = false;
+  while (!unique) {
+    const newCode = generateCode();
+
+    const qrExists = await mongoose.models.QRCodeData.findOne({
+      code: newCode,
+    });
+    const channelExists = await mongoose.models.Channel?.findOne({
+      code: newCode,
+    });
+
+    if (!qrExists && !channelExists) {
+      this.code = newCode;
+      unique = true;
+    }
+  }
+
+  next();
+});
+
+const QRCodeData = mongoose.models.QRCodeData || mongoose.model("QRCodeData", qrCodeSchema);
 module.exports = QRCodeData;

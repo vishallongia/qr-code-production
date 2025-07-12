@@ -4,6 +4,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Use your Str
 const Plan = require("../models/Plan");
 const Payment = require("../models/Payment");
 const MagicCoinPlan = require("../models/MagicCoinPlan");
+const QuizQuestionResponse = require("../models/QuizQuestionResponse");
 const {
   encryptPassword,
   decryptPassword,
@@ -420,8 +421,11 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
   try {
     const { orderID, planId, metaToken, isMagicPlan = false } = req.body;
     const decryptedPlanId = decryptPassword(planId);
-    const plan = await Plan.findById(decryptedPlanId);
+    // Dynamically select model
+    const planModel = isMagicPlan ? MagicCoinPlan : Plan;
+    const planRefName = isMagicPlan ? "MagicCoinPlan" : "Plan";
 
+    const plan = await planModel.findById(decryptedPlanId);
     if (!plan) {
       return res.status(404).json({ error: "Plan not found" });
     }
@@ -646,16 +650,16 @@ router.post("/validate-coupon", authMiddleware, async (req, res) => {
 // GET /magic-coin-wallet
 router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
   try {
-    // Fetch active coin plans
+    // 1. Fetch all active coin plans
     const plans = await MagicCoinPlan.find({ active: true }).sort({ price: 1 });
 
-    // Encrypt plan IDs
+    // 2. Encrypt plan IDs for secure rendering
     const encryptedPlans = plans.map((plan) => ({
       ...plan.toObject(),
       encryptedId: encryptPassword(plan._id.toString()),
     }));
 
-    // Get total coins
+    // 3. Total coins purchased via completed payments
     const coinResult = await Payment.aggregate([
       {
         $match: {
@@ -665,25 +669,64 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
         },
       },
       {
+        $lookup: {
+          from: "magiccoinplans", // Ensure correct collection name
+          localField: "plan_id",
+          foreignField: "_id",
+          as: "planInfo",
+        },
+      },
+      { $unwind: "$planInfo" },
+      {
         $group: {
           _id: null,
-          totalCoins: { $sum: "$magicCoins" },
+          totalCoins: { $sum: "$planInfo.coinsOffered" },
         },
       },
     ]);
 
-    const totalMagicCoins = coinResult[0]?.totalCoins || 0;
+    const totalCoinsPurchased = coinResult[0]?.totalCoins || 0;
 
-    // Render view with encrypted plan IDs
+    // 4. Total coins used in quiz (deductCoin = true)
+    const coinUsedResult = await QuizQuestionResponse.aggregate([
+      {
+        $match: {
+          userId: req.user._id,
+          deductCoin: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "quizquestions", // ✅ Make sure this matches the actual collection name
+          localField: "questionId",
+          foreignField: "_id",
+          as: "question",
+        },
+      },
+      { $unwind: "$question" },
+      {
+        $group: {
+          _id: null,
+          coinsUsed: { $sum: "$question.magicCoinDeducted" },
+        },
+      },
+    ]);
+
+    const coinsUsed = coinUsedResult[0]?.coinsUsed || 0;
+
+    // 5. Calculate remaining coins
+    const totalMagicCoins = totalCoinsPurchased - coinsUsed;
+
+    // 6. Render dashboard
     res.render("dashboardnew", {
-      plans: encryptedPlans, // 👈 now contains encryptedId
+      plans: encryptedPlans,
       user: req.user,
       activeSection: "magic-coin",
       totalMagicCoins,
     });
   } catch (error) {
-    console.error("Error fetching magic coin plans:", error);
-    res.status(500).send("Failed to load magic coin plans.");
+    console.error("Error fetching magic coin wallet:", error);
+    res.status(500).send("Failed to load magic coin wallet.");
   }
 });
 

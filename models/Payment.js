@@ -68,7 +68,6 @@ const paymentSchema = new mongoose.Schema({
   },
   coupon: {
     type: String,
-    default: null,
   },
   isCouponUsed: {
     type: Boolean,
