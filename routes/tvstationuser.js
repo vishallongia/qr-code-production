@@ -1457,9 +1457,8 @@ router.post("/quiz-response", async (req, res) => {
         });
       }
       // Deduct coins from user's wallet
-      coinsDeducted = question.magicCoinDeducted;
       await User.findByIdAndUpdate(userId, {
-        $inc: { walletCoin: -coinsDeducted },
+        $inc: { walletCoin: -totalDeducted },
       });
     }
 
