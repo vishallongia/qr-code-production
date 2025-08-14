@@ -3,7 +3,7 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const Payment = require("../models/Payment");
 const User = require("../models/User");
-const Plan = require("../models/Plan");
+const MagicCoinPlan = require("../models/Plan");
 const { client } = require("../config/paypal");
 const axios = require("axios");
 require("dotenv").config();
@@ -99,9 +99,11 @@ router.post(
           console.log(
             `✅ Payment updated: ${updated._id}, status: ${updated.paymentStatus}`
           );
-          const plan = await Plan.findById(updated.plan_id);
+          const plan = await MagicCoinPlan.findById(updated.plan_id);
           if (!plan) {
-            console.warn(`Plan with ID ${updated.plan_id} not found.`);
+            console.warn(
+              `Plan with ID ${updated.plan_id} not found (means can be subscription plan).`
+            );
           } else {
             // 3️⃣ Add coinsOffered from plan to user's wallet
             const user = await User.findById(updated.user_id);
