@@ -3,7 +3,7 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const Payment = require("../models/Payment");
 const User = require("../models/User");
-const MagicCoinPlan = require("../models/Plan");
+const MagicCoinPlan = require("../models/MagicCoinPlan");
 const { client } = require("../config/paypal");
 const axios = require("axios");
 require("dotenv").config();
