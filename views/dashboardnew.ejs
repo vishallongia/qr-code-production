@@ -399,6 +399,13 @@
                 </div>
                 <% } %>
 
+                  <% if (activeSection==='channel-sessions' ) { %>
+                <!-- Include the header partial -->
+                <div id="show-section" class="fade-in" style="width: 100%;">
+                    <%- include('../components/session'); -%>
+                </div>
+                <% } %>
+
                     <% if (activeSection==='channel-quiz' ) { %>
                         <!-- Include the header partial -->
                         <div id="show-section" class="fade-in" style="width: 100%;">

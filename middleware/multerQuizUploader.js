@@ -3,11 +3,22 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-const uploadDir = path.join(__dirname, "../questions-image");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
+  destination: (req, file, cb) => {
+    // Get path from request body, default to "questions-image"
+    const folder = req.uploadPath || "questions-image";
+
+    // Create the full path relative to current file
+    const savePath = path.join(__dirname, `../${folder}`);
+
+    // Create folder if it doesn't exist
+    if (!fs.existsSync(savePath)) {
+      fs.mkdirSync(savePath, { recursive: true });
+    }
+
+    cb(null, savePath);
+  },
+
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
@@ -17,23 +28,22 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 50 * 1024 * 1024 }, // 5MB
 });
 
-// Helper to delete uploaded files
-function cleanupUploadedFiles(files) {
+function cleanupUploadedFiles(files, folder = "questions-image") {
   if (!files) return;
 
   Object.values(files)
     .flat()
     .forEach((file) => {
-      const filePath = path.join(
-        __dirname,
-        "../questions-image/",
-        file.filename
-      );
+      const filePath = path.join(__dirname, `../${folder}/`, file.filename);
       fs.unlink(filePath, (err) => {
-        if (err) console.error("Error deleting file:", filePath, err.message);
+        if (err) {
+          console.error("Error deleting file:", filePath, err.message);
+        } else {
+          console.log("Successfully deleted:", filePath);
+        }
       });
     });
 }
@@ -47,7 +57,4 @@ function deleteFileIfExists(filePath) {
   });
 }
 
-
-
-
-module.exports = { upload, cleanupUploadedFiles,deleteFileIfExists};
+module.exports = { upload, cleanupUploadedFiles, deleteFileIfExists };

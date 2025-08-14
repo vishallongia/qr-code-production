@@ -21,14 +21,20 @@
                 <div class="quiz-admin-header">
                     <h1>Quiz Manager</h1>
                     <div class="quiz-admin-controls">
-                        <button onclick="window.open('/tvstation/channels/<%= channel._id %>/addquestion', '_blank')"
-                            class="btn">+ Add New Question</button>
-                        <button id="startChannelBtn" class="start-btn btn">
+                        <% if (!quizQuestions || quizQuestions.length===0) { %>
+                            <button
+                                onclick="window.open('/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/addquestion', '_blank')"
+                                class="btn">
+                                + Add New Question
+                            </button>
+                            <% } %>
+                                <!-- <button id="startChannelBtn" class="start-btn btn">
                             <%= channel.isRunning && channel.typeOfRunning==="quiz" ? "Stop" : "Start" %>
-                        </button>
-                        <!-- <button class="winner-btn btn">Draw Winner</button> -->
-                        <button class="logs-btn btn" onclick="location.href='/tvstation/quiz-response-tracker'">Track
-                            Logs</button>
+                        </button> -->
+                                <!-- <button class="winner-btn btn">Draw Winner</button> -->
+                                <button class="logs-btn btn"
+                                    onclick="location.href='/tvstation/quiz-response-tracker'">Track
+                                    Logs</button>
                     </div>
                 </div>
 
@@ -49,7 +55,7 @@
                                     </span>
                                 </div>
                                 <div class="quiz-admin-actions">
-                                    <a href="/tvstation/channels/<%= channel._id %>/editquestion/<%= q._id %>"
+                                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/editquestion/<%= q._id %>"
                                         target="_blank">
                                         <button>Edit</button>
                                     </a>
@@ -141,7 +147,8 @@
                                     const questionId = button.getAttribute("data-question-id");
 
                                     if (!confirm("Are you sure you want to delete this question?")) return;
-
+                                    const loader = document.getElementById("loader");
+                                    loader.style.display = "flex"; // show loader
                                     try {
                                         const res = await fetch(`/tvstation/quiz-question/${questionId}`, {
                                             method: "DELETE",
@@ -168,12 +175,58 @@
                                         console.error("Delete failed", err);
                                         showToast("Server error while deleting the question", "error");
                                     }
+
+                                    finally {
+                                        loader.style.display = "none";
+                                    }
                                 }
                             });
                         </script>
                         <% } %>
+                            <h1>Magic Code</h1>
+                            <div class="quiz-admin-question-card app-qr-box quiz-admin-questions">
+                                <div id="qr-download-container"></div>
+                                <!-- Magic Code Download Box -->
+                                <div class="type-box">
+                                    <!-- Hidden fields for JS -->
+                                    <input type="hidden" id="selectedFgHex" value="#000000" />
+                                    <input type="hidden" id="selectedBgHex" value="#FFFFFF" />
 
+                                    <!-- Foreground & Background Color Pickers -->
+                                    <div class="form-group" id="foreground-color-setting-update"
+                                        style="margin-top: 1rem;">
+                                        <label for="foreground-color-grid-update">Foreground Color</label>
+                                        <div class="color-grid" id="foreground-color-grid-update">
+                                            <% const fgColors=[ '#000000' , '#FFFFFF' , '#FF0093' , '#835EC7'
+                                                , '#00B760' , '#FC70BA' , '#1C00FF' , '#FF0000' , '#FFC62C' , '#00AEEF'
+                                                , '#FEFE00' , '#4CCED1' ]; %>
+                                                <% fgColors.forEach(hex=> { %>
+                                                    <div class="color-option"
+                                                        style="background-color: <%= hex %>; <%= hex === '#ffffff' ? 'border: 1px solid #ccc;' : '' %>">
+                                                    </div>
+                                                    <% }) %>
+                                        </div>
+                                    </div>
 
+                                    <div class="form-group" id="background-color-setting-update">
+                                        <label for="background-color-grid-update">Background Color</label>
+                                        <div class="color-grid" id="background-color-grid-update">
+                                            <% fgColors.forEach(hex=> { %>
+                                                <div class="color-option"
+                                                    style="background-color: <%= hex %>; <%= hex === '#ffffff' ? 'border: 1px solid #ccc;' : '' %>">
+                                                </div>
+                                                <% }) %>
+                                        </div>
+                                    </div>
+                                    <!-- Download Button -->
+                                    <!-- <button class="type-btn" onclick="handleMagicCodeUpdate('<%= channel._id %>')">Update</button> -->
+
+                                    <button class="type-btn btn"
+                                        onclick="downloadMagicCode('<%= channel._id %>', '<%= sessionId %>')"
+                                        style="margin-top: 10px;">Download</button>
+
+                                </div>
+                            </div>
 
     </div>
 
@@ -219,6 +272,282 @@
             }
         });
     </script>
+
+
+
+    <script>
+        const colorHexMapQuiz = {
+            "#000000": "black",
+            "#FFFFFF": "white",
+            "#FF0093": "magenta",
+            "#835EC7": "violet",
+            "#00B760": "green",
+            "#FC70BA": "pink",
+            "#1C00FF": "blue",
+            "#FF0000": "red",
+            "#FFC62C": "orange",
+            "#00AEEF": "cyan",
+            "#FEFE00": "yellow",
+            "#4CCED1": "turquoise"
+        };
+
+        const colorOptionsMap = {
+            black: ["white", "pink", "orange", "yellow", "turquoise"],
+            white: ["black", "green", "pink", "blue", "orange", "cyan", "yellow", "turquoise"],
+            magenta: ["white", "cyan", "yellow", "turquoise"],
+            violet: ["white", "cyan", "yellow", "turquoise"],
+            green: ["white", "cyan", "yellow", "turquoise"],
+            pink: ["white", "blue", "orange", "cyan", "yellow", "turquoise"],
+            blue: ["white", "orange", "cyan", "yellow", "turquoise"],
+            red: ["pink", "orange", "cyan", "yellow", "turquoise", "white"],
+            orange: ["white", "pink", "cyan", "turquoise"],
+            cyan: ["white", "black", "violet", "green", "pink", "blue", "orange", "yellow", "turquoise"],
+            yellow: ["white", "black", "violet", "green", "pink", "blue", "orange", "cyan", "turquoise"],
+            turquoise: ["white", "black", "violet", "green", "pink", "blue", "orange", "cyan", "yellow"]
+        };
+
+        const fgGrid = document.getElementById("foreground-color-grid-update");
+        const bgGrid = document.getElementById("background-color-grid-update");
+        const fgHexInput = document.getElementById("selectedFgHex");
+        const bgHexInput = document.getElementById("selectedBgHex");
+
+        function hexToName(hex) {
+            return colorHexMapQuiz[hex.toUpperCase()] || null;
+        }
+
+        function clearActive(container) {
+            container.querySelectorAll(".color-option").forEach(div => div.classList.remove("active"));
+        }
+
+        function rgbToHex(rgb) {
+            const rgbArr = rgb.match(/\d+/g);
+            if (!rgbArr || rgbArr.length < 3) return rgb;
+            return "#" + rgbArr.map(val => parseInt(val).toString(16).padStart(2, '0')).join('').toUpperCase();
+        }
+
+        fgGrid.querySelectorAll(".color-option").forEach(fgDiv => {
+            fgDiv.addEventListener("click", () => {
+                clearActive(fgGrid);
+                fgDiv.classList.add("active");
+
+                const fgHex = rgbToHex(fgDiv.style.backgroundColor);
+                const fgName = hexToName(fgHex);
+                fgHexInput.value = fgHex;
+
+                // Reset background selection
+                clearActive(bgGrid);
+                bgHexInput.value = "";
+
+                // Show only allowed background options
+                const allowed = colorOptionsMap[fgName] || [];
+                bgGrid.querySelectorAll(".color-option").forEach(bgDiv => {
+                    const bgHex = rgbToHex(bgDiv.style.backgroundColor);
+                    const bgName = hexToName(bgHex);
+                    bgDiv.style.display = (allowed.includes(bgName) && bgName !== fgName) ? "inline-block" : "none";
+                });
+            });
+        });
+
+        bgGrid.querySelectorAll(".color-option").forEach(bgDiv => {
+            bgDiv.addEventListener("click", () => {
+                if (bgDiv.style.display === "none") return;
+                clearActive(bgGrid);
+                bgDiv.classList.add("active");
+
+                const bgHex = rgbToHex(bgDiv.style.backgroundColor);
+                bgHexInput.value = bgHex;
+            });
+        });
+    </script>
+
+
+    <script>
+        async function handleMagicCodeUpdate(channelId) {
+            const fgHex = document.getElementById("selectedFgHex").value;
+            const bgHex = document.getElementById("selectedBgHex").value;
+
+            const body = {};
+
+            if (fgHex) body.qrDotColor = fgHex;
+            if (bgHex) body.backgroundColor = bgHex;
+
+            try {
+                const res = await fetch(`/tvstation/channel/${channelId}/qr`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(body),
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast("Magic code updated!", "success");
+                } else {
+                    showToast(data.message || "Failed to update magic code", "error");
+                }
+            } catch (err) {
+                console.error("QR update error:", err);
+                showToast("Something went wrong", "error");
+            }
+        }
+    </script>
+
+
+
+    <script>
+        async function downloadMagicCode(channelId, sessionId) {
+            const fgHex = document.getElementById("selectedFgHex").value;
+            const bgHex = document.getElementById("selectedBgHex").value;
+
+            const loader = document.getElementById("loader");
+            loader.style.display = "flex"; // show loader
+
+            try {
+                // Fetch QR data from server
+                const res = await fetch(`/tvstation/channel/${channelId}/session/${sessionId}/qr`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ qrDotColor: fgHex, backgroundColor: bgHex, type: "quiz" }),
+                });
+
+                const data = await res.json();
+                if (!data.success) {
+                    showToast(data.message || "Failed to fetch QR data", "error");
+                    return;
+                }
+
+
+
+                const qrData = data.qr;
+                const qrUrl = qrData.redirectUrl;
+                const qrCode = new QRCodeStyling({
+                    width: 3000,
+                    height: 3000,
+                    type: "canvas",
+                    data: qrUrl,
+                    dotsOptions: {
+                        color: qrData.qrDotColor || "#000000",
+                        type: qrData.dotStyle || "square",
+                        gradient: qrData.applyGradient === "linear" ? {
+                            type: "linear",
+                            colorStops: [
+                                { offset: 0, color: "#ff0000" },
+                                { offset: 1, color: qrData.qrDotColor || "#000000" }
+                            ]
+                        } : qrData.applyGradient === "radial" ? {
+                            type: "radial",
+                            colorStops: [
+                                { offset: 0, color: "#ff0000" },
+                                { offset: 1, color: qrData.qrDotColor || "#000000" }
+                            ]
+                        } : null
+                    },
+                    backgroundOptions: {
+                        color: qrData.backgroundColor || "#FFFFFF"
+                    },
+                    cornersSquareOptions: {
+                        type: qrData.cornerStyle || "square"
+                    },
+                    image: qrData.logo ? `${window.location.origin}/${qrData.logo}` : "",
+                    imageOptions: {
+                        crossOrigin: "anonymous",
+                        margin: 10
+                    }
+                });
+
+                const container = document.getElementById("qr-download-container");
+                container.innerHTML = ""; // clear previous
+
+                await qrCode.append(container);
+                setTimeout(() => {
+                    qrCode.download({ name: "magic-code", extension: "png", width: 1600, height: 1600 });
+                }, 500); // wait a little for QR to render
+            } catch (error) {
+                console.error("Download error:", error);
+                showToast("Error downloading magic code", "error");
+            }
+            finally {
+                loader.style.display = "none";
+            }
+        }
+    </script>
+
+
+
+
+
+    <script>
+        const sessionId = "<%= sessionId %>";
+        const qrType = "quiz"; // or dynamically pass from backend
+
+        async function loadMagicCodeOnPageLoad(sessionId, type) {
+            const loader = document.getElementById("loader");
+            loader.style.display = "flex"; // show loader
+            try {
+                const res = await fetch(`/tvstation/session/${sessionId}/qr/${type}`);
+                const data = await res.json();
+
+                if (!data.success) {
+                    console.error(data.message || "Failed to fetch QR details");
+                    return;
+                }
+
+                const qrData = data.data.qr;
+                const qrUrl = qrData.redirectUrl;
+
+                const qrCode = new QRCodeStyling({
+                    width: 3000,
+                    height: 3000,
+                    type: "canvas",
+                    data: qrUrl,
+                    dotsOptions: {
+                        color: qrData.qrDotColor || "#000000",
+                        type: qrData.dotStyle || "square",
+                        gradient: qrData.applyGradient === "linear" ? {
+                            type: "linear",
+                            colorStops: [
+                                { offset: 0, color: "#ff0000" },
+                                { offset: 1, color: qrData.qrDotColor || "#000000" }
+                            ]
+                        } : qrData.applyGradient === "radial" ? {
+                            type: "radial",
+                            colorStops: [
+                                { offset: 0, color: "#ff0000" },
+                                { offset: 1, color: qrData.qrDotColor || "#000000" }
+                            ]
+                        } : null
+                    },
+                    backgroundOptions: {
+                        color: qrData.backgroundColor || "#FFFFFF"
+                    },
+                    cornersSquareOptions: {
+                        type: qrData.cornerStyle || "square"
+                    },
+                    image: qrData.logo ? `${window.location.origin}/${qrData.logo}` : "",
+                    imageOptions: {
+                        crossOrigin: "anonymous",
+                        margin: 10
+                    }
+                });
+
+                const container = document.getElementById("qr-download-container");
+                container.innerHTML = ""; // clear previous QR
+                await qrCode.append(container);
+            } catch (error) {
+                console.error("Error loading magic code:", error);
+            }
+            finally {
+                loader.style.display = "none";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadMagicCodeOnPageLoad(sessionId, qrType);
+        });
+    </script>
+
 
 
 

@@ -1,5 +1,5 @@
 :root {
-    --blue: rgba(26, 1, 97, 1);
+    --blue: #18024b;
     --greygrey-2: rgba(201, 201, 202, 1);
     --greygrey-6: rgba(30, 29, 33, 1);
 }
@@ -510,7 +510,7 @@ canvas {
 
 
 :root {
-    --blue: rgba(26, 1, 97, 1);
+    --blue: #18024b;
     --grey: rgba(243, 243, 245, 1);
     --greygrey-6: rgba(30, 29, 33, 1);
 }
@@ -529,6 +529,7 @@ h1 {
     line-height: 28px;
     font-weight: 600;
     color: var(--greygrey-6);
+    margin: 0;
 }
 
 .print-options {
@@ -641,7 +642,7 @@ h1 {
 }
 
 .loader-overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;

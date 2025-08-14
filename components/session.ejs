@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Session Management</title>
+    <link rel="stylesheet" href="/css/channel-quiz.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+</head>
+
+<input type="hidden" id="channel-id" value="<%= channel._id %>">
+<input type="hidden" id="session-length" value="<%= sessions?.length || 0 %>">
+
+<body>
+    <!-- Session Create Popup -->
+    <div id="popup-add-session" class="popup-overlay" style="display: none;">
+        <div class="popup-content" style="position: relative; max-width: 500px; width: 90%;">
+            <div class="popup-sticky-header">
+                <span id="close-popup-session" style="font-size: 25px; cursor: pointer;">&times;</span>
+            </div>
+
+            <h2 style="text-align: center; margin-bottom: 20px;" id="add-session-headerText">Create New Session</h2>
+
+            <form id="add-session-form" enctype="multipart/form-data">
+                <input type="hidden" name="removeLogo" id="remove-logo-flag" value="false">
+                <!-- Session Name -->
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="text" id="session-name" name="name" class="number-input" placeholder="Session Name"
+                        required>
+                </div>
+
+                <!-- Logo Title -->
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="text" id="session-logo-title" name="logoTitle" class="number-input"
+                        placeholder="Logo Title (optional)">
+                </div>
+
+                <!-- Description -->
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <textarea id="session-description" name="description" class="number-input"
+                        placeholder="Session Description" rows="3" style="resize: vertical;"></textarea>
+                </div>
+
+                <!-- Link -->
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="url" id="session-link" name="link" class="number-input" placeholder="Optional Link">
+                </div>
+
+                <!-- Session Logo Upload -->
+                <div class="form-group" style="margin-bottom: 20px; position: relative;">
+                    <label for="session-logo"
+                        style="display: block; font-weight: bold; margin-bottom: 6px; color: var(--text-color);">
+                        Session Logo Image
+                    </label>
+                    <input type="file" id="session-logo" name="logo" accept="image/*" style="display: none;">
+                    <label for="session-logo" class="stylish-file-label" id="session-logo-label">Choose Logo</label>
+
+
+                    <!-- Preview -->
+                    <div id="session-logo-preview-container"
+                        style="margin-top: 10px; display: none; position: relative;">
+
+                        <!-- Bold & Clear Close Icon -->
+                        <span id="clear-logo-btn" class="clear-logo-btn" title="Remove selected image">
+                            &times;
+                        </span>
+
+                        <img id="session-logo-preview" src="" alt="Logo Preview"
+                            style="max-width: 100%; max-height: 150px; border-radius: 10px;">
+                    </div>
+
+                </div>
+
+
+                <!-- Submit Button -->
+                <div class="form-group" style="text-align: center;">
+                    <button type="submit" class="btn" id="submit-add-session">Create Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="quiz-admin-container">
+        <% if (error) { %>
+            <div class="quiz-admin-error">
+                <%= error %>
+            </div>
+            <% } else { %>
+                <div class="quiz-admin-header">
+                    <h1>Session Manager</h1>
+                    <div class="quiz-admin-controls">
+                        <button class="btn" id="create-session-btn">
+                            + Create New Session
+                        </button>
+                    </div>
+                </div>
+
+                <div class="quiz-admin-questions">
+                    <% if (sessions && sessions.length> 0) { %>
+                        <% sessions.forEach((s)=> { %>
+                            <div class="quiz-admin-question-card">
+                                <div class="quiz-admin-question-header">
+                                    <!-- Logo -->
+                                    <div class="session-logo-wrapper">
+                                        <% const hasLogo=s.logo; %>
+                                            <% const imageSrc=hasLogo ? s.logo : '/uploads/no-image.png' ; %>
+
+                                                <% if (s.link && hasLogo) { %>
+                                                    <a href="<%= s.link %>" target="_blank">
+                                                        <img src="<%= imageSrc %>" alt="Session Logo"
+                                                            class="session-logo-image" />
+                                                    </a>
+                                                    <% } else { %>
+                                                        <img src="<%= imageSrc %>" alt="Session Logo"
+                                                            class="session-logo-image" />
+                                                        <% } %>
+                                    </div>
+
+                                    <!-- Info -->
+                                    <div class="session-details">
+                                        <div class="quiz-admin-question-text">
+                                            <%= s.name %>
+                                        </div>
+                                        <div class="quiz-admin-info">
+                                            <% if (s.logoTitle) { %>
+                                                <span><strong>Logo Title:</strong>
+                                                    <%= s.logoTitle %>
+                                                </span>
+                                                <% } %>
+                                                    <% if (s.description) { %>
+                                                        <span><strong>Description:</strong>
+                                                            <%= s.description %>
+                                                        </span>
+                                                        <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="quiz-admin-actions">
+                                    <button class="edit-session-btn" data-session-id="<%= s._id %>"
+                                        data-name="<%= s.name %>" data-logo-title="<%= s.logoTitle %>"
+                                        data-description="<%= s.description %>" data-link="<%= s.link %>"
+                                        data-logo-url="<%= s.logo || '' %>">
+                                        Edit
+                                    </button>
+                                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= s._id %>">
+                                        <button class="view-btn">View</button>
+                                    </a>
+                                    <button class="delete-btn delete" data-session-id="<%= s._id %>">Delete</button>
+                                </div>
+                            </div>
+                            <% }) %>
+                                <% } else { %>
+                                    <p style="padding: 1rem;">No sessions available.</p>
+                                    <% } %>
+                </div>
+
+                <% if (hasMore) { %>
+                    <div class="quiz-admin-load" id="loadMoreContainer">
+                        <button id="loadMoreBtn">Load More</button>
+                        <div id="loadingText"
+                            style="display: none; text-align: center; margin-top: 10px; font-weight: 500;">
+                            Loading...
+                        </div>
+                    </div>
+                    <% } %>
+                        <% } %>
+    </div>
+</body>
+<script src="/js/session.js"></script>
+
+
+</html>

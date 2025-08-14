@@ -24,19 +24,20 @@
       </div>
       <% } %>
 
-        <% if (channel) { %>
+        <% if (channel && !error) { %>
           <div class="header-custom-channel-details">
             <h1>
               Channel Name: <%= channel.channelName %>
             </h1>
-            <div class="status <%= channel.isRunning ? 'running' : 'stopped' %>">
+            <!-- <div class="status <%= channel.isRunning ? 'running' : 'stopped' %>">
               Status: <%= channel.isRunning ? "Running (" + channel.typeOfRunning + ")" : "Stopped" %>
-            </div>
+            </div> -->
           </div>
 
           <div class="box-wrapper">
             <!-- Quiz Box -->
-            <div class="type-box" onclick="location.href='/tvstation/channels/<%= channel._id %>/quiz'">
+            <div class="type-box"
+              onclick="location.href='/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/quiz'">
               <div class="type-icon">
                 <!-- Quiz SVG: Question Bubble -->
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="#18024b">
@@ -45,14 +46,14 @@
                 </svg>
               </div>
               <div class="type-title">Quiz</div>
-              <div class="status-bar">
+              <!-- <div class="status-bar">
                 <div class="status-fill <%= channel.isRunning && channel.typeOfRunning === 'quiz' ? 'active' : '' %>">
                 </div>
               </div>
               <button class="type-btn"
                 onclick="toggleChannel('<%= channel._id %>', <%= channel.isRunning && channel.typeOfRunning === 'quiz' %>, 'quiz')">
                 <%= channel.isRunning && channel.typeOfRunning==='quiz' ? 'Stop' : 'Start' %> Quiz
-              </button>
+              </button> -->
             </div>
 
             <!-- Voting Box -->
@@ -65,7 +66,7 @@
                 </svg>
               </div>
               <div class="type-title">Voting</div>
-              <div class="status-bar">
+              <!-- <div class="status-bar">
                 <div
                   class="status-fill voting <%= channel.isRunning && channel.typeOfRunning === 'voting' ? 'active' : '' %>">
                 </div>
@@ -73,7 +74,7 @@
               <button class="type-btn"
                 onclick="toggleChannel('<%= channel._id %>', <%= channel.isRunning && channel.typeOfRunning === 'voting' %>, 'voting')">
                 <%= channel.isRunning && channel.typeOfRunning==='voting' ? 'Stop' : 'Start' %> Voting
-              </button>
+              </button> -->
             </div>
 
             <% if (channel.isRunning && channel.typeOfRunning) { %>

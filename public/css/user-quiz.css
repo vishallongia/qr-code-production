@@ -66,7 +66,7 @@
 }
 
 .uq-question-logo {
-    height: 40px;
+    width: 150px;
     object-fit: contain;
 }
 
@@ -167,6 +167,10 @@
     cursor: not-allowed;
 }
 
+
+
+/* ================= Coin Popup Styles ================= */
+
 .coin-popup-overlay {
     position: fixed;
     top: 0;
@@ -178,17 +182,156 @@
     align-items: center;
     justify-content: center;
     z-index: 2000;
+    /* padding: 10px; */
+    /* small padding for small screens */
+    animation: fadeIn 0.3s ease;
 }
 
 .coin-popup {
-    background: white;
-    padding: 20px 30px;
-    border-radius: 10px;
-    max-width: 400px;
-    width: 90%;
+    background: linear-gradient(145deg, #ffffff, #f7f7f7);
+    padding: 25px 30px;
+    border-radius: 16px;
+    max-width: 40%;
+    width: 100%;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    max-height: 80vh;
+    overflow-y: auto;
+    font-family: var(--uq-font-family);
+    color: var(--uq-text-color);
 }
+
+.coin-popup h3 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--uq-primary-bg);
+}
+
+.coin-popup p {
+    font-size: 16px;
+    margin: 8px 0;
+    line-height: 1.4;
+}
+
+/* Reward Name Badge */
+.coin-popup p span.reward-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(90deg, #ffd700, #ffc107);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Reward Image */
+.coin-popup img {
+    max-width: 180px;
+    height: auto;
+    border-radius: 12px;
+    margin: 12px 0;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Reward Description */
+.coin-popup p.description {
+    font-size: 14px;
+    color: #555;
+    margin-top: 4px;
+}
+
+/* Toggle Switch */
+.coin-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0;
+    font-weight: 500;
+}
+
+.coin-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.coin-toggle .slider {
+    width: 52px;
+    height: 26px;
+    background: #ccc;
+    border-radius: 999px;
+    position: relative;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.coin-toggle .slider::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.coin-toggle input[type="checkbox"]:checked+.slider::before {
+    transform: translateX(26px);
+}
+
+.coin-toggle input[type="checkbox"]:checked+.slider {
+    background: var(--uq-primary-bg);
+}
+
+/* Buttons */
+.coin-popup-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.coin-popup-buttons button {
+    padding: 10px 18px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--uq-primary-bg);
+    color: white;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.coin-popup-buttons button:hover {
+    background: var(--uq-primary-hover-bg);
+    transform: translateY(-2px);
+}
+
+/* Scrollbar for popup */
+.coin-popup::-webkit-scrollbar {
+    width: 6px;
+}
+
+.coin-popup::-webkit-scrollbar-thumb {
+    background-color: rgba(24, 2, 75, 0.5);
+    border-radius: 3px;
+}
+
+.coin-popup::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+
+
+
 
 .coin-toggle {
     display: flex;
@@ -229,7 +372,7 @@
 }
 
 .coin-toggle input[type="checkbox"]:checked+.slider {
-    background: #26a69a;
+    background: var(--uq-primary-bg);
 }
 
 .coin-popup-buttons {
@@ -322,6 +465,32 @@
     }
 
     .uq-question-logo {
-        height: 32px;
+        height: 90;
+    }
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .coin-popup {
+        padding: 15px 20px;
+        max-width: 80%;
+    }
+
+    .coin-popup img {
+        max-width: 80px;
+    }
+
+    .coin-popup h3 {
+        font-size: 18px;
+    }
+
+    .coin-popup p {
+        font-size: 14px;
+    }
+
+    .coin-popup-buttons button {
+        padding: 6px 12px;
+        font-size: 14px;
     }
 }

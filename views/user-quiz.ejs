@@ -19,17 +19,87 @@
 
     <div class="coin-popup-overlay" id="coinPopup" style="display: none;">
         <div class="coin-popup">
-            <h3>Confirm Answer</h3>
-            <p>This question costs <%= currentQuestion?.magicCoinDeducted %> coins. Do you want to deduct coins?</p>
-            <label class="coin-toggle">
-                <input type="checkbox" id="deductCoinSwitch" checked>
-                <span class="slider"></span>
-                Deduct Coins
-            </label>
-            <div class="coin-popup-buttons">
-                <button onclick="confirmAnswer(true)">Submit</button>
-                <button onclick="closeCoinPopup()">Cancel</button>
-            </div>
+            <% if (currentQuestion?.mode==="jackpot" || currentQuestion?.mode==="both" ) { %>
+                <div>
+                    <h3>Confirm Answer</h3>
+                    <p id="selectedOptionText"></p> <!-- ✅ Option text will be shown here -->
+
+                    <% if (currentQuestion?.jackpotCoinDeducted) { %>
+                        <p>Do you want to compete for the jackpot for <%= currentQuestion.jackpotCoinDeducted %> coins?
+                        </p>
+
+                        <% } %>
+
+                            <% if (currentQuestion?.jackpotRewardName) { %>
+                                <p>🎁 <%= currentQuestion.jackpotRewardName %>
+                                </p>
+                                <% } %>
+
+                                    <% if (currentQuestion?.jackpotRewardImage) { %>
+                                        <div style="margin:15px 0px;">
+                                            <img src="<%= currentQuestion.jackpotRewardImage %>" alt="Jackpot Reward">
+                                        </div>
+                                        <% } %>
+
+                                            <% if (currentQuestion?.jackpotRewardDescription) { %>
+                                                <p>
+                                                    <%= currentQuestion.jackpotRewardDescription %>
+                                                </p>
+                                                <% } %>
+
+                                                    <% if (currentQuestion?.jackpotCoinDeducted) { %>
+
+                                                        <label class="coin-toggle">
+                                                            <input type="checkbox" id="deductCoinSwitch" checked>
+                                                            <span class="slider"></span>
+                                                            Deduct Coins
+                                                        </label>
+                                                        <% } %>
+                </div>
+                <% } %>
+
+                    <% if (currentQuestion?.mode==="digital" || currentQuestion?.mode==="both" ) { %>
+                        <div>
+
+
+                            <% if (currentQuestion?.digitalCoinDeducted) { %>
+                                <p>Do you want to compete for the digital reward for <%=
+                                        currentQuestion.digitalCoinDeducted %> coins?</p>
+                                <% } %>
+
+                                    <% if (currentQuestion?.digitalRewardName) { %>
+                                        <p>🎁 <%= currentQuestion.digitalRewardName %>
+                                        </p>
+                                        <% } %>
+
+                                            <% if (currentQuestion?.digitalRewardImage) { %>
+                                                <div style="margin:15px 0px;">
+                                                    <img src="<%= currentQuestion.digitalRewardImage %>"
+                                                        alt="Digital Reward">
+                                                </div>
+                                                <% } %>
+
+                                                    <% if (currentQuestion?.digitalRewardDescription) { %>
+                                                        <p>
+                                                            <%= currentQuestion.digitalRewardDescription %>
+                                                        </p>
+                                                        <% } %>
+
+                                                            <% if (currentQuestion?.digitalCoinDeducted) { %>
+                                                                <label class="coin-toggle">
+                                                                    <input type="checkbox" id="deductCoinSwitch"
+                                                                        checked>
+                                                                    <span class="slider"></span>
+                                                                    Deduct Coins
+                                                                </label>
+                                                                <% } %>
+                        </div>
+                        <% } %>
+
+                            <div class="coin-popup-buttons">
+                                <button onclick="confirmAnswer(true)">Submit</button>
+                                <button onclick="closeCoinPopup()">Cancel</button>
+                            </div>
         </div>
     </div>
     <div class="uq-header">
@@ -45,12 +115,49 @@
                 <input type="hidden" name="questionId" value="<%= currentQuestion._id %>">
                 <input type="hidden" name="index" value="<%= index %>">
 
+                <div class="uq-question-header">
+                    <% if (currentQuestion.logo) { %>
+                        <% if (currentQuestion.logoLink) { %>
+                            <a href="<%= currentQuestion.logoLink %>" target="_blank">
+                                <img class="uq-question-logo" src="<%= currentQuestion.logo %>" alt="Logo" />
+                            </a>
+                            <% } else { %>
+                                <img class="uq-question-logo" src="<%= currentQuestion.logo %>" alt="Logo" />
+                                <% } %>
+
+                                    <% if (currentQuestion.logoTitle || currentQuestion.logoDescription) { %>
+                                        <div class="uq-logo-text">
+                                            <% if (currentQuestion.logoTitle) { %>
+                                                <h4 class="uq-logo-title">
+                                                    <%= currentQuestion.logoTitle %>
+                                                </h4>
+                                                <% } %>
+                                                    <% if (currentQuestion.logoDescription) { %>
+                                                        <p class="uq-logo-text">
+                                                            <%= currentQuestion.logoDescription %>
+                                                        </p>
+                                                        <% } %>
+                                        </div>
+                                        <% } %>
+                                            <% } %>
+                </div>
+
+
                 <!-- Question Header -->
                 <div class="uq-question-header">
                     <% if (currentQuestion.questionLogo) { %>
-                        <img class="uq-question-logo" src="<%= currentQuestion.questionLogo %>" alt="Question Logo" />
-                        <% } %>
+                        <% if (currentQuestion.questionImageLink) { %>
+                            <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
+                                <img class="uq-question-logo" src="<%= currentQuestion.questionLogo %>"
+                                    alt="Question Logo" />
+                            </a>
+                            <% } else { %>
+                                <img class="uq-question-logo" src="<%= currentQuestion.questionLogo %>"
+                                    alt="Question Logo" />
+                                <% } %>
+                                    <% } %>
                 </div>
+
 
                 <!-- Question Text -->
                 <div class="uq-question-number">Question <%= index + 1 %> of <%= total %>
@@ -91,15 +198,17 @@
                         <% const prevIndex=index> 0 ? index - 1 : 0; %>
                             <% const nextIndex=index + 1 < total ? index + 1 : index; %>
 
-                                <div class="uq-navigation">
+                                <!-- <div class="uq-navigation">
                                     <button type="button" onclick="window.location.href='?index=<%= prevIndex %>'" <% if
                                         (index <=0) { %> disabled <% } %>>Back</button>
                                     <button type="button" onclick="window.location.href='?index=<%= nextIndex %>'" <% if
                                         (index + 1>= total) { %> disabled <% } %>>Next</button>
-                                </div>
+                                </div> -->
             </form>
             <% } else { %>
-                <p>No question found or quiz ended.</p>
+                <p>
+                    <%= error || "No question found or quiz ended." %>
+                </p>
                 <% } %>
     </div>
 </body>
@@ -121,8 +230,16 @@
     });
 
     function openCoinPopup() {
+        const selectedRadio = document.querySelector('input[name="selectedOptionIndex"]:checked');
+        const label = document.querySelector(`label[for="${selectedRadio.id}"]`);
+        const optionLetter = String.fromCharCode(65 + parseInt(selectedRadio.value)); // 65 = A, 66 = B, etc.
+
+        const optionTextEl = document.getElementById("selectedOptionText");
+        optionTextEl.textContent = `You selected option ${optionLetter}: "${label.innerText.trim()}"`;
+
         coinPopup.style.display = "flex";
     }
+
 
     function closeCoinPopup() {
         coinPopup.style.display = "none";

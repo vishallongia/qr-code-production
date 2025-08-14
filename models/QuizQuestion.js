@@ -19,6 +19,12 @@ const quizQuestionSchema = new mongoose.Schema(
       ref: "Channel",
       required: true,
     },
+
+    sessionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Session",
+      // required: true,
+    },
     question: {
       type: String,
       required: true,
@@ -48,10 +54,58 @@ const quizQuestionSchema = new mongoose.Schema(
       type: String, // Optional logo image
       default: null,
     },
+    mode: {
+      type: String,
+      enum: ["jackpot", "digital", "both"],
+      default: "jackpot", // ✅ default value
+      required: true,
+    },
     magicCoinDeducted: {
       type: Number,
       required: true,
       min: 0,
+      default: 0,
+    },
+    jackpotCoinDeducted: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+    digitalCoinDeducted: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+
+    // 🎯 New Jackpot Reward Fields
+    jackpotRewardName: { type: String, default: "" },
+    jackpotRewardImage: { type: String, default: null },
+    jackpotRewardDescription: { type: String, default: "" },
+    jackpotRewardLink: { type: String, default: null },
+
+    // 🎯 New Digital Reward Fields
+    digitalRewardName: { type: String, default: "" },
+    digitalRewardImage: { type: String, default: null },
+    digitalRewardDescription: { type: String, default: "" },
+    digitalRewardLink: { type: String, default: null },
+
+    logo: {
+      type: String,
+      default: null, // Path or URL to main session logo
+    },
+    logoTitle: {
+      type: String,
+      default: "", // Optional title shown near/under the logo
+    },
+    logoDescription: {
+      type: String,
+      default: "", // Session description
+    },
+    logoLink: {
+      type: String,
+      default: null, // External or internal session link
     },
   },
   {

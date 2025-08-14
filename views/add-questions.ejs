@@ -40,6 +40,30 @@
                         </div>
                     </div>
                     <div class="quiz-question-block">
+                        <div class="quiz-form-group">
+                            <label>Logo Title </label>
+                            <input type="text" name="logoTitle" placeholder="Enter logo title" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Logo Description</label>
+                            <input type="text" name="logoDescription" placeholder="Enter logo description" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Logo Link </label>
+                            <input type="url" name="logoLink" placeholder="https://example.com" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Logo Image</label>
+                            <label class="quiz-file-label">
+                                <span class="quiz-file-label-text">Choose File</span>
+                                <input type="file" class="quiz-logoImage quiz-hidden-file" accept="image/*" />
+                            </label>
+                            <img class="preview-img quiz-logoImagePreview" style="display: none;" />
+                        </div>
+
                         <hr />
                         <div class="quiz-form-group">
                             <label>Question</label>
@@ -60,7 +84,7 @@
                             <input type="url" name="questionImageLink" placeholder="https://example.com" />
                         </div>
 
-                        <div class="quiz-form-group">
+                        <div class="quiz-form-group" style="display: none;">
                             <label>Question Logo (optional)</label>
                             <label class="quiz-file-label">
                                 <span class="quiz-file-label-text">Choose File</span>
@@ -85,8 +109,72 @@
 
                         <div class="quiz-form-group">
                             <label>Magic Coins Deducted</label>
-                            <input type="number" name="magicCoinDeducted" min="0" required />
+                            <input type="number" name="magicCoinDeducted" min="0" style="display: none;" />
                         </div>
+
+                        <div class="quiz-form-group">
+                            <label>Reward Mode</label>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button type="button" class="reward-mode-btn" data-mode="jackpot">Jackpot</button>
+                                <button type="button" class="reward-mode-btn" data-mode="digital">Digital</button>
+                                <button type="button" class="reward-mode-btn" data-mode="both">Both</button>
+                            </div>
+                        </div>
+
+                        <div class="quiz-form-group reward-field reward-jackpot" style="display: none;">
+                            <label>Jackpot Coin</label>
+                            <input type="number" class="quiz-form-group" name="jackpotCoinDeducted" min="0" />
+                            <label>Jackpot Reward Name</label>
+                            <input type="text" class="quiz-form-group" name="jackpotRewardName"
+                                placeholder="Enter Jackpot Reward Name" />
+
+                            <label>Jackpot Reward Image</label>
+                            <label class="quiz-file-label quiz-form-group">
+                                <span class="quiz-file-label-text">Choose File</span>
+                                <input type="file" class="quiz-jackpotRewardImage quiz-hidden-file quiz-form-group"
+                                    accept="image/*" />
+                            </label>
+                            <img class="preview-img quiz-jackpotRewardImagePreview quiz-form-group"
+                                style="display: none;" />
+
+                            <label>Jackpot Reward Description</label>
+                            <input type="text" name="jackpotRewardDescription" class="quiz-form-group"
+                                placeholder="Enter Jackpot Reward Description" />
+
+                            <label>Jackpot Reward Link</label>
+                            <input type="url" name="jackpotRewardLink" class="quiz-form-group"
+                                placeholder="https://example.com" />
+                        </div>
+
+                        <div class="quiz-form-group reward-field reward-digital" style="display: none;">
+                            <label>Digital Coin</label>
+                            <input type="number" class="quiz-form-group" name="digitalCoinDeducted" min="0" />
+
+                            <label>Digital Reward Name</label>
+                            <input type="text" class="quiz-form-group" name="digitalRewardName"
+                                placeholder="Enter Digital Reward Name" />
+
+                            <label>Digital Reward Image</label>
+                            <label class="quiz-file-label quiz-form-group">
+                                <span class="quiz-file-label-text">Choose File</span>
+                                <input type="file" class="quiz-digitalRewardImage quiz-hidden-file quiz-form-group"
+                                    accept="image/*" />
+                            </label>
+                            <img class="preview-img quiz-digitalRewardImagePreview quiz-form-group"
+                                style="display: none;" />
+
+                            <label>Digital Reward Description</label>
+                            <input type="text" class="quiz-form-group" name="digitalRewardDescription"
+                                placeholder="Enter Digital Reward Description" />
+
+                            <label>Digital Reward Link</label>
+                            <input type="url" name="digitalRewardLink" class="quiz-form-group"
+                                placeholder="https://example.com" />
+                        </div>
+
+                        <input type="hidden" name="mode" value="jackpot" />
+                        <input type="hidden" name="sessionId" value="<%= sessionId %>" />
+
                     </div>
                 </div>
             </template>
@@ -103,7 +191,10 @@
     function setupImagePreview(block) {
         const fileInputs = [
             { selector: ".quiz-questionImage", previewSelector: ".quiz-questionImagePreview" },
-            { selector: ".quiz-questionLogo", previewSelector: ".quiz-questionLogoPreview" }
+            { selector: ".quiz-questionLogo", previewSelector: ".quiz-questionLogoPreview" },
+            { selector: ".quiz-logoImage", previewSelector: ".quiz-logoImagePreview" },
+            { selector: ".quiz-jackpotRewardImage", previewSelector: ".quiz-jackpotRewardImagePreview" },
+            { selector: ".quiz-digitalRewardImage", previewSelector: ".quiz-digitalRewardImagePreview" }
         ];
 
         fileInputs.forEach(({ selector, previewSelector }) => {
@@ -138,6 +229,32 @@
             clearBtn.style.display = "none"; // Initially hidden
         });
     }
+
+    function setupRewardModeSwitcher(block) {
+        const modeButtons = block.querySelectorAll(".reward-mode-btn");
+        const modeInput = block.querySelector('input[name="mode"]');
+        const jackpotField = block.querySelector(".reward-jackpot");
+        const digitalField = block.querySelector(".reward-digital");
+
+        modeButtons.forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const mode = btn.dataset.mode;
+                modeInput.value = mode;
+
+                // Toggle visibility
+                jackpotField.style.display = (mode === 'jackpot' || mode === 'both') ? 'block' : 'none';
+                digitalField.style.display = (mode === 'digital' || mode === 'both') ? 'block' : 'none';
+
+                // Toggle active button style
+                modeButtons.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+            });
+        });
+
+        // Default to jackpot
+        modeButtons[0].click();
+    }
+
 
     function generateOptionBlock(block, index) {
         const optDiv = document.createElement("div");
@@ -275,6 +392,7 @@
 
         generateOptions(block, 2); // start with 2 options
         setupImagePreview(block);
+        setupRewardModeSwitcher(block); // ← Add this line
         wrapper.appendChild(block);
     }
 
@@ -285,10 +403,25 @@
         const formData = new FormData();
 
         const channelId = "<%= channel?._id %>";
+        const sessionId = "<%= sessionId %>";
+        formData.append("sessionId", sessionId);
         formData.append("channelId", channelId);
         formData.append("question", block.querySelector('input[name="question"]').value.trim());
         formData.append("magicCoinDeducted", block.querySelector('input[name="magicCoinDeducted"]').value);
         formData.append("correctAnswerIndex", block.querySelector('.quiz-correct-answer-select').value);
+        formData.append("logoTitle", block.querySelector('input[name="logoTitle"]').value.trim());
+        formData.append("logoDescription", block.querySelector('input[name="logoDescription"]').value.trim());
+        formData.append("logoLink", block.querySelector('input[name="logoLink"]').value.trim());
+
+
+        const logoImage = block.querySelector(".quiz-logoImage")?.files[0];
+        if (logoImage) formData.append("logo", logoImage);
+
+        // Mode & reward coins
+        formData.append("mode", block.querySelector('input[name="mode"]').value);
+        formData.append("jackpotCoinDeducted", block.querySelector('input[name="jackpotCoinDeducted"]')?.value || 0);
+        formData.append("digitalCoinDeducted", block.querySelector('input[name="digitalCoinDeducted"]')?.value || 0);
+
 
         const questionImage = block.querySelector(".quiz-questionImage")?.files[0];
         const questionLogo = block.querySelector(".quiz-questionLogo")?.files[0];
@@ -300,6 +433,31 @@
 
         const options = block.querySelectorAll(".quiz-option-block");
         const optionData = [];
+
+
+
+        const jackpotRewardName = block.querySelector('input[name="jackpotRewardName"]').value.trim();
+        const jackpotRewardDescription = block.querySelector('input[name="jackpotRewardDescription"]').value.trim();
+        const jackpotRewardLink = block.querySelector('input[name="jackpotRewardLink"]').value.trim();
+        const jackpotRewardImage = block.querySelector(".quiz-jackpotRewardImage")?.files[0];
+
+        if (jackpotRewardName) formData.append("jackpotRewardName", jackpotRewardName);
+        if (jackpotRewardDescription) formData.append("jackpotRewardDescription", jackpotRewardDescription);
+        if (jackpotRewardLink) formData.append("jackpotRewardLink", jackpotRewardLink);
+        if (jackpotRewardImage) formData.append("jackpotRewardImage", jackpotRewardImage);
+
+        const digitalRewardName = block.querySelector('input[name="digitalRewardName"]').value.trim();
+        const digitalRewardDescription = block.querySelector('input[name="digitalRewardDescription"]').value.trim();
+        const digitalRewardLink = block.querySelector('input[name="digitalRewardLink"]').value.trim();
+        const digitalRewardImage = block.querySelector(".quiz-digitalRewardImage")?.files[0];
+
+        if (digitalRewardName) formData.append("digitalRewardName", digitalRewardName);
+        if (digitalRewardDescription) formData.append("digitalRewardDescription", digitalRewardDescription);
+        if (digitalRewardLink) formData.append("digitalRewardLink", digitalRewardLink);
+        if (digitalRewardImage) formData.append("digitalRewardImage", digitalRewardImage);
+
+
+
 
         options.forEach((opt, index) => {
             const text = opt.querySelector('input[type="text"]').value.trim();
@@ -316,6 +474,23 @@
         formData.append("options", JSON.stringify(optionData));
         const loader = document.getElementById("loader");
         loader.style.display = "flex"; // show loader
+
+        // Convert FormData to a plain object
+        const formDataObj = {};
+        formData.forEach((value, key) => {
+            // If key already exists, make it an array (for duplicate keys like optionsImages)
+            if (formDataObj[key]) {
+                if (!Array.isArray(formDataObj[key])) {
+                    formDataObj[key] = [formDataObj[key]];
+                }
+                formDataObj[key].push(value);
+            } else {
+                formDataObj[key] = value;
+            }
+        });
+
+
+
 
         try {
             const res = await fetch("/tvstation/quiz-question/create", {

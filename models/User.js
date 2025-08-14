@@ -48,6 +48,11 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    walletCoins: {
+      type: Number,
+      default: 0, // start at 0 coins
+    },
+
     lastExpiryEmailSent: {
       type: Date,
       default: null,

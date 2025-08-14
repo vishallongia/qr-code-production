@@ -12,12 +12,9 @@ const Channel = require("../models/Channel");
 const Payment = require("../models/Payment");
 const QuizQuestionResponse = require("../models/QuizQuestionResponse");
 const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
+const Session = require("../models/Session"); // adjust path if needed
 const BASE_URL = process.env.FRONTEND_URL; // update if needed
-const {
-  encryptPassword,
-  decryptPassword,
-  generateCode,
-} = require("../public/js/cryptoUtils");
+const { addUploadPath } = require("../utils/selectUploadDestination");
 
 // GET /channels - paginated list
 router.get("/channels", async (req, res) => {
@@ -316,10 +313,11 @@ router.put("/channels/:id", async (req, res) => {
   }
 });
 
-router.get("/channels/:id", async (req, res) => {
+router.get("/channels/:id/session/:sessionId?", async (req, res) => {
   const channelId = req.params.id;
+  const sessionId = req.params.sessionId;
 
-  // Validate ObjectId
+  // Validate channelId
   if (!mongoose.Types.ObjectId.isValid(channelId)) {
     return res.render("dashboardnew", {
       channel: null,
@@ -331,7 +329,6 @@ router.get("/channels/:id", async (req, res) => {
 
   try {
     const channel = await Channel.findById(channelId);
-
     if (!channel) {
       return res.render("dashboardnew", {
         channel: null,
@@ -351,17 +348,49 @@ router.get("/channels/:id", async (req, res) => {
       });
     }
 
-    // Render with channel data
+    let session = null;
+
+    if (sessionId) {
+      // Validate sessionId
+      if (!mongoose.Types.ObjectId.isValid(sessionId)) {
+        return res.render("dashboardnew", {
+          channel,
+          sessionId: null,
+          error: "Invalid Session ID",
+          activeSection: "channel-details",
+          user: req.user,
+        });
+      }
+
+      session = await Session.findOne({
+        _id: sessionId,
+        channelId: channelId,
+      });
+
+      if (!session) {
+        return res.render("dashboardnew", {
+          channel,
+          sessionId: null,
+          error: "Session not found or does not belong to this channel",
+          activeSection: "channel-details",
+          user: req.user,
+        });
+      }
+    }
+
+    // Success: render with both channel and (optional) session
     res.render("dashboardnew", {
       channel,
+      sessionId,
       error: null,
       activeSection: "channel-details",
       user: req.user,
     });
   } catch (err) {
-    console.error("Error fetching channel details:", err);
+    console.error("Error fetching channel or session details:", err);
     res.render("login", {
       channel: null,
+      session: null,
       error: "Server error, please try again later.",
       activeSection: "channel-details",
       user: req.user,
@@ -369,14 +398,17 @@ router.get("/channels/:id", async (req, res) => {
   }
 });
 
-router.get("/channels/:id/quiz", async (req, res) => {
-  const channelId = req.params.id;
+router.get("/channels/:channelId/session/:sessionId/quiz", async (req, res) => {
+  const { channelId, sessionId } = req.params;
 
-  // Validate ObjectId
-  if (!mongoose.Types.ObjectId.isValid(channelId)) {
+  // Validate ObjectIds
+  if (
+    !mongoose.Types.ObjectId.isValid(channelId) ||
+    !mongoose.Types.ObjectId.isValid(sessionId)
+  ) {
     return res.render("dashboardnew", {
       channel: null,
-      error: "Invalid Channel ID",
+      error: "Invalid Channel or Session ID",
       activeSection: "channel-quiz",
       user: req.user,
     });
@@ -384,11 +416,12 @@ router.get("/channels/:id/quiz", async (req, res) => {
 
   try {
     const channel = await Channel.findById(channelId);
+    const session = await Session.findById(sessionId);
 
-    if (!channel) {
+    if (!channel || !session) {
       return res.render("dashboardnew", {
         channel: null,
-        error: "Channel not found",
+        error: "Channel or session not found",
         activeSection: "channel-quiz",
         user: req.user,
       });
@@ -403,22 +436,26 @@ router.get("/channels/:id/quiz", async (req, res) => {
         user: req.user,
       });
     }
+
     const skip = parseInt(req.query.skip) || 0;
     const limit = parseInt(req.query.limit) || 5;
-    const quizQuestions = await QuizQuestion.find({ channelId })
+
+    const quizQuestions = await QuizQuestion.find({
+      channelId,
+      sessionId,
+    })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
-    const total = await QuizQuestion.countDocuments({ channelId });
+    const total = await QuizQuestion.countDocuments({ channelId, sessionId });
     const hasMore = skip + quizQuestions.length < total;
 
     if (req.xhr || req.headers.accept.includes("json")) {
       return res.json({ type: "success", data: quizQuestions, hasMore });
     }
 
-    // Render quiz section of the dashboard
     return res.render("dashboardnew", {
       channel,
       error: null,
@@ -426,160 +463,187 @@ router.get("/channels/:id/quiz", async (req, res) => {
       user: req.user,
       quizQuestions,
       hasMore,
+      sessionId,
     });
   } catch (err) {
-    console.error("Error fetching quiz channel details:", err);
+    console.error("Error fetching quiz for session:", err);
     return res.render("dashboardnew", {
       channel: null,
       error: "Server error. Please try again later.",
       activeSection: "channel-quiz",
       user: req.user,
       quizQuestions: null,
-      hasMore,
+      hasMore: false,
     });
   }
 });
 
-router.post(
-  "/quiz-question/create",
-  upload.fields([
-    { name: "questionImage", maxCount: 1 },
-    { name: "questionLogo", maxCount: 1 },
-    { name: "optionsImages" },
-  ]),
-  async (req, res) => {
-    try {
-      const {
-        channelId,
-        question,
-        options,
-        correctAnswerIndex,
-        questionImageLink,
-        magicCoinDeducted,
-      } = req.body;
-      if (!channelId || !question || !options || !magicCoinDeducted) {
-        cleanupUploadedFiles(req.files); // ⛔ Clean files on validation error
-        return res.status(400).json({
-          message: "Missing required fields.",
-          type: "error",
-        });
-      }
+router.delete("/quiz-question/:id", async (req, res) => {
+  try {
+    const questionId = req.params.id;
+    const { channelId } = req.body;
+    const userId = req.user?._id; // Assumes auth middleware adds user
 
-      const parsedOptions = JSON.parse(options);
-      if (!Array.isArray(parsedOptions) || parsedOptions.length < 2) {
-        cleanupUploadedFiles(req.files); // ⛔ Clean files on validation error
-        return res.status(400).json({
-          message: "At least 2 options are required.",
-          type: "error",
-        });
-      }
-
-      const formattedOptions = parsedOptions.map((opt) => {
-        const imageFile = req.files["optionsImages"]?.find(
-          (file) => file.originalname === opt.imageName
-        );
-
-        return {
-          text: opt.text?.trim(),
-          image: imageFile ? `/questions-image/${imageFile.filename}` : null,
-        };
-      });
-
-      const questionImagePath = req.files["questionImage"]?.[0]?.filename;
-      const questionLogoPath = req.files["questionLogo"]?.[0]?.filename;
-
-      const quizData = new QuizQuestion({
-        channelId,
-        question: question.trim(),
-        options: formattedOptions,
-        correctAnswerIndex: parseInt(correctAnswerIndex),
-        questionImage: questionImagePath
-          ? `/questions-image/${questionImagePath}`
-          : null,
-        questionImageLink: questionImageLink?.trim() || null,
-        questionLogo: questionLogoPath
-          ? `/questions-image/${questionLogoPath}`
-          : null,
-        magicCoinDeducted: parseInt(magicCoinDeducted),
-      });
-
-      await quizData.save();
-
-      return res.status(201).json({
-        message: "Quiz question saved successfully.",
-        type: "success",
-        data: quizData,
-      });
-    } catch (err) {
-      console.error("Error saving quiz question:", err);
-      cleanupUploadedFiles(req.files); // ⛔ Clean files on any failure
-      return res.status(500).json({
-        message: "Failed to save quiz question.",
+    if (!channelId || !userId) {
+      return res.status(400).json({
+        message: "channelId and userId are required",
         type: "error",
       });
     }
-  }
-);
 
-router.get("/channels/:id/addquestion", async (req, res) => {
-  const channelId = req.params.id;
-
-  // Validate ObjectId
-  if (!mongoose.Types.ObjectId.isValid(channelId)) {
-    return res.render("add-questions", {
-      channel: null,
-      error: "Invalid Channel ID",
-      user: req.user,
+    // 🔐 1. Verify the channel belongs to the user
+    const channel = await Channel.findOne({
+      _id: channelId,
+      createdBy: userId,
     });
-  }
-
-  try {
-    const channel = await Channel.findById(channelId);
-
     if (!channel) {
-      return res.render("add-questions", {
-        channel: null,
-        error: "Channel not found",
-        user: req.user,
+      return res.status(403).json({
+        message: "Unauthorized channel access",
+        type: "error",
       });
     }
 
-    if (!channel.createdBy.equals(req.user._id)) {
-      return res.render("add-questions", {
-        channel: null,
-        error: "Access denied",
-        user: req.user,
+    // 📦 2. Find the quiz question within the channel
+    const quiz = await QuizQuestion.findOne({ _id: questionId, channelId });
+    if (!quiz) {
+      return res.status(404).json({
+        message: "Quiz not found",
+        type: "error",
       });
     }
 
-    // Render the add-question page if all checks pass
-    return res.render("add-questions", {
-      channel,
-      error: null,
-      user: req.user,
+    // 🧹 3. Delete related file assets (if exist)
+    const fileFieldsToCheck = [
+      quiz.questionImage,
+      quiz.questionLogo,
+      quiz.logo,
+    ];
+
+    fileFieldsToCheck.forEach((filePath) => {
+      if (filePath) deleteFileIfExists(filePath);
+    });
+
+    // Also clean up any option images
+    if (Array.isArray(quiz.options)) {
+      quiz.options.forEach((option) => {
+        if (option.image) deleteFileIfExists(option.image);
+      });
+    }
+
+    // ❌ 4. Delete the quiz
+    await QuizQuestion.deleteOne({ _id: questionId });
+
+    return res.status(200).json({
+      message: "Quiz question deleted successfully",
+      type: "success",
     });
   } catch (err) {
-    console.error("Error in /channels/:id/addquestion:", err);
-    return res.render("add-questions", {
-      channel: null,
-      error: "Server error, please try again later.",
-      user: req.user,
+    console.error("Delete Error:", err);
+    return res.status(500).json({
+      message: "Server error",
+      type: "error",
     });
   }
 });
 
 router.get(
-  "/channels/:channelId/editquestion/:questionId",
+  "/channels/:channelId/session/:sessionId/addquestion",
   async (req, res) => {
-    const { channelId, questionId } = req.params;
+    const { channelId, sessionId } = req.params;
+
+    if (
+      !mongoose.Types.ObjectId.isValid(channelId) ||
+      !mongoose.Types.ObjectId.isValid(sessionId)
+    ) {
+      return res.render("add-questions", {
+        channel: null,
+        session: null,
+        error: "Invalid Channel or Session ID",
+        user: req.user,
+      });
+    }
+
+    try {
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+
+      if (!channel || !session) {
+        return res.render("add-questions", {
+          channel: null,
+          session: null,
+          error: "Channel or Session not found",
+          user: req.user,
+        });
+      }
+
+      // Check if user owns the channel
+      if (!channel.createdBy.equals(req.user._id)) {
+        return res.render("add-questions", {
+          channel: null,
+          session: null,
+          error: "Access denied",
+          user: req.user,
+        });
+      }
+
+      // Optional: check if session belongs to the channel
+      if (!session.channelId.equals(channel._id)) {
+        return res.render("add-questions", {
+          channel: null,
+          session: null,
+          error: "Session does not belong to this channel",
+          user: req.user,
+        });
+      }
+
+      // ✅ Check if a question already exists for the session
+      const existingQuestion = await QuizQuestion.findOne({ sessionId });
+
+      if (existingQuestion) {
+        return res.render("add-questions", {
+          channel,
+          session,
+          error: "Only one question is allowed per session.",
+          user: req.user,
+          sessionId,
+        });
+      }
+
+      return res.render("add-questions", {
+        channel,
+        session,
+        error: null,
+        user: req.user,
+        sessionId,
+      });
+    } catch (err) {
+      console.error(
+        "Error in GET /channels/:channelId/session/:sessionId/addquestion:",
+        err
+      );
+      return res.render("add-questions", {
+        channel: null,
+        session: null,
+        error: "Server error, please try again later.",
+        user: req.user,
+      });
+    }
+  }
+);
+
+router.get(
+  "/channels/:channelId/session/:sessionId/editquestion/:questionId",
+  async (req, res) => {
+    const { channelId, questionId, sessionId } = req.params;
 
     // Validate ObjectIds
     if (
       !mongoose.Types.ObjectId.isValid(channelId) ||
-      !mongoose.Types.ObjectId.isValid(questionId)
+      !mongoose.Types.ObjectId.isValid(questionId) ||
+      !mongoose.Types.ObjectId.isValid(sessionId)
     ) {
       return res.render("edit-question", {
-        error: "Invalid Channel ID or Question ID",
+        error: "Invalid Channel ID or Question ID or Session ID",
         channel: null,
         question: null,
         user: req.user,
@@ -626,6 +690,7 @@ router.get(
         channel,
         question,
         user: req.user,
+        sessionId,
       });
     } catch (err) {
       console.error("Error fetching question for edit:", err);
@@ -639,132 +704,452 @@ router.get(
   }
 );
 
-router.post("/quiz-question/update", upload.any(), async (req, res) => {
-  try {
-    const {
-      channelId,
-      questionId,
-      question,
-      questionImageLink,
-      correctAnswerIndex,
-      magicCoinDeducted,
-      optionTexts = [],
-    } = req.body;
+router.post(
+  "/quiz-question/create",
+  upload.fields([
+    { name: "questionImage", maxCount: 1 },
+    { name: "questionLogo", maxCount: 1 },
+    { name: "logo", maxCount: 1 },
+    { name: "optionsImages" },
+    { name: "jackpotRewardImage", maxCount: 1 }, // ✅ new
+    { name: "digitalRewardImage", maxCount: 1 }, // ✅ new
+  ]),
+  async (req, res) => {
+    try {
+      const {
+        channelId,
+        sessionId,
+        question,
+        options,
+        correctAnswerIndex,
+        questionImageLink,
+        mode = "jackpot",
+        jackpotCoinDeducted = 0,
+        digitalCoinDeducted = 0,
+        logoTitle,
+        logoDescription,
+        logoLink,
 
-    // 🛡️ Allowable file fields
-    const allowedFields = new Set([
-      "questionImage",
-      "questionLogo",
-      ...Array.from({ length: 20 }, (_, i) => `optionImages[${i}]`),
-    ]);
+        // 🎯 New Jackpot Reward fields
+        jackpotRewardName,
+        jackpotRewardDescription,
+        jackpotRewardLink,
 
-    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+        // 🎯 New Digital Reward fields
+        digitalRewardName,
+        digitalRewardDescription,
+        digitalRewardLink,
+      } = req.body;
 
-    for (const file of req.files) {
-      if (!allowedFields.has(file.fieldname)) {
+      // ✅ Validate ObjectId format
+      if (
+        !mongoose.Types.ObjectId.isValid(channelId) ||
+        !mongoose.Types.ObjectId.isValid(sessionId)
+      ) {
         cleanupUploadedFiles(req.files);
         return res.status(400).json({
-          message: `Unexpected file field: ${file.fieldname}`,
+          message: "Invalid channelId or sessionId.",
           type: "error",
         });
       }
 
-      if (!allowedMimeTypes.includes(file.mimetype)) {
+      // ✅ Validate required fields
+      if (
+        !channelId ||
+        !sessionId ||
+        !question ||
+        !options ||
+        correctAnswerIndex === undefined
+      ) {
         cleanupUploadedFiles(req.files);
         return res.status(400).json({
-          message: `Invalid file type for: ${file.originalname}`,
+          message: "Missing required fields.",
           type: "error",
         });
       }
-    }
 
-    // Basic field validation
-    if (
-      !channelId ||
-      !questionId ||
-      !question ||
-      !optionTexts ||
-      magicCoinDeducted === undefined
-    ) {
-      cleanupUploadedFiles(req.files);
-      return res.status(400).json({ message: "Missing fields", type: "error" });
-    }
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
 
-    const quiz = await QuizQuestion.findOne({ _id: questionId, channelId });
-    if (!quiz) {
-      cleanupUploadedFiles(req.files);
-      return res.status(404).json({ message: "Quiz not found", type: "error" });
-    }
-
-    // 🔍 Collect files into structured format
-    const uploadedOptionImagesByIndex = {};
-    const filesMap = {};
-    for (const file of req.files) {
-      filesMap[file.fieldname] = file;
-      const match = file.fieldname.match(/^optionImages\[(\d+)]$/);
-      if (match) {
-        const index = parseInt(match[1], 10);
-        uploadedOptionImagesByIndex[index] = file;
+      if (!channel || !session) {
+        cleanupUploadedFiles(req.files);
+        return res.status(400).json({
+          message: "Channel or Session not found",
+          type: "error",
+        });
       }
-    }
 
-    // 📸 Question Image
-    if (filesMap["questionImage"]) {
-      if (quiz.questionImage) deleteFileIfExists(quiz.questionImage);
-      quiz.questionImage = `/questions-image/${filesMap["questionImage"].filename}`;
-    } else {
-      if (quiz.questionImage) deleteFileIfExists(quiz.questionImage);
-      quiz.questionImage = null;
-    }
-
-    // 🖼️ Question Logo
-    if (filesMap["questionLogo"]) {
-      if (quiz.questionLogo) deleteFileIfExists(quiz.questionLogo);
-      quiz.questionLogo = `/questions-image/${filesMap["questionLogo"].filename}`;
-    } else {
-      if (quiz.questionLogo) deleteFileIfExists(quiz.questionLogo);
-      quiz.questionLogo = null;
-    }
-
-    // 📝 Options with Images
-    const formattedOptions = optionTexts.map((text, i) => {
-      const uploaded = uploadedOptionImagesByIndex[i];
-      const old = quiz.options[i]?.image;
-
-      if (uploaded) {
-        if (old) deleteFileIfExists(old);
-        return {
-          text: text.trim(),
-          image: `/questions-image/${uploaded.filename}`,
-        };
-      } else {
-        if (old) deleteFileIfExists(old);
-        return {
-          text: text.trim(),
-          image: null,
-        };
+      if (!channel.createdBy.equals(req.user._id)) {
+        cleanupUploadedFiles(req.files);
+        return res.status(400).json({
+          message: "Access denied",
+          type: "error",
+        });
       }
-    });
 
-    // 🧠 Update quiz
-    quiz.question = question.trim();
-    quiz.correctAnswerIndex = parseInt(correctAnswerIndex);
-    quiz.magicCoinDeducted = parseInt(magicCoinDeducted);
-    quiz.questionImageLink = questionImageLink?.trim() || null;
-    quiz.options = formattedOptions;
+      // ✅ Validate coins (must be numbers, not negative)
+      let jCoin = Math.max(0, parseInt(jackpotCoinDeducted) || 0);
+      let dCoin = Math.max(0, parseInt(digitalCoinDeducted) || 0);
 
-    await quiz.save();
+      // Enforce mode-specific logic
+      if (mode === "jackpot") {
+        dCoin = 0; // 👈 ignore digital
+        if (jCoin < 0) {
+          cleanupUploadedFiles(req.files);
+          return res.status(400).json({
+            message: "Jackpot coin cannot be negative",
+            type: "error",
+          });
+        }
+      } else if (mode === "digital") {
+        jCoin = 0; // 👈 ignore jackpot
+        if (dCoin < 0) {
+          cleanupUploadedFiles(req.files);
+          return res.status(400).json({
+            message: "Digital coin cannot be negative",
+            type: "error",
+          });
+        }
+      } else if (mode === "both") {
+        if (jCoin < 0 || dCoin < 0) {
+          cleanupUploadedFiles(req.files);
+          return res.status(400).json({
+            message: "Both jackpot and digital cannot be negative",
+            type: "error",
+          });
+        }
+      }
 
-    res.status(200).json({
-      message: "Question updated successfully",
-      type: "success",
-    });
-  } catch (err) {
-    console.error("Update Error:", err);
-    cleanupUploadedFiles(req.files);
-    res.status(500).json({ message: "Server error", type: "error" });
+      const magicCoinDeducted =
+        mode === "jackpot" ? jCoin : mode === "digital" ? dCoin : jCoin + dCoin;
+
+      // ✅ Validate & parse options
+      let parsedOptions;
+      try {
+        parsedOptions = JSON.parse(options);
+      } catch (err) {
+        cleanupUploadedFiles(req.files);
+        return res.status(400).json({
+          message: "Invalid options format.",
+          type: "error",
+        });
+      }
+
+      if (!Array.isArray(parsedOptions) || parsedOptions.length < 2) {
+        cleanupUploadedFiles(req.files);
+        return res.status(400).json({
+          message: "At least 2 options are required.",
+          type: "error",
+        });
+      }
+
+      const formattedOptions = parsedOptions.map((opt) => {
+        const imageFile = req.files["optionsImages"]?.find(
+          (file) => file.originalname === opt.imageName
+        );
+
+        return {
+          text: opt.text?.trim(),
+          image: imageFile ? `/questions-image/${imageFile.filename}` : null,
+        };
+      });
+
+      // ✅ Extract file paths
+      const questionImagePath = req.files["questionImage"]?.[0]?.filename;
+      const questionLogoPath = req.files["questionLogo"]?.[0]?.filename;
+      const logoPath = req.files["logo"]?.[0]?.filename;
+      const jackpotRewardImagePath =
+        req.files["jackpotRewardImage"]?.[0]?.filename; // ✅ new
+      const digitalRewardImagePath =
+        req.files["digitalRewardImage"]?.[0]?.filename; // ✅ new
+
+      // ✅ Create and save quiz
+      const quizData = new QuizQuestion({
+        channelId,
+        sessionId,
+        question: question.trim(),
+        options: formattedOptions,
+        correctAnswerIndex: parseInt(correctAnswerIndex),
+        questionImage: questionImagePath
+          ? `/questions-image/${questionImagePath}`
+          : null,
+        questionImageLink: questionImageLink?.trim() || null,
+        questionLogo: questionLogoPath
+          ? `/questions-image/${questionLogoPath}`
+          : null,
+        logo: logoPath ? `/questions-image/${logoPath}` : null,
+        logoTitle: logoTitle?.trim() || null,
+        logoDescription: logoDescription?.trim() || null,
+        logoLink: logoLink?.trim() || null,
+        jackpotCoinDeducted: jCoin,
+        digitalCoinDeducted: dCoin,
+        mode,
+        magicCoinDeducted,
+
+        // 🎯 New Jackpot Reward fields
+        jackpotRewardName: jackpotRewardName?.trim() || "",
+        jackpotRewardImage: jackpotRewardImagePath
+          ? `/questions-image/${jackpotRewardImagePath}`
+          : null,
+        jackpotRewardDescription: jackpotRewardDescription?.trim() || "",
+        jackpotRewardLink: jackpotRewardLink?.trim() || null,
+
+        // 🎯 New Digital Reward fields
+        digitalRewardName: digitalRewardName?.trim() || "",
+        digitalRewardImage: digitalRewardImagePath
+          ? `/questions-image/${digitalRewardImagePath}`
+          : null,
+        digitalRewardDescription: digitalRewardDescription?.trim() || "",
+        digitalRewardLink: digitalRewardLink?.trim() || null,
+      });
+
+      await quizData.save();
+
+      return res.status(201).json({
+        message: "Quiz question saved successfully.",
+        type: "success",
+        data: quizData,
+      });
+    } catch (err) {
+      console.error("Error saving quiz question:", err);
+      cleanupUploadedFiles(req.files);
+      return res.status(500).json({
+        message: "Failed to save quiz question.",
+        type: "error",
+      });
+    }
   }
-});
+);
+
+router.post(
+  "/quiz-question/update",
+  upload.fields([
+    { name: "questionImage", maxCount: 1 },
+    { name: "questionLogo", maxCount: 1 },
+    { name: "logo", maxCount: 1 },
+    { name: "optionsImages" },
+    { name: "jackpotRewardImage", maxCount: 1 }, // ✅ new
+    { name: "digitalRewardImage", maxCount: 1 }, // ✅ new
+  ]),
+  async (req, res) => {
+    try {
+      const {
+        questionId,
+        channelId,
+        sessionId,
+        question,
+        options,
+        correctAnswerIndex,
+        questionImageLink,
+        mode = "jackpot",
+        jackpotCoinDeducted = 0,
+        digitalCoinDeducted = 0,
+        logoTitle,
+        logoDescription,
+        logoLink,
+        clearedImages,
+        // New Jackpot fields
+        jackpotRewardName,
+        jackpotRewardDescription,
+        jackpotRewardLink,
+        // New Digital fields
+        digitalRewardName,
+        digitalRewardDescription,
+        digitalRewardLink,
+      } = req.body;
+      console.log(
+        "Total files received:",
+        Object.values(req.files).reduce((sum, arr) => sum + arr.length, 0)
+      );
+
+      // ✅ Validate ObjectId format
+      if (
+        !mongoose.Types.ObjectId.isValid(channelId) ||
+        !mongoose.Types.ObjectId.isValid(sessionId)
+      ) {
+        cleanupUploadedFiles(req.files);
+        return res.status(400).json({ message: "Invalid IDs", type: "error" });
+      }
+
+      // ✅ Fetch quiz
+      const quiz = await QuizQuestion.findById(questionId);
+      if (!quiz) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(404)
+          .json({ message: "Quiz not found", type: "error" });
+      }
+
+      // ✅ Fetch channel & session
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+      if (!channel || !session) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "Channel or Session not found", type: "error" });
+      }
+
+      // ✅ Ownership check
+      if (!channel.createdBy.equals(req.user._id)) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(403)
+          .json({ message: "Access denied", type: "error" });
+      }
+
+      // ✅ Validate required fields
+      if (!question || !options || correctAnswerIndex === undefined) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "Missing required fields", type: "error" });
+      }
+
+      // ✅ Validate coins
+      let jCoin = Math.max(0, parseInt(jackpotCoinDeducted) || 0);
+      let dCoin = Math.max(0, parseInt(digitalCoinDeducted) || 0);
+      if (mode === "jackpot") dCoin = 0;
+      else if (mode === "digital") jCoin = 0;
+
+      const magicCoinDeducted =
+        mode === "jackpot" ? jCoin : mode === "digital" ? dCoin : jCoin + dCoin;
+
+      // ✅ Parse options
+      let parsedOptions;
+      try {
+        parsedOptions = JSON.parse(options);
+      } catch (err) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "Invalid options format", type: "error" });
+      }
+
+      if (!Array.isArray(parsedOptions) || parsedOptions.length < 2) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "At least 2 options required", type: "error" });
+      }
+
+      const cleared = clearedImages
+        ? clearedImages.split(",").map((s) => s.trim())
+        : [];
+
+      // ✅ Handle main images
+      const handleImageUpdate = (field, uploadedFile) => {
+        if (cleared.includes(field)) {
+          deleteFileIfExists(quiz[field]);
+          return null;
+        } else if (uploadedFile) {
+          deleteFileIfExists(quiz[field]);
+          return `/questions-image/${uploadedFile.filename}`;
+        }
+        return quiz[field];
+      };
+
+      quiz.logo = handleImageUpdate("logo", req.files["logo"]?.[0]);
+      quiz.questionImage = handleImageUpdate(
+        "questionImage",
+        req.files["questionImage"]?.[0]
+      );
+      quiz.questionLogo = handleImageUpdate(
+        "questionLogo",
+        req.files["questionLogo"]?.[0]
+      );
+      quiz.jackpotRewardImage = handleImageUpdate(
+        "jackpotRewardImage",
+        req.files["jackpotRewardImage"]?.[0]
+      );
+      quiz.digitalRewardImage = handleImageUpdate(
+        "digitalRewardImage",
+        req.files["digitalRewardImage"]?.[0]
+      );
+
+      // ✅ Map uploaded option images to correct option index
+      const files = req.files["optionsImages"] || [];
+      const idxListRaw = req.body.optionsImagesIndex;
+
+      // Ensure idxList is an array of numbers
+      const idxList = Array.isArray(idxListRaw)
+        ? idxListRaw
+        : idxListRaw
+        ? [idxListRaw]
+        : [];
+      const idxNumbers = idxList
+        .map((n) => parseInt(n, 10))
+        .filter((n) => !Number.isNaN(n));
+
+      // Build: optionIndex -> file
+      const fileByOptionIndex = new Map();
+      files.forEach((f, k) => {
+        const optIdx = idxNumbers[k];
+        if (typeof optIdx === "number") fileByOptionIndex.set(optIdx, f);
+      });
+
+      const formattedOptions = parsedOptions.map((opt, idx) => {
+        const uploadedFile = fileByOptionIndex.get(idx); // match by real option index
+
+        let imagePath = quiz.options[idx]?.image || null;
+
+        if (uploadedFile) {
+          // Always prioritize newly uploaded file
+          deleteFileIfExists(imagePath);
+          imagePath = `/questions-image/${uploadedFile.filename}`;
+
+          // Remove this index from cleared list so it won't be treated as cleared
+          const clearedIdx = cleared.indexOf(`optionImage-${idx}`);
+          if (clearedIdx !== -1) cleared.splice(clearedIdx, 1);
+        } else if (cleared.includes(`optionImage-${idx}`)) {
+          // Only clear if no new file uploaded
+          deleteFileIfExists(imagePath);
+          imagePath = null;
+        }
+
+        return { text: opt.text?.trim(), image: imagePath };
+      });
+
+      // ✅ Update quiz fields
+      quiz.channelId = channelId;
+      quiz.sessionId = sessionId;
+      quiz.question = question.trim();
+      quiz.options = formattedOptions;
+      quiz.correctAnswerIndex = parseInt(correctAnswerIndex);
+      quiz.questionImageLink = questionImageLink?.trim() || null;
+      quiz.logoTitle = logoTitle?.trim() || null;
+      quiz.logoDescription = logoDescription?.trim() || null;
+      quiz.logoLink = logoLink?.trim() || null;
+      quiz.jackpotCoinDeducted = jCoin;
+      quiz.digitalCoinDeducted = dCoin;
+      quiz.mode = mode;
+      quiz.magicCoinDeducted = magicCoinDeducted;
+
+      // ✅ Update Jackpot & Digital Reward fields
+      quiz.jackpotRewardName = jackpotRewardName?.trim() || "";
+      quiz.jackpotRewardDescription = jackpotRewardDescription?.trim() || "";
+      quiz.jackpotRewardLink = jackpotRewardLink?.trim() || null;
+
+      quiz.digitalRewardName = digitalRewardName?.trim() || "";
+      quiz.digitalRewardDescription = digitalRewardDescription?.trim() || "";
+      quiz.digitalRewardLink = digitalRewardLink?.trim() || null;
+
+      await quiz.save();
+
+      return res.status(200).json({
+        message: "Quiz question updated successfully.",
+        type: "success",
+        data: quiz,
+      });
+    } catch (err) {
+      console.error("Error updating quiz question:", err);
+      cleanupUploadedFiles(req.files);
+      return res
+        .status(500)
+        .json({ message: "Failed to update quiz question", type: "error" });
+    }
+  }
+);
 
 router.delete("/quiz-question/:id", async (req, res) => {
   try {
@@ -814,28 +1199,162 @@ router.delete("/quiz-question/:id", async (req, res) => {
   }
 });
 
-router.get("/channels/:id/quiz-play", async (req, res) => {
-  const channelId = req.params.id;
+router.get(
+  "/channels/:channelId/session/:sessionId/quiz-play",
+  async (req, res) => {
+    const { channelId, sessionId } = req.params;
 
-  // Validate Channel ID
-  if (!mongoose.Types.ObjectId.isValid(channelId)) {
-    return res.render("user-quiz", {
-      channel: null,
-      error: "Invalid Channel ID",
-      user: req.user,
-      currentQuestion: null,
-      index: 0,
-      total: 0,
-      availableCoins: 0,
-    });
-  }
+    try {
+      // Validate Channel ID
+      if (
+        !mongoose.Types.ObjectId.isValid(channelId) ||
+        !mongoose.Types.ObjectId.isValid(sessionId)
+      ) {
+        return res.render("user-quiz", {
+          channel: null,
+          error: "Invalid Channel ID or Session ID",
+          user: req.user,
+          currentQuestion: null,
+          index: 0,
+          total: 0,
+          availableCoins: 0,
+        });
+      }
 
-  try {
-    const channel = await Channel.findById(channelId);
-    if (!channel || channel.typeOfRunning !== "quiz" || !channel.isRunning) {
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+
+      if (!channel) {
+        return res.render("user-quiz", {
+          channel: null,
+          error: "Channel not found",
+          user: req.user,
+          currentQuestion: null,
+          index: 0,
+          total: 0,
+          availableCoins: 0,
+        });
+      }
+
+      if (!session) {
+        return res.render("user-quiz", {
+          channel: null,
+          error: "Session not found",
+          user: req.user,
+          currentQuestion: null,
+          index: 0,
+          total: 0,
+          availableCoins: 0,
+        });
+      }
+
+      if (!channel.isRunning) {
+        return res.render("user-quiz", {
+          channel: null,
+          error: "Quiz is not currently running or does not exist",
+          user: req.user,
+          currentQuestion: null,
+          index: 0,
+          total: 0,
+          availableCoins: 0,
+        });
+      }
+
+      const index =
+        req.query.index !== undefined ? parseInt(req.query.index) : 0;
+
+      const quizQuestions = await QuizQuestion.find({ sessionId })
+        .sort({ createdAt: 1 })
+        .skip(index)
+        .limit(1)
+        .lean();
+
+      const total = await QuizQuestion.countDocuments({ sessionId });
+      const currentQuestion = quizQuestions[0] || null;
+      const hasNext = index + 1 < total;
+
+      // 🔹 Calculate total purchased coins
+      const purchasedCoinsResult = await Payment.aggregate([
+        {
+          $match: {
+            user_id: req.user._id,
+            paymentStatus: "completed",
+            type: "coin",
+          },
+        },
+        {
+          $lookup: {
+            from: "magiccoinplans",
+            localField: "plan_id",
+            foreignField: "_id",
+            as: "planInfo",
+          },
+        },
+        { $unwind: "$planInfo" },
+        {
+          $group: {
+            _id: null,
+            totalCoins: { $sum: "$planInfo.coinsOffered" },
+          },
+        },
+      ]);
+
+      const totalCoins = purchasedCoinsResult[0]?.totalCoins || 0;
+
+      // 🔹 Calculate total deducted coins
+      const deductedResponses = await QuizQuestionResponse.aggregate([
+        {
+          $match: {
+            userId: req.user._id,
+            deductCoin: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "quizquestions",
+            localField: "questionId",
+            foreignField: "_id",
+            as: "questionInfo",
+          },
+        },
+        { $unwind: "$questionInfo" },
+        {
+          $group: {
+            _id: null,
+            totalDeducted: { $sum: "$questionInfo.magicCoinDeducted" },
+          },
+        },
+      ]);
+
+      const totalDeducted = deductedResponses[0]?.totalDeducted || 0;
+
+      const availableCoins = totalCoins - totalDeducted;
+
+      if (req.xhr || req.headers.accept.includes("json")) {
+        return res.json({
+          type: "success",
+          data: currentQuestion,
+          currentIndex: index,
+          total,
+          hasNext,
+          availableCoins,
+        });
+      }
+
+      return res.render("user-quiz", {
+        channel,
+        error: null,
+        user: req.user,
+        currentQuestion,
+        index,
+        total,
+        availableCoins,
+      });
+    } catch (err) {
+      console.error("Error loading quiz question:", err);
       return res.render("user-quiz", {
         channel: null,
-        error: "Quiz is not currently running or does not exist",
+        error: "Server error. Please try again later.",
         user: req.user,
         currentQuestion: null,
         index: 0,
@@ -843,109 +1362,8 @@ router.get("/channels/:id/quiz-play", async (req, res) => {
         availableCoins: 0,
       });
     }
-
-    const index = req.query.index !== undefined ? parseInt(req.query.index) : 0;
-
-    const quizQuestions = await QuizQuestion.find({ channelId })
-      .sort({ createdAt: 1 })
-      .skip(index)
-      .limit(1)
-      .lean();
-
-    const total = await QuizQuestion.countDocuments({ channelId });
-    const currentQuestion = quizQuestions[0] || null;
-    const hasNext = index + 1 < total;
-
-    // 🔹 Calculate total purchased coins
-    const purchasedCoinsResult = await Payment.aggregate([
-      {
-        $match: {
-          user_id: req.user._id,
-          paymentStatus: "completed",
-          type: "coin",
-        },
-      },
-      {
-        $lookup: {
-          from: "magiccoinplans",
-          localField: "plan_id",
-          foreignField: "_id",
-          as: "planInfo",
-        },
-      },
-      { $unwind: "$planInfo" },
-      {
-        $group: {
-          _id: null,
-          totalCoins: { $sum: "$planInfo.coinsOffered" },
-        },
-      },
-    ]);
-
-    const totalCoins = purchasedCoinsResult[0]?.totalCoins || 0;
-
-    // 🔹 Calculate total deducted coins
-    const deductedResponses = await QuizQuestionResponse.aggregate([
-      {
-        $match: {
-          userId: req.user._id,
-          deductCoin: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "quizquestions",
-          localField: "questionId",
-          foreignField: "_id",
-          as: "questionInfo",
-        },
-      },
-      { $unwind: "$questionInfo" },
-      {
-        $group: {
-          _id: null,
-          totalDeducted: { $sum: "$questionInfo.magicCoinDeducted" },
-        },
-      },
-    ]);
-
-    const totalDeducted = deductedResponses[0]?.totalDeducted || 0;
-
-    const availableCoins = totalCoins - totalDeducted;
-
-    if (req.xhr || req.headers.accept.includes("json")) {
-      return res.json({
-        type: "success",
-        data: currentQuestion,
-        currentIndex: index,
-        total,
-        hasNext,
-        availableCoins,
-      });
-    }
-
-    return res.render("user-quiz", {
-      channel,
-      error: null,
-      user: req.user,
-      currentQuestion,
-      index,
-      total,
-      availableCoins,
-    });
-  } catch (err) {
-    console.error("Error loading quiz question:", err);
-    return res.render("user-quiz", {
-      channel: null,
-      error: "Server error. Please try again later.",
-      user: req.user,
-      currentQuestion: null,
-      index: 0,
-      total: 0,
-      availableCoins: 0,
-    });
   }
-});
+);
 
 router.post("/quiz-response", async (req, res) => {
   const {
@@ -1037,6 +1455,11 @@ router.post("/quiz-response", async (req, res) => {
           message: `You need ${question.magicCoinDeducted} coins, but you have only ${availableCoins}`,
         });
       }
+      // Deduct coins from user's wallet
+      coinsDeducted = question.magicCoinDeducted;
+      await User.findByIdAndUpdate(userId, {
+        $inc: { walletCoin: -coinsDeducted },
+      });
     }
 
     // Always create new response
@@ -1087,6 +1510,8 @@ router.get("/quiz-response-tracker", async (req, res) => {
           selectedOptionIndex: 1,
           isCorrect: 1,
           deductCoin: 1,
+          jackpotCoinDeducted: "$question.jackpotCoinDeducted",
+          digitalCoinDeducted: "$question.digitalCoinDeducted",
           coinsDeducted: {
             $cond: [
               { $eq: ["$deductCoin", true] },
@@ -1134,10 +1559,16 @@ router.get("/quiz-response-tracker", async (req, res) => {
 });
 
 // POST /api/channel/:channelId/qr
-router.post("/channel/:channelId/qr", async (req, res) => {
+router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
   try {
-    const { channelId } = req.params;
-    const { backgroundColor, qrDotColor } = req.body;
+    const { channelId, sessionId } = req.params;
+    const { backgroundColor, qrDotColor, type } = req.body;
+
+    if (!type || !["quiz", "voting", "shopping", "brand"].includes(type)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid app type" });
+    }
 
     // Step 1: Find the channel
     const channel = await Channel.findById(channelId);
@@ -1147,14 +1578,29 @@ router.post("/channel/:channelId/qr", async (req, res) => {
         .json({ success: false, message: "Channel not found" });
     }
 
-    const channelCode = channel.code;
-    const qrUrl = `${BASE_URL}/tvstation/channels/${channelId}/quiz-play`;
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Session not found" });
+    }
 
-    // Step 2: Find QR by code
-    let qr = await QRCodeData.findOne({ code: channelCode });
+    // Step 3: Find the code for the given type in session.code[]
+    const codeObj = session.code.find((c) => c.type === type);
+    if (!codeObj) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Code for this type not found" });
+    }
+
+    const sessionCode = codeObj.value;
+    const qrUrl = `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play`;
+
+    // Step 4: Find or create QR
+    let qr = await QRCodeData.findOne({ code: sessionCode });
 
     if (qr) {
-      // Step 3a: If QR exists and colors provided, update them
+      // Update colors if provided
       let updated = false;
 
       if (backgroundColor && backgroundColor !== qr.backgroundColor) {
@@ -1171,13 +1617,12 @@ router.post("/channel/:channelId/qr", async (req, res) => {
         await qr.save();
       }
     } else {
-      // Step 3b: Create new QR
       qr = await QRCodeData.create({
-        qrName: channelCode,
+        qrName: sessionCode,
         type: "url",
         url: qrUrl,
         text: "",
-        code: channelCode,
+        code: sessionCode, // ✅ now uses session code for given type
         qrDotColor: qrDotColor || "#000000",
         backgroundColor: backgroundColor || "#FFFFFF",
         dotStyle: "rounded",
@@ -1190,15 +1635,358 @@ router.post("/channel/:channelId/qr", async (req, res) => {
         usedId: null,
       });
     }
-    const qrObj = qr.toObject();
-    qrObj.redirectUrl = `${BASE_URL}/${channelCode}`;
 
-    // Step 4: Return response
+    const qrObj = qr.toObject();
+    qrObj.redirectUrl = `${BASE_URL}/${sessionCode}`;
+
+    // Step 5: Return response
     res.json({ success: true, qr: qrObj });
   } catch (error) {
     console.error("QR generation error:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
+
+// GET /api/session/:sessionId/qr/:type
+router.get("/session/:sessionId/qr/:type", async (req, res) => {
+  try {
+    const { sessionId, type } = req.params;
+
+    // ✅ Validate type
+    if (!["quiz", "voting", "shopping", "brand"].includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid app type",
+      });
+    }
+
+    // ✅ Only fetch fields needed for validation
+    const session = await Session.findById(
+      sessionId,
+      "name logo logoTitle description link code channelId"
+    ).lean();
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Session not found",
+      });
+    }
+
+    // ✅ Get session code for given type
+    const codeObj = session.code.find((c) => c.type === type);
+    if (!codeObj) {
+      return res.status(404).json({
+        success: false,
+        message: `No code found for type: ${type}`,
+      });
+    }
+
+    const sessionCode = codeObj.value;
+
+    // ✅ Find QR for that code only
+    const qr = await QRCodeData.findOne({ code: sessionCode }).lean();
+    if (!qr) {
+      return res.status(404).json({
+        success: false,
+        message: "QR data not found",
+      });
+    }
+
+    // ✅ Response only contains QR and session meta
+    res.json({
+      success: true,
+      data: {
+        type,
+        code: sessionCode,
+        qr: {
+          ...qr,
+          redirectUrl: `${BASE_URL}/${sessionCode}`,
+        },
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching QR details:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+});
+
+// Session Api
+
+router.get("/channels/:id/sessions", async (req, res) => {
+  const channelId = req.params.id;
+
+  if (!mongoose.Types.ObjectId.isValid(channelId)) {
+    return res.render("dashboardnew", {
+      channel: null,
+      error: "Invalid Channel ID",
+      activeSection: "channel-sessions",
+      user: req.user,
+      sessions: [],
+    });
+  }
+
+  try {
+    const channel = await Channel.findById(channelId);
+    if (!channel) {
+      return res.render("dashboardnew", {
+        channel: null,
+        error: "Channel not found",
+        activeSection: "channel-sessions",
+        user: req.user,
+        sessions: [],
+      });
+    }
+
+    if (!channel.createdBy.equals(req.user._id)) {
+      return res.render("dashboardnew", {
+        channel: null,
+        error: "Access denied",
+        activeSection: "channel-sessions",
+        user: req.user,
+        sessions: [],
+      });
+    }
+
+    const skip = parseInt(req.query.skip) || 0;
+    const limit = parseInt(req.query.limit) || 5;
+
+    const sessions = await Session.find({ channelId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await Session.countDocuments({ channelId });
+    const hasMore = skip + sessions.length < total;
+
+    if (req.xhr || req.headers.accept.includes("json")) {
+      return res.json({ type: "success", data: sessions, hasMore });
+    }
+
+    return res.render("dashboardnew", {
+      channel,
+      error: null,
+      activeSection: "channel-sessions",
+      user: req.user,
+      sessions,
+      hasMore,
+    });
+  } catch (err) {
+    console.error("Error fetching sessions:", err);
+    return res.render("dashboardnew", {
+      channel: null,
+      error: "Server error. Please try again later.",
+      activeSection: "channel-sessions",
+      user: req.user,
+      sessions: [],
+      hasMore: false,
+    });
+  }
+});
+
+router.post(
+  "/session/:channelId/create",
+  addUploadPath("uploads"),
+  upload.fields([{ name: "logo", maxCount: 1 }]),
+  async (req, res) => {
+    const mongoSession = await mongoose.startSession();
+    mongoSession.startTransaction();
+
+    try {
+      const { name, logoTitle, description, link } = req.body;
+      const { channelId } = req.params;
+
+      if (!name || !channelId) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(400).json({
+          message: "Name and channelId are required.",
+          type: "error",
+        });
+      }
+
+      const logoFile = req.files["logo"]?.[0];
+      const logoPath = logoFile ? `/uploads/${logoFile.filename}` : null;
+
+      // Create session
+      const newSession = await Session.create(
+        [
+          {
+            name: name.trim(),
+            logo: logoPath,
+            logoTitle: logoTitle?.trim() || "",
+            description: description?.trim() || "",
+            link: link?.trim() || null,
+            channelId: channelId,
+          },
+        ],
+        { session: mongoSession }
+      );
+
+      const channel = await Channel.findById(channelId).session(mongoSession);
+      if (!channel) throw new Error("Channel not found");
+
+      // Create 4 QR codes based on session.code array
+      const qrDocs = newSession[0].code.map((codeObj) => {
+        let url;
+        switch (codeObj.type) {
+          case "quiz":
+            url = `${BASE_URL}/tvstation/channels/${channelId}/session/${newSession[0]._id}/quiz-play`;
+            break;
+          case "voting":
+            url = `${BASE_URL}/tvstation/channels/${channelId}/session/${newSession[0]._id}/voting-play`;
+            break;
+          case "shopping":
+            url = `${BASE_URL}/tvstation/channels/${channelId}/session/${newSession[0]._id}/shopping-play`;
+            break;
+          case "brand":
+            url = `${BASE_URL}/tvstation/channels/${channelId}/session/${newSession[0]._id}/brand-play`;
+            break;
+          default:
+            url = `${BASE_URL}/tvstation/channels/${channelId}/session/${newSession[0]._id}`;
+        }
+
+        return {
+          qrName: codeObj.value,
+          type: "url",
+          url,
+          text: "",
+          code: codeObj.value,
+          qrDotColor: "#000000",
+          backgroundColor: "#FFFFFF",
+          dotStyle: "rounded",
+          cornerStyle: "dot",
+          applyGradient: "none",
+          ColorList: "first",
+          isDemo: false,
+          isQrActivated: true,
+          isFirstQr: false,
+          usedId: null,
+        };
+      });
+
+      await QRCodeData.insertMany(qrDocs, { session: mongoSession });
+
+      await mongoSession.commitTransaction();
+      mongoSession.endSession();
+
+      return res.status(201).json({
+        message: "Session and QRs created successfully.",
+        type: "success",
+        data: newSession[0],
+      });
+    } catch (err) {
+      await mongoSession.abortTransaction();
+      mongoSession.endSession();
+
+      console.error("Error creating session & QRs:", err);
+      cleanupUploadedFiles(req.files, "uploads");
+
+      return res.status(500).json({
+        message: "Failed to create session and QRs.",
+        type: "error",
+      });
+    }
+  }
+);
+
+// DELETE session route
+router.delete("/session/:sessionId", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    // ✅ Find the session first
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return res
+        .status(404)
+        .json({ message: "Session not found", type: "error" });
+    }
+
+    // ✅ Delete logo file if exists
+    if (session.logo) {
+      deleteFileIfExists(session.logo);
+    }
+
+    // ✅ Delete the session document
+    await Session.findByIdAndDelete(sessionId);
+
+    return res.status(200).json({
+      message: "Session deleted successfully",
+      type: "success",
+    });
+  } catch (err) {
+    console.error("Error deleting session:", err);
+    return res.status(500).json({
+      message: "Failed to delete session",
+      type: "error",
+    });
+  }
+});
+
+router.post(
+  "/session/:sessionId/update",
+  addUploadPath("uploads"),
+  upload.fields([{ name: "logo", maxCount: 1 }]),
+  async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { name, logoTitle, description, link, removeLogo } = req.body;
+
+      const session = await Session.findById(sessionId);
+      if (!session) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res
+          .status(404)
+          .json({ message: "Session not found", type: "error" });
+      }
+
+      const newLogoFile = req.files["logo"]?.[0];
+      const shouldRemoveLogo = removeLogo === "true"; // comes as string from form
+
+      // ✅ Handle logo logic
+      let logoPath = session.logo;
+
+      if (newLogoFile) {
+        // Replace with new logo
+        if (session.logo) {
+          deleteFileIfExists(session.logo);
+        }
+        logoPath = `/uploads/${newLogoFile.filename}`;
+      } else if (shouldRemoveLogo && session.logo) {
+        // Remove existing logo only if flagged
+        deleteFileIfExists(session.logo);
+        logoPath = null;
+      }
+
+      // ✅ Update fields
+      session.name = name?.trim() || session.name;
+      session.logo = logoPath;
+      session.logoTitle = logoTitle?.trim() || "";
+      session.description = description?.trim() || "";
+      session.link = link?.trim() || null;
+
+      await session.save();
+
+      return res.status(200).json({
+        message: "Session updated successfully.",
+        type: "success",
+        data: session,
+      });
+    } catch (err) {
+      console.error("Error updating session:", err);
+      cleanupUploadedFiles(req.files, "uploads");
+      return res.status(500).json({
+        message: "Failed to update session.",
+        type: "error",
+      });
+    }
+  }
+);
+
+// Session Api End Here
 
 module.exports = router;

@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
 const Payment = require("../models/Payment");
+const User = require("../models/User");
+const Plan = require("../models/Plan");
 const { client } = require("../config/paypal");
 const axios = require("axios");
 require("dotenv").config();
@@ -71,13 +73,16 @@ router.post(
       }
 
       const eventBody = JSON.parse(rawBody);
-
+      console.log(eventBody.event_type, "type");
       if (eventBody.event_type === "PAYMENT.CAPTURE.COMPLETED") {
+        console.log("💰 Payment capture completed event received");
         const capture = eventBody.resource;
         const transactionId = capture.id;
         const status = capture.status;
         const amount = parseFloat(capture.amount.value);
         const currency = capture.amount.currency_code;
+
+        console.log(`Looking for Payment with transactionId: ${transactionId}`);
 
         const updated = await Payment.findOneAndUpdate(
           { transactionId },
@@ -88,6 +93,28 @@ router.post(
           console.warn(
             `Payment with transaction ID ${transactionId} not found.`
           );
+        } else {
+          // 2️⃣ Payment exists and updated ✅
+          // Now fetch the corresponding plan
+          console.log(
+            `✅ Payment updated: ${updated._id}, status: ${updated.paymentStatus}`
+          );
+          const plan = await Plan.findById(updated.plan_id);
+          if (!plan) {
+            console.warn(`Plan with ID ${updated.plan_id} not found.`);
+          } else {
+            // 3️⃣ Add coinsOffered from plan to user's wallet
+            const user = await User.findById(updated.user_id);
+            if (!user) {
+              console.warn(`User with ID ${updated.user_id} not found.`);
+            } else {
+              user.walletCoins = (user.walletCoins || 0) + plan.coinsOffered;
+              await user.save();
+              console.log(
+                `Added ${plan.coinsOffered} coins to user ${user._id}. Total coins: ${user.walletCoins}`
+              );
+            }
+          }
         }
       }
 

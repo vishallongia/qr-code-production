@@ -33,7 +33,8 @@
                                     <span>Email</span>
                                     <span>Answer</span>
                                     <span>Correct</span>
-                                    <span>Coins Deducted</span>
+                                    <span>Jackpot Coins Deducted</span>
+                                    <span>Digital Coins Deducted</span>
                                     <span>Time</span>
                                 </div>
 
@@ -60,7 +61,10 @@
                                                 <%= resp.isCorrect ? "Yes" : "No" %>
                                             </span>
                                             <span>
-                                                <%= resp.deductCoin ? (resp.coinsDeducted || 1) : "No" %>
+                                                <%= resp.jackpotCoinDeducted ? (resp.jackpotCoinDeducted || 1) : "No" %>
+                                            </span>
+                                            <span>
+                                                <%= resp.digitalCoinDeducted ? (resp.digitalCoinDeducted || 1) : "No" %>
                                             </span>
                                             <span>
                                                 <%= formattedDate %>
