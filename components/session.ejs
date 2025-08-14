@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 </head>
 
-<input type="hidden" id="channel-id" value="<%= channel._id %>">
+<input type="hidden" id="channel-id" value="<%= channel ? channel._id : '' %>">
 <input type="hidden" id="session-length" value="<%= sessions?.length || 0 %>">
 
 <body>

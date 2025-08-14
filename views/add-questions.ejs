@@ -501,7 +501,10 @@
             const result = await res.json();
             if (result.type === "success") {
                 showToast(result.message || "Question saved successfully!", "success");
-                createQuestionBlock();
+                // Reload page after 1 second
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } else {
                 showToast(result.message || "Something went wrong.", "error");
             }

@@ -27,7 +27,10 @@ router.get("/channels", async (req, res) => {
     const totalChannels = await Channel.countDocuments();
     const totalPages = Math.ceil(totalChannels / recordsPerPage);
 
-    const channels = await Channel.find()
+    // Filter channels created by the logged-in user
+    const filter = { createdBy: req.user._id };
+
+    const channels = await Channel.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(recordsPerPage)

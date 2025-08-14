@@ -199,6 +199,9 @@
     overflow-y: auto;
     font-family: var(--uq-font-family);
     color: var(--uq-text-color);
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+
 }
 
 .coin-popup h3 {
