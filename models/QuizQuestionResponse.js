@@ -36,6 +36,14 @@ const quizQuestionResponseSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    jackpotCoinDeducted: {
+      type: Number,
+      default: 0,
+    },
+    digitalCoinDeducted: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

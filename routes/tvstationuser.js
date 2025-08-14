@@ -1275,61 +1275,65 @@ router.get(
       const hasNext = index + 1 < total;
 
       // 🔹 Calculate total purchased coins
-      const purchasedCoinsResult = await Payment.aggregate([
-        {
-          $match: {
-            user_id: req.user._id,
-            paymentStatus: "completed",
-            type: "coin",
-          },
-        },
-        {
-          $lookup: {
-            from: "magiccoinplans",
-            localField: "plan_id",
-            foreignField: "_id",
-            as: "planInfo",
-          },
-        },
-        { $unwind: "$planInfo" },
-        {
-          $group: {
-            _id: null,
-            totalCoins: { $sum: "$planInfo.coinsOffered" },
-          },
-        },
-      ]);
+      // const purchasedCoinsResult = await Payment.aggregate([
+      //   {
+      //     $match: {
+      //       user_id: req.user._id,
+      //       paymentStatus: "completed",
+      //       type: "coin",
+      //     },
+      //   },
+      //   {
+      //     $lookup: {
+      //       from: "magiccoinplans",
+      //       localField: "plan_id",
+      //       foreignField: "_id",
+      //       as: "planInfo",
+      //     },
+      //   },
+      //   { $unwind: "$planInfo" },
+      //   {
+      //     $group: {
+      //       _id: null,
+      //       totalCoins: { $sum: "$planInfo.coinsOffered" },
+      //     },
+      //   },
+      // ]);
 
-      const totalCoins = purchasedCoinsResult[0]?.totalCoins || 0;
+      // const totalCoins = purchasedCoinsResult[0]?.totalCoins || 0;
 
       // 🔹 Calculate total deducted coins
-      const deductedResponses = await QuizQuestionResponse.aggregate([
-        {
-          $match: {
-            userId: req.user._id,
-            deductCoin: true,
-          },
-        },
-        {
-          $lookup: {
-            from: "quizquestions",
-            localField: "questionId",
-            foreignField: "_id",
-            as: "questionInfo",
-          },
-        },
-        { $unwind: "$questionInfo" },
-        {
-          $group: {
-            _id: null,
-            totalDeducted: { $sum: "$questionInfo.magicCoinDeducted" },
-          },
-        },
-      ]);
+      // const deductedResponses = await QuizQuestionResponse.aggregate([
+      //   {
+      //     $match: {
+      //       userId: req.user._id,
+      //       deductCoin: true,
+      //     },
+      //   },
+      //   {
+      //     $lookup: {
+      //       from: "quizquestions",
+      //       localField: "questionId",
+      //       foreignField: "_id",
+      //       as: "questionInfo",
+      //     },
+      //   },
+      //   { $unwind: "$questionInfo" },
+      //   {
+      //     $group: {
+      //       _id: null,
+      //       totalDeducted: { $sum: "$questionInfo.magicCoinDeducted" },
+      //     },
+      //   },
+      // ]);
 
-      const totalDeducted = deductedResponses[0]?.totalDeducted || 0;
+      // const totalDeducted = deductedResponses[0]?.totalDeducted || 0;
 
-      const availableCoins = totalCoins - totalDeducted;
+      // const availableCoins = totalCoins - totalDeducted;
+
+      // Now User has a key walletCoins
+
+      const availableCoins = req.user?.walletCoins || 0;
 
       if (req.xhr || req.headers.accept.includes("json")) {
         return res.json({
@@ -1338,7 +1342,7 @@ router.get(
           currentIndex: index,
           total,
           hasNext,
-          availableCoins,
+          availableCoins: req.user.walletCoins,
         });
       }
 
@@ -1372,6 +1376,8 @@ router.post("/quiz-response", async (req, res) => {
     channelId,
     selectedOptionIndex,
     deductCoin = false,
+    jackpotCoinDeducted = false, // flags to decide snapshot
+    digitalCoinDeducted = false,
   } = req.body;
 
   const userId = req.user?._id;
@@ -1393,86 +1399,51 @@ router.post("/quiz-response", async (req, res) => {
     const isCorrect =
       question.correctAnswerIndex === Number(selectedOptionIndex);
 
-    // 🪙 Check coin balance if deductCoin is true
-    if (deductCoin) {
-      // Get total coins purchased
-      const purchased = await Payment.aggregate([
-        {
-          $match: {
-            user_id: userId,
-            paymentStatus: "completed",
-            type: "coin",
-          },
-        },
-        {
-          $lookup: {
-            from: "magiccoinplans",
-            localField: "plan_id",
-            foreignField: "_id",
-            as: "planInfo",
-          },
-        },
-        { $unwind: "$planInfo" },
-        {
-          $group: {
-            _id: null,
-            totalCoins: { $sum: "$planInfo.coinsOffered" },
-          },
-        },
-      ]);
-      const totalCoins = purchased[0]?.totalCoins || 0;
+    // Determine snapshot values
+    const jackpotSnapshot =
+      deductCoin && jackpotCoinDeducted ? question.jackpotCoinDeducted || 0 : 0;
+    const digitalSnapshot =
+      deductCoin && digitalCoinDeducted ? question.digitalCoinDeducted || 0 : 0;
 
-      // Get total deducted coins from past responses
-      const deducted = await QuizQuestionResponse.aggregate([
-        {
-          $match: {
-            userId,
-            deductCoin: true,
-          },
-        },
-        {
-          $lookup: {
-            from: "quizquestions",
-            localField: "questionId",
-            foreignField: "_id",
-            as: "questionInfo",
-          },
-        },
-        { $unwind: "$questionInfo" },
-        {
-          $group: {
-            _id: null,
-            totalDeducted: { $sum: "$questionInfo.magicCoinDeducted" },
-          },
-        },
-      ]);
-      const totalDeducted = deducted[0]?.totalDeducted || 0;
+    // Total sum of both
+    const totalSnapshot = jackpotSnapshot + digitalSnapshot;
 
-      const availableCoins = totalCoins - totalDeducted;
+    // If totalSnapshot is 0, override deductCoin to false
+    const actualDeductCoin = totalSnapshot > 0 ? deductCoin : false;
 
-      if (availableCoins < question.magicCoinDeducted) {
+    if (actualDeductCoin) {
+      const user = await User.findById(userId);
+      if ((user.walletCoins || 0) < totalSnapshot) {
         return res.status(400).json({
           success: false,
-          message: `You need ${question.magicCoinDeducted} coins, but you have only ${availableCoins}`,
+          message: `You need ${totalSnapshot} coins, but you have only ${
+            user.walletCoins || 0
+          }`,
         });
       }
-      // Deduct coins from user's wallet
-      await User.findByIdAndUpdate(userId, {
-        $inc: { walletCoin: -totalDeducted },
-      });
+
+      const updateResult = await User.findByIdAndUpdate(
+        userId,
+        { $inc: { walletCoins: -totalSnapshot } },
+        { new: true }
+      );
+
+      console.log("Wallet update result:", updateResult);
     }
 
-    // Always create new response
-    await QuizQuestionResponse.create({
+    // Create quiz response with coin snapshot and correct deductCoin
+    const response = await QuizQuestionResponse.create({
       userId,
       questionId,
       channelId,
       selectedOptionIndex,
       isCorrect,
-      deductCoin,
+      deductCoin: actualDeductCoin,
+      jackpotCoinDeducted: jackpotSnapshot,
+      digitalCoinDeducted: digitalSnapshot,
     });
 
-    return res.status(200).json({ success: true, isCorrect });
+    return res.status(200).json({ success: true, isCorrect, response });
   } catch (err) {
     console.error("Error saving quiz response:", err);
     return res.status(500).json({ success: false, message: "Server error" });
@@ -1510,8 +1481,8 @@ router.get("/quiz-response-tracker", async (req, res) => {
           selectedOptionIndex: 1,
           isCorrect: 1,
           deductCoin: 1,
-          jackpotCoinDeducted: "$question.jackpotCoinDeducted",
-          digitalCoinDeducted: "$question.digitalCoinDeducted",
+          jackpotCoinDeducted: 1,
+          digitalCoinDeducted: 1,
           coinsDeducted: {
             $cond: [
               { $eq: ["$deductCoin", true] },

@@ -50,7 +50,7 @@
                                                     <% if (currentQuestion?.jackpotCoinDeducted) { %>
 
                                                         <label class="coin-toggle">
-                                                            <input type="checkbox" id="deductCoinSwitch" checked>
+                                                            <input type="checkbox" id="deductJackpotCoinSwitch" checked>
                                                             <span class="slider"></span>
                                                             Deduct Coins
                                                         </label>
@@ -87,7 +87,7 @@
 
                                                             <% if (currentQuestion?.digitalCoinDeducted) { %>
                                                                 <label class="coin-toggle">
-                                                                    <input type="checkbox" id="deductCoinSwitch"
+                                                                    <input type="checkbox" id="deductDigitalCoinSwitch"
                                                                         checked>
                                                                     <span class="slider"></span>
                                                                     Deduct Coins
@@ -252,7 +252,11 @@
     function confirmAnswer() {
         const questionId = document.querySelector('input[name="questionId"]').value;
         const channelId = document.querySelector('input[name="channelId"]').value;
-        const deductCoin = deductCoinSwitch.checked;
+        // const deductCoin = deductCoinSwitch.checked;
+
+        // Check which toggles are ON
+        const deductJackpotCoin = document.getElementById("deductJackpotCoinSwitch")?.checked || false;
+        const deductDigitalCoin = document.getElementById("deductDigitalCoinSwitch")?.checked || false;
 
         const loader = document.getElementById("loader");
         loader.style.display = "flex"; // show loader
@@ -266,7 +270,9 @@
                 questionId,
                 channelId,
                 selectedOptionIndex,
-                deductCoin,
+                deductCoin: deductJackpotCoin || deductDigitalCoin, // overall deduction
+                jackpotCoinDeducted: deductJackpotCoin,
+                digitalCoinDeducted: deductDigitalCoin
             }),
         })
             .then((res) => res.json())

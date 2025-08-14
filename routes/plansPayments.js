@@ -659,63 +659,63 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
       encryptedId: encryptPassword(plan._id.toString()),
     }));
 
-    // 3. Total coins purchased via completed payments
-    const coinResult = await Payment.aggregate([
-      {
-        $match: {
-          user_id: req.user._id,
-          paymentStatus: "completed",
-          type: "coin",
-        },
-      },
-      {
-        $lookup: {
-          from: "magiccoinplans", // Ensure correct collection name
-          localField: "plan_id",
-          foreignField: "_id",
-          as: "planInfo",
-        },
-      },
-      { $unwind: "$planInfo" },
-      {
-        $group: {
-          _id: null,
-          totalCoins: { $sum: "$planInfo.coinsOffered" },
-        },
-      },
-    ]);
+    // // 3. Total coins purchased via completed payments
+    // const coinResult = await Payment.aggregate([
+    //   {
+    //     $match: {
+    //       user_id: req.user._id,
+    //       paymentStatus: "completed",
+    //       type: "coin",
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "magiccoinplans", // Ensure correct collection name
+    //       localField: "plan_id",
+    //       foreignField: "_id",
+    //       as: "planInfo",
+    //     },
+    //   },
+    //   { $unwind: "$planInfo" },
+    //   {
+    //     $group: {
+    //       _id: null,
+    //       totalCoins: { $sum: "$planInfo.coinsOffered" },
+    //     },
+    //   },
+    // ]);
 
-    const totalCoinsPurchased = coinResult[0]?.totalCoins || 0;
+    // const totalCoinsPurchased = coinResult[0]?.totalCoins || 0;
 
-    // 4. Total coins used in quiz (deductCoin = true)
-    const coinUsedResult = await QuizQuestionResponse.aggregate([
-      {
-        $match: {
-          userId: req.user._id,
-          deductCoin: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "quizquestions", // ✅ Make sure this matches the actual collection name
-          localField: "questionId",
-          foreignField: "_id",
-          as: "question",
-        },
-      },
-      { $unwind: "$question" },
-      {
-        $group: {
-          _id: null,
-          coinsUsed: { $sum: "$question.magicCoinDeducted" },
-        },
-      },
-    ]);
+    // // 4. Total coins used in quiz (deductCoin = true)
+    // const coinUsedResult = await QuizQuestionResponse.aggregate([
+    //   {
+    //     $match: {
+    //       userId: req.user._id,
+    //       deductCoin: true,
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "quizquestions", // ✅ Make sure this matches the actual collection name
+    //       localField: "questionId",
+    //       foreignField: "_id",
+    //       as: "question",
+    //     },
+    //   },
+    //   { $unwind: "$question" },
+    //   {
+    //     $group: {
+    //       _id: null,
+    //       coinsUsed: { $sum: "$question.magicCoinDeducted" },
+    //     },
+    //   },
+    // ]);
 
-    const coinsUsed = coinUsedResult[0]?.coinsUsed || 0;
+    // const coinsUsed = coinUsedResult[0]?.coinsUsed || 0;
 
     // 5. Calculate remaining coins
-    const totalMagicCoins = totalCoinsPurchased - coinsUsed;
+    const totalMagicCoins = req.user.walletCoins || 0;
 
     // 6. Render dashboard
     res.render("dashboardnew", {
