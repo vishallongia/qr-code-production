@@ -10,6 +10,7 @@ const {
 const QuizQuestion = require("../models/QuizQuestion");
 const Channel = require("../models/Channel");
 const Payment = require("../models/Payment");
+const User = require("../models/User");
 const QuizQuestionResponse = require("../models/QuizQuestionResponse");
 const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
 const Session = require("../models/Session"); // adjust path if needed
