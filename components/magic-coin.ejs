@@ -131,6 +131,7 @@
                                 if (response.transactionId) {
                                     if (couponInput) couponInput.value = ""; // Clear the coupon input
                                     // ✅ Redirect to success page with transaction ID
+                                    const type = "magic"; // or whatever type you need
                                     window.location.href = `/successpayment?session_id=${response.transactionId}&type=${type}`
                                 } else {
                                     alert("Transaction ID not found.");
