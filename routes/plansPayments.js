@@ -227,11 +227,13 @@ router.post(
 router.get("/successpayment", async (req, res) => {
   try {
     const session = req.query.session_id;
+    const type = req.query.type || "subscription"; // default to subscription
     const payment = await Payment.findOne({ transactionId: session });
 
     res.render("paymentsuccess", {
       paymentStatus: payment?.paymentStatus || "pending",
       amount: payment?.amount,
+      type, // send type to frontend
       errorMessage: null, // no error
     });
   } catch (error) {
@@ -239,6 +241,7 @@ router.get("/successpayment", async (req, res) => {
     res.render("paymentsuccess", {
       paymentStatus: "failed",
       amount: 0,
+      type: req.query.type || "subscription",
       errorMessage:
         "There was an error retrieving your payment. Please wait while we confirm the status.",
     });

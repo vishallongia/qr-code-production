@@ -1,137 +1,162 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ===================== Add Channel Popup =====================
-  const addPopup = document.getElementById("popup-add-channel");
+  // ===================== Elements =====================
+  const popup = document.getElementById("popup-add-edit-show");
   const openAddBtn = document.getElementById("add-channel-btn");
-  const closeAddBtn = document.getElementById("close-popup-channel");
+  const closeBtn = document.getElementById("close-popup-show");
+  const form = document.getElementById("add-edit-show-form");
+  const showIdInput = document.getElementById("show-id");
+  const showNameInput = document.getElementById("show-name");
+  const showLogoInput = document.getElementById("show-logo");
+  const logoPreviewContainer = document.getElementById(
+    "show-logo-preview-container"
+  );
+  const logoPreview = document.getElementById("show-logo-preview");
+  const clearLogoBtn = document.getElementById("clear-show-logo-btn");
+  const removeLogoFlag = document.getElementById("remove-show-logo-flag");
+  const popupHeader = document.getElementById("show-popup-header");
 
+  // ===================== Open Add Popup =====================
   openAddBtn?.addEventListener("click", () => {
-    addPopup.style.display = "flex";
+    popup.style.display = "flex";
+    popupHeader.textContent = "Add New Show";
+    form.reset();
+    showIdInput.value = "";
+    removeLogoFlag.value = "false";
+    logoPreviewContainer.style.display = "none";
   });
 
-  closeAddBtn?.addEventListener("click", () => {
-    addPopup.style.display = "none";
+  // ===================== Close Popup =====================
+  closeBtn?.addEventListener("click", () => {
+    popup.style.display = "none";
+    form.reset();
+    logoPreviewContainer.style.display = "none";
+    showLogoInput.value = "";
+    removeLogoFlag.value = "false";
   });
 
-  // ===================== Add Channel Submit =====================
-  const addForm = document.getElementById("add-channel-form");
-  addForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const input = document.getElementById("channel-name-input");
-    const name = input.value.trim();
-
-    if (!name) {
-      showToast("Channel name is required", "error");
-      return;
+  // ===================== Logo Preview =====================
+  showLogoInput.addEventListener("change", () => {
+    const file = showLogoInput.files[0];
+    if (file) {
+      logoPreview.src = URL.createObjectURL(file);
+      logoPreviewContainer.style.display = "block";
+      removeLogoFlag.value = "false";
+      clearLogoBtn.style.display = "block"; // <-- add this line
     }
+  });
 
-    try {
-      const res = await fetch("/tvstation/create-channel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-      });
+  // ===================== Clear Logo =====================
+  clearLogoBtn.addEventListener("click", () => {
+    showLogoInput.value = "";
+    logoPreview.src = "";
+    logoPreviewContainer.style.display = "none";
+    removeLogoFlag.value = "true";
+  });
 
-      const data = await res.json();
+  // ===================== Edit Show Popup =====================
+  // ===================== Edit Show Popup =====================
+  document.querySelectorAll(".edit-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const channelId = btn.dataset.id?.trim(); // remove extra spaces
+      showIdInput.value = channelId;
+      popupHeader.textContent = "Edit Show";
 
-      if (res.ok) {
-        showToast(data.message || "Channel created successfully", "success");
-        input.value = "";
-        addPopup.style.display = "none";
-        setTimeout(() => location.reload(), 1000);
+      // Populate name
+      const secondSpan = btn
+        .closest(".user-item")
+        ?.querySelector("span:nth-child(2)");
+      showNameInput.value = secondSpan?.innerText.trim() || "";
+
+      // Populate optional fields from data- attributes
+      const logoTitleInput = document.getElementById("session-logo-title");
+      const descriptionInput = document.getElementById("session-description");
+      const linkInput = document.getElementById("session-link");
+
+      logoTitleInput.value = btn.dataset.logoTitle || "";
+      descriptionInput.value = btn.dataset.description || "";
+      linkInput.value = btn.dataset.link || "";
+
+      // Handle logo preview
+      if (btn.dataset.logoUrl) {
+        logoPreview.src = btn.dataset.logoUrl;
+        logoPreviewContainer.style.display = "block";
+        clearLogoBtn.style.display = "block";
+        removeLogoFlag.value = "false";
       } else {
-        showToast(data.message || "Failed to create channel", "error");
+        logoPreview.src = "";
+        logoPreviewContainer.style.display = "none";
+        clearLogoBtn.style.display = "none";
+        removeLogoFlag.value = "false";
       }
-    } catch (error) {
-      console.error("Create Channel API error:", error);
-      showToast("Failed to create channel", "error");
-    }
+
+      // Reset file input
+      showLogoInput.value = "";
+
+      // Show popup
+      popup.style.display = "flex";
+    });
   });
 
-  // ===================== Delete Channel =====================
+  // ===================== Delete Show =====================
   document.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const channelId = btn.dataset.id;
-      const confirmed = confirm(
-        "Are you sure you want to delete this channel?"
-      );
+      const confirmed = confirm("Are you sure you want to delete this show?");
       if (!confirmed) return;
-
+      document.getElementById("loader").style.display = "flex"; // 👈 Show loader
       try {
         const res = await fetch(`/tvstation/channels/${channelId}`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
         });
-
         const data = await res.json();
-
         if (res.ok) {
-          showToast(data.message || "Channel deleted successfully", "success");
+          showToast(data.message || "Show deleted successfully", "success");
           setTimeout(() => location.reload(), 1000);
         } else {
-          showToast(data.message || "Failed to delete channel", "error");
+          showToast(data.message || "Failed to delete show", "error");
         }
       } catch (err) {
-        console.error("Delete error:", err);
+        console.error(err);
         showToast("Something went wrong", "error");
+      } finally {
+        document.getElementById("loader").style.display = "none"; // 👈 Show loader
       }
     });
   });
 
-  // ===================== Edit Channel Popup =====================
-  const editPopup = document.getElementById("popup-edit-channel");
-  const closeEditBtn = document.getElementById("close-popup-edit-channel");
-
-  closeEditBtn?.addEventListener("click", () => {
-    editPopup.style.display = "none";
-  });
-
-  document.querySelectorAll(".edit-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const channelId = btn.dataset.id;
-      const nameSpan = btn
-        .closest(".user-item")
-        ?.querySelector("span:first-child");
-      const currentName = nameSpan?.innerText.trim() || "";
-
-      document.getElementById("edit-channel-id").value = channelId;
-      document.getElementById("edit-channel-name").value = currentName;
-
-      editPopup.style.display = "flex";
-    });
-  });
-
-  // ===================== Edit Channel Submit =====================
-  const editForm = document.getElementById("edit-channel-form");
-  editForm?.addEventListener("submit", async (e) => {
+  // ===================== Add/Edit Submit =====================
+  form?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const channelId = document.getElementById("edit-channel-id").value;
-    const name = document.getElementById("edit-channel-name").value.trim();
-
-    if (!name) {
-      showToast("Channel name is required", "error");
-      return;
-    }
+    const formData = new FormData(form); // automatically includes all inputs
+    document.getElementById("loader").style.display = "flex"; // 👈 Show loader
+    const showId = showIdInput.value;
+    const url = showId
+      ? `/tvstation/channels/${showId}`
+      : "/tvstation/create-channel";
+    const method = showId ? "PUT" : "POST";
 
     try {
-      const res = await fetch(`/tvstation/channels/${channelId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-      });
-
+      const res = await fetch(url, { method, body: formData });
       const data = await res.json();
 
       if (res.ok) {
-        showToast(data.message || "Channel updated successfully", "success");
-        editPopup.style.display = "none";
+        showToast(data.message || "Show saved successfully", "success");
+        popup.style.display = "none";
+        form.reset();
+        logoPreviewContainer.style.display = "none";
+        showLogoInput.value = "";
+        removeLogoFlag.value = "false";
         setTimeout(() => location.reload(), 1000);
       } else {
-        showToast(data.message || "Failed to update channel", "error");
+        showToast(data.message || "Failed to save show", "error");
       }
     } catch (err) {
-      console.error("Edit channel error:", err);
+      console.error(err);
       showToast("Something went wrong", "error");
+    } finally {
+      document.getElementById("loader").style.display = "none"; // 👈 Show loader
     }
   });
 });

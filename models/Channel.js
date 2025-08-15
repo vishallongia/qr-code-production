@@ -14,11 +14,31 @@ const tvChannelSchema = new mongoose.Schema(
     },
     isRunning: {
       type: Boolean,
-      default: false,
+      default: true,
+      immutable: true,
     },
     typeOfRunning: {
       type: String,
       enum: ["voting", "quiz"],
+    },
+    logo: {
+      type: String, // path to uploaded logo
+      default: null,
+    },
+    logoTitle: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    link: {
+      type: String,
+      default: "",
+      trim: true,
     },
   },
   {

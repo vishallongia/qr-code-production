@@ -13,106 +13,117 @@
 </head>
 
 <body style="padding: 0px;">
-    <% const pageNum=Number(currentPage); const invalidPage=isNaN(pageNum) || pageNum> totalPages || pageNum < 1; %>
 
-            <div class="modern-list-container">
-                <h2>Quiz Response Tracker</h2>
+    <% if (error) { %>
+        <div class="quiz-admin-error" style="margin: 20px;">
+            <%= error %>
+        </div>
+        <% } else { %>
+            <% const pageNum=Number(currentPage); const invalidPage=isNaN(pageNum) || pageNum> totalPages || pageNum <
+                    1; %>
 
-                <% if (invalidPage && totalPages> 0) { %>
-                    <%- include('../components/404') %>
-                        <% } else if (quizResponses && quizResponses.length> 0) { %>
+                    <div class="modern-list-container">
+                        <h2>Quiz Response Tracker</h2>
 
-                            <p><strong>Total Responses:</strong>
-                                <%= totalResponsesWithoutPagination %>
-                            </p>
+                        <% if (invalidPage && totalPages> 0) { %>
+                            <%- include('../components/404') %>
+                                <% } else if (quizResponses && quizResponses.length> 0) { %>
 
-                            <div class="list-wrapper">
-                                <div class="list-header">
-                                    <span>Question</span>
-                                    <span>User</span>
-                                    <span>Email</span>
-                                    <span>Answer</span>
-                                    <span>Correct</span>
-                                    <span>Jackpot Coins Deducted</span>
-                                    <span>Digital Coins Deducted</span>
-                                    <span>Time</span>
-                                </div>
+                                    <p><strong>Total Responses:</strong>
+                                        <%= totalResponsesWithoutPagination %>
+                                    </p>
 
-                                <ul class="user-list">
-                                    <% quizResponses.forEach(resp=> {
-                                        const formattedDate = new Date(resp.createdAt).toLocaleString("en-GB", {
-                                        day: '2-digit', month: '2-digit', year: 'numeric',
-                                        hour: '2-digit', minute: '2-digit'
-                                        });
-                                        %>
-                                        <li class="user-item">
-                                            <span>
-                                                <%= resp.questionText || "—" %>
-                                            </span>
-                                            <span>
-                                                <%= resp.userName %>
-                                            </span>
-                                            <span>
-                                                <%= resp.userEmail %>
-                                            </span>
-                                            <span>Option <%= resp.selectedOptionIndex + 1 %></span>
-                                            <span
-                                                class="<%= resp.isCorrect ? 'status-sticker success' : 'status-sticker error' %>">
-                                                <%= resp.isCorrect ? "Yes" : "No" %>
-                                            </span>
-                                            <span>
-                                                <%= resp.jackpotCoinDeducted ? (resp.jackpotCoinDeducted || 1) : "No" %>
-                                            </span>
-                                            <span>
-                                                <%= resp.digitalCoinDeducted ? (resp.digitalCoinDeducted || 1) : "No" %>
-                                            </span>
-                                            <span>
-                                                <%= formattedDate %>
-                                            </span>
-                                        </li>
-                                        <% }) %>
-                                </ul>
-                            </div>
+                                    <div class="list-wrapper">
+                                        <div class="list-header">
+                                            <span>Question</span>
+                                            <span>User</span>
+                                            <span>Email</span>
+                                            <span>Answer</span>
+                                            <span>Correct</span>
+                                            <span>Jackpot Coins Deducted</span>
+                                            <span>Digital Coins Deducted</span>
+                                            <span>Time</span>
+                                        </div>
 
-                            <div class="pagination-container">
-                                <% if (pageNum> 1) { %>
-                                    <a href="?page=<%= pageNum - 1 %>" class="pagination-btn prev-btn">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M15 19L8 12L15 5" />
-                                        </svg>
-                                    </a>
-                                    <% } %>
+                                        <ul class="user-list">
+                                            <% quizResponses.forEach(resp=> {
+                                                const formattedDate = new Date(resp.createdAt).toLocaleString("en-GB", {
+                                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                                hour: '2-digit', minute: '2-digit'
+                                                });
+                                                %>
+                                                <li class="user-item">
+                                                    <span>
+                                                        <%= resp.questionText || "—" %>
+                                                    </span>
+                                                    <span>
+                                                        <%= resp.userName %>
+                                                    </span>
+                                                    <span>
+                                                        <%= resp.userEmail %>
+                                                    </span>
+                                                    <span>Option <%= resp.selectedOptionIndex + 1 %></span>
+                                                    <span
+                                                        class="<%= resp.isCorrect ? 'status-sticker success' : 'status-sticker error' %>">
+                                                        <%= resp.isCorrect ? "Yes" : "No" %>
+                                                    </span>
+                                                    <span>
+                                                        <%= resp.jackpotCoinDeducted ? (resp.jackpotCoinDeducted || 1)
+                                                            : "No" %>
+                                                    </span>
+                                                    <span>
+                                                        <%= resp.digitalCoinDeducted ? (resp.digitalCoinDeducted || 1)
+                                                            : "No" %>
+                                                    </span>
+                                                    <span>
+                                                        <%= formattedDate %>
+                                                    </span>
+                                                </li>
+                                                <% }) %>
+                                        </ul>
+                                    </div>
 
-                                        <% for (let i=1; i <=totalPages; i++) { %>
-                                            <% if (i===pageNum) { %>
-                                                <span class="pagination-btn active-page">
-                                                    <%= i %>
-                                                </span>
-                                                <% } else { %>
-                                                    <a href="?page=<%= i %>" class="pagination-btn">
-                                                        <%= i %>
-                                                    </a>
-                                                    <% } %>
-                                                        <% } %>
+                                    <div class="pagination-container">
+                                        <% if (pageNum> 1) { %>
+                                            <a href="?page=<%= pageNum - 1 %>" class="pagination-btn prev-btn">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M15 19L8 12L15 5" />
+                                                </svg>
+                                            </a>
+                                            <% } %>
 
-                                                            <% if (pageNum < totalPages) { %>
-                                                                <a href="?page=<%= pageNum + 1 %>"
-                                                                    class="pagination-btn next-btn">
-                                                                    <svg width="22" height="22" viewBox="0 0 24 24"
-                                                                        fill="currentColor">
-                                                                        <path d="M9 5L16 12L9 19" />
-                                                                    </svg>
-                                                                </a>
+                                                <% for (let i=1; i <=totalPages; i++) { %>
+                                                    <% if (i===pageNum) { %>
+                                                        <span class="pagination-btn active-page">
+                                                            <%= i %>
+                                                        </span>
+                                                        <% } else { %>
+                                                            <a href="?page=<%= i %>" class="pagination-btn">
+                                                                <%= i %>
+                                                            </a>
+                                                            <% } %>
                                                                 <% } %>
-                            </div>
 
-                            <% } else { %>
-                                <p class="no-data-message">No quiz responses yet.</p>
-                                <% } %>
-            </div>
+                                                                    <% if (pageNum < totalPages) { %>
+                                                                        <a href="?page=<%= pageNum + 1 %>"
+                                                                            class="pagination-btn next-btn">
+                                                                            <svg width="22" height="22"
+                                                                                viewBox="0 0 24 24" fill="currentColor">
+                                                                                <path d="M9 5L16 12L9 19" />
+                                                                            </svg>
+                                                                        </a>
+                                                                        <% } %>
+                                    </div>
 
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
-            <script src="/js/toastify-setup.js"></script>
+                                    <% } else { %>
+                                        <p class="no-data-message">No quiz responses yet.</p>
+                                        <% } %>
+                    </div>
+
+
+                    <% } %>
 </body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
 
 </html>

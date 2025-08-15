@@ -7,10 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/css/payment-status.css" rel="stylesheet">
     <script>
-        // Redirect after 5 seconds to the homepage
+        const type = "<%= type %>";
+        // Redirect after 5 seconds
         setTimeout(() => {
-            window.location.href = "/";
-        }, 10000);
+            if (type === "magic") {
+                window.location.href = "/magic-coin-wallet";
+            } else {
+                window.location.href = "/";
+            }
+        }, 5000);
     </script>
 </head>
 
@@ -31,14 +36,27 @@
         const statusTitle = document.getElementById('status-title');
         const statusMessage = document.getElementById('status-message');
 
-        console.log(paymentStatus)
+        // Update redirect message
+        const redirectMsg = document.querySelector('.redirect-msg');
+        if (type === "magic") {
+            redirectMsg.textContent = "You will be redirected to your wallet shortly...";
+        } else {
+            redirectMsg.textContent = "You will be redirected to the homepage shortly...";
+        }
 
         // Handling different statuses
         if (paymentStatus === "completed") {
             statusIcon.classList.add("fas", "fa-check-circle");
-            statusIcon.style.color = "green"; // Green for success
+            statusIcon.style.color = "green";
+
             statusTitle.textContent = "Payment Successful!";
-            statusMessage.textContent = "Thank you! Your subscription is now active.";
+
+            if (type === "magic") {
+                statusMessage.textContent = "Magic coins added to your wallet.";
+            } else {
+                statusMessage.textContent = "Thank you! Your subscription is now active.";
+            }
+
         } else if (paymentStatus === "failed") {
             statusIcon.classList.add("fas", "fa-times-circle");
             statusIcon.style.color = "red"; // Red for failure

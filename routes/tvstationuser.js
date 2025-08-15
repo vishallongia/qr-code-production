@@ -20,15 +20,14 @@ const { addUploadPath } = require("../utils/selectUploadDestination");
 // GET /channels - paginated list
 router.get("/channels", async (req, res) => {
   try {
+    // Filter channels created by the logged-in user
+    const filter = { createdBy: req.user._id };
     const currentPage = parseInt(req.query.page) || 1;
     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 10;
     const skip = (currentPage - 1) * recordsPerPage;
 
-    const totalChannels = await Channel.countDocuments();
+    const totalChannels = await Channel.countDocuments(filter);
     const totalPages = Math.ceil(totalChannels / recordsPerPage);
-
-    // Filter channels created by the logged-in user
-    const filter = { createdBy: req.user._id };
 
     const channels = await Channel.find(filter)
       .sort({ createdAt: -1 })
@@ -59,54 +58,70 @@ router.get("/channels", async (req, res) => {
   }
 });
 
-router.post("/create-channel", async (req, res) => {
-  try {
-    const { name } = req.body;
-    const user = req.user;
+router.post(
+  "/create-channel",
+  addUploadPath("uploads"),
+  upload.fields([{ name: "logo", maxCount: 1 }]),
+  async (req, res) => {
+    try {
+      const user = req.user;
+      const { name, description, link, logoTitle } = req.body;
 
-    // Validate input
-    if (!name || typeof name !== "string" || !name.trim()) {
-      return res.status(400).json({
-        message: "Channel name is required",
+      if (!name || typeof name !== "string" || !name.trim()) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(400).json({
+          message: "Show name is required",
+          type: "error",
+        });
+      }
+
+      const channelName = name.trim();
+
+      // Check for duplicates
+      const duplicate = await Channel.findOne({
+        channelName: new RegExp(`^${channelName}$`, "i"),
+        createdBy: user._id,
+      });
+
+      if (duplicate) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(400).json({
+          message: "Channel with this name already exists",
+          type: "error",
+        });
+      }
+
+      // Handle logo file
+      const logoFile = req.files["logo"]?.[0];
+      const logoPath = logoFile ? `/uploads/${logoFile.filename}` : null;
+
+      // Create channel document
+      const newChannel = new Channel({
+        channelName,
+        createdBy: user._id,
+        logo: logoPath || null,
+        description: description?.trim() || "",
+        link: link?.trim() || "",
+        logoTitle: logoTitle?.trim() || "",
+      });
+
+      await newChannel.save();
+
+      return res.status(201).json({
+        message: "Show created successfully",
+        type: "success",
+        channel: newChannel,
+      });
+    } catch (err) {
+      console.error("Error creating channel:", err.message);
+      cleanupUploadedFiles(req.files, "uploads");
+      return res.status(500).json({
+        message: "Internal server error while creating show",
         type: "error",
       });
     }
-
-    const channelName = name.trim();
-
-    // Check for duplicates (case-insensitive)
-    const duplicate = await Channel.findOne({
-      channelName: new RegExp(`^${channelName}$`, "i"),
-    });
-
-    if (duplicate) {
-      return res.status(400).json({
-        message: "Channel with this name already exists",
-        type: "error",
-      });
-    }
-
-    // Create channel
-    const newChannel = new Channel({
-      channelName,
-      createdBy: user._id,
-    });
-
-    await newChannel.save();
-
-    return res.status(201).json({
-      message: "Channel created successfully",
-      type: "success",
-      channel: newChannel,
-    });
-  } catch (err) {
-    console.error("Error creating channel:", err.message);
-    return res.status(500).json({
-      message: "Internal server error while creating channel",
-      type: "error",
-    });
   }
-});
+);
 
 router.delete("/channels/:id", async (req, res) => {
   try {
@@ -254,68 +269,96 @@ router.patch("/channels/:channelId/toggle", async (req, res) => {
   }
 });
 
-router.put("/channels/:id", async (req, res) => {
-  try {
-    const channelId = req.params.id;
-    const { name } = req.body;
-    const user = req.user;
+router.put(
+  "/channels/:id",
+  addUploadPath("uploads"),
+  upload.fields([{ name: "logo", maxCount: 1 }]),
+  async (req, res) => {
+    try {
+      const channelId = req.params.id;
+      const user = req.user;
+      const { name, description, link, logoTitle, removeLogo } = req.body;
+      if (!name || typeof name !== "string" || !name.trim()) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(400).json({
+          message: "Channel name is required",
+          type: "error",
+        });
+      }
 
-    if (!name || typeof name !== "string" || !name.trim()) {
-      return res.status(400).json({
-        message: "Channel name is required",
+      const updatedName = name.trim();
+
+      // Fetch channel
+      const channel = await Channel.findById(channelId);
+      if (!channel) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(404).json({
+          message: "Channel not found",
+          type: "error",
+        });
+      }
+
+      // Authorization
+      if (!channel.createdBy.equals(user._id)) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(403).json({
+          message: "You are not authorized to edit this channel",
+          type: "error",
+        });
+      }
+
+      // Duplicate name check
+      const duplicate = await Channel.findOne({
+        _id: { $ne: channelId },
+        channelName: new RegExp(`^${updatedName}$`, "i"),
+      });
+
+      if (duplicate) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(400).json({
+          message: "Another channel with this name already exists",
+          type: "error",
+        });
+      }
+
+      // Logo logic
+      const newLogoFile = req.files["logo"]?.[0];
+      const shouldRemoveLogo = removeLogo === "true";
+      let logoPath = channel.logo;
+
+      if (newLogoFile) {
+        // Replace existing logo
+        if (channel.logo) deleteFileIfExists(channel.logo);
+        logoPath = `/uploads/${newLogoFile.filename}`;
+      } else if (shouldRemoveLogo && channel.logo) {
+        deleteFileIfExists(channel.logo);
+        logoPath = null;
+      }
+
+      // Update channel
+      channel.channelName = updatedName;
+      channel.logo = logoPath;
+      channel.description = description?.trim() || "";
+      channel.link = link?.trim() || "";
+      channel.logoTitle = logoTitle?.trim() || "";
+
+      await channel.save();
+
+      return res.status(200).json({
+        message: "Channel updated successfully",
+        type: "success",
+        channel,
+      });
+    } catch (err) {
+      console.error("Error updating channel:", err);
+      cleanupUploadedFiles(req.files, "uploads");
+      return res.status(500).json({
+        message: "Internal server error while updating channel",
         type: "error",
       });
     }
-
-    const updatedName = name.trim();
-
-    // Fetch channel
-    const channel = await Channel.findById(channelId);
-    if (!channel) {
-      return res.status(404).json({
-        message: "Channel not found",
-        type: "error",
-      });
-    }
-
-    // Allow only creator to update (or admin if applicable)
-    if (!channel.createdBy.equals(user._id)) {
-      return res.status(403).json({
-        message: "You are not authorized to edit this channel",
-        type: "error",
-      });
-    }
-
-    // Check for duplicate name (case-insensitive)
-    const duplicate = await Channel.findOne({
-      _id: { $ne: channelId }, // exclude current
-      channelName: new RegExp(`^${updatedName}$`, "i"),
-    });
-
-    if (duplicate) {
-      return res.status(400).json({
-        message: "Another channel with this name already exists",
-        type: "error",
-      });
-    }
-
-    // Perform update
-    channel.channelName = updatedName;
-    await channel.save();
-
-    return res.status(200).json({
-      message: "Channel updated successfully",
-      type: "success",
-      channel,
-    });
-  } catch (err) {
-    console.error("Error updating channel:", err.message);
-    return res.status(500).json({
-      message: "Internal server error while updating channel",
-      type: "error",
-    });
   }
-});
+);
 
 router.get("/channels/:id/session/:sessionId?", async (req, res) => {
   const channelId = req.params.id;
@@ -434,10 +477,11 @@ router.get("/channels/:channelId/session/:sessionId/quiz", async (req, res) => {
     // Check ownership
     if (!channel.createdBy.equals(req.user._id)) {
       return res.render("dashboardnew", {
-        channel: null,
+        channel: channel,
         error: "Access denied",
         activeSection: "channel-quiz",
         user: req.user,
+        sessionId,
       });
     }
 
@@ -1346,6 +1390,7 @@ router.get(
           total,
           hasNext,
           availableCoins: req.user.walletCoins,
+          sessionId,
         });
       }
 
@@ -1357,6 +1402,7 @@ router.get(
         index,
         total,
         availableCoins,
+        sessionId,
       });
     } catch (err) {
       console.error("Error loading quiz question:", err);
@@ -1377,6 +1423,7 @@ router.post("/quiz-response", async (req, res) => {
   const {
     questionId,
     channelId,
+    sessionId,
     selectedOptionIndex,
     deductCoin = false,
     jackpotCoinDeducted = false, // flags to decide snapshot
@@ -1444,6 +1491,7 @@ router.post("/quiz-response", async (req, res) => {
       deductCoin: actualDeductCoin,
       jackpotCoinDeducted: jackpotSnapshot,
       digitalCoinDeducted: digitalSnapshot,
+      sessionId,
     });
 
     return res.status(200).json({ success: true, isCorrect, response });
@@ -1453,84 +1501,108 @@ router.post("/quiz-response", async (req, res) => {
   }
 });
 
-router.get("/quiz-response-tracker", async (req, res) => {
-  const currentPage = parseInt(req.query.page) || 1;
-  const recordsPerPage = parseInt(process.env.USER_PER_PAGE) || 10;
-  const skip = (currentPage - 1) * recordsPerPage;
+router.get(
+  "/channel/:channelId/session/:sessionId/quiz-response-tracker",
+  async (req, res) => {
+    const currentPage = parseInt(req.query.page) || 1;
+    const recordsPerPage = parseInt(process.env.USER_PER_PAGE) || 10;
+    const skip = (currentPage - 1) * recordsPerPage;
+    const { sessionId, channelId } = req.params;
 
-  try {
-    const result = await QuizQuestionResponse.aggregate([
-      {
-        $lookup: {
-          from: "quizquestions",
-          localField: "questionId",
-          foreignField: "_id",
-          as: "question",
-        },
-      },
-      { $unwind: "$question" },
-      {
-        $lookup: {
-          from: "users",
-          localField: "userId",
-          foreignField: "_id",
-          as: "user",
-        },
-      },
-      { $unwind: "$user" },
-      {
-        $project: {
-          questionText: "$question.question",
-          selectedOptionIndex: 1,
-          isCorrect: 1,
-          deductCoin: 1,
-          jackpotCoinDeducted: 1,
-          digitalCoinDeducted: 1,
-          coinsDeducted: {
-            $cond: [
-              { $eq: ["$deductCoin", true] },
-              "$question.magicCoinDeducted",
-              0,
-            ],
+    const channel = await Channel.findById(channelId);
+    if (!channel || !channel.createdBy.equals(req.user._id)) {
+      return res.render("dashboardnew", {
+        quizResponses: [],
+        totalResponsesWithoutPagination: 0,
+        currentPage: 1,
+        totalPages: 0,
+        activeSection: "quiz-response-tracker",
+        user: req.user,
+        error: "Access denied",
+      });
+    }
+
+    try {
+      const result = await QuizQuestionResponse.aggregate([
+        {
+          $lookup: {
+            from: "quizquestions",
+            localField: "questionId",
+            foreignField: "_id",
+            as: "question",
           },
-          createdAt: 1,
-          userName: "$user.fullName",
-          userEmail: "$user.email",
         },
-      },
-      { $sort: { createdAt: -1 } },
-      {
-        $facet: {
-          data: [{ $skip: skip }, { $limit: recordsPerPage }],
-          totalCount: [{ $count: "total" }],
+        { $unwind: "$question" },
+        {
+          $match: {
+            "question.sessionId": new mongoose.Types.ObjectId(sessionId),
+          },
         },
-      },
-    ]);
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: "$user" },
+        {
+          $project: {
+            questionText: "$question.question",
+            selectedOptionIndex: 1,
+            isCorrect: 1,
+            deductCoin: 1,
+            jackpotCoinDeducted: 1,
+            digitalCoinDeducted: 1,
+            coinsDeducted: {
+              $cond: [
+                { $eq: ["$deductCoin", true] },
+                "$question.magicCoinDeducted",
+                0,
+              ],
+            },
+            createdAt: 1,
+            userName: "$user.fullName",
+            userEmail: "$user.email",
+          },
+        },
+        { $sort: { createdAt: -1 } },
+        {
+          $facet: {
+            data: [{ $skip: skip }, { $limit: recordsPerPage }],
+            totalCount: [{ $count: "total" }],
+          },
+        },
+      ]);
 
-    const quizResponses = result[0].data;
-    const totalResponses = result[0].totalCount[0]?.total || 0;
-    const totalPages = Math.ceil(totalResponses / recordsPerPage);
+      const quizResponses = result[0].data;
+      const totalResponses = result[0].totalCount[0]?.total || 0;
+      const totalPages = Math.ceil(totalResponses / recordsPerPage);
 
-    res.render("dashboardnew", {
-      quizResponses,
-      totalResponsesWithoutPagination: totalResponses,
-      currentPage,
-      totalPages,
-      activeSection: "quiz-response-tracker", // ✅ Added here
-      user: req.user,
-    });
-  } catch (error) {
-    console.error("Error fetching quiz responses:", error);
-    res.status(500).render("dashboardnew", {
-      quizResponses: [],
-      totalResponsesWithoutPagination: 0,
-      currentPage: 1,
-      totalPages: 0,
-      activeSection: "quiz-response-tracker", // ✅ Added here
-      user: req.user,
-    });
+      res.render("dashboardnew", {
+        quizResponses,
+        totalResponsesWithoutPagination: totalResponses,
+        currentPage,
+        totalPages,
+        error: null,
+        activeSection: "quiz-response-tracker", // ✅ Added here
+        user: req.user,
+      });
+    } catch (error) {
+      console.error("Error fetching quiz responses:", error);
+      res.status(500).render("dashboardnew", {
+        quizResponses: [],
+        totalResponsesWithoutPagination: 0,
+        error: "Server Error",
+        currentPage: 1,
+        totalPages: 0,
+        activeSection: "quiz-response-tracker", // ✅ Added here
+        user: req.user,
+      });
+    }
   }
-});
+);
 
 // POST /api/channel/:channelId/qr
 router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {

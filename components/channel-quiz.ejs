@@ -33,7 +33,7 @@
                         </button> -->
                                 <!-- <button class="winner-btn btn">Draw Winner</button> -->
                                 <button class="logs-btn btn"
-                                    onclick="location.href='/tvstation/quiz-response-tracker'">Track
+                                    onclick="location.href='/tvstation/channel/<%= channel._id %>/session/<%= sessionId %>/quiz-response-tracker'">Track
                                     Logs</button>
                     </div>
                 </div>
@@ -215,11 +215,21 @@
                                                 <div class="color-option"
                                                     style="background-color: <%= hex %>; <%= hex === '#ffffff' ? 'border: 1px solid #ccc;' : '' %>">
                                                 </div>
+
                                                 <% }) %>
+                                                    <!-- Transparent Option -->
+                                                    <div class="color-option transparent-option"
+                                                        data-color="transparent"
+                                                        style="background: repeating-conic-gradient(#ccc 0% 25%, transparent 0% 50%) 50% / 10px 10px;">
+                                                    </div>
                                         </div>
                                     </div>
                                     <!-- Download Button -->
                                     <!-- <button class="type-btn" onclick="handleMagicCodeUpdate('<%= channel._id %>')">Update</button> -->
+
+                                    <button class="type-btn btn"
+                                        onclick="downloadMagicCode('<%= channel._id %>', '<%= sessionId %>', true)"
+                                        style="margin-top: 10px;">Update</button>
 
                                     <button class="type-btn btn"
                                         onclick="downloadMagicCode('<%= channel._id %>', '<%= sessionId %>')"
@@ -334,6 +344,10 @@
                 const fgName = hexToName(fgHex);
                 fgHexInput.value = fgHex;
 
+
+                // Preserve transparent selection if already selected
+                const transparentSelected = bgHexInput.value === "transparent";
+
                 // Reset background selection
                 clearActive(bgGrid);
                 bgHexInput.value = "";
@@ -343,7 +357,16 @@
                 bgGrid.querySelectorAll(".color-option").forEach(bgDiv => {
                     const bgHex = rgbToHex(bgDiv.style.backgroundColor);
                     const bgName = hexToName(bgHex);
-                    bgDiv.style.display = (allowed.includes(bgName) && bgName !== fgName) ? "inline-block" : "none";
+
+                    // Transparent always visible except when FG = white
+                    if (bgDiv.dataset.color === "transparent") {
+                        bgDiv.style.display = fgName === "white" ? "none" : "inline-block";
+                        bgHexInput.value = "#00000";
+                    } else {
+                        bgDiv.style.display = (allowed.includes(bgName) && bgName !== fgName) ? "inline-block" : "none";
+                    }
+
+
                 });
             });
         });
@@ -354,8 +377,30 @@
                 clearActive(bgGrid);
                 bgDiv.classList.add("active");
 
-                const bgHex = rgbToHex(bgDiv.style.backgroundColor);
-                bgHexInput.value = bgHex;
+                const bgDataColor = bgDiv.dataset.color;
+                if (bgDataColor === "transparent") {
+                    bgHexInput.value = "transparent";
+                } else {
+                    bgHexInput.value = rgbToHex(bgDiv.style.backgroundColor);
+                }
+
+
+
+                // Hide white in FG only if BG is transparent
+                fgGrid.querySelectorAll(".color-option").forEach(fgDiv => {
+                    if (bgData === "transparent" && fgDiv.dataset.color === "white") {
+                        fgDiv.style.display = "none";
+                        if (fgDiv.classList.contains("active")) {
+                            clearActive(fgGrid);
+                            fgHexInput.value = "";
+                        }
+                    } else {
+                        fgDiv.style.display = "inline-block";
+                    }
+                });
+
+                // const bgHex = rgbToHex(bgDiv.style.backgroundColor);
+                // bgHexInput.value = bgHex;
             });
         });
     </script>
@@ -397,7 +442,7 @@
 
 
     <script>
-        async function downloadMagicCode(channelId, sessionId) {
+        async function downloadMagicCode(channelId, sessionId, isUpdate = false) {
             const fgHex = document.getElementById("selectedFgHex").value;
             const bgHex = document.getElementById("selectedBgHex").value;
 
@@ -412,11 +457,15 @@
                     body: JSON.stringify({ qrDotColor: fgHex, backgroundColor: bgHex, type: "quiz" }),
                 });
 
+
                 const data = await res.json();
                 if (!data.success) {
                     showToast(data.message || "Failed to fetch QR data", "error");
                     return;
                 }
+
+
+
 
 
 
@@ -450,7 +499,7 @@
                     cornersSquareOptions: {
                         type: qrData.cornerStyle || "square"
                     },
-                    image: qrData.logo ? `${window.location.origin}/${qrData.logo}` : "",
+                    image: window.location.origin ? `${window.location.origin}/images/logo1.jpg` : "",
                     imageOptions: {
                         crossOrigin: "anonymous",
                         margin: 10
@@ -461,6 +510,12 @@
                 container.innerHTML = ""; // clear previous
 
                 await qrCode.append(container);
+
+                // ⛔ Early return for update (skip download)
+                if (isUpdate) {
+                    return;
+                }
+
                 setTimeout(() => {
                     qrCode.download({ name: "magic-code", extension: "png", width: 1600, height: 1600 });
                 }, 500); // wait a little for QR to render
@@ -525,7 +580,7 @@
                     cornersSquareOptions: {
                         type: qrData.cornerStyle || "square"
                     },
-                    image: qrData.logo ? `${window.location.origin}/${qrData.logo}` : "",
+                    image: `${window.location.origin}/images/logo1.jpg` || "",
                     imageOptions: {
                         crossOrigin: "anonymous",
                         margin: 10

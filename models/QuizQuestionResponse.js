@@ -44,6 +44,11 @@ const quizQuestionResponseSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+
+    sessionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Session",
+    },
   },
   {
     timestamps: true,

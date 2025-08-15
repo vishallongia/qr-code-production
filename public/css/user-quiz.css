@@ -189,19 +189,25 @@
 
 .coin-popup {
     background: linear-gradient(145deg, #ffffff, #f7f7f7);
-    padding: 25px 30px;
+    padding: 25px 10px;
     border-radius: 16px;
     max-width: 40%;
     width: 100%;
     text-align: center;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     max-height: 80vh;
-    overflow-y: auto;
+    overflow: hidden;
+    /* hide overflow on outer div */
     font-family: var(--uq-font-family);
     color: var(--uq-text-color);
-    overflow-y: auto;
-    scrollbar-gutter: stable;
+}
 
+/* Scrollable inner div */
+.coin-popup-inner {
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-right: 10px;
+    /* optional: prevent scrollbar overlap */
 }
 
 .coin-popup h3 {
@@ -329,7 +335,7 @@
 }
 
 .coin-popup::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #0f0f0f;
 }
 
 
@@ -476,7 +482,7 @@
 /* Responsive adjustments */
 @media (max-width: 480px) {
     .coin-popup {
-        padding: 15px 20px;
+        padding: 15px 5px;
         max-width: 80%;
     }
 

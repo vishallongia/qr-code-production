@@ -12,42 +12,67 @@
 
 <body style="padding: 0">
 
-    <div id="popup-add-channel" class="popup-overlay" style="display: none;">
-        <div class="popup-content" style="position: relative;">
-            <span id="close-popup-channel"
+
+
+
+    <!-- Add / Edit Show Popup -->
+    <div id="popup-add-edit-show" class="popup-overlay" style="display: none;">
+        <div class="popup-content" style="position: relative; max-width: 500px; width: 90%;">
+            <span id="close-popup-show"
                 style="position: absolute; top: 10px; right: 15px; font-size: 25px; cursor: pointer;">&times;</span>
-            <p>Please Enter Channel Name</p>
-            <form id="add-channel-form">
-                <div class="form-group" style="margin-bottom: 24px;">
-                    <input type="text" id="channel-name-input" name="channelName" placeholder="Enter Channel Name..."
-                        required />
+            <h2 id="show-popup-header" style="text-align: center; margin-bottom: 20px;">Add New Show</h2>
+
+            <form id="add-edit-show-form" enctype="multipart/form-data">
+                <input type="hidden" name="showId" id="show-id" value="">
+                <input type="hidden" name="removeLogo" id="remove-show-logo-flag" value="false">
+
+
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="text" id="show-name" name="name" placeholder="Show Name" required />
                 </div>
-                <button type="submit" class="btn" id="submit-add-channel">Add Channel</button>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="text" id="session-logo-title" name="logoTitle" placeholder="Logo Title (optional)">
+                </div>
+
+                <!-- Description -->
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <textarea id="session-description" name="description" placeholder="Session Description" rows="3"
+                        style="resize: vertical;"></textarea>
+                </div>
+
+                <!-- Link -->
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="url" id="session-link" name="link" placeholder="Optional Link">
+                </div>
+                <!-- Logo Upload -->
+                <div class="form-group" style="margin-bottom: 20px; position: relative;">
+                    <input type="file" id="show-logo" name="logo" accept="image/*" style="display: none;">
+                    <label for="show-logo" class="stylish-file-label" id="show-logo-label">Choose Logo</label>
+
+                    <div id="show-logo-preview-container" style="margin-top: 10px; display: none; position: relative;">
+                        <span id="clear-show-logo-btn" class="clear-logo-btn"
+                            title="Remove selected image">&times;</span>
+                        <img id="show-logo-preview" src="" alt="Logo Preview"
+                            style="max-width: 100%; max-height: 150px; border-radius: 10px;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="text-align: center;">
+                    <button type="submit" class="btn" id="submit-add-edit-show">Save Show</button>
+                </div>
             </form>
         </div>
     </div>
 
-    <!-- Edit Channel Popup -->
-    <div id="popup-edit-channel" class="popup-overlay" style="display: none;">
-        <div class="popup-content" style="position: relative;">
-            <span id="close-popup-edit-channel"
-                style="position: absolute; top: 10px; right: 15px; font-size: 25px; cursor: pointer;">&times;</span>
-            <p>Update Channel Name</p>
-            <form id="edit-channel-form">
-                <input type="hidden" id="edit-channel-id" />
-                <div class="form-group" style="margin-bottom: 24px;">
-                    <input type="text" id="edit-channel-name" placeholder="Enter New Channel Name..." required />
-                </div>
-                <button type="submit" class="btn">Update Channel</button>
-            </form>
-        </div>
-    </div>
+
 
     <div class="modern-list-container">
-        <h2>Channels</h2>
+        <h2>Shows</h2>
         <div style="display: flex; justify-content: end;">
             <button id="add-channel-btn" class="btn primary" style="margin-bottom: 16px;">
-                + Add New Channel
+                + Add New Show
             </button>
         </div>
 
@@ -58,12 +83,13 @@
                         <% } else if (channels && channels.length> 0) { %>
 
                             <!-- Total Count Display -->
-                            <p><strong>Total Channels:</strong>
+                            <p><strong>Total Shows:</strong>
                                 <%= totalChannels %>
                             </p>
 
                             <div class="list-wrapper">
                                 <div class="list-header">
+                                    <th>Logo</th>
                                     <span>Name</span>
                                     <span>Go</span>
                                     <span>Edit</span>
@@ -71,8 +97,22 @@
                                 </div>
 
                                 <ul class="user-list">
-                                    <% channels.forEach(channel=> { %>
+                                    <% channels.forEach(channel=> {
+                                        const logoUrl = channel.logo ? channel.logo : '/uploads/no-image.png';
+                                        %>
+
                                         <li class="user-item">
+                                            <span>
+                                                <% if(channel.logo && channel.link) { %>
+                                                    <a href="<%= channel.link %>" target="_blank">
+                                                        <img src="<%= logoUrl %>" alt="<%= channel.channelName %>"
+                                                            class="channel-logo">
+                                                    </a>
+                                                    <% } else { %>
+                                                        <img src="<%= logoUrl %>" alt="<%= channel.channelName %>"
+                                                            class="channel-logo">
+                                                        <% } %>
+                                            </span>
                                             <span>
                                                 <%= channel.channelName %>
                                             </span>
@@ -83,7 +123,11 @@
                                             </span>
 
                                             <span>
-                                                <button class="btn edit-btn" data-id="<%= channel._id %>">Edit</button>
+                                                <button class="btn edit-btn" data-id="<%= channel._id %>"
+                                                    data-logo-title="<%= channel.logoTitle %>"
+                                                    data-description="<%= channel.description %>"
+                                                    data-link="<%= channel.link %>"
+                                                    data-logo-url="<%= channel.logo %>">Edit</button>
                                             </span>
 
                                             <span>

@@ -8,15 +8,16 @@
     --box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
     --input-border-color: rgba(0, 0, 0, 0.2);
     --input-focus-border-color: #80deea;
-    --submit-btn-bg: #4db6ac;
-    --submit-btn-hover-bg: #26a69a;
+    --submit-btn-bg: #18024b;
+    --submit-btn-hover-bg: #2c0a6e;
+    /* slightly lighter purple */
     --link-color: #18024b;
     --link-hover-color: #18024b;
     --text-color: #333333;
     --grid-columns-7: 0.8fr 0.8fr 0.8fr 1.0fr 0.5fr 0.5fr 0.5fr;
     --grid-columns-9: 0.7fr 0.7fr 0.7fr 1.0fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr;
     --grid-columns-6: 0.7fr 0.7fr 0.7fr 0.7fr 0.5fr 0.5fr;
-    --grid-columns-8: 0.7fr 0.7fr 0.7fr 0.7fr 0.5fr 0.7fr 0.5fr 0.7fr;
+    --grid-columns-8: 0.7fr 0.7fr 0.7fr 0.7fr 0.6fr 0.7fr 0.5fr 0.6fr;
 }
 
 body {
@@ -806,4 +807,120 @@ input:checked+.toggle-slider:before {
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.3s ease;
+}
+
+
+.quiz-admin-error {
+    background-color: #fce4ec;
+    color: #c62828;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    border: 1px solid #f8bbd0;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+
+.stylish-file-label {
+    display: inline-block;
+    background-color: var(--submit-btn-bg);
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    user-select: none;
+}
+
+.stylish-file-label:hover {
+    background-color: var(--submit-btn-hover-bg);
+    transform: scale(1.03);
+}
+
+
+/* ✕ Clear Icon */
+.clear-logo-btn {
+    display: none;
+    position: absolute;
+    top: 0px;
+    right: 8px;
+    font-size: 22px;
+    font-weight: 900;
+    color: white;
+    background: red;
+    border-radius: 50%;
+    padding: 4px 10px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.clear-logo-btn:hover {
+    transform: scale(1.15);
+}
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99;
+    overflow-y: auto;
+    /* allows vertical scroll */
+    padding: 20px;
+    /* adds space for small screens */
+}
+
+.popup-content {
+    position: relative;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    /* prevents it from overflowing viewport */
+    overflow-y: auto;
+    /* scroll if content is taller than max-height */
+    /* background: var(--container-bg); */
+    backdrop-filter: blur(var(--container-backdrop-blur));
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+}
+
+
+/* Channel Logo Styles */
+.channel-logo {
+    width: 60px;
+    /* adjust as needed */
+    height: 60px;
+    /* maintain square for perfect circle */
+    object-fit: cover;
+    /* crop/fit image nicely */
+    border-radius: 50%;
+    /* makes it circular */
+    display: block;
+    /* ensures no extra space around img */
+    cursor: pointer;
+    /* pointer if clickable */
+    transition: transform 0.2s ease;
+}
+
+.channel-logo:hover {
+    transform: scale(1.05);
+    /* small zoom on hover */
+}
+
+/* Optional: Remove link underline and preserve hover effect */
+.user-item a {
+    text-decoration: none;
+    display: inline-block;
 }

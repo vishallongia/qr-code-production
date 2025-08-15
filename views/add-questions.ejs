@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Add Quiz Questions</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
     <link rel="stylesheet" href="/css/add-quiz-question.css" />
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -501,9 +502,10 @@
             const result = await res.json();
             if (result.type === "success") {
                 showToast(result.message || "Question saved successfully!", "success");
-                // Reload page after 1 second
+
+                const { channelId, sessionId, _id } = result.data; // ✅ Extract
                 setTimeout(() => {
-                    window.location.reload();
+                    window.location.href = `/tvstation/channels/${channelId}/session/${sessionId}/editquestion/${_id}`;
                 }, 1000);
             } else {
                 showToast(result.message || "Something went wrong.", "error");
