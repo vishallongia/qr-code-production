@@ -274,7 +274,6 @@
                     labelTextEl.textContent = file.name;
                     showClear();
 
-                    // Remove from clearedImages if re-added
                     const current = clearedInputField.value ? clearedInputField.value.split(",") : [];
                     clearedInputField.value = current.filter(name => name !== originalName).join(",");
                 }
@@ -282,7 +281,6 @@
         };
 
         attachChangeHandler(fileInput);
-
 
         clearBtn.addEventListener("click", () => {
             const keyName = getClearedKeyFn ? getClearedKeyFn() : originalName;
@@ -292,11 +290,10 @@
                 clearedInputField.value = current.join(",");
             }
 
-            // Replace input with same name (to allow new upload)
             const newInput = document.createElement("input");
             newInput.type = "file";
             newInput.className = originalClass;
-            newInput.name = originalName; // <== name retained
+            newInput.name = originalName;
             newInput.accept = accept;
 
             const labelContainer = fileInput.closest(".quiz-file-label");
@@ -309,7 +306,6 @@
             hideClear();
 
             attachChangeHandler(fileInput);
-            setupImagePreviewAndClear(fileInput, previewImg, labelTextEl, clearBtn, false);
         });
     }
 
@@ -326,11 +322,8 @@
         });
     }
 
-
-
     function initOptionBlock(block) {
         const input = block.querySelector('input[type="file"]');
-        const index = Array.from(document.querySelectorAll(".quiz-option-block")).indexOf(block);
         const label = block.querySelector(".quiz-file-label-text");
         const img = block.querySelector("img.preview-img");
         const hasImage = img?.src && !img.src.endsWith("/") && img.style.display !== "none";
@@ -365,16 +358,16 @@
         const index = document.querySelectorAll(".quiz-option-block").length;
 
         block.innerHTML = `
-            <label>Option ${index + 1}</label>
-            <input type="text" name="optionTexts[]" value="${text}" required />
-            <label class="quiz-file-label">
-                <span class="quiz-file-label-text">${imageUrl ? imageUrl.split('/').pop() : "Choose Image"}</span>
-                <input type="file" name="optionsImages" class="quiz-hidden-file option-image-input" accept="image/*" />
-            </label>
-            <img class="preview-img" style="display: ${imageUrl ? 'block' : 'none'};" src="${imageUrl || ''}" />
-            <button type="button" class="quiz-clear-btn" style="display: ${imageUrl ? 'inline-block' : 'none'};">✕</button>
-            <button type="button" class="quiz-option-delete-btn">✕</button>
-        `;
+<label>Option ${index + 1}</label>
+<input type="text" name="optionTexts[]" value="${text}" required />
+<label class="quiz-file-label">
+    <span class="quiz-file-label-text">${imageUrl ? imageUrl.split('/').pop() : "Choose Image"}</span>
+    <input type="file" name="optionsImages" class="quiz-hidden-file option-image-input" accept="image/*" />
+</label>
+<img class="preview-img" style="display: ${imageUrl ? 'block' : 'none'};" src="${imageUrl || ''}" />
+<button type="button" class="quiz-clear-btn" style="display: ${imageUrl ? 'inline-block' : 'none'};">✕</button>
+<button type="button" class="quiz-option-delete-btn">✕</button>
+`;
 
         initOptionBlock(block);
         document.getElementById("option-blocks").appendChild(block);
@@ -389,91 +382,67 @@
         addOptionBlock();
     });
 
-    // Setup for question image/logo
+    // Setup main images
     ["logo", "questionImage", "questionLogo", "jackpotRewardImage", "digitalRewardImage"].forEach(name => {
         const input = document.querySelector(`input[name="${name}"]`);
         const label = input?.closest(".quiz-file-label")?.querySelector(".quiz-file-label-text");
         const img = input?.closest(".quiz-form-group")?.querySelector("img.preview-img");
         const hasImage = img?.src && !img.src.endsWith("/") && img.style.display !== "none";
-
-        if (input && label && img) {
-            setupImagePreviewAndClear(input, img, label, null, hasImage);
-        }
+        if (input && label && img) setupImagePreviewAndClear(input, img, label, null, hasImage);
     });
 
     initExistingOptionBlocks();
 
-    async function fetchImageAsFile(url, name) {
-        const res = await fetch(url);
-        const blob = await res.blob();
-        return new File([blob], name, { type: blob.type });
-    }
-
     document.getElementById("edit-question-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const form = e.target;
-        const formData = new FormData(form);
-        formData.delete("optionImages"); // Remove all default ones
         const cleared = document.getElementById("clearedImagesInput").value.split(",").filter(Boolean);
+        const formData = new FormData();
 
-        for (const name of ["questionImage", "questionLogo"]) {
-            const isCleared = cleared.includes(name);
+        // Non-file inputs
+        form.querySelectorAll("input, textarea, select").forEach(el => {
+            if (el.type !== "file") formData.append(el.name, el.value);
+        });
+
+        // Only append new files, skip existing images
+        ["logo", "questionImage", "questionLogo", "jackpotRewardImage", "digitalRewardImage"].forEach(name => {
             const input = form.querySelector(`input[name="${name}"]`);
-
-            if (!input || isCleared) continue;
-
-            const img = input.closest(".quiz-form-group")?.querySelector("img.preview-img");
-            const fileExists = formData.getAll(name).some(val => val instanceof File && val.name);
-
-            if (!fileExists && img?.src && !img.src.startsWith("blob:")) {
-                const fileName = img.src.split("/").pop();
-                const file = await fetchImageAsFile(img.src, fileName);
-                formData.append(name, file);
+            const isCleared = cleared.includes(name);
+            if (input?.files[0] && !isCleared) {
+                formData.append(name, input.files[0]);
             }
-        }
+        });
 
-
-
-
-        // Append ONLY newly selected files; map each file to its option index
+        // Options
         const optionBlocks = document.querySelectorAll(".quiz-option-block");
-        for (let i = 0; i < optionBlocks.length; i++) {
-            const block = optionBlocks[i];
+        optionBlocks.forEach((block, i) => {
             const input = block.querySelector("input[type='file']");
-            const isCleared = cleared.includes(`optionImage-${i}`);
             const newFile = input?.files?.[0];
-            if (newFile) {
-                // If new file is selected, send it regardless of cleared status
+            const isCleared = cleared.includes(`optionImage-${i}`);
+            if (newFile && !isCleared) {
                 formData.append("optionsImages", newFile);
                 formData.append("optionsImagesIndex", String(i));
-
-                // Also make sure cleared list does not contain this anymore
-                const idxInCleared = cleared.indexOf(`optionImage-${i}`);
-                if (idxInCleared !== -1) cleared.splice(idxInCleared, 1);
-                continue;
             }
+        });
 
-            if (isCleared) {
-                // Cleared and no new file → skip (remove image on backend)
-                continue;
-            }
-            // Else: no new file & not cleared → send nothing; backend keeps existing image
-        }
-
-        const optionsArray = Array.from(optionBlocks).map((block, index) => {
-            const text = block.querySelector('input[type="text"]').value;
+        // Option texts & existing images (just keep names, backend uses them)
+        const optionsArray = Array.from(optionBlocks).map((block, i) => {
+            const text = block.querySelector('input[type="text"]').value.trim();
+            const input = block.querySelector("input[type='file']");
             const img = block.querySelector("img.preview-img");
+            const isCleared = cleared.includes(`optionImage-${i}`);
+            const newFile = input?.files?.[0];
             return {
                 text,
-                imageName: img?.src && !img.src.startsWith("blob:")
+                imageName: (!newFile && !isCleared && img?.src && !img.src.startsWith("blob:"))
                     ? img.src.split("/").pop()
-                    : (block.querySelector('input[type="file"]').files[0]?.name || "")
+                    : ""
             };
         });
         formData.append("options", JSON.stringify(optionsArray));
-        const loader = document.getElementById("loader");
-        loader.style.display = "flex"; // show loader
 
+        const loader = document.getElementById("loader");
+        loader.style.display = "flex";
 
         try {
             const response = await fetch("/tvstation/quiz-question/update", {
@@ -483,59 +452,42 @@
             const result = await response.json();
             if (result.type === "success") {
                 showToast(result.message || "Question updated successfully", "success");
-                setTimeout(() => {
-                    location.reload(); // reloads current page
-                    // Or use: window.location.href = "/tvstation/quiz-questions"; to redirect
-                }, 1000); // 1000ms = 1 second
+                setTimeout(() => location.reload(), 1000);
             } else {
                 showToast(result.message || "Update failed", "error");
             }
         } catch (err) {
             console.error(err);
             showToast("Server error", "error");
-        }
-        finally {
-            loader.style.display = "none"; // hide loader after fetch is done
+        } finally {
+            loader.style.display = "none";
         }
     });
 
-
+    // Reward mode
     function setupRewardModeSwitcher(block) {
         const modeButtons = block.querySelectorAll(".reward-mode-btn");
         const modeInput = block.querySelector('input[name="mode"]');
         const jackpotField = block.querySelector(".reward-jackpot");
         const digitalField = block.querySelector(".reward-digital");
-
         const currentMode = modeInput?.value || 'jackpot';
-
-        // Activate the current mode button
-        modeButtons.forEach((btn) => {
+        modeButtons.forEach(btn => {
             btn.addEventListener("click", () => {
                 const mode = btn.dataset.mode;
                 modeInput.value = mode;
-
-                // Toggle visibility
                 jackpotField.style.display = (mode === 'jackpot' || mode === 'both') ? 'block' : 'none';
                 digitalField.style.display = (mode === 'digital' || mode === 'both') ? 'block' : 'none';
-
-                // Toggle active class
                 modeButtons.forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
             });
-
-            if (btn.dataset.mode === currentMode) {
-                btn.classList.add("active");
-            }
+            if (btn.dataset.mode === currentMode) btn.classList.add("active");
         });
-
-        // Set initial visibility based on mode
         jackpotField.style.display = (currentMode === 'jackpot' || currentMode === 'both') ? 'block' : 'none';
         digitalField.style.display = (currentMode === 'digital' || currentMode === 'both') ? 'block' : 'none';
     }
-
-    // Init all blocks (support multiple forms too)
-    document.querySelectorAll('.reward-block').forEach(setupRewardModeSwitcher)
+    document.querySelectorAll('.reward-block').forEach(setupRewardModeSwitcher);
 </script>
+
 
 
 

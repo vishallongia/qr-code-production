@@ -16,6 +16,7 @@ const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
 const Session = require("../models/Session"); // adjust path if needed
 const BASE_URL = process.env.FRONTEND_URL; // update if needed
 const { addUploadPath } = require("../utils/selectUploadDestination");
+const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
 
 // GET /channels - paginated list
 router.get("/channels", async (req, res) => {
@@ -153,7 +154,9 @@ router.delete("/channels/:id", async (req, res) => {
       });
     }
 
-    await Channel.findByIdAndDelete(channelId);
+    // await Channel.findByIdAndDelete(channelId);
+    // ✅ Cascading delete
+    await cascadeDelete("channel", channelId);
 
     return res.status(200).json({
       message: "Channel deleted successfully",
@@ -560,26 +563,29 @@ router.delete("/quiz-question/:id", async (req, res) => {
       });
     }
 
-    // 🧹 3. Delete related file assets (if exist)
-    const fileFieldsToCheck = [
-      quiz.questionImage,
-      quiz.questionLogo,
-      quiz.logo,
-    ];
+    // 🧹 Use cascadeDelete to remove quiz question + all related data
+    await cascadeDelete("quizQuestion", questionId);
 
-    fileFieldsToCheck.forEach((filePath) => {
-      if (filePath) deleteFileIfExists(filePath);
-    });
+    // // 🧹 3. Delete related file assets (if exist)
+    // const fileFieldsToCheck = [
+    //   quiz.questionImage,
+    //   quiz.questionLogo,
+    //   quiz.logo,
+    // ];
 
-    // Also clean up any option images
-    if (Array.isArray(quiz.options)) {
-      quiz.options.forEach((option) => {
-        if (option.image) deleteFileIfExists(option.image);
-      });
-    }
+    // fileFieldsToCheck.forEach((filePath) => {
+    //   if (filePath) deleteFileIfExists(filePath);
+    // });
 
-    // ❌ 4. Delete the quiz
-    await QuizQuestion.deleteOne({ _id: questionId });
+    // // Also clean up any option images
+    // if (Array.isArray(quiz.options)) {
+    //   quiz.options.forEach((option) => {
+    //     if (option.image) deleteFileIfExists(option.image);
+    //   });
+    // }
+
+    // // ❌ 4. Delete the quiz
+    // await QuizQuestion.deleteOne({ _id: questionId });
 
     return res.status(200).json({
       message: "Quiz question deleted successfully",
@@ -1005,10 +1011,11 @@ router.post(
         digitalRewardDescription,
         digitalRewardLink,
       } = req.body;
-      console.log(
-        "Total files received:",
-        Object.values(req.files).reduce((sum, arr) => sum + arr.length, 0)
-      );
+
+      console.log("===== Incoming File Counts =====");
+      for (const field in req.files) {
+        console.log(`${field}: ${req.files[field].length}`);
+      }
 
       // ✅ Validate ObjectId format
       if (
@@ -1115,47 +1122,41 @@ router.post(
         req.files["digitalRewardImage"]?.[0]
       );
 
-      // ✅ Map uploaded option images to correct option index
+      // Step 1: Build a map of option index → uploaded file
+      // Step 1: Build a map of option index → uploaded file (prevent duplicate saves)
+      const seenFilenames = new Set();
       const files = req.files["optionsImages"] || [];
-      const idxListRaw = req.body.optionsImagesIndex;
+      const idxListRaw = req.body.optionsImagesIndex || [];
+      const idxList = Array.isArray(idxListRaw) ? idxListRaw : [idxListRaw];
 
-      // Ensure idxList is an array of numbers
-      const idxList = Array.isArray(idxListRaw)
-        ? idxListRaw
-        : idxListRaw
-        ? [idxListRaw]
-        : [];
-      const idxNumbers = idxList
-        .map((n) => parseInt(n, 10))
-        .filter((n) => !Number.isNaN(n));
-
-      // Build: optionIndex -> file
       const fileByOptionIndex = new Map();
-      files.forEach((f, k) => {
-        const optIdx = idxNumbers[k];
-        if (typeof optIdx === "number") fileByOptionIndex.set(optIdx, f);
+      files.forEach((file, k) => {
+        const idx = parseInt(idxList[k], 10);
+        if (!isNaN(idx) && !seenFilenames.has(file.originalname)) {
+          fileByOptionIndex.set(idx, file);
+          seenFilenames.add(file.originalname);
+        }
       });
 
       const formattedOptions = parsedOptions.map((opt, idx) => {
-        const uploadedFile = fileByOptionIndex.get(idx); // match by real option index
+        let oldImage = quiz.options[idx]?.image || null;
+        let newImage = oldImage;
 
-        let imagePath = quiz.options[idx]?.image || null;
-
-        if (uploadedFile) {
-          // Always prioritize newly uploaded file
-          deleteFileIfExists(imagePath);
-          imagePath = `/questions-image/${uploadedFile.filename}`;
-
-          // Remove this index from cleared list so it won't be treated as cleared
-          const clearedIdx = cleared.indexOf(`optionImage-${idx}`);
-          if (clearedIdx !== -1) cleared.splice(clearedIdx, 1);
-        } else if (cleared.includes(`optionImage-${idx}`)) {
-          // Only clear if no new file uploaded
-          deleteFileIfExists(imagePath);
-          imagePath = null;
+        // ✅ Use uploaded file if exists for this option
+        if (fileByOptionIndex.has(idx)) {
+          deleteFileIfExists(oldImage);
+          newImage = `/questions-image/${fileByOptionIndex.get(idx).filename}`;
+        }
+        // ✅ Clear image if flagged
+        else if (cleared.includes(`optionImage-${idx}`)) {
+          deleteFileIfExists(oldImage);
+          newImage = null;
         }
 
-        return { text: opt.text?.trim(), image: imagePath };
+        return {
+          text: opt.text?.trim(),
+          image: newImage,
+        };
       });
 
       // ✅ Update quiz fields
@@ -1173,14 +1174,37 @@ router.post(
       quiz.mode = mode;
       quiz.magicCoinDeducted = magicCoinDeducted;
 
-      // ✅ Update Jackpot & Digital Reward fields
-      quiz.jackpotRewardName = jackpotRewardName?.trim() || "";
-      quiz.jackpotRewardDescription = jackpotRewardDescription?.trim() || "";
-      quiz.jackpotRewardLink = jackpotRewardLink?.trim() || null;
+      // Reward fields handling based on mode
+      if (mode === "jackpot") {
+        // Clear digital reward fields & files
+        quiz.digitalRewardName = "";
+        quiz.digitalRewardDescription = "";
+        quiz.digitalRewardLink = null;
+        deleteFileIfExists(quiz.digitalRewardImage);
+        quiz.digitalRewardImage = null;
 
-      quiz.digitalRewardName = digitalRewardName?.trim() || "";
-      quiz.digitalRewardDescription = digitalRewardDescription?.trim() || "";
-      quiz.digitalRewardLink = digitalRewardLink?.trim() || null;
+        quiz.jackpotRewardName = jackpotRewardName?.trim() || "";
+        quiz.jackpotRewardDescription = jackpotRewardDescription?.trim() || "";
+        quiz.jackpotRewardLink = jackpotRewardLink?.trim() || null;
+      } else if (mode === "digital") {
+        // Clear jackpot reward fields & files
+        quiz.jackpotRewardName = "";
+        quiz.jackpotRewardDescription = "";
+        quiz.jackpotRewardLink = null;
+        deleteFileIfExists(quiz.jackpotRewardImage);
+        quiz.jackpotRewardImage = null;
+
+        quiz.digitalRewardName = digitalRewardName?.trim() || "";
+        quiz.digitalRewardDescription = digitalRewardDescription?.trim() || "";
+        quiz.digitalRewardLink = digitalRewardLink?.trim() || null;
+      } else if (mode === "both") {
+        quiz.jackpotRewardName = jackpotRewardName?.trim() || "";
+        quiz.jackpotRewardDescription = jackpotRewardDescription?.trim() || "";
+        quiz.jackpotRewardLink = jackpotRewardLink?.trim() || null;
+        quiz.digitalRewardName = digitalRewardName?.trim() || "";
+        quiz.digitalRewardDescription = digitalRewardDescription?.trim() || "";
+        quiz.digitalRewardLink = digitalRewardLink?.trim() || null;
+      }
 
       await quiz.save();
 
@@ -1460,25 +1484,27 @@ router.post("/quiz-response", async (req, res) => {
 
     // If totalSnapshot is 0, override deductCoin to false
     const actualDeductCoin = totalSnapshot > 0 ? deductCoin : false;
-
+    let updateResult;
     if (actualDeductCoin) {
       const user = await User.findById(userId);
       if ((user.walletCoins || 0) < totalSnapshot) {
-        return res.status(400).json({
+        return res.status(200).json({
           success: false,
-          message: `You need ${totalSnapshot} coins, but you have only ${
-            user.walletCoins || 0
-          }`,
+          notEnoughCoins: true,
+          availableCoins: user.walletCoins || 0,
+          requiredCoins: totalSnapshot,
+          correctOptionIndex: question.correctAnswerIndex,
         });
       }
 
-      const updateResult = await User.findByIdAndUpdate(
+      updateResult = await User.findByIdAndUpdate(
         userId,
         { $inc: { walletCoins: -totalSnapshot } },
         { new: true }
       );
-
-      console.log("Wallet update result:", updateResult);
+    } else {
+      // No deduction, just get current wallet coins
+      updateResult = await User.findById(userId);
     }
 
     // Create quiz response with coin snapshot and correct deductCoin
@@ -1494,7 +1520,24 @@ router.post("/quiz-response", async (req, res) => {
       sessionId,
     });
 
-    return res.status(200).json({ success: true, isCorrect, response });
+    return res.status(200).json({
+      success: true,
+      isCorrect,
+      correctOptionIndex: question.correctAnswerIndex,
+      jackpotCoinDeducted: jackpotSnapshot > 0,
+      digitalCoinDeducted: digitalSnapshot > 0,
+      availableCoins: updateResult.walletCoins || 0, // ✅ include coins here
+      jackpotReward: {
+        name: question.jackpotRewardName,
+        image: question.jackpotRewardImage,
+        description: question.jackpotRewardDescription,
+      },
+      digitalReward: {
+        name: question.digitalRewardName,
+        image: question.digitalRewardImage,
+        description: question.digitalRewardDescription,
+      },
+    });
   } catch (err) {
     console.error("Error saving quiz response:", err);
     return res.status(500).json({ success: false, message: "Server error" });
@@ -1952,13 +1995,16 @@ router.delete("/session/:sessionId", async (req, res) => {
         .json({ message: "Session not found", type: "error" });
     }
 
-    // ✅ Delete logo file if exists
-    if (session.logo) {
-      deleteFileIfExists(session.logo);
-    }
+    // // ✅ Delete logo file if exists
+    // if (session.logo) {
+    //   deleteFileIfExists(session.logo);
+    // }
 
-    // ✅ Delete the session document
-    await Session.findByIdAndDelete(sessionId);
+    // // ✅ Delete the session document
+    // await Session.findByIdAndDelete(sessionId);
+
+    // ✅ Use cascadeDelete to remove session + related data
+    await cascadeDelete("session", sessionId);
 
     return res.status(200).json({
       message: "Session deleted successfully",

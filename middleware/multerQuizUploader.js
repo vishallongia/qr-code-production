@@ -51,10 +51,21 @@ function cleanupUploadedFiles(files, folder = "questions-image") {
 // Utility: delete single file if exists
 function deleteFileIfExists(filePath) {
   if (!filePath) return;
-  const fullPath = path.join(__dirname, "..", filePath); // assuming "/questions-image/filename"
-  fs.unlink(fullPath, (err) => {
-    if (err) console.warn("Failed to delete file:", fullPath);
-  });
+
+  const fullPath = path.join(__dirname, "..", filePath); // e.g., "/questions-image/filename"
+
+  // Check if file exists
+  if (fs.existsSync(fullPath)) {
+    fs.unlink(fullPath, (err) => {
+      if (err) {
+        console.warn("Failed to delete file:", fullPath, err);
+      } else {
+        console.log("Deleted file successfully:", fullPath);
+      }
+    });
+  } else {
+    console.log("File does not exist, nothing to delete:", fullPath);
+  }
 }
 
 module.exports = { upload, cleanupUploadedFiles, deleteFileIfExists };

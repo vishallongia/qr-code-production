@@ -18,6 +18,26 @@
         <div class="spinner"></div>
     </div>
 
+    <!-- Result Popup -->
+    <div class="coin-popup-overlay" id="resultPopup" style="display: none;">
+        <div class="coin-popup">
+            <div class="coin-popup-inner">
+                <p id="resultText"></p>
+                <div id="jackpotRewardSection" style="display: none; margin: 15px 0;">
+                    <img id="jackpotRewardImage" src="" alt="Jackpot Reward" />
+                    <p id="jackpotRewardDescription"></p>
+                </div>
+                <div id="digitalRewardSection" style="display: none; margin: 15px 0;">
+                    <img id="digitalRewardImage" src="" alt="Digital Reward" />
+                    <p id="digitalRewardDescription"></p>
+                </div>
+                <div class="coin-popup-buttons">
+                    <button onclick="closeResultPopup()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="coin-popup-overlay" id="coinPopup" style="display: none;">
         <div class="coin-popup">
             <div class="coin-popup-inner">
@@ -111,7 +131,7 @@
     <input type="hidden" name="sessionId" value="<%= sessionId %>">
     <div class="uq-header">
         <div class="uq-logo">Magic Code</div>
-        <div class="uq-coins">🪙 Magic Coins: <%= availableCoins || 0 %>
+        <div class="uq-coins" id="walletCoins">🪙 Magic Coins: <%= availableCoins || 0 %>
         </div>
     </div>
 
@@ -287,14 +307,9 @@
         })
             .then((res) => res.json())
             .then((data) => {
-                if (data.success) {
-                    showToast(
-                        data.isCorrect ? "Correct Answer!" : "Wrong Answer!",
-                        data.isCorrect ? "success" : "error"
-                    );
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                if (data.success || data.notEnoughCoins) {
+                    // Show result popup instead of reloading
+                    showResultPopup(data);
                 } else {
                     showToast(data.message || "Failed to save response", "error");
                 }
@@ -308,6 +323,102 @@
                 loader.style.display = "none"; // hide loader after fetch is done
             });
     }
+
+
+    function showResultPopup(data) {
+        const resultPopup = document.getElementById("resultPopup");
+        const resultText = document.getElementById("resultText");
+        const jackpotSection = document.getElementById("jackpotRewardSection");
+        const digitalSection = document.getElementById("digitalRewardSection");
+
+        // Reset sections
+        jackpotSection.style.display = "none";
+        digitalSection.style.display = "none";
+
+        // Extract data
+        const correctLetter = String.fromCharCode(65 + data.correctOptionIndex);
+        const isCorrect = data.isCorrect;
+        const jackpotDeducted = data.jackpotCoinDeducted;
+        const digitalDeducted = data.digitalCoinDeducted;
+
+        // Update coin counter in UI if exists
+        const walletCoinsEl = document.getElementById("walletCoins");
+        if (walletCoinsEl && data.availableCoins !== undefined) {
+            walletCoinsEl.textContent = `🪙 Magic Coins: ${data.availableCoins}`;
+        }
+
+        // Check if user had enough coins
+        if (data.notEnoughCoins) {
+            resultText.innerHTML = `❌ You do not have enough coins to participate.<br>
+        You have <strong>${data.availableCoins}</strong> coins, but <strong>${data.requiredCoins}</strong> are required.`;
+        } else {
+            // Determine text for normal result
+            if (isCorrect) {
+                if (!jackpotDeducted && !digitalDeducted) {
+                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are not participating in the contest.`;
+                } else if (jackpotDeducted && !digitalDeducted) {
+                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are qualified to win the jackpot.`;
+                } else if (!jackpotDeducted && digitalDeducted) {
+                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are qualified to win the 3 Months VIP PLAN.`;
+                } else if (jackpotDeducted && digitalDeducted) {
+                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are qualified to win both: the JACKPOT, and 3 Months VIP PLAN.`;
+                }
+            } else {
+                resultText.textContent = `The correct answer is ${correctLetter}. Thank you for your participation.`;
+            }
+
+            // Show rewards if any deduction was done
+            if (jackpotDeducted && data.jackpotReward) {
+                jackpotSection.style.display = "block";
+                const jackpotImage = document.getElementById("jackpotRewardImage");
+                const jackpotDesc = document.getElementById("jackpotRewardDescription");
+
+                // Remove old reward name paragraph if exists
+                const oldNameEl = jackpotSection.querySelector(".jackpot-name");
+                if (oldNameEl) oldNameEl.remove();
+
+                if (data.jackpotReward.name) {
+                    const nameEl = document.createElement("p");
+                    nameEl.className = "jackpot-name";
+                    nameEl.textContent = `🎁 ${data.jackpotReward.name}`;
+                    jackpotSection.insertBefore(nameEl, jackpotImage);
+                }
+
+                jackpotImage.src = data.jackpotReward.image || "";
+                jackpotDesc.textContent = data.jackpotReward.description || "";
+            }
+
+
+            if (digitalDeducted && data.digitalReward) {
+                digitalSection.style.display = "block";
+                const digitalImage = document.getElementById("digitalRewardImage");
+                const digitalDesc = document.getElementById("digitalRewardDescription");
+
+                // Remove old reward name paragraph if exists
+                const oldNameEl = digitalSection.querySelector(".digital-name");
+                if (oldNameEl) oldNameEl.remove();
+
+                if (data.digitalReward.name) {
+                    const nameEl = document.createElement("p");
+                    nameEl.className = "digital-name";
+                    nameEl.textContent = `🎁 ${data.digitalReward.name}`;
+                    digitalSection.insertBefore(nameEl, digitalImage);
+                }
+
+                digitalImage.src = data.digitalReward.image || "";
+                digitalDesc.textContent = data.digitalReward.description || "";
+            }
+
+        }
+
+        resultPopup.style.display = "flex";
+    }
+
+
+    function closeResultPopup() {
+        document.getElementById("resultPopup").style.display = "none";
+    }
+
 </script>
 
 

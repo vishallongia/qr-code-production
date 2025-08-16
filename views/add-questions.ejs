@@ -246,6 +246,53 @@
                 jackpotField.style.display = (mode === 'jackpot' || mode === 'both') ? 'block' : 'none';
                 digitalField.style.display = (mode === 'digital' || mode === 'both') ? 'block' : 'none';
 
+                if (jackpotField.style.display === 'none') {
+                    jackpotField.querySelectorAll('input[type="text"], input[type="number"], input[type="url"], input[type="file"]').forEach(input => {
+                        input.value = '';
+                        if (input.type === 'file') {
+                            // Reset input value
+                            input.value = '';
+
+                            // Reset label text
+                            const labelText = input.parentElement.querySelector('.quiz-file-label-text');
+                            if (labelText) labelText.textContent = 'Choose File';
+
+                            // Hide clear button
+                            const clearBtn = input.parentElement.querySelector('.quiz-clear-btn');
+                            if (clearBtn) clearBtn.style.display = 'none';
+
+                            // Hide preview image
+                            const preview = block.querySelector(`.${input.classList[0]}Preview`);
+                            if (preview) preview.style.display = 'none';
+                        }
+
+                    });
+                }
+
+                if (digitalField.style.display === 'none') {
+                    digitalField.querySelectorAll('input[type="text"], input[type="number"], input[type="url"], input[type="file"]').forEach(input => {
+                        input.value = '';
+                        if (input.type === 'file') {
+                            // Reset input value
+                            input.value = '';
+
+                            // Reset label text
+                            const labelText = input.parentElement.querySelector('.quiz-file-label-text');
+                            if (labelText) labelText.textContent = 'Choose File';
+
+                            // Hide clear button
+                            const clearBtn = input.parentElement.querySelector('.quiz-clear-btn');
+                            if (clearBtn) clearBtn.style.display = 'none';
+
+                            // Hide preview image
+                            const preview = block.querySelector(`.${input.classList[0]}Preview`);
+                            if (preview) preview.style.display = 'none';
+                        }
+
+                    });
+                }
+
+
                 // Toggle active button style
                 modeButtons.forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
@@ -255,6 +302,7 @@
         // Default to jackpot
         modeButtons[0].click();
     }
+
 
 
     function generateOptionBlock(block, index) {
