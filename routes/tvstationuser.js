@@ -8,10 +8,11 @@ const {
   deleteFileIfExists,
 } = require("../middleware/multerQuizUploader");
 const QuizQuestion = require("../models/QuizQuestion");
+const VoteQuestion = require("../models/VoteQuestion");
 const Channel = require("../models/Channel");
-const Payment = require("../models/Payment");
 const User = require("../models/User");
 const QuizQuestionResponse = require("../models/QuizQuestionResponse");
+const VoteQuestionResponse = require("../models/VoteQuestionResponse");
 const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
 const Session = require("../models/Session"); // adjust path if needed
 const BASE_URL = process.env.FRONTEND_URL; // update if needed
@@ -982,8 +983,8 @@ router.post(
     { name: "questionLogo", maxCount: 1 },
     { name: "logo", maxCount: 1 },
     { name: "optionsImages" },
-    { name: "jackpotRewardImage", maxCount: 1 }, // ✅ new
-    { name: "digitalRewardImage", maxCount: 1 }, // ✅ new
+    { name: "jackpotRewardImage", maxCount: 1 },
+    { name: "digitalRewardImage", maxCount: 1 },
   ]),
   async (req, res) => {
     try {
@@ -1002,22 +1003,16 @@ router.post(
         logoDescription,
         logoLink,
         clearedImages,
-        // New Jackpot fields
+        // Rewards
         jackpotRewardName,
         jackpotRewardDescription,
         jackpotRewardLink,
-        // New Digital fields
         digitalRewardName,
         digitalRewardDescription,
         digitalRewardLink,
       } = req.body;
 
-      console.log("===== Incoming File Counts =====");
-      for (const field in req.files) {
-        console.log(`${field}: ${req.files[field].length}`);
-      }
-
-      // ✅ Validate ObjectId format
+      // ✅ Validate IDs
       if (
         !mongoose.Types.ObjectId.isValid(channelId) ||
         !mongoose.Types.ObjectId.isValid(sessionId)
@@ -1035,7 +1030,7 @@ router.post(
           .json({ message: "Quiz not found", type: "error" });
       }
 
-      // ✅ Fetch channel & session
+      // ✅ Channel & session
       const channel = await Channel.findById(channelId);
       const session = await Session.findById(sessionId);
       if (!channel || !session) {
@@ -1053,7 +1048,7 @@ router.post(
           .json({ message: "Access denied", type: "error" });
       }
 
-      // ✅ Validate required fields
+      // ✅ Required fields
       if (!question || !options || correctAnswerIndex === undefined) {
         cleanupUploadedFiles(req.files);
         return res
@@ -1061,14 +1056,24 @@ router.post(
           .json({ message: "Missing required fields", type: "error" });
       }
 
-      // ✅ Validate coins
+      // ✅ Coins
       let jCoin = Math.max(0, parseInt(jackpotCoinDeducted) || 0);
       let dCoin = Math.max(0, parseInt(digitalCoinDeducted) || 0);
       if (mode === "jackpot") dCoin = 0;
       else if (mode === "digital") jCoin = 0;
+      else if (mode === "none") {
+        jCoin = 0;
+        dCoin = 0;
+      }
 
       const magicCoinDeducted =
-        mode === "jackpot" ? jCoin : mode === "digital" ? dCoin : jCoin + dCoin;
+        mode === "jackpot"
+          ? jCoin
+          : mode === "digital"
+          ? dCoin
+          : mode === "none"
+          ? 0
+          : jCoin + dCoin;
 
       // ✅ Parse options
       let parsedOptions;
@@ -1088,9 +1093,17 @@ router.post(
           .json({ message: "At least 2 options required", type: "error" });
       }
 
-      const cleared = clearedImages
-        ? clearedImages.split(",").map((s) => s.trim())
-        : [];
+      // ✅ Cleared images list
+      let cleared = [];
+      if (clearedImages) {
+        if (Array.isArray(clearedImages)) {
+          cleared = clearedImages.flatMap((c) =>
+            c.split(",").map((s) => s.trim())
+          );
+        } else if (typeof clearedImages === "string") {
+          cleared = clearedImages.split(",").map((s) => s.trim());
+        }
+      }
 
       // ✅ Handle main images
       const handleImageUpdate = (field, uploadedFile) => {
@@ -1122,39 +1135,66 @@ router.post(
         req.files["digitalRewardImage"]?.[0]
       );
 
-      // Step 1: Build a map of option index → uploaded file
-      // Step 1: Build a map of option index → uploaded file (prevent duplicate saves)
-      const seenFilenames = new Set();
+      // ✅ Map option files to IDs
       const files = req.files["optionsImages"] || [];
-      const idxListRaw = req.body.optionsImagesIndex || [];
-      const idxList = Array.isArray(idxListRaw) ? idxListRaw : [idxListRaw];
+      const optionIdsRaw = req.body.optionIds || [];
+      const optionIds = Array.isArray(optionIdsRaw)
+        ? optionIdsRaw
+        : [optionIdsRaw];
+      const fileByOptionId = new Map();
 
-      const fileByOptionIndex = new Map();
       files.forEach((file, k) => {
-        const idx = parseInt(idxList[k], 10);
-        if (!isNaN(idx) && !seenFilenames.has(file.originalname)) {
-          fileByOptionIndex.set(idx, file);
-          seenFilenames.add(file.originalname);
-        }
+        const id = optionIds[k];
+        if (id) fileByOptionId.set(id, file);
       });
 
-      const formattedOptions = parsedOptions.map((opt, idx) => {
-        let oldImage = quiz.options[idx]?.image || null;
+      if (req.body.clearedOptions) {
+        const fullyClearedOptionIds = req.body.clearedOptions.split(",");
+        fullyClearedOptionIds.forEach((id) => {
+          const existingOpt = quiz.options.find((o) => o._id.toString() === id);
+          if (existingOpt) deleteFileIfExists(existingOpt.image);
+        });
+        quiz.options = quiz.options.filter(
+          (o) => !fullyClearedOptionIds.includes(o._id.toString())
+        );
+      }
+
+      // ✅ Format updated options
+      const formattedOptions = parsedOptions.map((opt) => {
+        let optId = null;
+
+        if (opt._id && mongoose.Types.ObjectId.isValid(opt._id)) {
+          optId = opt._id;
+        } else {
+          optId = new mongoose.Types.ObjectId();
+        }
+
+        let oldImage = null;
+        if (opt._id && mongoose.Types.ObjectId.isValid(opt._id)) {
+          const found = quiz.options.find(
+            (o) => o._id && o._id.toString() === opt._id.toString()
+          );
+          oldImage = found ? found.image : null;
+        }
+
         let newImage = oldImage;
 
-        // ✅ Use uploaded file if exists for this option
-        if (fileByOptionIndex.has(idx)) {
+        if (fileByOptionId.has(opt._id)) {
           deleteFileIfExists(oldImage);
-          newImage = `/questions-image/${fileByOptionIndex.get(idx).filename}`;
-        }
-        // ✅ Clear image if flagged
-        else if (cleared.includes(`optionImage-${idx}`)) {
+          newImage = `/questions-image/${fileByOptionId.get(opt._id).filename}`;
+        } else if (
+          cleared.includes(opt._id) ||
+          cleared.includes(`optionImage-${opt._id}`)
+        ) {
           deleteFileIfExists(oldImage);
           newImage = null;
+        } else if (opt.imageName && !oldImage) {
+          newImage = `/questions-image/${opt.imageName}`;
         }
 
         return {
-          text: opt.text?.trim(),
+          _id: optId,
+          text: opt.text?.trim() || "",
           image: newImage,
         };
       });
@@ -1174,9 +1214,8 @@ router.post(
       quiz.mode = mode;
       quiz.magicCoinDeducted = magicCoinDeducted;
 
-      // Reward fields handling based on mode
+      // ✅ Reward fields
       if (mode === "jackpot") {
-        // Clear digital reward fields & files
         quiz.digitalRewardName = "";
         quiz.digitalRewardDescription = "";
         quiz.digitalRewardLink = null;
@@ -1187,7 +1226,6 @@ router.post(
         quiz.jackpotRewardDescription = jackpotRewardDescription?.trim() || "";
         quiz.jackpotRewardLink = jackpotRewardLink?.trim() || null;
       } else if (mode === "digital") {
-        // Clear jackpot reward fields & files
         quiz.jackpotRewardName = "";
         quiz.jackpotRewardDescription = "";
         quiz.jackpotRewardLink = null;
@@ -1204,6 +1242,18 @@ router.post(
         quiz.digitalRewardName = digitalRewardName?.trim() || "";
         quiz.digitalRewardDescription = digitalRewardDescription?.trim() || "";
         quiz.digitalRewardLink = digitalRewardLink?.trim() || null;
+      } else if (mode === "none") {
+        quiz.jackpotRewardName = "";
+        quiz.jackpotRewardDescription = "";
+        quiz.jackpotRewardLink = null;
+        deleteFileIfExists(quiz.jackpotRewardImage);
+        quiz.jackpotRewardImage = null;
+
+        quiz.digitalRewardName = "";
+        quiz.digitalRewardDescription = "";
+        quiz.digitalRewardLink = null;
+        deleteFileIfExists(quiz.digitalRewardImage);
+        quiz.digitalRewardImage = null;
       }
 
       await quiz.save();
@@ -2080,5 +2130,793 @@ router.post(
 );
 
 // Session Api End Here
+
+// Voting Api Start Here
+
+router.get(
+  "/channels/:channelId/session/:sessionId/voting",
+  async (req, res) => {
+    const { channelId, sessionId } = req.params;
+
+    // Validate ObjectIds
+    if (
+      !mongoose.Types.ObjectId.isValid(channelId) ||
+      !mongoose.Types.ObjectId.isValid(sessionId)
+    ) {
+      return res.render("dashboardnew", {
+        channel: null,
+        error: "Invalid Channel or Session ID",
+        activeSection: "channel-vote",
+        user: req.user,
+      });
+    }
+
+    try {
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+
+      if (!channel || !session) {
+        return res.render("dashboardnew", {
+          channel: null,
+          error: "Channel or session not found",
+          activeSection: "channel-vote",
+          user: req.user,
+        });
+      }
+
+      // Check ownership
+      if (!channel.createdBy.equals(req.user._id)) {
+        return res.render("dashboardnew", {
+          channel,
+          error: "Access denied",
+          activeSection: "channel-vote",
+          user: req.user,
+          sessionId,
+        });
+      }
+
+      const skip = parseInt(req.query.skip) || 0;
+      const limit = parseInt(req.query.limit) || 5;
+
+      const voteQuestions = await VoteQuestion.find({
+        channelId,
+        sessionId,
+      })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+
+      const total = await VoteQuestion.countDocuments({ channelId, sessionId });
+      const hasMore = skip + voteQuestions.length < total;
+
+      if (req.xhr || req.headers.accept.includes("json")) {
+        return res.json({ type: "success", data: voteQuestions, hasMore });
+      }
+
+      return res.render("dashboardnew", {
+        channel,
+        error: null,
+        activeSection: "channel-vote",
+        user: req.user,
+        voteQuestions,
+        hasMore,
+        sessionId,
+      });
+    } catch (err) {
+      console.error("Error fetching vote for session:", err);
+      return res.render("dashboardnew", {
+        channel: null,
+        error: "Server error. Please try again later.",
+        activeSection: "channel-vote",
+        user: req.user,
+        voteQuestions: null,
+        hasMore: false,
+      });
+    }
+  }
+);
+
+router.get(
+  "/channels/:channelId/session/:sessionId/addvotingquestion",
+  async (req, res) => {
+    const { channelId, sessionId } = req.params;
+
+    if (
+      !mongoose.Types.ObjectId.isValid(channelId) ||
+      !mongoose.Types.ObjectId.isValid(sessionId)
+    ) {
+      return res.render("add-voting-question", {
+        channel: null,
+        session: null,
+        error: "Invalid Channel or Session ID",
+        user: req.user,
+        sessionId,
+      });
+    }
+
+    try {
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+
+      if (!channel || !session) {
+        return res.render("add-voting-question", {
+          channel: null,
+          session: null,
+          error: "Channel or Session not found",
+          user: req.user,
+          sessionId,
+        });
+      }
+
+      // Check if user owns the channel
+      if (!channel.createdBy.equals(req.user._id)) {
+        return res.render("add-voting-question", {
+          channel: null,
+          session: null,
+          error: "Access denied",
+          user: req.user,
+          sessionId,
+        });
+      }
+
+      // Optional: check if session belongs to the channel
+      if (!session.channelId.equals(channel._id)) {
+        return res.render("add-voting-question", {
+          channel: null,
+          session: null,
+          error: "Session does not belong to this channel",
+          user: req.user,
+          sessionId,
+        });
+      }
+
+      // Check if a voting question already exists for the session
+      const existingQuestion = await VoteQuestion.findOne({ sessionId });
+
+      if (existingQuestion) {
+        return res.render("add-voting-question", {
+          channel,
+          session,
+          error: "Only one question is allowed per session.",
+          user: req.user,
+          sessionId,
+        });
+      }
+
+      return res.render("add-voting-question", {
+        channel,
+        session,
+        error: null,
+        user: req.user,
+        sessionId,
+      });
+    } catch (err) {
+      console.error(
+        "Error in GET /channels/:channelId/session/:sessionId/add-voting-question:",
+        err
+      );
+      return res.render("add-voting-questions", {
+        channel: null,
+        session: null,
+        error: "Server error, please try again later.",
+        user: req.user,
+      });
+    }
+  }
+);
+
+router.post(
+  "/voting-question/create",
+  upload.fields([
+    { name: "questionImage", maxCount: 1 },
+    { name: "questionLogo", maxCount: 1 },
+    { name: "logo", maxCount: 1 },
+    { name: "optionsImages" },
+    { name: "jackpotRewardImage", maxCount: 1 },
+    { name: "digitalRewardImage", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const {
+        channelId,
+        sessionId,
+        question,
+        options,
+        questionImageLink,
+        mode = "none",
+        jackpotCoinDeducted = 0,
+        digitalCoinDeducted = 0,
+        logoTitle,
+        logoDescription,
+        logoLink,
+        jackpotRewardName,
+        jackpotRewardDescription,
+        jackpotRewardLink,
+        digitalRewardName,
+        digitalRewardDescription,
+        digitalRewardLink,
+      } = req.body;
+
+      // ✅ Validate ObjectId
+      if (
+        !mongoose.Types.ObjectId.isValid(channelId) ||
+        !mongoose.Types.ObjectId.isValid(sessionId)
+      ) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "Invalid channelId or sessionId", type: "error" });
+      }
+
+      // ✅ Required fields for voting
+      if (!channelId || !sessionId || !question || !options) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "Missing required fields.", type: "error" });
+      }
+
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+
+      if (!channel || !session) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "Channel or Session not found", type: "error" });
+      }
+
+      if (!channel.createdBy.equals(req.user._id)) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "Access denied", type: "error" });
+      }
+
+      // ✅ Coins validation
+      let jCoin = Math.max(0, parseInt(jackpotCoinDeducted) || 0);
+      let dCoin = Math.max(0, parseInt(digitalCoinDeducted) || 0);
+
+      if (mode === "jackpot") {
+        dCoin = 0;
+      } else if (mode === "digital") {
+        jCoin = 0;
+      }
+
+      const magicCoinDeducted =
+        mode === "jackpot" ? jCoin : mode === "digital" ? dCoin : jCoin + dCoin;
+
+      // ✅ Parse options
+      let parsedOptions;
+      try {
+        parsedOptions = JSON.parse(options);
+      } catch (err) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "Invalid options format.", type: "error" });
+      }
+
+      if (!Array.isArray(parsedOptions) || parsedOptions.length < 2) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "At least 2 options are required.", type: "error" });
+      }
+
+      const formattedOptions = parsedOptions.map((opt) => {
+        const imageFile = req.files["optionsImages"]?.find(
+          (file) => file.originalname === opt.imageName
+        );
+        return {
+          text: opt.text?.trim(),
+          image: imageFile ? `/questions-image/${imageFile.filename}` : null,
+        };
+      });
+
+      // ✅ File extraction
+      const questionImagePath = req.files["questionImage"]?.[0]?.filename;
+      const questionLogoPath = req.files["questionLogo"]?.[0]?.filename;
+      const logoPath = req.files["logo"]?.[0]?.filename;
+      const jackpotRewardImagePath =
+        req.files["jackpotRewardImage"]?.[0]?.filename;
+      const digitalRewardImagePath =
+        req.files["digitalRewardImage"]?.[0]?.filename;
+
+      // ✅ Save Voting Question (no correctAnswerIndex)
+      const votingData = new VoteQuestion({
+        channelId,
+        sessionId,
+        question: question.trim(),
+        options: formattedOptions,
+        questionImage: questionImagePath
+          ? `/questions-image/${questionImagePath}`
+          : null,
+        questionImageLink: questionImageLink?.trim() || null,
+        questionLogo: questionLogoPath
+          ? `/questions-image/${questionLogoPath}`
+          : null,
+        logo: logoPath ? `/questions-image/${logoPath}` : null,
+        logoTitle: logoTitle?.trim() || null,
+        logoDescription: logoDescription?.trim() || null,
+        logoLink: logoLink?.trim() || null,
+        jackpotCoinDeducted: jCoin,
+        digitalCoinDeducted: dCoin,
+        mode,
+        magicCoinDeducted,
+        jackpotRewardName: jackpotRewardName?.trim() || "",
+        jackpotRewardImage: jackpotRewardImagePath
+          ? `/questions-image/${jackpotRewardImagePath}`
+          : null,
+        jackpotRewardDescription: jackpotRewardDescription?.trim() || "",
+        jackpotRewardLink: jackpotRewardLink?.trim() || null,
+        digitalRewardName: digitalRewardName?.trim() || "",
+        digitalRewardImage: digitalRewardImagePath
+          ? `/questions-image/${digitalRewardImagePath}`
+          : null,
+        digitalRewardDescription: digitalRewardDescription?.trim() || "",
+        digitalRewardLink: digitalRewardLink?.trim() || null,
+      });
+
+      await votingData.save();
+
+      return res.status(201).json({
+        message: "Voting question saved successfully.",
+        type: "success",
+        data: votingData,
+      });
+    } catch (err) {
+      console.error("Error saving voting question:", err);
+      cleanupUploadedFiles(req.files);
+      return res.status(500).json({
+        message: "Failed to save voting question.",
+        type: "error",
+      });
+    }
+  }
+);
+
+router.get(
+  "/channels/:channelId/session/:sessionId/edit-voting-question/:questionId",
+  async (req, res) => {
+    const { channelId, questionId, sessionId } = req.params;
+
+    // Validate ObjectIds
+    if (
+      !mongoose.Types.ObjectId.isValid(channelId) ||
+      !mongoose.Types.ObjectId.isValid(questionId) ||
+      !mongoose.Types.ObjectId.isValid(sessionId)
+    ) {
+      return res.render("edit-voting-question", {
+        error: "Invalid Channel ID, Question ID, or Session ID",
+        channel: null,
+        question: null,
+        user: req.user,
+      });
+    }
+
+    try {
+      const channel = await Channel.findById(channelId);
+
+      if (!channel) {
+        return res.render("edit-voting-question", {
+          error: "Channel not found",
+          channel: null,
+          question: null,
+          user: req.user,
+        });
+      }
+
+      if (!channel.createdBy.equals(req.user._id)) {
+        return res.render("edit-voting-question", {
+          error: "Access denied",
+          channel: null,
+          question: null,
+          user: req.user,
+        });
+      }
+
+      const question = await VoteQuestion.findOne({
+        _id: questionId,
+        channelId,
+      }).lean();
+
+      if (!question) {
+        return res.render("edit-voting-question", {
+          error: "Voting question not found",
+          channel,
+          question: null,
+          user: req.user,
+        });
+      }
+
+      return res.render("edit-voting-question", {
+        error: null,
+        channel,
+        question,
+        user: req.user,
+        sessionId,
+      });
+    } catch (err) {
+      console.error("Error fetching voting question for edit:", err);
+      return res.render("edit-voting-question", {
+        error: "Server error. Try again later.",
+        channel: null,
+        question: null,
+        user: req.user,
+      });
+    }
+  }
+);
+
+router.post(
+  "/voting-question/update",
+  upload.fields([
+    { name: "questionImage", maxCount: 1 },
+    { name: "questionLogo", maxCount: 1 },
+    { name: "logo", maxCount: 1 },
+    { name: "optionsImages" },
+    { name: "jackpotRewardImage", maxCount: 1 },
+    { name: "digitalRewardImage", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const {
+        questionId,
+        channelId,
+        sessionId,
+        question,
+        options,
+        questionImageLink,
+        mode = "jackpot",
+        jackpotCoinDeducted = 0,
+        digitalCoinDeducted = 0,
+        logoTitle,
+        logoDescription,
+        logoLink,
+        clearedImages,
+        jackpotRewardName,
+        jackpotRewardDescription,
+        jackpotRewardLink,
+        digitalRewardName,
+        digitalRewardDescription,
+        digitalRewardLink,
+      } = req.body;
+
+      // ✅ Validate IDs
+      if (
+        !mongoose.Types.ObjectId.isValid(channelId) ||
+        !mongoose.Types.ObjectId.isValid(sessionId)
+      ) {
+        cleanupUploadedFiles(req.files);
+        return res.status(400).json({ message: "Invalid IDs", type: "error" });
+      }
+
+      // ✅ Fetch voting question
+      const votingQuestion = await VoteQuestion.findById(questionId);
+      if (!votingQuestion) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(404)
+          .json({ message: "Voting question not found", type: "error" });
+      }
+
+      // ✅ Channel & session
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+      if (!channel || !session) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "Channel or Session not found", type: "error" });
+      }
+
+      // ✅ Ownership check
+      if (!channel.createdBy.equals(req.user._id)) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(403)
+          .json({ message: "Access denied", type: "error" });
+      }
+
+      // ✅ Required fields
+      if (!question || !options) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "Missing required fields", type: "error" });
+      }
+
+      // ✅ Coins
+      let jCoin = Math.max(0, parseInt(jackpotCoinDeducted) || 0);
+      let dCoin = Math.max(0, parseInt(digitalCoinDeducted) || 0);
+      if (mode === "jackpot") dCoin = 0;
+      else if (mode === "digital") jCoin = 0;
+      else if (mode === "none") {
+        jCoin = 0;
+        dCoin = 0;
+      }
+
+      const magicCoinDeducted =
+        mode === "jackpot"
+          ? jCoin
+          : mode === "digital"
+          ? dCoin
+          : mode === "none"
+          ? 0
+          : jCoin + dCoin;
+
+      // ✅ Parse options
+      let parsedOptions;
+      try {
+        parsedOptions = JSON.parse(options);
+      } catch (err) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "Invalid options format", type: "error" });
+      }
+
+      if (!Array.isArray(parsedOptions) || parsedOptions.length < 2) {
+        cleanupUploadedFiles(req.files);
+        return res
+          .status(400)
+          .json({ message: "At least 2 options required", type: "error" });
+      }
+
+      // ✅ Cleared images list
+      let cleared = [];
+      if (clearedImages) {
+        if (Array.isArray(clearedImages)) {
+          cleared = clearedImages.flatMap((c) =>
+            c.split(",").map((s) => s.trim())
+          );
+        } else if (typeof clearedImages === "string") {
+          cleared = clearedImages.split(",").map((s) => s.trim());
+        }
+      }
+
+      // ✅ Handle main images
+      const handleImageUpdate = (field, uploadedFile) => {
+        if (cleared.includes(field)) {
+          deleteFileIfExists(votingQuestion[field]);
+          return null;
+        } else if (uploadedFile) {
+          deleteFileIfExists(votingQuestion[field]);
+          return `/questions-image/${uploadedFile.filename}`;
+        }
+        return votingQuestion[field];
+      };
+
+      votingQuestion.logo = handleImageUpdate("logo", req.files["logo"]?.[0]);
+      votingQuestion.questionImage = handleImageUpdate(
+        "questionImage",
+        req.files["questionImage"]?.[0]
+      );
+      votingQuestion.jackpotRewardImage = handleImageUpdate(
+        "jackpotRewardImage",
+        req.files["jackpotRewardImage"]?.[0]
+      );
+      votingQuestion.digitalRewardImage = handleImageUpdate(
+        "digitalRewardImage",
+        req.files["digitalRewardImage"]?.[0]
+      );
+
+      // ✅ Map option files to IDs
+      const files = req.files["optionsImages"] || [];
+      const optionIdsRaw = req.body.optionIds || [];
+      const optionIds = Array.isArray(optionIdsRaw)
+        ? optionIdsRaw
+        : [optionIdsRaw];
+      const fileByOptionId = new Map();
+
+      files.forEach((file, k) => {
+        const id = optionIds[k];
+        if (id) fileByOptionId.set(id, file);
+      });
+
+      // Delete images of fully removed options
+      if (req.body.clearedOptions) {
+        const fullyClearedOptionIds = req.body.clearedOptions.split(",");
+        fullyClearedOptionIds.forEach((id) => {
+          const existingOpt = votingQuestion.options.find(
+            (o) => o._id.toString() === id
+          );
+          if (existingOpt) deleteFileIfExists(existingOpt.image);
+        });
+        // Remove these options from DB
+        votingQuestion.options = votingQuestion.options.filter(
+          (o) => !fullyClearedOptionIds.includes(o._id.toString())
+        );
+      }
+
+      const formattedOptions = parsedOptions.map((opt, idx) => {
+        let optId = null;
+
+        // Use existing ObjectId if valid
+        if (opt._id && mongoose.Types.ObjectId.isValid(opt._id)) {
+          optId = opt._id;
+        } else {
+          // Otherwise generate a fresh one (new option)
+          optId = new mongoose.Types.ObjectId();
+        }
+
+        let oldImage = null;
+        if (opt._id && mongoose.Types.ObjectId.isValid(opt._id)) {
+          const found = votingQuestion.options.find(
+            (o) => o._id && o._id.toString() === opt._id.toString()
+          );
+          oldImage = found ? found.image : null;
+        }
+
+        let newImage = oldImage;
+
+        if (fileByOptionId.has(opt._id)) {
+          deleteFileIfExists(oldImage);
+          newImage = `/questions-image/${fileByOptionId.get(opt._id).filename}`;
+        } else if (
+          cleared.includes(opt._id) ||
+          cleared.includes(`optionImage-${opt._id}`)
+        ) {
+          deleteFileIfExists(oldImage);
+          newImage = null;
+        } else if (opt.imageName && !oldImage) {
+          newImage = `/questions-image/${opt.imageName}`;
+        }
+
+        return {
+          _id: optId,
+          text: opt.text?.trim() || "",
+          image: newImage,
+        };
+      });
+
+      // ✅ Update main fields
+      votingQuestion.channelId = channelId;
+      votingQuestion.sessionId = sessionId;
+      votingQuestion.question = question.trim();
+      votingQuestion.options = formattedOptions;
+      votingQuestion.questionImageLink = questionImageLink?.trim() || null;
+      votingQuestion.logoTitle = logoTitle?.trim() || null;
+      votingQuestion.logoDescription = logoDescription?.trim() || null;
+      votingQuestion.logoLink = logoLink?.trim() || null;
+      votingQuestion.jackpotCoinDeducted = jCoin;
+      votingQuestion.digitalCoinDeducted = dCoin;
+      votingQuestion.mode = mode;
+      votingQuestion.magicCoinDeducted = magicCoinDeducted;
+
+      // ✅ Reward fields
+      if (mode === "jackpot") {
+        votingQuestion.digitalRewardName = "";
+        votingQuestion.digitalRewardDescription = "";
+        votingQuestion.digitalRewardLink = null;
+        deleteFileIfExists(votingQuestion.digitalRewardImage);
+        votingQuestion.digitalRewardImage = null;
+
+        votingQuestion.jackpotRewardName = jackpotRewardName?.trim() || "";
+        votingQuestion.jackpotRewardDescription =
+          jackpotRewardDescription?.trim() || "";
+        votingQuestion.jackpotRewardLink = jackpotRewardLink?.trim() || null;
+      } else if (mode === "digital") {
+        votingQuestion.jackpotRewardName = "";
+        votingQuestion.jackpotRewardDescription = "";
+        votingQuestion.jackpotRewardLink = null;
+        deleteFileIfExists(votingQuestion.jackpotRewardImage);
+        votingQuestion.jackpotRewardImage = null;
+
+        votingQuestion.digitalRewardName = digitalRewardName?.trim() || "";
+        votingQuestion.digitalRewardDescription =
+          digitalRewardDescription?.trim() || "";
+        votingQuestion.digitalRewardLink = digitalRewardLink?.trim() || null;
+      } else if (mode === "both") {
+        votingQuestion.jackpotRewardName = jackpotRewardName?.trim() || "";
+        votingQuestion.jackpotRewardDescription =
+          jackpotRewardDescription?.trim() || "";
+        votingQuestion.jackpotRewardLink = jackpotRewardLink?.trim() || null;
+        votingQuestion.digitalRewardName = digitalRewardName?.trim() || "";
+        votingQuestion.digitalRewardDescription =
+          digitalRewardDescription?.trim() || "";
+        votingQuestion.digitalRewardLink = digitalRewardLink?.trim() || null;
+      } else if (mode === "none") {
+        votingQuestion.jackpotRewardName = "";
+        votingQuestion.jackpotRewardDescription = "";
+        votingQuestion.jackpotRewardLink = null;
+        deleteFileIfExists(votingQuestion.jackpotRewardImage);
+        votingQuestion.jackpotRewardImage = null;
+
+        votingQuestion.digitalRewardName = "";
+        votingQuestion.digitalRewardDescription = "";
+        votingQuestion.digitalRewardLink = null;
+        deleteFileIfExists(votingQuestion.digitalRewardImage);
+        votingQuestion.digitalRewardImage = null;
+      }
+
+      await votingQuestion.save();
+
+      return res.status(200).json({
+        message: "Voting question updated successfully.",
+        type: "success",
+        data: votingQuestion,
+      });
+    } catch (err) {
+      console.error("Error updating voting question:", err);
+      cleanupUploadedFiles(req.files);
+      return res
+        .status(500)
+        .json({ message: "Failed to update voting question", type: "error" });
+    }
+  }
+);
+
+router.delete("/voting-question/:id", async (req, res) => {
+  try {
+    const voteId = req.params.id;
+    const { channelId } = req.body;
+    const userId = req.user?._id; // Assumes auth middleware adds user
+
+    if (!channelId || !userId) {
+      return res.status(400).json({
+        message: "channelId and userId are required",
+        type: "error",
+      });
+    }
+
+    // 🔐 1. Verify the channel belongs to the user
+    const channel = await Channel.findOne({
+      _id: channelId,
+      createdBy: userId,
+    });
+    if (!channel) {
+      return res.status(403).json({
+        message: "Unauthorized channel access",
+        type: "error",
+      });
+    }
+
+    // 📦 2. Find the voting question within the channel
+    const voteQuestion = await VoteQuestion.findOne({ _id: voteId, channelId });
+    if (!voteQuestion) {
+      return res.status(404).json({
+        message: "Voting question not found",
+        type: "error",
+      });
+    }
+
+    // 🧹 Use cascadeDelete to remove voting question + all related data
+    await cascadeDelete("voteQuestion", voteId);
+
+    // // Optional: Delete related file assets (if exist)
+    // const fileFieldsToCheck = [
+    //   voteQuestion.questionImage,
+    //   voteQuestion.questionLogo,
+    //   voteQuestion.logo,
+    // ];
+    // fileFieldsToCheck.forEach((filePath) => {
+    //   if (filePath) deleteFileIfExists(filePath);
+    // });
+    // if (Array.isArray(voteQuestion.options)) {
+    //   voteQuestion.options.forEach((option) => {
+    //     if (option.image) deleteFileIfExists(option.image);
+    //   });
+    // }
+
+    // // ❌ Optional: Delete the voting question directly
+    // await VoteQuestion.deleteOne({ _id: voteId });
+
+    return res.status(200).json({
+      message: "Voting question deleted successfully",
+      type: "success",
+    });
+  } catch (err) {
+    console.error("Delete Error:", err);
+    return res.status(500).json({
+      message: "Server error",
+      type: "error",
+    });
+  }
+});
+
+// Voting Api End Here
 
 module.exports = router;

@@ -73,7 +73,6 @@ router.post(
       }
 
       const eventBody = JSON.parse(rawBody);
-      console.log(eventBody.event_type, "type");
       if (eventBody.event_type === "PAYMENT.CAPTURE.COMPLETED") {
         console.log("💰 Payment capture completed event received");
         const capture = eventBody.resource;
@@ -115,8 +114,51 @@ router.post(
               console.log(
                 `Added ${plan.coinsOffered} coins to user ${user._id}. Total coins: ${user.walletCoins}`
               );
+              // ✅ Update totalCoins in Payment for history
+              updated.totalCoins = user.walletCoins;
+              await updated.save();
             }
           }
+        }
+      } else if (eventBody.event_type === "PAYMENT.CAPTURE.DENIED") {
+        console.log("❌ Payment capture denied event received");
+        const capture = eventBody.resource;
+        const transactionId = capture.id;
+        const status = capture.status;
+
+        const updated = await Payment.findOneAndUpdate(
+          { transactionId },
+          {
+            paymentStatus: status.toLowerCase(),
+          }
+        );
+
+        if (updated) {
+          console.log(`❌ Payment status for ${updated._id} set to declined.`);
+        } else {
+          console.warn(
+            `Payment with transaction ID ${transactionId} not found.`
+          );
+        }
+      } else if (eventBody.event_type === "PAYMENT.CAPTURE.PENDING") {
+        console.log("⏳ Payment capture pending event received");
+        const capture = eventBody.resource;
+        const transactionId = capture.id;
+        const status = capture.status;
+
+        const updated = await Payment.findOneAndUpdate(
+          { transactionId },
+          {
+            paymentStatus: status.toLowerCase(),
+          }
+        );
+
+        if (updated) {
+          console.log(`⏳ Payment status for ${updated._id} set to pending.`);
+        } else {
+          console.warn(
+            `Payment with transaction ID ${transactionId} not found.`
+          );
         }
       }
 

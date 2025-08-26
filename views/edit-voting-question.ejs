@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Edit Quiz Question</title>
+    <title>Edit Voting Question</title>
     <link rel="stylesheet" href="/css/add-quiz-question.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
@@ -21,13 +21,14 @@
         </div>
         <% } else { %>
             <div class="quiz-container">
-                <h2>Edit Quiz Question</h2>
+                <h2>Edit Voting Question</h2>
                 <form id="edit-question-form" enctype="multipart/form-data">
                     <input type="hidden" name="channelId" value="<%= channel._id %>" />
                     <input type="hidden" name="questionId" value="<%= question._id %>" />
                     <input type="hidden" name="sessionId" value="<%= sessionId %>" />
                     <input type="hidden" id="clearedImagesInput" name="clearedImages" />
-                    <input type="hidden" id="clearedOptions" name="clearedOptions" />
+                    <input type="hidden" id="clearedOptions" name="clearedOptions" value="">
+
 
 
                     <div class="quiz-form-group">
@@ -63,8 +64,9 @@
                                 <% } %>
                     </div>
                     <div class="quiz-form-group">
-                        <label>Question</label>
-                        <input type="text" name="question" value="<%= question.question %>" required />
+                        <label>Voting Question</label>
+                        <input type="text" name="question" value="<%= question.question %>"
+                            placeholder="Enter voting question" required />
                     </div>
 
                     <div class="quiz-form-group">
@@ -84,31 +86,20 @@
 
                     <div class="quiz-form-group">
                         <label>Question Image Link (optional)</label>
-                        <input type="url" name="questionImageLink" value="<%= question.questionImageLink || '' %>" />
+                        <input type="url" name="questionImageLink" value="<%= question.questionImageLink || '' %>"
+                            placeholder="https://example.com" />
                     </div>
-
-                    <!-- <div class="quiz-form-group">
-                        <label>Question Logo (optional)</label>
-                        <label class="quiz-file-label">
-                            <span class="quiz-file-label-text">
-                                <%= question.questionLogo ? question.questionLogo.split('/').pop() : 'Choose File' %>
-                            </span>
-                            <input type="file" name="questionLogo" class="quiz-hidden-file" accept="image/*" />
-                        </label>
-                        <% if (question.questionLogo) { %>
-                            <img class="preview-img" src="<%= question.questionLogo %>" style="display: block;" />
-                            <% } else { %>
-                                <img class="preview-img" style="display: none;" />
-                                <% } %>
-                    </div> -->
 
                     <div class="quiz-option-wrapper">
                         <div class="quiz-option-controls">
                             <button type="button" id="btn-add-option" class="quiz-btn-add-option">+ Add Option</button>
                         </div>
                         <div id="option-blocks" class="quiz-option-blocks quiz-options-grid">
-                            <% question.options.forEach((opt, index)=> { %>
-                                <div class="quiz-option-block" data-option-id="<%= opt._id %>">
+                            <% question.options.forEach((opt, index)=> {
+                                // Generate a stable unique ID for each option
+                                const optionId = opt._id || `option-${Date.now()}-${index}`;
+                                %>
+                                <div class="quiz-option-block" data-option-id="<%= optionId %>">
                                     <label>Option <%= index + 1 %></label>
                                     <input type="text" name="optionTexts[]" value="<%= opt.text %>" required />
 
@@ -119,6 +110,7 @@
                                         <input type="file" class="quiz-hidden-file option-image-input"
                                             name="optionImages" accept="image/*" />
                                     </label>
+
                                     <% if (opt.image) { %>
                                         <img class="preview-img" src="<%= opt.image %>" style="display: block;" />
                                         <% } else { %>
@@ -129,24 +121,14 @@
                                 </div>
                                 <% }); %>
                         </div>
+
                     </div>
 
-                    <div class="quiz-form-group">
-                        <label>Correct Answer</label>
-                        <select name="correctAnswerIndex" id="correct-answer-select" required>
-                            <option value="">-- Select --</option>
-                            <% question.options.forEach((opt, i)=> { %>
-                                <option value="<%= i %>" <%=question.correctAnswerIndex===i ? 'selected' : '' %>>Option
-                                    <%= i + 1 %>
-                                </option>
-                                <% }); %>
-                        </select>
-                    </div>
 
-                    <div class="quiz-form-group">
+                    <div class="quiz-form-group" style="display: none;">
                         <label>Magic Coins Deducted</label>
-                        <input type="number" name="magicCoinDeducted" value="<%= question.magicCoinDeducted %>" min="0"
-                            style="display: none;" />
+                        <input type="number" name="magicCoinDeducted" value="<%= question.magicCoinDeducted %>"
+                            min="0" />
                     </div>
 
                     <div class="quiz-form-group reward-block">
@@ -226,7 +208,6 @@
                                         <img class="preview-img quiz-logoImagePreview" style="display: none;" />
                                         <% } %>
                             </div>
-
 
                             <label>Digital Reward Description</label>
                             <input type="text" class="quiz-form-group" name="digitalRewardDescription"
@@ -312,62 +293,53 @@
     }
 
     function renumberOptions() {
-        const blocks = document.querySelectorAll(".quiz-option-block");
-        const select = document.getElementById("correct-answer-select");
-        select.innerHTML = '<option value="">-- Select --</option>';
-        blocks.forEach((block, index) => {
+        document.querySelectorAll(".quiz-option-block").forEach((block, index) => {
             block.querySelector("label").innerText = `Option ${index + 1}`;
-            const option = document.createElement("option");
-            option.value = index;
-            option.innerText = `Option ${index + 1}`;
-            select.appendChild(option);
         });
     }
 
     function initOptionBlock(block) {
+        if (!block.dataset.optionId) block.dataset.optionId = `option-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const optionId = block.dataset.optionId;
+
         const input = block.querySelector('input[type="file"]');
         const label = block.querySelector(".quiz-file-label-text");
         const img = block.querySelector("img.preview-img");
         const hasImage = img?.src && !img.src.endsWith("/") && img.style.display !== "none";
 
-        setupImagePreviewAndClear(
-            input,
-            img,
-            label,
-            null,
-            hasImage,
-            () => block.dataset.optionId || block.dataset.newKey
-        );
+        setupImagePreviewAndClear(input, img, label, null, hasImage, () => `optionImage-${optionId}`);
 
         const deleteBtn = block.querySelector(".quiz-option-delete-btn");
         deleteBtn?.addEventListener("click", () => {
             const total = document.querySelectorAll(".quiz-option-block").length;
             if (total > 2) {
-                const optionId = block.dataset.optionId;
-                if (optionId) {
-                    const clearedOptionsInput = document.getElementById("clearedOptions");
-                    const current = clearedOptionsInput.value ? clearedOptionsInput.value.split(",") : [];
-                    if (!current.includes(optionId)) {
-                        current.push(optionId);
-                        clearedOptionsInput.value = current.join(",");
-                    }
-                }
+                const clearedInputField = document.getElementById("clearedImagesInput");
+                const current = clearedInputField.value ? clearedInputField.value.split(",") : [];
+                const keyName = `optionImage-${optionId}`;
+                if (!current.includes(keyName)) current.push(keyName);
+                clearedInputField.value = current.join(",");
+
+                // --- Minimal change ---
+                const clearedOptionsField = document.getElementById("clearedOptions");
+                const clearedOptions = clearedOptionsField.value ? clearedOptionsField.value.split(",") : [];
+                clearedOptions.push(optionId);
+                clearedOptionsField.value = clearedOptions.join(",");
+
                 block.remove();
                 renumberOptions();
             } else {
                 alert("Minimum 2 options required.");
             }
         });
+
     }
 
-    function addOptionBlock(text = "", imageUrl = "") {
+    function addOptionBlock(text = "", imageUrl = "", optionId = null) {
         const block = document.createElement("div");
         block.className = "quiz-option-block";
-
-        const newKey = `newOption-${Date.now()}`;
-        block.dataset.newKey = newKey;
-
+        block.dataset.optionId = optionId || `option-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const index = document.querySelectorAll(".quiz-option-block").length;
+
         block.innerHTML = `
 <label>Option ${index + 1}</label>
 <input type="text" name="optionTexts[]" value="${text}" required />
@@ -379,7 +351,6 @@
 <button type="button" class="quiz-clear-btn" style="display: ${imageUrl ? 'inline-block' : 'none'};">✕</button>
 <button type="button" class="quiz-option-delete-btn">✕</button>
 `;
-
         initOptionBlock(block);
         document.getElementById("option-blocks").appendChild(block);
         renumberOptions();
@@ -389,9 +360,7 @@
         document.querySelectorAll(".quiz-option-block").forEach(initOptionBlock);
     }
 
-    document.getElementById("btn-add-option").addEventListener("click", () => {
-        addOptionBlock();
-    });
+    document.getElementById("btn-add-option").addEventListener("click", () => addOptionBlock());
 
     ["logo", "questionImage", "questionLogo", "jackpotRewardImage", "digitalRewardImage"].forEach(name => {
         const input = document.querySelector(`input[name="${name}"]`);
@@ -406,75 +375,85 @@
     document.getElementById("edit-question-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const form = e.target;
-        const cleared = document.getElementById("clearedImagesInput").value.split(",").filter(Boolean);
-        const clearedOptions = document.getElementById("clearedOptions").value.split(",").filter(Boolean);
+        const cleared = document.getElementById("clearedImagesInput").value
+            .split(",")
+            .filter(Boolean);
+
         const formData = new FormData();
 
+        // Append all non-file inputs
         form.querySelectorAll("input, textarea, select").forEach(el => {
-            if (el.type !== "file") formData.append(el.name, el.value);
+            if (el.type !== "file") {
+                // Skip optionTexts[] for now (we'll handle options separately)
+                if (el.name !== "optionTexts[]") formData.append(el.name, el.value);
+            }
         });
 
-        ["logo", "questionImage", "questionLogo", "jackpotRewardImage", "digitalRewardImage"].forEach(name => {
+        // Append main images if not cleared
+        ["logo", "questionImage", "jackpotRewardImage", "digitalRewardImage"].forEach(name => {
             const input = form.querySelector(`input[name="${name}"]`);
-            const isCleared = cleared.includes(name);
-            if (input?.files[0] && !isCleared) {
+            if (input?.files[0] && !cleared.includes(name)) {
                 formData.append(name, input.files[0]);
             }
         });
 
+        // Prepare options array and append option files
         const optionBlocks = document.querySelectorAll(".quiz-option-block");
         const optionsArray = [];
 
-        optionBlocks.forEach((block) => {
-            const text = block.querySelector('input[type="text"]').value.trim();
+        optionBlocks.forEach(block => {
+            const optionId = block.dataset.optionId;
+            const textInput = block.querySelector('input[type="text"]');
             const fileInput = block.querySelector("input[type='file']");
             const img = block.querySelector("img.preview-img");
-            const optionId = block.dataset.optionId || block.dataset.newKey;
-            const newFile = fileInput?.files?.[0];
-            const isCleared = cleared.includes(optionId);
+
+            // Determine imageName
+            let imageName = "";
+            if (fileInput?.files?.[0] && !cleared.includes(`optionImage-${optionId}`)) {
+                formData.append("optionsImages", fileInput.files[0]);  // file
+                formData.append("optionIds", optionId);                // matching id
+                imageName = fileInput.files[0].name;
+            } else if (!fileInput?.files?.[0] && !cleared.includes(`optionImage-${optionId}`) && img?.src && !img.src.startsWith("blob:")) {
+                imageName = img.src.split("/").pop();
+            }
 
             optionsArray.push({
-                _id: block.dataset.optionId || optionId,
-                text,
-                imageName: (!newFile && !isCleared && img?.src && !img.src.startsWith("blob:"))
-                    ? img.src.split("/").pop()
-                    : ""
+                _id: optionId,   // Use this as _id so backend knows which option
+                text: textInput.value.trim(),
+                imageName
             });
-
-            if (newFile && !isCleared) {
-                formData.append("optionsImages", newFile);
-                formData.append("optionIds", optionId);
-            }
         });
 
         formData.append("options", JSON.stringify(optionsArray));
+
+        // Append cleared images as CSV
         formData.append("clearedImages", cleared.join(","));
 
+        // Submit form
         const loader = document.getElementById("loader");
         loader.style.display = "flex";
-
         try {
-            const response = await fetch("/tvstation/quiz-question/update", {
+            const response = await fetch("/tvstation/voting-question/update", {
                 method: "POST",
-                body: formData,
+                body: formData
             });
             const result = await response.json();
-            if (result.type === "success") {
-                showToast(result.message || "Question updated successfully", "success");
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                showToast(result.message || "Update failed", "error");
-            }
+            showToast(result.message || "success");
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+            // Optionally show a toast here
         } catch (err) {
-            console.error(err);
-            showToast("Server error", "error");
+            console.error("Error submitting form:", err);
+            console.log(err);
+            showToast(result.message || "Something went wrong", "error");
         } finally {
             loader.style.display = "none";
         }
     });
 
+
+    // Reward mode
     function setupRewardModeSwitcher(block) {
         const modeButtons = block.querySelectorAll(".reward-mode-btn");
         const modeInput = block.querySelector('input[name="mode"]');
@@ -495,12 +474,8 @@
         jackpotField.style.display = (currentMode === 'jackpot' || currentMode === 'both') ? 'block' : 'none';
         digitalField.style.display = (currentMode === 'digital' || currentMode === 'both') ? 'block' : 'none';
     }
-
     document.querySelectorAll('.reward-block').forEach(setupRewardModeSwitcher);
 </script>
-
-
-
 
 
 

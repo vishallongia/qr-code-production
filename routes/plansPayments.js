@@ -4,6 +4,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Use your Str
 const Plan = require("../models/Plan");
 const Payment = require("../models/Payment");
 const MagicCoinPlan = require("../models/MagicCoinPlan");
+const User = require("../models/User");
 const QuizQuestionResponse = require("../models/QuizQuestionResponse");
 const {
   encryptPassword,
@@ -232,6 +233,7 @@ router.get("/successpayment", async (req, res) => {
 
     res.render("paymentsuccess", {
       paymentStatus: payment?.paymentStatus || "pending",
+      transactionId: session, // This is the crucial addition
       amount: payment?.amount,
       type, // send type to frontend
       errorMessage: null, // no error
@@ -245,6 +247,24 @@ router.get("/successpayment", async (req, res) => {
       errorMessage:
         "There was an error retrieving your payment. Please wait while we confirm the status.",
     });
+  }
+});
+
+// A new, dedicated API endpoint for polling
+router.get("/payment/status/:sessionId", async (req, res) => {
+  try {
+    const sessionId = req.params.sessionId;
+    const payment = await Payment.findOne({ transactionId: sessionId });
+
+    if (payment) {
+      // Send a lightweight JSON response
+      res.status(200).json({ status: payment.paymentStatus });
+    } else {
+      res.status(404).json({ status: "not_found" });
+    }
+  } catch (error) {
+    console.error("Error fetching payment status:", error);
+    res.status(500).json({ status: "error" });
   }
 });
 
@@ -471,7 +491,7 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
       planRef: isMagicPlan ? "MagicCoinPlan" : "Plan",
       type: isMagicPlan ? "coin" : "subscription",
       paymentMethod: "paypal",
-      paymentStatus: captureDetails.status.toLowerCase(),
+      paymentStatus: "pending",
       amount,
       currency: captureDetails.amount.currency_code,
       transactionId: captureDetails.id,
@@ -486,7 +506,9 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
       }),
     };
 
-    await Payment.create(paymentData);
+    // 1️⃣ Save Payment first
+    const payment = await Payment.create(paymentData);
+
     res.json({
       message: "Payment successful",
       status: captureDetails.status,
@@ -653,79 +675,135 @@ router.post("/validate-coupon", authMiddleware, async (req, res) => {
 // GET /magic-coin-wallet
 router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
   try {
-    // 1. Fetch all active coin plans
-    const plans = await MagicCoinPlan.find({ active: true }).sort({ price: 1 });
+    const limit = parseInt(req.query.limit) || 5; // default 1
+    const skip = parseInt(req.query.skip) || 0; // default 0
 
-    // 2. Encrypt plan IDs for secure rendering
+    // 1️⃣ Fetch all active MagicCoinPlans (same as before, as this is separate data)
+    const plans = await MagicCoinPlan.find({ active: true }).sort({ price: 1 });
     const encryptedPlans = plans.map((plan) => ({
       ...plan.toObject(),
       encryptedId: encryptPassword(plan._id.toString()),
     }));
 
-    // // 3. Total coins purchased via completed payments
-    // const coinResult = await Payment.aggregate([
-    //   {
-    //     $match: {
-    //       user_id: req.user._id,
-    //       paymentStatus: "completed",
-    //       type: "coin",
-    //     },
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "magiccoinplans", // Ensure correct collection name
-    //       localField: "plan_id",
-    //       foreignField: "_id",
-    //       as: "planInfo",
-    //     },
-    //   },
-    //   { $unwind: "$planInfo" },
-    //   {
-    //     $group: {
-    //       _id: null,
-    //       totalCoins: { $sum: "$planInfo.coinsOffered" },
-    //     },
-    //   },
-    // ]);
+    // 2️⃣ Define the aggregation pipeline to get all transaction history in one query
+    const pipeline = [
+      {
+        $match: {
+          user_id: req.user._id,
+          type: "coin",
+        },
+      },
 
-    // const totalCoinsPurchased = coinResult[0]?.totalCoins || 0;
+      {
+        $lookup: {
+          from: "magiccoinplans", // The name of the collection for MagicCoinPlan
+          localField: "plan_id",
+          foreignField: "_id",
+          as: "planDetails",
+        },
+      },
 
-    // // 4. Total coins used in quiz (deductCoin = true)
-    // const coinUsedResult = await QuizQuestionResponse.aggregate([
-    //   {
-    //     $match: {
-    //       userId: req.user._id,
-    //       deductCoin: true,
-    //     },
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "quizquestions", // ✅ Make sure this matches the actual collection name
-    //       localField: "questionId",
-    //       foreignField: "_id",
-    //       as: "question",
-    //     },
-    //   },
-    //   { $unwind: "$question" },
-    //   {
-    //     $group: {
-    //       _id: null,
-    //       coinsUsed: { $sum: "$question.magicCoinDeducted" },
-    //     },
-    //   },
-    // ]);
+      {
+        $unwind: "$planDetails",
+      },
 
-    // const coinsUsed = coinUsedResult[0]?.coinsUsed || 0;
+      {
+        $sort: {
+          createdAt: 1,
+        },
+      },
 
-    // 5. Calculate remaining coins
-    const totalMagicCoins = req.user.walletCoins || 0;
+      {
+        $setWindowFields: {
+          partitionBy: "$user_id",
+          sortBy: { createdAt: 1 },
+          output: {
+            runningBalance: {
+              $sum: {
+                $cond: {
+                  if: { $eq: ["$paymentStatus", "completed"] },
+                  then: "$planDetails.coinsOffered",
+                  else: 0,
+                },
+              },
+              window: {
+                documents: ["unbounded", "current"],
+              },
+            },
+          },
+        },
+      },
 
-    // 6. Render dashboard
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+
+      {
+        $project: {
+          _id: 0, // Exclude the default _id field
+          amount: "$amount",
+          currency: "$currency",
+          paymentStatus: "$paymentStatus",
+          paymentMethod: "$paymentMethod",
+          transactionId: "$transactionId",
+          createdAt: "$paymentDate",
+          coinsOffered: "$planDetails.coinsOffered",
+          initialBalance: {
+            $subtract: [
+              "$runningBalance",
+              {
+                $cond: {
+                  if: { $eq: ["$paymentStatus", "completed"] },
+                  then: "$planDetails.coinsOffered",
+                  else: 0,
+                },
+              },
+            ],
+          },
+          totalBalance: "$runningBalance",
+        },
+      },
+    ];
+
+    // 3️⃣ Execute the aggregation pipeline
+    const transactionHistory = await Payment.aggregate(pipeline);
+
+    // 4️⃣ Get total count for hasMore pagination logic
+    const totalTransactions = await Payment.countDocuments({
+      user_id: req.user._id,
+      type: "coin",
+    });
+
+    // 5️⃣ Respond with JSON or render the page
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.json({
+        plans: encryptedPlans,
+        user: req.user,
+        activeSection: "magic-coin",
+        totalMagicCoins: req.user.walletCoins || 0,
+        transactionHistory,
+        hasMore: totalTransactions > skip + limit,
+      });
+    }
+
+    const hasMoretest = totalTransactions > skip + limit;
+
     res.render("dashboardnew", {
       plans: encryptedPlans,
       user: req.user,
       activeSection: "magic-coin",
-      totalMagicCoins,
+      totalMagicCoins: req.user.walletCoins || 0,
+      transactionHistory,
+      hasMore: totalTransactions > skip + limit,
     });
   } catch (error) {
     console.error("Error fetching magic coin wallet:", error);

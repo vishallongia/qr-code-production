@@ -1,60 +1,69 @@
 :root {
     --uq-font-family: "Poppins", sans-serif;
-    --uq-bg-gradient-start: #e0f7fa;
-    --uq-bg-gradient-end: #ffe0b2;
-    --uq-container-bg: rgba(255, 255, 255, 0.9);
-    --uq-container-blur: 10px;
-    --uq-radius: 10px;
-    --uq-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-    --uq-border-color: rgba(0, 0, 0, 0.2);
-    --uq-primary-bg: #18024b;
-    --uq-primary-hover-bg: rgba(26, 1, 97, 0.9);
-    --uq-text-color: #333333;
+    --uq-primary-bg: #0173f0;
+    --uq-primary-hover-bg: #005bb5;
+    /* A darker shade for hover effect */
+    --uq-secondary: #9dceda;
+    --uq-background: #ececdf;
+    --uq-accent: #cbdea4;
+    --uq-text-dark: #2c3e50;
+    --uq-text-light: #91b461;
+    --uq-white: #ffffff;
+    --uq-radius: 16px;
+    --uq-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .user-quiz-page {
     font-family: var(--uq-font-family);
     margin: 0;
     padding: 0;
-    color: var(--uq-text-color);
+    color: var(--uq-text-dark);
     min-height: 100vh;
+    /* Using new background color */
 }
 
 .uq-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: white;
-    padding: 10px 20px;
+    background-color: var(--uq-primary-bg);
+    /* Using new primary color */
+    color: var(--uq-white);
+    padding: 1rem 2rem;
+    /* Adjusted from first CSS */
     box-shadow: var(--uq-shadow);
-    border-bottom: 1px solid #ddd;
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
 .uq-logo {
-    font-weight: bold;
-    font-size: 20px;
-    color: var(--uq-primary-bg);
+    font-weight: 600;
+    /* Adjusted from first CSS */
+    font-size: 1.5rem;
+    /* Adjusted from first CSS */
+    color: var(--uq-white);
 }
 
 .uq-coins {
-    font-size: 16px;
-    background-color: #ffe082;
+    font-size: 1rem;
+    /* Adjusted from first CSS */
+    background-color: var(--uq-secondary);
+    /* Using new secondary color */
     padding: 5px 12px;
     border-radius: var(--uq-radius);
-    font-weight: 500;
+    font-weight: 600;
+    /* Adjusted from first CSS */
+    color: var(--uq-text-dark);
+    /* Changed text color for contrast */
 }
 
 .uq-container {
-    max-width: 600px;
-    margin: 40px auto;
-    background-color: var(--uq-container-bg);
-    backdrop-filter: blur(var(--uq-container-blur));
-    padding: 30px;
+    max-width: 700px;
+    margin: 3rem auto;
+    background-color: var(--uq-white);
+    padding: 2rem;
     border-radius: var(--uq-radius);
-    box-shadow: var(--uq-shadow);
 }
 
 .uq-question-header {
@@ -66,7 +75,7 @@
 }
 
 .uq-question-logo {
-    width: 150px;
+    max-width: 260px;
     object-fit: contain;
 }
 
@@ -74,13 +83,10 @@
     display: flex;
     justify-content: center;
     margin-bottom: 10px;
-
-
 }
 
 .uq-question-image {
-    max-width: 100%;
-    max-height: 160px;
+    max-width: 260px;
     object-fit: cover;
     border-radius: var(--uq-radius);
     box-shadow: var(--uq-shadow);
@@ -93,16 +99,16 @@
 }
 
 .uq-question-text {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 20px;
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
     text-align: center;
 }
 
 .uq-options {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
     margin-bottom: 30px;
 }
 
@@ -111,47 +117,71 @@
 }
 
 .uq-option label {
-    background-color: #f5f5f5;
-    border: 1px solid var(--uq-border-color);
-    padding: 12px 16px;
+    background-color: var(--uq-white);
+    padding: 1.2rem;
     border-radius: var(--uq-radius);
     cursor: pointer;
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 12px;
-    transition: 0.2s;
+    transition: 0.3s;
     font-size: 16px;
     font-weight: 500;
-    color: var(--uq-text-color);
+    color: var(--uq-text-dark);
+    text-align: center;
+}
+
+.uq-option label:hover {
+    transform: translateY(-5px);
 }
 
 .uq-option input[type="radio"]:checked+label {
     background-color: var(--uq-primary-bg);
-    color: white;
+    border-color: var(--uq-primary-bg);
+    box-shadow: 0 0 10px var(--uq-primary-bg);
+    color: var(--uq-white);
+}
+
+.uq-option-image-large {
+    width: 100%;
+    object-fit: contain;
+    /* Using contain to better fit images */
+    border-radius: var(--uq-radius);
+    margin-bottom: 0.8rem;
+}
+
+.uq-option-text-wrapper {
+    text-align: center;
+    margin: 10px 0;
+}
+
+.uq-option-letter {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.uq-option-text {
+    flex-grow: 1;
 }
 
 .uq-option-inline-image {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid #ccc;
-    flex-shrink: 0;
+    display: none;
 }
 
 .uq-navigation {
     display: flex;
     justify-content: space-between;
-    gap: 10px;
+    gap: 1rem;
 }
 
 .uq-navigation button {
     flex: 1;
     padding: 10px 0;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 500;
     background-color: var(--uq-primary-bg);
-    color: white;
+    color: var(--uq-white);
     border: none;
     border-radius: var(--uq-radius);
     cursor: pointer;
@@ -167,77 +197,69 @@
     cursor: not-allowed;
 }
 
-
-
 /* ================= Coin Popup Styles ================= */
-
 .coin-popup-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
+    background: rgba(10, 10, 10, 0.6);
+    display: none;
     justify-content: center;
+    align-items: center;
     z-index: 2000;
-    /* padding: 10px; */
-    /* small padding for small screens */
     animation: fadeIn 0.3s ease;
 }
 
 .coin-popup {
-    background: linear-gradient(145deg, #ffffff, #f7f7f7);
-    padding: 25px 10px;
-    border-radius: 16px;
-    max-width: 40%;
-    width: 100%;
+    background: var(--uq-white);
+    padding: 2rem;
+    border-radius: var(--uq-radius);
+    box-shadow: var(--uq-shadow);
     text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-    max-height: 80vh;
-    overflow: hidden;
-    /* hide overflow on outer div */
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
     font-family: var(--uq-font-family);
-    color: var(--uq-text-color);
+    color: var(--uq-text-dark);
 }
 
-/* Scrollable inner div */
 .coin-popup-inner {
     max-height: 80vh;
     overflow-y: auto;
     padding-right: 10px;
-    /* optional: prevent scrollbar overlap */
 }
 
 .coin-popup h3 {
-    font-size: 22px;
+    font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 15px;
     color: var(--uq-primary-bg);
 }
 
 .coin-popup p {
-    font-size: 16px;
+    font-size: 1.2rem;
+    /* Changed from 16px to 1rem */
     margin: 8px 0;
     line-height: 1.4;
 }
 
-/* Reward Name Badge */
 .coin-popup p span.reward-badge {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: linear-gradient(90deg, #ffd700, #ffc107);
+    background: var(--uq-accent);
     padding: 6px 12px;
     border-radius: 20px;
     font-weight: 600;
-    font-size: 14px;
-    color: #fff;
+    font-size: 0.875rem;
+    /* Changed from 14px to 0.875rem */
+    color: var(--uq-text-dark);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-/* Reward Image */
 .coin-popup img {
     max-width: 180px;
     height: auto;
@@ -246,14 +268,13 @@
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
 
-/* Reward Description */
 .coin-popup p.description {
-    font-size: 14px;
+    font-size: 0.875rem;
+    /* Changed from 14px to 0.875rem */
     color: #555;
     margin-top: 4px;
 }
 
-/* Toggle Switch */
 .coin-toggle {
     display: flex;
     align-items: center;
@@ -270,7 +291,7 @@
 .coin-toggle .slider {
     width: 52px;
     height: 26px;
-    background: #ccc;
+    background: var(--uq-secondary);
     border-radius: 999px;
     position: relative;
     cursor: pointer;
@@ -284,7 +305,7 @@
     left: 3px;
     width: 20px;
     height: 20px;
-    background: white;
+    background: var(--uq-primary-bg);
     border-radius: 50%;
     transition: transform 0.3s ease;
 }
@@ -294,10 +315,9 @@
 }
 
 .coin-toggle input[type="checkbox"]:checked+.slider {
-    background: var(--uq-primary-bg);
+    background: #ececdf;
 }
 
-/* Buttons */
 .coin-popup-buttons {
     display: flex;
     justify-content: center;
@@ -313,8 +333,9 @@
     border-radius: 8px;
     cursor: pointer;
     background: var(--uq-primary-bg);
-    color: white;
-    font-size: 16px;
+    color: var(--uq-white);
+    font-size: 1rem;
+    /* Changed from 16px to 1rem */
     transition: all 0.3s ease;
     min-width: 100px;
 }
@@ -324,87 +345,18 @@
     transform: translateY(-2px);
 }
 
-/* Scrollbar for popup */
 .coin-popup::-webkit-scrollbar {
     width: 6px;
 }
 
 .coin-popup::-webkit-scrollbar-thumb {
-    background-color: rgba(24, 2, 75, 0.5);
+    background-color: var(--uq-secondary);
     border-radius: 3px;
 }
 
 .coin-popup::-webkit-scrollbar-track {
-    background: #0f0f0f;
+    background: transparent;
 }
-
-
-
-
-
-.coin-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin: 20px 0;
-    font-weight: 500;
-}
-
-.coin-toggle input[type="checkbox"] {
-    display: none;
-}
-
-.coin-toggle .slider {
-    width: 50px;
-    height: 24px;
-    background: #ccc;
-    border-radius: 999px;
-    position: relative;
-    cursor: pointer;
-}
-
-.coin-toggle .slider::before {
-    content: "";
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 18px;
-    height: 18px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 0.3s ease;
-}
-
-.coin-toggle input[type="checkbox"]:checked+.slider::before {
-    transform: translateX(26px);
-}
-
-.coin-toggle input[type="checkbox"]:checked+.slider {
-    background: var(--uq-primary-bg);
-}
-
-.coin-popup-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
-
-.coin-popup-buttons button {
-    padding: 8px 16px;
-    font-weight: 600;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    background-color: var(--uq-primary-bg);
-    color: white;
-    transition: background 0.3s;
-}
-
-.coin-popup-buttons button:hover {
-    background-color: var(--uq-primary-hover-bg);
-}
-
 
 .loader-overlay {
     position: fixed;
@@ -413,7 +365,6 @@
     width: 100%;
     height: 100%;
     background: rgba(255, 255, 255, 0.8);
-    /* Slightly dimmed background */
     display: none;
     justify-content: center;
     align-items: center;
@@ -423,11 +374,58 @@
 .spinner {
     width: 50px;
     height: 50px;
-    border: 5px solid #6c63ff;
-    /* Customize color */
+    border: 5px solid var(--uq-primary-bg);
     border-top: 5px solid transparent;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+}
+
+.reward-name-highlighter {
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+    color: var(--uq-primary-bg) !important
+}
+
+/* Container for the language selector */
+.language-selector-container {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 5px;
+    box-sizing: border-box;
+    /* Ensures padding is included in the width */
+}
+
+/* Styling for the select box itself */
+#languageSwitcher {
+    font-family: var(--uq-font-family);
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: var(--uq-radius);
+    border: 2px solid var(--uq-primary-bg);
+    background-color: var(--uq-white);
+    color: var(--uq-text-dark);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    /* Removes default OS styling for a custom look */
+    -webkit-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+}
+
+#languageSwitcher:hover {
+    background-color: var(--uq-background);
+    /* Lighter background on hover */
+}
+
+#languageSwitcher:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(1, 115, 240, 0.3);
+    /* Adds a focus ring for accessibility */
 }
 
 @keyframes spin {
@@ -447,59 +445,72 @@
 }
 
 
-/* Responsive */
-@media (max-width: 480px) {
+/* =================================
+   Responsive Design
+   ================================= */
+@media (max-width: 768px) {
     .uq-container {
-        margin: 20px 10px;
-        padding: 20px;
+        padding: 1.2rem;
+        margin: 2rem 1rem;
+    }
+
+    .uq-options {
+        grid-template-columns: 1fr;
+        gap: 15px;
     }
 
     .uq-question-text {
-        font-size: 18px;
+        font-size: 1rem;
     }
+
+
 
     .uq-option label {
+        padding: 1rem;
+    }
+
+    .uq-navigation button {
         font-size: 14px;
-        gap: 10px;
-        padding: 10px 12px;
-    }
-
-    .uq-option-inline-image {
-        width: 32px;
-        height: 32px;
-    }
-
-    .uq-question-image {
-        max-height: 180px;
-    }
-
-    .uq-question-logo {
-        height: 90;
     }
 }
 
-
-/* Responsive adjustments */
 @media (max-width: 480px) {
+    .uq-header {
+        padding: 10px;
+    }
+
+    .uq-logo {
+        font-size: 1.2rem;
+    }
+
+    .uq-coins {
+        font-size: 0.9rem;
+    }
+
+    .uq-container {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .uq-options {
+        gap: 10px;
+    }
+
+    .uq-question-text {
+        font-size: 0.9rem;
+    }
+
+    .uq-option label {
+        padding: 0.8rem;
+    }
+
+
+
+    .uq-navigation button {
+        font-size: 12px;
+    }
+
     .coin-popup {
-        padding: 15px 5px;
-        max-width: 80%;
-    }
-
-    .coin-popup img {
-        max-width: 80px;
-    }
-
-    .coin-popup h3 {
-        font-size: 18px;
-    }
-
-    .coin-popup p {
-        font-size: 14px;
-    }
-
-    .coin-popup-buttons button {
-        padding: 6px 12px;
-        font-size: 14px;
+        padding: 1rem;
     }
 }

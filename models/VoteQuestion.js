@@ -12,7 +12,7 @@ const optionSchema = new mongoose.Schema({
   },
 });
 
-const quizQuestionSchema = new mongoose.Schema(
+const voteQuestionSchema = new mongoose.Schema(
   {
     channelId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -37,11 +37,11 @@ const quizQuestionSchema = new mongoose.Schema(
         message: "At least 2 options are required.",
       },
     },
-    correctAnswerIndex: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
+    // correctAnswerIndex: {
+    //   type: Number,
+    //   required: true,
+    //   min: 0,
+    // },
     questionImage: {
       type: String, // Optional image URL or path
       default: null,
@@ -56,8 +56,8 @@ const quizQuestionSchema = new mongoose.Schema(
     },
     mode: {
       type: String,
-      enum: ["jackpot", "digital", "both", "none"],
-      default: "jackpot", // ✅ default value
+      enum: ["jackpot", "digital", "both", "none"], // 🎯 New option "none" added here
+      default: "none", // ✅ Updated default value
       required: true,
     },
     magicCoinDeducted: {
@@ -113,4 +113,4 @@ const quizQuestionSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("QuizQuestion", quizQuestionSchema);
+module.exports = mongoose.model("VoteQuestion", voteQuestionSchema);

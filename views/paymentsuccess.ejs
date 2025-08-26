@@ -5,74 +5,119 @@
     <meta charset="UTF-8">
     <title>Payment Status</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link href="/css/payment-status.css" rel="stylesheet">
-    <script>
-        const type = "<%= type %>";
-        // Redirect after 5 seconds
-        setTimeout(() => {
-            if (type === "magic") {
-                window.location.href = "/magic-coin-wallet";
-            } else {
-                window.location.href = "/";
-            }
-        }, 8000);
-    </script>
 </head>
 
 <body class="success-page">
     <div class="message-box animated fadeInDown">
-        <!-- Display status based on payment status -->
-        <i class="fas fa-3x" id="status-icon"></i> <!-- Increased icon size to 3x -->
+        <i class="fas fa-3x" id="status-icon"></i>
         <h1 id="status-title"></h1>
         <p id="status-message"></p>
-        <p class="redirect-msg">You will be redirected to the homepage shortly...</p>
+        <p class="redirect-msg"></p>
     </div>
 
     <script>
-        // Get payment status and error message dynamically from server-side rendering
-        const paymentStatus = "<%= paymentStatus %>";  // From server-side
-        const errorMessage = "<%= errorMessage %>";  // From server-side
+        // Get dynamic data from server-side rendering
+        const type = "<%= type %>";
+        const transactionId = "<%= transactionId %>";
+
         const statusIcon = document.getElementById('status-icon');
         const statusTitle = document.getElementById('status-title');
         const statusMessage = document.getElementById('status-message');
-
-        // Update redirect message
         const redirectMsg = document.querySelector('.redirect-msg');
+
+        // **Initial Display:** Set to 'pending' immediately for a good user experience.
+        statusIcon.classList.add("fas", "fa-spinner", "fa-spin");
+        statusIcon.style.color = "gray";
+        statusTitle.textContent = "Processing Payment...";
+        statusMessage.textContent = "Please wait while we finalize your payment. Do not close this page.";
+
+        // Polling limit configuration
+        let retryCount = 0;
+        const MAX_RETRIES = 15; // Set your desired maximum number of retries
+
+        // Update redirect message based on the type of payment
         if (type === "magic") {
             redirectMsg.textContent = "You will be redirected to your wallet shortly...";
         } else {
             redirectMsg.textContent = "You will be redirected to the homepage shortly...";
         }
 
-        // Handling different statuses
-        if (paymentStatus === "completed") {
-            statusIcon.classList.add("fas", "fa-check-circle");
-            statusIcon.style.color = "green";
+        // **Polling Logic:** Function to check the status from the server
+        function pollForStatus() {
 
-            statusTitle.textContent = "Payment Successful!";
+            // Check if we have exceeded the maximum number of retries
+            if (retryCount >= MAX_RETRIES) {
+                console.error('Polling limit reached. Giving up.');
+                statusIcon.classList.remove("fa-spinner", "fa-spin");
+                statusIcon.classList.add("fas", "fa-exclamation-circle");
+                statusIcon.style.color = "red";
+                statusTitle.textContent = "Payment Confirmation Failed";
+                statusMessage.textContent = "We could not confirm your payment status. Please try again or check your account later.";
 
-            if (type === "magic") {
-                statusMessage.textContent = "Magic coins added to your wallet.";
-            } else {
-                statusMessage.textContent = "Thank you! Your subscription is now active.";
+                // Redirect the user to a generic error page
+                setTimeout(() => window.location.href = "/", 5000);
+                return; // Stop the polling
             }
 
-        } else if (paymentStatus === "failed") {
-            statusIcon.classList.add("fas", "fa-times-circle");
-            statusIcon.style.color = "red"; // Red for failure
-            statusTitle.textContent = "Payment Failed!";
-            statusMessage.textContent = errorMessage || "There was an issue processing your payment.";
-        } else if (paymentStatus === "pending") {
-            statusIcon.classList.add("fas", "fa-spinner", "fa-spin");
-            statusIcon.style.color = "gray"; // Gray for pending
-            statusTitle.textContent = "Processing Payment...";
-            statusMessage.textContent = "Please wait while we finalize your payment.";
-        } else {
-            statusIcon.classList.add("fas", "fa-exclamation-circle");
-            statusIcon.style.color = "orange"; // Orange for unknown
-            statusTitle.textContent = "Unknown Status";
-            statusMessage.textContent = "We encountered an issue. Please try again.";
+
+
+            fetch(`/payment/status/${transactionId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const finalStatus = data.status;
+
+                    if (finalStatus === "completed") {
+                        // Update UI for a successful payment
+                        statusIcon.classList.remove("fa-spinner", "fa-spin");
+                        statusIcon.classList.add("fa-check-circle");
+                        statusIcon.style.color = "green";
+                        statusTitle.textContent = "Payment Successful!";
+                        statusMessage.textContent = type === "magic" ? "Magic coins added to your wallet." : "Thank you! Your subscription is now active.";
+
+                        // Redirect after a 5-second delay
+                        setTimeout(() => {
+                            window.location.href = type === "magic" ? "/magic-coin-wallet" : "/";
+                        }, 5000);
+                    } else if (finalStatus === "denied" || finalStatus === "failed") {
+                        // Update UI for a failed payment
+                        statusIcon.classList.remove("fa-spinner", "fa-spin");
+                        statusIcon.classList.add("fa-times-circle");
+                        statusIcon.style.color = "red";
+                        statusTitle.textContent = "Payment Failed!";
+                        statusMessage.textContent = "There was an issue processing your payment.";
+
+                        // Redirect after a 5-second delay
+                        setTimeout(() => {
+                            window.location.href = "/";
+                        }, 5000);
+                    } else {
+                        // If still pending or unknown, poll again after a short delay
+                        retryCount++;
+                        setTimeout(pollForStatus, 10000); // Poll every 10 seconds
+                    }
+                })
+                .catch(error => {
+                    console.error('Polling error:', error);
+                    // Fallback UI for any polling errors
+                    statusIcon.classList.remove("fa-spinner", "fa-spin");
+                    statusIcon.classList.add("fa-exclamation-circle");
+                    statusIcon.style.color = "orange";
+                    statusTitle.textContent = "Unknown Status";
+                    statusMessage.textContent = "We encountered an issue. Please try again or check your account later.";
+                    // On any fetch error, increment the counter and retry
+                    retryCount++;
+                });
         }
+
+        // Start the polling process a moment after the page loads
+        setTimeout(pollForStatus, 10000);
     </script>
 </body>
 

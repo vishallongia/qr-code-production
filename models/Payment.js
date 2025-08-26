@@ -81,6 +81,10 @@ const paymentSchema = new mongoose.Schema({
   originalAmount: { type: Number }, // Plan price before discount
   discountAmount: { type: Number }, // Discount given to the user
   commissionAmount: { type: Number },
+  totalCoins: {
+    type: Number,
+    default: null, // default is none
+  },
 });
 
 paymentSchema.pre("save", async function (next) {

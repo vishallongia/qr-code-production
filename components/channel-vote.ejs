@@ -18,7 +18,7 @@
         <span>&rsaquo;</span>
         <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Apps</a>
         <span>&rsaquo;</span>
-        <span class="active">Quiz</span>
+        <span class="active">Voting</span>
     </nav>
 
     <div class="quiz-admin-container">
@@ -30,9 +30,9 @@
                 <div class="quiz-admin-header">
                     <h1>Quiz Manager</h1>
                     <div class="quiz-admin-controls">
-                        <% if (!quizQuestions || quizQuestions.length===0) { %>
+                        <% if (!voteQuestions|| voteQuestions.length===0) { %>
                             <button
-                                onclick="window.open('/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/addquestion', '_blank')"
+                                onclick="window.open('/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/addvotingquestion', '_blank')"
                                 class="btn">
                                 + Add New Question
                             </button>
@@ -48,8 +48,8 @@
                 </div>
 
                 <div class="quiz-admin-questions">
-                    <% if (quizQuestions && quizQuestions.length> 0) { %>
-                        <% quizQuestions.forEach((q, index)=> { %>
+                    <% if (voteQuestions&& voteQuestions.length> 0) { %>
+                        <% voteQuestions.forEach((q, index)=> { %>
                             <div class="quiz-admin-question-card">
                                 <div class="quiz-admin-question-text">
                                     <%= q.question %>
@@ -64,7 +64,7 @@
                                     </span>
                                 </div>
                                 <div class="quiz-admin-actions">
-                                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/editquestion/<%= q._id %>"
+                                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/edit-voting-question/<%= q._id %>"
                                         target="_blank">
                                         <button>Edit</button>
                                     </a>
@@ -89,7 +89,7 @@
 
                         <script>
 
-                            let skipCount = <%= quizQuestions.length %>;
+                            let skipCount = <%= voteQuestions.length %>;
                             const channelId = "<%= channel._id %>";
 
                             const loadMoreBtn = document.getElementById("loadMoreBtn");
@@ -159,7 +159,7 @@
                                     const loader = document.getElementById("loader");
                                     loader.style.display = "flex"; // show loader
                                     try {
-                                        const res = await fetch(`/tvstation/quiz-question/${questionId}`, {
+                                        const res = await fetch(`/tvstation/voting-question/${questionId}`, {
                                             method: "DELETE",
                                             headers: {
                                                 "Content-Type": "application/json"
@@ -470,7 +470,7 @@
                 const res = await fetch(`/tvstation/channel/${channelId}/session/${sessionId}/qr`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ qrDotColor: fgHex, backgroundColor: bgHex, type: "quiz" }),
+                    body: JSON.stringify({ qrDotColor: fgHex, backgroundColor: bgHex, type: "voting" }),
                 });
 
 
@@ -551,7 +551,7 @@
 
     <script>
         const sessionId = "<%= sessionId %>";
-        const qrType = "quiz"; // or dynamically pass from backend
+        const qrType = "voting"; // or dynamically pass from backend
 
         async function loadMagicCodeOnPageLoad(sessionId, type) {
             const loader = document.getElementById("loader");

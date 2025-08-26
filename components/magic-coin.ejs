@@ -42,6 +42,78 @@
         </div>
     </div>
 
+    <div class="transaction-bar" style="margin-top: 40px;">
+        <h3 class="transaction-heading">Magic Coin Transaction History</h3>
+        <div class="transaction-list" id="transactionList">
+            <% if (transactionHistory && transactionHistory.length> 0) { %>
+                <div class="transaction-item header">
+                    <span>Amount</span>
+                    <span>Type</span>
+                    <span>Initial Balance</span>
+                    <span>Coin Offered</span>
+                    <span>Final Balance</span>
+                    <span>Date</span>
+                </div>
+                <% transactionHistory.forEach(tx=> {
+                    const formattedDate = new Date(tx.createdAt).toLocaleString("en-GB", {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                    });
+                    let amountClass = '';
+                    let typeText = '';
+                    let typeBadgeClass = '';
+
+                    // Set classes and text based on status
+                    if (tx.paymentStatus === 'completed') {
+                    amountClass = 'positive';
+                    typeText = 'Added';
+                    typeBadgeClass = 'badge-added';
+                    } else if (tx.paymentStatus === 'denied' || tx.paymentStatus === 'failed') {
+                    amountClass = 'negative';
+                    typeText = 'Failed';
+                    typeBadgeClass = 'badge-failed';
+                    } else {
+                    amountClass = '';
+                    typeText = 'Pending';
+                    typeBadgeClass = 'badge-pending';
+                    }
+                    %>
+                    <div class="transaction-item">
+                        <span class="transaction-amount <%= amountClass %>">
+                            <%= tx.amount %>
+                                <%= tx.currency %>
+                        </span>
+                        <span class="transaction-type">
+                            <span class="type-badge <%= typeBadgeClass %>">
+                                <%= typeText %>
+                            </span>
+                        </span>
+                        <span class="transaction-balance">
+                            <%= tx.initialBalance %>
+                        </span>
+                        <span class="transaction-balance">
+                            <%= tx.coinsOffered %>
+                        </span>
+                        <span class="transaction-balance">
+                            <%= tx.totalBalance %>
+                        </span>
+                        <span class="transaction-date">
+                            <%= formattedDate %>
+                        </span>
+                    </div>
+                    <% }) %>
+                        <% } else { %>
+                            <div class="transaction-item">
+                                <span class="no-transactions">No transactions available.</span>
+                            </div>
+                            <% } %>
+        </div>
+        <% if (hasMore) { %>
+            <button id="loadMoreBtn">Load More</button>
+            <% } %>
+    </div>
+
+
 
 
 
@@ -154,7 +226,94 @@
             }).render(container);
         });
     });
+
+
+    let skipCount = <%= transactionHistory.length %>;
+
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener("click", async () => {
+            try {
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.textContent = "Loading...";
+
+                // Use limit of 5, as in your original JS.
+                const response = await fetch(`/magic-coin-wallet?skip=${skipCount}&limit=5`, {
+                    headers: { Accept: "application/json" }
+                });
+                const data = await response.json();
+
+                data.transactionHistory.forEach((tx) => {
+                    const item = document.createElement("div");
+                    item.className = "transaction-item";
+
+                    const formattedDate = new Date(tx.createdAt).toLocaleString("en-GB", {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+
+                    let amountClass = '';
+                    let typeText = '';
+                    let typeBadgeClass = '';
+
+                    // Match the backend logic for paymentStatus
+                    if (tx.paymentStatus === 'completed') {
+                        amountClass = 'positive';
+                        typeText = 'Added';
+                        typeBadgeClass = 'badge-added';
+                    } else if (tx.paymentStatus === 'denied' || tx.paymentStatus === 'failed') {
+                        amountClass = 'negative';
+                        typeText = 'Failed';
+                        typeBadgeClass = 'badge-failed';
+                    } else {
+                        amountClass = '';
+                        typeText = 'Pending';
+                        typeBadgeClass = 'badge-pending';
+                    }
+
+                    item.innerHTML = `
+                    <span class="transaction-amount ${amountClass}">
+                        ${tx.amount} ${tx.currency}
+                    </span>
+                    <span class="transaction-type">
+                        <span class="type-badge ${typeBadgeClass}">${typeText}</span>
+                    </span>
+                    <span class="transaction-balance">
+                        ${tx.initialBalance}
+                    </span>
+                    <span class="transaction-balance">
+                        ${tx.coinsOffered}
+                    </span>
+                    <span class="transaction-balance">
+                        ${tx.totalBalance}
+                    </span>
+                    <span class="transaction-date">
+                        ${formattedDate}
+                    </span>
+                `;
+
+                    document.getElementById("transactionList").appendChild(item);
+                });
+
+                skipCount += data.transactionHistory.length;
+
+                if (!data.hasMore) {
+                    loadMoreBtn.remove();
+                } else {
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.textContent = "Load More";
+                }
+            } catch (err) {
+                console.error("Load more failed", err);
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.textContent = "Load More"; // Re-enable button on error
+            }
+        });
+    }
+
 </script>
+
+
 
 
 

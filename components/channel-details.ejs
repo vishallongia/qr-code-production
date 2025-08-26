@@ -16,7 +16,13 @@
   <!-- This container will hold the QR code so it can be downloaded -->
   <div id="qr-download-container" style="display: none;"></div>
 
-
+  <nav class="breadcrumbs">
+    <a href="/tvstation/channels">Shows</a>
+    <span>&rsaquo;</span>
+    <a href="/tvstation/channels/<%= channel._id %>/sessions">Session Manager</a>
+    <span>&rsaquo;</span>
+    <span class="active">Apps</span>
+  </nav>
   <div class="container-channel-details">
     <% if (error) { %>
       <div class="error">
@@ -57,7 +63,8 @@
             </div>
 
             <!-- Voting Box -->
-            <div class="type-box" onclick="location.href='/tvstation/channels/<%= channel._id %>/voting'">
+            <div class="type-box"
+              onclick="location.href='/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting'">
               <div class="type-icon">
                 <!-- Voting SVG: Ballot Box -->
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="#18024b">

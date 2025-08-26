@@ -22,7 +22,7 @@
     <div class="coin-popup-overlay" id="resultPopup" style="display: none;">
         <div class="coin-popup">
             <div class="coin-popup-inner">
-                <p id="resultText"></p>
+                <p id="resultText" style="font-size: 1.5rem; font-weight: bold;"></p>
                 <div id="jackpotRewardSection" style="display: none; margin: 15px 0;">
                     <img id="jackpotRewardImage" src="" alt="Jackpot Reward" />
                     <p id="jackpotRewardDescription"></p>
@@ -54,7 +54,7 @@
                             <% } %>
 
                                 <% if (currentQuestion?.jackpotRewardName) { %>
-                                    <p>🎁 <%= currentQuestion.jackpotRewardName %>
+                                    <p class="reward-name-highlighter">🎁 <%= currentQuestion.jackpotRewardName %>
                                     </p>
                                     <% } %>
 
@@ -74,10 +74,11 @@
                                                         <% if (currentQuestion?.jackpotCoinDeducted) { %>
 
                                                             <label class="coin-toggle">
+                                                                NO
                                                                 <input type="checkbox" id="deductJackpotCoinSwitch"
                                                                     checked>
                                                                 <span class="slider"></span>
-                                                                Deduct Coins
+                                                                Yes
                                                             </label>
                                                             <% } %>
                     </div>
@@ -93,7 +94,8 @@
                                     <% } %>
 
                                         <% if (currentQuestion?.digitalRewardName) { %>
-                                            <p>🎁 <%= currentQuestion.digitalRewardName %>
+                                            <p class="reward-name-highlighter">🎉 <%= currentQuestion.digitalRewardName
+                                                    %>
                                             </p>
                                             <% } %>
 
@@ -112,10 +114,11 @@
 
                                                                 <% if (currentQuestion?.digitalCoinDeducted) { %>
                                                                     <label class="coin-toggle">
+                                                                        No
                                                                         <input type="checkbox"
                                                                             id="deductDigitalCoinSwitch" checked>
                                                                         <span class="slider"></span>
-                                                                        Deduct Coins
+                                                                        Yes
                                                                     </label>
                                                                     <% } %>
                             </div>
@@ -133,6 +136,15 @@
         <div class="uq-logo">Magic Code</div>
         <div class="uq-coins" id="walletCoins">🪙 Magic Coins: <%= availableCoins || 0 %>
         </div>
+    </div>
+
+    <div class="language-selector-container">
+        <select id="languageSwitcher" class="language-selector-select active">
+            <option value="en">English</option>
+            <option value="de">Deutsch (German)</option>
+            <option value="hu">Hungarian</option>
+            <option value="ro">Romanian</option>
+        </select>
     </div>
 
     <div class="uq-container">
@@ -187,8 +199,8 @@
 
 
                 <!-- Question Text -->
-                <div class="uq-question-number">Question <%= index + 1 %> of <%= total %>
-                </div>
+                <!-- <div class="uq-question-number">Question <%= index + 1 %> of <%= total %>
+                </div> -->
                 <div class="uq-question-text">
                     <%= currentQuestion.question %>
                 </div>
@@ -207,15 +219,21 @@
                         <div class="uq-options">
                             <% currentQuestion.options.forEach((opt, i)=> { %>
                                 <div class="uq-option">
+                                    <div class="uq-option-text-wrapper">
+                                        <span class="uq-option-letter">
+                                            <%= String.fromCharCode(65 + i) %>.
+                                        </span>
+                                        <span class="uq-option-text">
+                                            <%= opt.text %>
+                                        </span>
+                                    </div>
                                     <input type="radio" name="selectedOptionIndex" id="opt<%= i %>" value="<%= i %>">
                                     <label for="opt<%= i %>">
                                         <% if (opt.image) { %>
-                                            <img class="uq-option-inline-image" src="<%= opt.image %>"
+                                            <img class="uq-option-image-large" src="<%= opt.image %>"
                                                 alt="Option Image" />
                                             <% } %>
-                                                <span>
-                                                    <%= opt.text %>
-                                                </span>
+
                                     </label>
                                 </div>
                                 <% }) %>
@@ -258,11 +276,23 @@
 
     function openCoinPopup() {
         const selectedRadio = document.querySelector('input[name="selectedOptionIndex"]:checked');
-        const label = document.querySelector(`label[for="${selectedRadio.id}"]`);
-        const optionLetter = String.fromCharCode(65 + parseInt(selectedRadio.value)); // 65 = A, 66 = B, etc.
+        if (!selectedRadio) {
+            // If no radio button is selected, exit the function.
+            return;
+        }
 
-        const optionTextEl = document.getElementById("selectedOptionText");
-        optionTextEl.textContent = `You selected option ${optionLetter}: "${label.innerText.trim()}"`;
+        const label = document.querySelector(`label[for="${selectedRadio.id}"]`);
+        const optionLetter = String.fromCharCode(65 + parseInt(selectedRadio.value));
+
+        // Find the span with the class 'uq-option-text' inside the parent div
+        const optionTextElInPopup = document.getElementById("selectedOptionText");
+        const optionTextSpan = label.closest('.uq-option').querySelector('.uq-option-text');
+
+        if (optionTextSpan) {
+            optionTextElInPopup.textContent = `You selected option ${optionLetter}: "${optionTextSpan.innerText.trim()}"`;
+        } else {
+            optionTextElInPopup.textContent = `You selected option ${optionLetter}: "(text not found)"`;
+        }
 
         coinPopup.style.display = "flex";
     }
@@ -379,7 +409,7 @@
 
                 if (data.jackpotReward.name) {
                     const nameEl = document.createElement("p");
-                    nameEl.className = "jackpot-name";
+                    nameEl.className = "jackpot-name reward-name-highlighter";
                     nameEl.textContent = `🎁 ${data.jackpotReward.name}`;
                     jackpotSection.insertBefore(nameEl, jackpotImage);
                 }
@@ -400,7 +430,7 @@
 
                 if (data.digitalReward.name) {
                     const nameEl = document.createElement("p");
-                    nameEl.className = "digital-name";
+                    nameEl.className = "digital-name reward-name-highlighter";
                     nameEl.textContent = `🎁 ${data.digitalReward.name}`;
                     digitalSection.insertBefore(nameEl, digitalImage);
                 }

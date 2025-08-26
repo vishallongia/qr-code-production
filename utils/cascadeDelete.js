@@ -2,6 +2,8 @@ const Channel = require("../models/Channel");
 const Session = require("../models/Session");
 const QuizQuestion = require("../models/QuizQuestion");
 const QuizQuestionResponse = require("../models/QuizQuestionResponse");
+const VoteQuestion = require("../models/VoteQuestion");
+const VoteQuestionResponse = require("../models/VoteQuestionResponse");
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust path as per your structure
 const { deleteFileIfExists } = require("../middleware/multerQuizUploader");
 async function cascadeDelete(type, id) {
@@ -38,6 +40,12 @@ async function cascadeDelete(type, id) {
         const questions = await QuizQuestion.find({ sessionId: id });
         for (const question of questions) {
           await cascadeDelete("quizQuestion", question._id);
+        }
+
+        // Delete all vote questions for this session
+        const votes = await VoteQuestion.find({ sessionId: id });
+        for (const vote of votes) {
+          await cascadeDelete("voteQuestion", vote._id);
         }
 
         // Delete all QR codes associated with this session's codes
@@ -86,16 +94,36 @@ async function cascadeDelete(type, id) {
       }
       break;
 
-    case "quizQuestionResponse":
+    case "voteQuestion":
       try {
-        await QuizQuestionResponse.deleteOne({ _id: id });
+        const vote = await VoteQuestion.findById(id);
+        if (!vote) return;
+
+        // Delete uploaded files
+        deleteFileIfExists(vote.logo);
+        deleteFileIfExists(vote.questionImage);
+
+        // Delete option images
+        if (vote.options && vote.options.length > 0) {
+          vote.options.forEach((option) => deleteFileIfExists(option.image));
+        }
+
+        // Delete all responses
+        try {
+          await VoteQuestionResponse.deleteMany({ questionId: id });
+        } catch (respErr) {
+          console.error(
+            `Failed to delete responses for vote question ${id}:`,
+            respErr
+          );
+        }
+
+        // Delete the vote question itself
+        await VoteQuestion.deleteOne({ _id: id });
       } catch (err) {
-        console.error(`Error deleting quiz response ${id}:`, err);
+        console.error(`Error deleting vote question ${id}:`, err);
       }
       break;
-
-    default:
-      console.warn("Invalid type for cascadeDelete:", type);
   }
 }
 

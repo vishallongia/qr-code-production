@@ -1,107 +1,317 @@
-:root {
-    --background-color: #f9fafb;
-    --primary-color: #1a0161;
-    --hover-primary-color: #350d85;
-    --text-color: #374151;
-    --heading-color: #111827;
-    --card-background: #ffffff;
-    --card-shadow: rgba(0, 0, 0, 0.08);
-    --card-hover-shadow: rgba(0, 0, 0, 0.15);
-    --button-text-color: #ffffff;
-    --transition-speed: 0.3s;
-    --radius: 16px;
-}
+ :root {
+     --font-family: "Poppins", sans-serif;
+     --bg-gradient-start: #e0f7fa;
+     --bg-gradient-end: #ffe0b2;
+     --container-bg: rgba(255, 255, 255, 0.9);
+     --container-backdrop-blur: 10px;
+     --border-radius: 10px;
+     --box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+     --input-border-color: rgba(0, 0, 0, 0.2);
+     --input-focus-border-color: #80deea;
+     --submit-btn-bg: #18024b;
+     --submit-btn-hover-bg: rgba(26, 1, 97, 0.9);
+     ;
+     --link-color: #18024b;
+     --link-hover-color: rgba(26, 1, 97, 0.9);
+     ;
+     --text-color: #333333;
+ }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+ * {
+     box-sizing: border-box;
+     margin: 0;
+     padding: 0;
+ }
 
-body {
-    font-family: 'Poppins', sans-serif;
-    background: var(--background-color);
-    color: var(--text-color);
-    line-height: 1.6;
-}
+ body {
+     font-family: 'Poppins', sans-serif;
+     background: var(--background-color);
+     color: var(--text-color);
+     line-height: 1.6;
+ }
 
-.plans {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1rem;
-    margin-top: 2rem;
-    padding: 0 1rem;
-}
+ .plans {
+     display: grid;
+     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+     gap: 1rem;
+     margin-top: 2rem;
+     padding: 0 1rem;
+ }
 
-.plan-card {
-    background: var(--card-background);
-    border-radius: var(--radius);
-    box-shadow: 0 4px 16px var(--card-shadow);
-    padding: 2rem;
-    text-align: center;
-    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
-    position: relative;
-    overflow: hidden;
-}
+ .plan-card {
+     background: var(--card-background);
+     border-radius: var(--radius);
+     box-shadow: 0 4px 16px var(--card-shadow);
+     padding: 2rem;
+     text-align: center;
+     transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+     position: relative;
+     overflow: hidden;
+ }
 
-.plan-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 10px 30px var(--card-hover-shadow);
-}
+ .plan-card:hover {
+     transform: translateY(-10px);
+     box-shadow: 0 10px 30px var(--card-hover-shadow);
+ }
 
-.plan-price {
-    font-size: 2.2rem;
-    color: var(--primary-color);
-    font-weight: 700;
-    margin-bottom: 1rem;
-}
+ .plan-price {
+     font-size: 2.2rem;
+     color: var(--primary-color);
+     font-weight: 700;
+     margin-bottom: 1rem;
+ }
 
-.plan-coins {
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: var(--heading-color);
-    margin-bottom: 1.5rem;
-}
+ .plan-coins {
+     font-size: 1.2rem;
+     font-weight: 500;
+     color: var(--heading-color);
+     margin-bottom: 1.5rem;
+ }
 
-.subscribe-btn {
-    background-color: var(--primary-color);
-    color: var(--button-text-color);
-    border: none;
-    padding: 0.8rem 1.6rem;
-    font-size: 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color var(--transition-speed);
-    width: 100%;
-}
+ .subscribe-btn {
+     background-color: var(--primary-color);
+     color: var(--button-text-color);
+     border: none;
+     padding: 0.8rem 1.6rem;
+     font-size: 1rem;
+     border-radius: 8px;
+     cursor: pointer;
+     transition: background-color var(--transition-speed);
+     width: 100%;
+ }
 
-.subscribe-btn:hover {
-    background-color: var(--hover-primary-color);
-}
+ .subscribe-btn:hover {
+     background-color: var(--hover-primary-color);
+ }
 
 
 
-.container-custom-wallet {
-    background: var(--container-bg);
-    backdrop-filter: blur(var(--container-backdrop-blur));
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 2rem 3rem;
-    text-align: center;
-    font-family: var(--font-family);
-}
+ .container-custom-wallet {
+     background: var(--container-bg);
+     backdrop-filter: blur(var(--container-backdrop-blur));
+     border-radius: var(--border-radius);
+     box-shadow: var(--box-shadow);
+     padding: 2rem 3rem;
+     text-align: center;
+     font-family: var(--font-family);
+ }
 
-.label {
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 2rem;
-    display: block;
-}
+ .label {
+     font-size: 1rem;
+     color: #555;
+     margin-bottom: 2rem;
+     display: block;
+ }
 
-.wallet-balance {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    font-weight: 600;
-    color: black;
-}
+ .wallet-balance {
+     font-size: 2.5rem;
+     margin-bottom: 1rem;
+     font-weight: 600;
+     color: black;
+ }
 
+ I can help you improve the CSS for your transaction history table while maintaining the existing design. The main focus will be on improving the alignment,
+ spacing,
+ and readability of the table content,
+ especially with the new columns you've added.
+
+ Here are the CSS improvements: CSS Improvements CSS
+
+ /* All CSS from your provided code */
+ :root {
+     --background-color: #f9fafb;
+     --primary-color: #1a0161;
+     --hover-primary-color: #350d85;
+     --text-color: #374151;
+     --heading-color: #111827;
+     --card-background: #ffffff;
+     --card-shadow: rgba(0, 0, 0, 0.08);
+     --card-hover-shadow: rgba(0, 0, 0, 0.15);
+     --button-text-color: #ffffff;
+     --transition-speed: 0.3s;
+     --radius: 16px;
+     /* Added variables for improved consistency */
+     --font-family: 'Poppins', sans-serif;
+     --bg-gradient-start: #e0f7fa;
+     --bg-gradient-end: #ffe0b2;
+     --container-bg: rgba(255, 255, 255, 0.9);
+     --container-backdrop-blur: 10px;
+     --border-radius: 10px;
+     --box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+     --input-border-color: rgba(0, 0, 0, 0.2);
+     --submit-btn-bg: #18024b;
+     --submit-btn-hover-bg: rgba(26, 1, 97, 0.9);
+ }
+
+ * {
+     box-sizing: border-box;
+     margin: 0;
+     padding: 0;
+ }
+
+ body {
+     font-family: var(--font-family);
+     background: var(--background-color);
+     color: var(--text-color);
+     line-height: 1.6;
+ }
+
+ /* ... (Your other CSS rules for plans, wallet, etc.) ... */
+ .container-custom-wallet {
+     background: var(--container-bg);
+     backdrop-filter: blur(var(--container-backdrop-blur));
+     border-radius: var(--border-radius);
+     box-shadow: var(--box-shadow);
+     padding: 2rem 3rem;
+     text-align: center;
+     font-family: var(--font-family);
+ }
+
+ .label {
+     font-size: 1rem;
+     color: #555;
+     margin-bottom: 2rem;
+     display: block;
+ }
+
+ .wallet-balance {
+     font-size: 2.5rem;
+     margin-bottom: 1rem;
+     font-weight: 600;
+     color: black;
+ }
+
+ .transaction-bar {
+     margin-top: 2rem;
+     padding: 2rem 3rem;
+     background: var(--container-bg);
+     backdrop-filter: blur(var(--container-backdrop-blur));
+     border-radius: var(--border-radius);
+     box-shadow: var(--box-shadow);
+     text-align: left;
+ }
+
+ .transaction-heading {
+     font-size: 1.3rem;
+     font-weight: 600;
+     color: var(--text-color);
+     margin-bottom: 1.5rem;
+ }
+
+ .transaction-list {
+     display: flex;
+     flex-direction: column;
+ }
+
+ .transaction-item {
+     display: grid;
+     /* Updated grid to have 6 columns */
+     grid-template-columns: minmax(100px, 1fr) minmax(80px, 0.8fr) repeat(2, minmax(120px, 1fr)) minmax(120px, 1fr) minmax(140px, 1.2fr);
+     gap: 1rem;
+     padding: 0.75rem 1rem;
+     margin-bottom: 1rem;
+     background: white;
+     border: 1px solid var(--input-border-color);
+     border-radius: var(--border-radius);
+     box-shadow: var(--box-shadow);
+     font-family: var(--font-family);
+     font-size: 0.95rem;
+     color: var(--text-color);
+     /* Improved alignment for all grid items */
+     align-items: center;
+ }
+
+ /* New header styling for better visual separation */
+ .transaction-item.header {
+     font-weight: bold;
+     /* background: #f1f5f9; */
+     /* A light background color */
+     box-shadow: none;
+     text-transform: uppercase;
+     font-size: 0.85rem;
+     border: none;
+ }
+
+ .transaction-item>span {
+     text-align: center;
+ }
+
+ .transaction-amount {
+     /* Center text within the cell */
+     text-align: center;
+ }
+
+ .transaction-amount.positive {
+     color: green;
+     font-weight: bold;
+ }
+
+ .transaction-amount.negative {
+     color: red;
+     font-weight: bold;
+ }
+
+ /* Align date to the right for better readability */
+ .transaction-date {
+     text-align: right;
+     font-size: 0.9rem;
+     color: var(--text-color);
+ }
+
+ .no-transactions {
+     grid-column: 1 / -1;
+     /* Make the 'no transactions' message span all columns */
+     text-align: center;
+     padding: 2rem 0;
+     color: #6b7280;
+ }
+
+
+ #loadMoreBtn {
+     margin-top: 1rem;
+     background-color: var(--submit-btn-bg);
+     border: none;
+     border-radius: var(--border-radius);
+     padding: 0.6rem 1.2rem;
+     font-size: 1rem;
+     color: white;
+     cursor: pointer;
+     transition: background-color 0.3s ease;
+ }
+
+ #loadMoreBtn:hover {
+     background-color: var(--submit-btn-hover-bg);
+ }
+
+
+ /* Badge-specific CSS for type indicators */
+ .type-badge {
+     padding: 0.25rem 0.75rem;
+     border-radius: 50px;
+     font-size: 0.8rem;
+     font-weight: 600;
+     text-transform: uppercase;
+     white-space: nowrap;
+ }
+
+ .badge-added {
+     background-color: #d1fae5;
+     color: #065f46;
+ }
+
+ .badge-failed {
+     background-color: #fee2e2;
+     color: #991b1b;
+ }
+
+ .badge-pending {
+     background-color: #fef3c7;
+     color: #92400e;
+ }
+
+ /* Update the transaction-type span to center the badge correctly */
+ .transaction-type {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+ }
