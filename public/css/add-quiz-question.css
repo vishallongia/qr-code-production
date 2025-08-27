@@ -18,7 +18,7 @@
 
 body {
     font-family: var(--font-family);
-    background: linear-gradient(to bottom right, var(--bg-gradient-start), var(--bg-gradient-end));
+    background: whitesmoke;
     margin: 0;
     padding: 20px;
     color: var(--text-color);

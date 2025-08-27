@@ -57,8 +57,10 @@ router.get("/plans", authMiddleware, async (req, res) => {
         isVip,
         validTill: validUntilVip,
       },
+      isTvStation: req.user.isTvStation,
     };
     // Render the 'plans' EJS page and pass the encrypted plans data to it
+
     res.render("dashboardnew", {
       plans: encryptedPlans,
       user: userSubscription,

@@ -88,7 +88,7 @@ const paymentSchema = new mongoose.Schema({
 });
 
 paymentSchema.pre("save", async function (next) {
-  if (this.paymentStatus === "completed" && this.type === "subscription") {
+  if (this.paymentStatus === "pending" && this.type === "subscription") {
     const plan = await mongoose.model("Plan").findById(this.plan_id);
     if (!plan) return next(new Error("Plan not found"));
 

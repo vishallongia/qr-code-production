@@ -2089,7 +2089,7 @@ router.get("/usercontrol", authMiddleware, async (req, res) => {
 
     // Fetch minimal user data
     const user = await User.findById(userId).select(
-      "showEditOnScan role subscription fullName"
+      "showEditOnScan role subscription fullName isTvStation"
     );
 
     if (!user) {
