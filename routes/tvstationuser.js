@@ -1701,7 +1701,7 @@ router.get(
 router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
   try {
     const { channelId, sessionId } = req.params;
-    const { backgroundColor, qrDotColor, type } = req.body;
+    const { backgroundColor, qrDotColor, type, lang = "en" } = req.body;
 
     if (!type || !["quiz", "voting", "shopping", "brand"].includes(type)) {
       return res
@@ -1733,28 +1733,21 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
     }
 
     const sessionCode = codeObj.value;
-    const qrUrl = `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play`;
+    const qrUrl = `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=${lang}`;
 
     // Step 4: Find or create QR
     let qr = await QRCodeData.findOne({ code: sessionCode });
 
     if (qr) {
       // Update colors if provided
-      let updated = false;
+      if (backgroundColor) qr.backgroundColor = backgroundColor;
+      if (qrDotColor) qr.qrDotColor = qrDotColor;
 
-      if (backgroundColor && backgroundColor !== qr.backgroundColor) {
-        qr.backgroundColor = backgroundColor;
-        updated = true;
-      }
+      // Always update URL for the current lang
+      qr.url = qrUrl;
 
-      if (qrDotColor && qrDotColor !== qr.qrDotColor) {
-        qr.qrDotColor = qrDotColor;
-        updated = true;
-      }
-
-      if (updated) {
-        await qr.save();
-      }
+      await qr.save();
+      console.log("QR updated and saved");
     } else {
       qr = await QRCodeData.create({
         qrName: sessionCode,

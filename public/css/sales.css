@@ -776,6 +776,7 @@ input:checked+.toggle-slider:before {
     text-align: center;
     letter-spacing: 0.5px;
     transition: transform 0.2s ease;
+    height: max-content;
 }
 
 .status-sticker.success {
