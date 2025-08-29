@@ -21,10 +21,6 @@ const voteQuestionResponseSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    isCorrect: {
-      type: Boolean,
-      required: true,
-    },
     isActive: {
       type: Boolean,
       default: true,

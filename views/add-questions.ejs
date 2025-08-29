@@ -13,6 +13,7 @@
 </head>
 
 <body>
+
     <div class="loader-overlay" id="loader">
         <div class="spinner"></div>
     </div>
@@ -22,6 +23,17 @@
         </div>
         <% } else { %>
             <div class="quiz-container">
+                <nav class="breadcrumbs">
+                    <a href="/tvstation/channels">Shows</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channel._id %>/sessions">Session Manager</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Apps</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/quiz">Quiz</a>
+                    <span>&rsaquo;</span>
+                    <span class="active">Add a Quiz Question</span>
+                </nav>
                 <h2>Add a Quiz Question</h2>
                 <form id="questions-form">
                     <div id="questions-wrapper"></div>
@@ -119,6 +131,7 @@
                                 <button type="button" class="reward-mode-btn" data-mode="jackpot">Jackpot</button>
                                 <button type="button" class="reward-mode-btn" data-mode="digital">Digital</button>
                                 <button type="button" class="reward-mode-btn" data-mode="both">Both</button>
+                                <button type="button" class="reward-mode-btn" data-mode="none">None</button>
                             </div>
                         </div>
 
@@ -237,70 +250,54 @@
         const jackpotField = block.querySelector(".reward-jackpot");
         const digitalField = block.querySelector(".reward-digital");
 
+        function clearFields(field) {
+            field.querySelectorAll('input[type="text"], input[type="number"], input[type="url"], input[type="file"]').forEach(input => {
+                input.value = '';
+                if (input.type === 'file') {
+                    input.value = '';
+                    const labelText = input.parentElement.querySelector('.quiz-file-label-text');
+                    if (labelText) labelText.textContent = 'Choose File';
+                    const clearBtn = input.parentElement.querySelector('.quiz-clear-btn');
+                    if (clearBtn) clearBtn.style.display = 'none';
+                    const preview = block.querySelector(`.${input.classList[0]}Preview`);
+                    if (preview) {
+                        preview.src = '';
+                        preview.style.display = 'none';
+                    }
+                }
+            });
+        }
+
         modeButtons.forEach((btn) => {
             btn.addEventListener("click", () => {
                 const mode = btn.dataset.mode;
                 modeInput.value = mode;
 
-                // Toggle visibility
-                jackpotField.style.display = (mode === 'jackpot' || mode === 'both') ? 'block' : 'none';
-                digitalField.style.display = (mode === 'digital' || mode === 'both') ? 'block' : 'none';
-
-                if (jackpotField.style.display === 'none') {
-                    jackpotField.querySelectorAll('input[type="text"], input[type="number"], input[type="url"], input[type="file"]').forEach(input => {
-                        input.value = '';
-                        if (input.type === 'file') {
-                            // Reset input value
-                            input.value = '';
-
-                            // Reset label text
-                            const labelText = input.parentElement.querySelector('.quiz-file-label-text');
-                            if (labelText) labelText.textContent = 'Choose File';
-
-                            // Hide clear button
-                            const clearBtn = input.parentElement.querySelector('.quiz-clear-btn');
-                            if (clearBtn) clearBtn.style.display = 'none';
-
-                            // Hide preview image
-                            const preview = block.querySelector(`.${input.classList[0]}Preview`);
-                            if (preview) preview.style.display = 'none';
-                        }
-
-                    });
+                if (mode === "jackpot") {
+                    jackpotField.style.display = "block";
+                    digitalField.style.display = "none";
+                    clearFields(digitalField);
+                } else if (mode === "digital") {
+                    jackpotField.style.display = "none";
+                    digitalField.style.display = "block";
+                    clearFields(jackpotField);
+                } else if (mode === "both") {
+                    jackpotField.style.display = "block";
+                    digitalField.style.display = "block";
+                } else if (mode === "none") {
+                    jackpotField.style.display = "none";
+                    digitalField.style.display = "none";
+                    clearFields(jackpotField);
+                    clearFields(digitalField);
                 }
 
-                if (digitalField.style.display === 'none') {
-                    digitalField.querySelectorAll('input[type="text"], input[type="number"], input[type="url"], input[type="file"]').forEach(input => {
-                        input.value = '';
-                        if (input.type === 'file') {
-                            // Reset input value
-                            input.value = '';
-
-                            // Reset label text
-                            const labelText = input.parentElement.querySelector('.quiz-file-label-text');
-                            if (labelText) labelText.textContent = 'Choose File';
-
-                            // Hide clear button
-                            const clearBtn = input.parentElement.querySelector('.quiz-clear-btn');
-                            if (clearBtn) clearBtn.style.display = 'none';
-
-                            // Hide preview image
-                            const preview = block.querySelector(`.${input.classList[0]}Preview`);
-                            if (preview) preview.style.display = 'none';
-                        }
-
-                    });
-                }
-
-
-                // Toggle active button style
                 modeButtons.forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
             });
         });
 
-        // Default to jackpot
-        modeButtons[0].click();
+        // default select "none"
+        block.querySelector('[data-mode="none"]').click();
     }
 
 

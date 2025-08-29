@@ -25,11 +25,11 @@
                 <p id="resultText" style="font-size: 1.5rem; font-weight: bold;"></p>
                 <div id="jackpotRewardSection" style="display: none; margin: 15px 0;">
                     <img id="jackpotRewardImage" src="" alt="Jackpot Reward" />
-                    <p id="jackpotRewardDescription"></p>
+                    <p id="jackpotRewardDescription" style="font-size: 0.95rem;"></p>
                 </div>
                 <div id="digitalRewardSection" style="display: none; margin: 15px 0;">
                     <img id="digitalRewardImage" src="" alt="Digital Reward" />
-                    <p id="digitalRewardDescription"></p>
+                    <p id="digitalRewardDescription" style="font-size: 0.95rem;"></p>
                 </div>
                 <div class="coin-popup-buttons">
                     <button onclick="closeResultPopup()">Close</button>
@@ -244,6 +244,13 @@
                                             <% } %>
 
                                     </label>
+                                    <!-- ✅ Progress bar for this option -->
+                                    <div class="progress-bar-container" id="barContainer<%= i %>">
+                                        <div class="progress-bar-fill" id="bar<%= i %>"
+                                            style="width: <%= opt.percentage %>%;">
+                                            <%= opt.percentage %>%
+                                        </div>
+                                    </div>
                                 </div>
                                 <% }) %>
                         </div>
@@ -283,6 +290,19 @@
             openCoinPopup();
         });
     });
+
+    function updateVoteBars(voteResults) {
+        voteResults.forEach(result => {
+            const idx = result.optionIndex;
+            const barFill = document.getElementById(`bar${idx}`);
+            if (barFill) {
+                // Animate width smoothly
+                barFill.style.transition = "width 0.8s ease-in-out";
+                barFill.style.width = `${result.percentage}%`;
+                barFill.textContent = `${result.percentage}%`;
+            }
+        });
+    }
 
     function openCoinPopup() {
         const selectedRadio = document.querySelector('input[name="selectedOptionIndex"]:checked');
@@ -330,7 +350,7 @@
         const loader = document.getElementById("loader");
         loader.style.display = "flex"; // show loader
 
-        fetch("/tvstation/quiz-response", {
+        fetch("/tvstation/voting-response", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -371,15 +391,19 @@
         const jackpotSection = document.getElementById("jackpotRewardSection");
         const digitalSection = document.getElementById("digitalRewardSection");
 
+
         // Reset sections
         jackpotSection.style.display = "none";
         digitalSection.style.display = "none";
 
         // Extract data
-        const correctLetter = String.fromCharCode(65 + data.correctOptionIndex);
-        const isCorrect = data.isCorrect;
+        const selectedLetter = String.fromCharCode(65 + parseInt(data.selectedOptionIndex));
+        const result = data.voteResults.find(r => r.optionIndex === data.selectedOptionIndex);
+        const percentage = result ? result.percentage : 0;
         const jackpotDeducted = data.jackpotCoinDeducted;
         const digitalDeducted = data.digitalCoinDeducted;
+
+
 
 
         // Update coin counter in UI if exists
@@ -394,20 +418,8 @@
             resultText.innerHTML = `❌ You do not have enough coins to participate.<br>
         You have <strong>${data.availableCoins}</strong> coins, but <strong>${data.requiredCoins}</strong> are required.`;
         } else {
-            // Determine text for normal result
-            if (isCorrect) {
-                if (!jackpotDeducted && !digitalDeducted) {
-                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are not participating in the contest.`;
-                } else if (jackpotDeducted && !digitalDeducted) {
-                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are qualified to win the jackpot.`;
-                } else if (!jackpotDeducted && digitalDeducted) {
-                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are qualified to win the 3 Months VIP PLAN.`;
-                } else if (jackpotDeducted && digitalDeducted) {
-                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are qualified to win both: the JACKPOT, and 3 Months VIP PLAN.`;
-                }
-            } else {
-                resultText.textContent = `The correct answer is ${correctLetter}. Thank you for your participation.`;
-            }
+            // Show message
+            resultText.textContent = `✅ Thank you for voting. Option ${selectedLetter} received ${percentage}% votes.`;
 
             // Show rewards if any deduction was done
             if (jackpotDeducted && data.jackpotReward) {
@@ -418,7 +430,6 @@
                 // Remove old reward name paragraph if exists
                 const oldNameEl = jackpotSection.querySelector(".jackpot-name");
                 if (oldNameEl) oldNameEl.remove();
-
                 if (data.jackpotReward.name) {
                     const nameEl = document.createElement("p");
                     nameEl.className = "jackpot-name reward-name-highlighter";
@@ -451,6 +462,11 @@
                 digitalDesc.textContent = data.digitalReward.description || "";
             }
 
+        }
+
+        // ✅ Immediately update the vote percentages
+        if (data.voteResults && data.voteResults.length) {
+            updateVoteBars(data.voteResults);
         }
 
         resultPopup.style.display = "flex";

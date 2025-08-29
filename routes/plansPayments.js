@@ -677,113 +677,89 @@ router.post("/validate-coupon", authMiddleware, async (req, res) => {
 // GET /magic-coin-wallet
 router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 5; // default 1
+    const limit = parseInt(req.query.limit) || 5; // default 5
     const skip = parseInt(req.query.skip) || 0; // default 0
 
-    // 1️⃣ Fetch all active MagicCoinPlans (same as before, as this is separate data)
+    // 1️⃣ Fetch all active MagicCoinPlans (same as before)
     const plans = await MagicCoinPlan.find({ active: true }).sort({ price: 1 });
     const encryptedPlans = plans.map((plan) => ({
       ...plan.toObject(),
       encryptedId: encryptPassword(plan._id.toString()),
     }));
 
-    // 2️⃣ Define the aggregation pipeline to get all transaction history in one query
+    // 2️⃣ Aggregation pipeline for transactions + quiz coin deductions
     const pipeline = [
+      // --- Wallet recharge transactions ---
       {
         $match: {
           user_id: req.user._id,
           type: "coin",
         },
       },
-
       {
         $lookup: {
-          from: "magiccoinplans", // The name of the collection for MagicCoinPlan
+          from: "magiccoinplans",
           localField: "plan_id",
           foreignField: "_id",
           as: "planDetails",
         },
       },
-
-      {
-        $unwind: "$planDetails",
-      },
-
-      {
-        $sort: {
-          createdAt: 1,
-        },
-      },
-
-      {
-        $setWindowFields: {
-          partitionBy: "$user_id",
-          sortBy: { createdAt: 1 },
-          output: {
-            runningBalance: {
-              $sum: {
-                $cond: {
-                  if: { $eq: ["$paymentStatus", "completed"] },
-                  then: "$planDetails.coinsOffered",
-                  else: 0,
-                },
-              },
-              window: {
-                documents: ["unbounded", "current"],
-              },
-            },
-          },
-        },
-      },
-
-      {
-        $sort: {
-          createdAt: -1,
-        },
-      },
-
-      {
-        $skip: skip,
-      },
-      {
-        $limit: limit,
-      },
-
+      { $unwind: "$planDetails" },
       {
         $project: {
-          _id: 0, // Exclude the default _id field
-          amount: "$amount",
-          currency: "$currency",
-          paymentStatus: "$paymentStatus",
-          paymentMethod: "$paymentMethod",
-          transactionId: "$transactionId",
-          createdAt: "$paymentDate",
+          _id: 0,
+          paymentStatus: "$paymentStatus", // keep original status
           coinsOffered: "$planDetails.coinsOffered",
-          initialBalance: {
-            $subtract: [
-              "$runningBalance",
-              {
-                $cond: {
-                  if: { $eq: ["$paymentStatus", "completed"] },
-                  then: "$planDetails.coinsOffered",
-                  else: 0,
-                },
-              },
-            ],
-          },
-          totalBalance: "$runningBalance",
+          createdAt: "$paymentDate",
         },
       },
+
+      // --- Merge quiz coin deductions ---
+      {
+        $unionWith: {
+          coll: "quizquestionresponses",
+          pipeline: [
+            { $match: { userId: req.user._id } },
+            {
+              $project: {
+                _id: 0,
+                paymentStatus: { $literal: "deducted" }, // always success
+                coinsOffered: {
+                  $add: ["$jackpotCoinDeducted", "$digitalCoinDeducted"],
+                },
+                createdAt: "$createdAt",
+              },
+            },
+            {
+              $match: {
+                coinsOffered: { $gt: 0 }, // ✅ filter here
+              },
+            },
+          ],
+        },
+      },
+
+      // --- Sort all transactions by date descending ---
+      { $sort: { createdAt: -1 } },
+
+      // --- Pagination ---
+      { $skip: skip },
+      { $limit: limit },
     ];
 
     // 3️⃣ Execute the aggregation pipeline
     const transactionHistory = await Payment.aggregate(pipeline);
 
     // 4️⃣ Get total count for hasMore pagination logic
-    const totalTransactions = await Payment.countDocuments({
+    // Count both wallet + quiz deductions
+    const totalWallet = await Payment.countDocuments({
       user_id: req.user._id,
       type: "coin",
     });
+    const totalQuiz = await QuizQuestionResponse.countDocuments({
+      userId: req.user._id,
+    });
+    const totalTransactions = totalWallet + totalQuiz;
 
     // 5️⃣ Respond with JSON or render the page
     if (req.xhr || req.headers.accept.indexOf("json") > -1) {
@@ -796,8 +772,6 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
         hasMore: totalTransactions > skip + limit,
       });
     }
-
-    const hasMoretest = totalTransactions > skip + limit;
 
     res.render("dashboardnew", {
       plans: encryptedPlans,

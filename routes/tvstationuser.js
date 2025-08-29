@@ -1395,65 +1395,6 @@ router.get(
       const currentQuestion = quizQuestions[0] || null;
       const hasNext = index + 1 < total;
 
-      // 🔹 Calculate total purchased coins
-      // const purchasedCoinsResult = await Payment.aggregate([
-      //   {
-      //     $match: {
-      //       user_id: req.user._id,
-      //       paymentStatus: "completed",
-      //       type: "coin",
-      //     },
-      //   },
-      //   {
-      //     $lookup: {
-      //       from: "magiccoinplans",
-      //       localField: "plan_id",
-      //       foreignField: "_id",
-      //       as: "planInfo",
-      //     },
-      //   },
-      //   { $unwind: "$planInfo" },
-      //   {
-      //     $group: {
-      //       _id: null,
-      //       totalCoins: { $sum: "$planInfo.coinsOffered" },
-      //     },
-      //   },
-      // ]);
-
-      // const totalCoins = purchasedCoinsResult[0]?.totalCoins || 0;
-
-      // 🔹 Calculate total deducted coins
-      // const deductedResponses = await QuizQuestionResponse.aggregate([
-      //   {
-      //     $match: {
-      //       userId: req.user._id,
-      //       deductCoin: true,
-      //     },
-      //   },
-      //   {
-      //     $lookup: {
-      //       from: "quizquestions",
-      //       localField: "questionId",
-      //       foreignField: "_id",
-      //       as: "questionInfo",
-      //     },
-      //   },
-      //   { $unwind: "$questionInfo" },
-      //   {
-      //     $group: {
-      //       _id: null,
-      //       totalDeducted: { $sum: "$questionInfo.magicCoinDeducted" },
-      //     },
-      //   },
-      // ]);
-
-      // const totalDeducted = deductedResponses[0]?.totalDeducted || 0;
-
-      // const availableCoins = totalCoins - totalDeducted;
-
-      // Now User has a key walletCoins
-
       const availableCoins = req.user?.walletCoins || 0;
 
       if (req.xhr || req.headers.accept.includes("json")) {
@@ -1612,6 +1553,8 @@ router.get(
         activeSection: "quiz-response-tracker",
         user: req.user,
         error: "Access denied",
+        sessionId,
+        channelId,
       });
     }
 
@@ -1681,6 +1624,8 @@ router.get(
         error: null,
         activeSection: "quiz-response-tracker", // ✅ Added here
         user: req.user,
+        sessionId,
+        channelId,
       });
     } catch (error) {
       console.error("Error fetching quiz responses:", error);
@@ -1692,6 +1637,8 @@ router.get(
         totalPages: 0,
         activeSection: "quiz-response-tracker", // ✅ Added here
         user: req.user,
+        sessionId,
+        channelId,
       });
     }
   }
@@ -1747,7 +1694,6 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
       qr.url = qrUrl;
 
       await qr.save();
-      console.log("QR updated and saved");
     } else {
       qr = await QRCodeData.create({
         qrName: sessionCode,
@@ -2907,6 +2853,368 @@ router.delete("/voting-question/:id", async (req, res) => {
       message: "Server error",
       type: "error",
     });
+  }
+});
+
+router.get(
+  "/channel/:channelId/session/:sessionId/voting-response-tracker",
+  async (req, res) => {
+    const currentPage = parseInt(req.query.page) || 1;
+    const recordsPerPage = parseInt(process.env.USER_PER_PAGE) || 10;
+    const skip = (currentPage - 1) * recordsPerPage;
+    const { sessionId, channelId } = req.params;
+
+    const channel = await Channel.findById(channelId);
+    if (!channel || !channel.createdBy.equals(req.user._id)) {
+      return res.render("dashboardnew", {
+        quizResponses: [],
+        totalResponsesWithoutPagination: 0,
+        currentPage: 1,
+        totalPages: 0,
+        activeSection: "voting-response-tracker",
+        user: req.user,
+        error: "Access denied",
+        sessionId,
+        channelId,
+      });
+    }
+
+    try {
+      const result = await VoteQuestionResponse.aggregate([
+        {
+          $lookup: {
+            from: "votequestions",
+            localField: "questionId",
+            foreignField: "_id",
+            as: "question",
+          },
+        },
+        { $unwind: "$question" },
+        {
+          $match: {
+            "question.sessionId": new mongoose.Types.ObjectId(sessionId),
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: "$user" },
+        {
+          $project: {
+            questionText: "$question.question",
+            selectedOptionIndex: 1,
+            deductCoin: 1,
+            jackpotCoinDeducted: 1,
+            digitalCoinDeducted: 1,
+            coinsDeducted: {
+              $cond: [
+                { $eq: ["$deductCoin", true] },
+                "$question.magicCoinDeducted",
+                0,
+              ],
+            },
+            createdAt: 1,
+            userName: "$user.fullName",
+            userEmail: "$user.email",
+          },
+        },
+        { $sort: { createdAt: -1 } },
+        {
+          $facet: {
+            data: [{ $skip: skip }, { $limit: recordsPerPage }],
+            totalCount: [{ $count: "total" }],
+          },
+        },
+      ]);
+
+      const quizResponses = result[0].data;
+      const totalResponses = result[0].totalCount[0]?.total || 0;
+      const totalPages = Math.ceil(totalResponses / recordsPerPage);
+
+      res.render("dashboardnew", {
+        quizResponses,
+        totalResponsesWithoutPagination: totalResponses,
+        currentPage,
+        totalPages,
+        error: null,
+        activeSection: "voting-response-tracker", // ✅ Added here
+        user: req.user,
+        sessionId,
+        channelId,
+      });
+    } catch (error) {
+      console.error("Error fetching quiz responses:", error);
+      res.status(500).render("dashboardnew", {
+        quizResponses: [],
+        totalResponsesWithoutPagination: 0,
+        error: "Server Error",
+        currentPage: 1,
+        totalPages: 0,
+        activeSection: "voting-response-tracker", // ✅ Added here
+        user: req.user,
+        sessionId,
+        channelId,
+      });
+    }
+  }
+);
+
+router.get(
+  "/channels/:channelId/session/:sessionId/voting-play",
+  async (req, res) => {
+    const { channelId, sessionId } = req.params;
+
+    try {
+      // Validate Channel ID
+      if (
+        !mongoose.Types.ObjectId.isValid(channelId) ||
+        !mongoose.Types.ObjectId.isValid(sessionId)
+      ) {
+        return res.render("user-voting", {
+          channel: null,
+          error: "Invalid Channel ID or Session ID",
+          user: req.user,
+          currentQuestion: null,
+          index: 0,
+          total: 0,
+          availableCoins: 0,
+        });
+      }
+
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+
+      if (!channel) {
+        return res.render("user-voting", {
+          channel: null,
+          error: "Channel not found",
+          user: req.user,
+          currentQuestion: null,
+          index: 0,
+          total: 0,
+          availableCoins: 0,
+        });
+      }
+
+      if (!session) {
+        return res.render("user-voting", {
+          channel: null,
+          error: "Session not found",
+          user: req.user,
+          currentQuestion: null,
+          index: 0,
+          total: 0,
+          availableCoins: 0,
+        });
+      }
+
+      if (!channel.isRunning) {
+        return res.render("user-voting", {
+          channel: null,
+          error: "Voting Quiz is not currently running or does not exist",
+          user: req.user,
+          currentQuestion: null,
+          index: 0,
+          total: 0,
+          availableCoins: 0,
+        });
+      }
+
+      const index =
+        req.query.index !== undefined ? parseInt(req.query.index) : 0;
+
+      const quizQuestions = await VoteQuestion.find({ sessionId })
+        .sort({ createdAt: 1 })
+        .skip(index)
+        .limit(1)
+        .lean();
+
+      const total = await QuizQuestion.countDocuments({ sessionId });
+      const currentQuestion = quizQuestions[0] || null;
+      const hasNext = index + 1 < total;
+
+      const availableCoins = req.user?.walletCoins || 0;
+
+      if (currentQuestion) {
+        const stats = await VoteQuestionResponse.aggregate([
+          { $match: { questionId: currentQuestion._id } },
+          { $group: { _id: "$selectedOptionIndex", votes: { $sum: 1 } } },
+        ]);
+
+        const totalVotes = stats.reduce((acc, s) => acc + s.votes, 0) || 1;
+
+        // Build lookup map once
+        const votesMap = {};
+        stats.forEach((s) => {
+          votesMap[s._id] = s.votes;
+        });
+
+        // Map options with percentage
+        currentQuestion.options = currentQuestion.options.map((opt, idx) => {
+          const count = votesMap[idx] || 0;
+          const percentage = ((count / totalVotes) * 100).toFixed(1);
+          return { ...opt, votes: count, percentage };
+        });
+      }
+
+      if (req.xhr || req.headers.accept.includes("json")) {
+        return res.json({
+          type: "success",
+          data: currentQuestion,
+          currentIndex: index,
+          total,
+          hasNext,
+          availableCoins: req.user.walletCoins,
+          sessionId,
+        });
+      }
+
+      return res.render("user-voting", {
+        channel,
+        error: null,
+        user: req.user,
+        currentQuestion,
+        index,
+        total,
+        availableCoins,
+        sessionId,
+      });
+    } catch (err) {
+      console.error("Error loading quiz question:", err);
+      return res.render("user-quiz", {
+        channel: null,
+        error: "Server error. Please try again later.",
+        user: req.user,
+        currentQuestion: null,
+        index: 0,
+        total: 0,
+        availableCoins: 0,
+      });
+    }
+  }
+);
+
+router.post("/voting-response", async (req, res) => {
+  const {
+    questionId,
+    channelId,
+    sessionId,
+    selectedOptionIndex,
+    deductCoin = false,
+    jackpotCoinDeducted = false, // flags to decide snapshot
+    digitalCoinDeducted = false,
+  } = req.body;
+
+  const userId = req.user?._id;
+
+  if (!questionId || !channelId || selectedOptionIndex === undefined) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing required fields" });
+  }
+
+  try {
+    const question = await VoteQuestion.findById(questionId);
+    if (!question) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Question not found" });
+    }
+
+    // Determine snapshot values
+    const jackpotSnapshot =
+      deductCoin && jackpotCoinDeducted ? question.jackpotCoinDeducted || 0 : 0;
+    const digitalSnapshot =
+      deductCoin && digitalCoinDeducted ? question.digitalCoinDeducted || 0 : 0;
+
+    // Total sum of both
+    const totalSnapshot = jackpotSnapshot + digitalSnapshot;
+
+    // If totalSnapshot is 0, override deductCoin to false
+    const actualDeductCoin = totalSnapshot > 0 ? deductCoin : false;
+    let updateResult;
+    if (actualDeductCoin) {
+      const user = await User.findById(userId);
+      if ((user.walletCoins || 0) < totalSnapshot) {
+        return res.status(200).json({
+          success: false,
+          notEnoughCoins: true,
+          availableCoins: user.walletCoins || 0,
+          requiredCoins: totalSnapshot,
+        });
+      }
+
+      updateResult = await User.findByIdAndUpdate(
+        userId,
+        { $inc: { walletCoins: -totalSnapshot } },
+        { new: true }
+      );
+    } else {
+      // No deduction, just get current wallet coins
+      updateResult = await User.findById(userId);
+    }
+
+    // Create quiz response with coin snapshot and correct deductCoin
+    const response = await VoteQuestionResponse.create({
+      userId,
+      questionId,
+      channelId,
+      selectedOptionIndex,
+      deductCoin: actualDeductCoin,
+      jackpotCoinDeducted: jackpotSnapshot,
+      digitalCoinDeducted: digitalSnapshot,
+      sessionId,
+    });
+
+    // ✅ Optimized aggregation to get vote counts
+    const stats = await VoteQuestionResponse.aggregate([
+      { $match: { questionId: question._id } },
+      {
+        $group: {
+          _id: "$selectedOptionIndex",
+          votes: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Build results for all options
+    const totalVotes = stats.reduce((acc, s) => acc + s.votes, 0) || 1;
+    const voteResults = question.options.map((_, idx) => {
+      const found = stats.find((s) => s._id === idx);
+      const count = found ? found.votes : 0;
+      return {
+        optionIndex: idx,
+        votes: count,
+        percentage: ((count / totalVotes) * 100).toFixed(1),
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      voteResults,
+      jackpotCoinDeducted: jackpotSnapshot > 0,
+      digitalCoinDeducted: digitalSnapshot > 0,
+      availableCoins: updateResult.walletCoins || 0, // ✅ include coins here
+      jackpotReward: {
+        name: question.jackpotRewardName,
+        image: question.jackpotRewardImage,
+        description: question.jackpotRewardDescription,
+      },
+      digitalReward: {
+        name: question.digitalRewardName,
+        image: question.digitalRewardImage,
+        description: question.digitalRewardDescription,
+      },
+      selectedOptionIndex,
+    });
+  } catch (err) {
+    console.error("Error saving quiz response:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 });
 

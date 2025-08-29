@@ -101,7 +101,7 @@
                         </div>
                         <% } else { %>
                             <div class="subscription-card">
-                                <% if (new Date(user.validUntil) < new Date()) { %>
+                                <% if (!user.validUntil || new Date(user.validUntil) < new Date()) { %>
                                     <div class="status-badge expired">No Active Subscription</div>
                                     <p class="no-subscription-message">Subscribe now to enjoy premium features.</p>
                                     <% } else { %>

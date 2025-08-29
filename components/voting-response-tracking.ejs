@@ -13,7 +13,6 @@
 </head>
 
 <body style="padding: 0px;">
-
     <nav class="breadcrumbs">
         <a href="/tvstation/channels">Shows</a>
         <span>&rsaquo;</span>
@@ -21,9 +20,9 @@
         <span>&rsaquo;</span>
         <a href="/tvstation/channels/<%= channelId %>/session/<%= sessionId %>">Apps</a>
         <span>&rsaquo;</span>
-        <a href="/tvstation/channels/<%= channelId %>/session/<%= sessionId %>/quiz">Quiz</a>
+        <a href="/tvstation/channels/<%= channelId %>/session/<%= sessionId %>/voting">Voting</a>
         <span>&rsaquo;</span>
-        <span class="active">Quiz Responses</span>
+        <span class="active">Voting Quiz Responses</span>
     </nav>
 
     <% if (error) { %>
@@ -35,7 +34,8 @@
                     1; %>
 
                     <div class="modern-list-container">
-                        <h2>Quiz Response Tracker</h2>
+
+                        <h2>Voting Response Tracker</h2>
 
                         <% if (invalidPage && totalPages> 0) { %>
                             <%- include('../components/404') %>
@@ -51,7 +51,6 @@
                                             <span>User</span>
                                             <span>Email</span>
                                             <span>Answer</span>
-                                            <span>Correct</span>
                                             <span>Jackpot Coins Deducted</span>
                                             <span>Digital Coins Deducted</span>
                                             <span>Time</span>
@@ -75,10 +74,6 @@
                                                         <%= resp.userEmail %>
                                                     </span>
                                                     <span>Option <%= resp.selectedOptionIndex + 1 %></span>
-                                                    <span
-                                                        class="<%= resp.isCorrect ? 'status-sticker success' : 'status-sticker error' %>">
-                                                        <%= resp.isCorrect ? "Yes" : "No" %>
-                                                    </span>
                                                     <span>
                                                         <%= resp.jackpotCoinDeducted ? (resp.jackpotCoinDeducted || 1)
                                                             : "No" %>
@@ -128,7 +123,7 @@
                                     </div>
 
                                     <% } else { %>
-                                        <p class="no-data-message">No quiz responses yet.</p>
+                                        <p class="no-data-message">No voting quiz responses yet.</p>
                                         <% } %>
                     </div>
 

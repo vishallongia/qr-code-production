@@ -22,6 +22,17 @@
         </div>
         <% } else { %>
             <div class="quiz-container">
+                <nav class="breadcrumbs">
+                    <a href="/tvstation/channels">Shows</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channel._id %>/sessions">Session Manager</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Apps</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting">Voting</a>
+                    <span>&rsaquo;</span>
+                    <span class="active">Add a Voting Question</span>
+                </nav>
                 <h2>Add a Voting Question</h2>
                 <form id="voting-form">
                     <div id="voting-questions-wrapper"></div>

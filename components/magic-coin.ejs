@@ -47,11 +47,8 @@
         <div class="transaction-list" id="transactionList">
             <% if (transactionHistory && transactionHistory.length> 0) { %>
                 <div class="transaction-item header">
-                    <span>Amount</span>
+                    <span>Coin</span>
                     <span>Type</span>
-                    <span>Initial Balance</span>
-                    <span>Coin Offered</span>
-                    <span>Final Balance</span>
                     <span>Date</span>
                 </div>
                 <% transactionHistory.forEach(tx=> {
@@ -62,41 +59,44 @@
                     let amountClass = '';
                     let typeText = '';
                     let typeBadgeClass = '';
+                    let coinSymbol = ''; // + or -
 
                     // Set classes and text based on status
                     if (tx.paymentStatus === 'completed') {
-                    amountClass = 'positive';
                     typeText = 'Added';
                     typeBadgeClass = 'badge-added';
-                    } else if (tx.paymentStatus === 'denied' || tx.paymentStatus === 'failed') {
-                    amountClass = 'negative';
+                    coinSymbol = '+';
+                    }
+
+                    else if (tx.paymentStatus === 'deducted') {
+                    typeText = 'Deducted';
+                    typeBadgeClass = 'badge-deducted';
+                    coinSymbol = '-';
+                    }
+                    else if (tx.paymentStatus === 'denied' || tx.paymentStatus === 'failed') {
                     typeText = 'Failed';
                     typeBadgeClass = 'badge-failed';
-                    } else {
-                    amountClass = '';
+                    }
+
+                    else {
                     typeText = 'Pending';
                     typeBadgeClass = 'badge-pending';
                     }
                     %>
                     <div class="transaction-item">
-                        <span class="transaction-amount <%= amountClass %>">
-                            <%= tx.amount %>
-                                <%= tx.currency %>
+                        <span
+                            class="transaction-balance <%= tx.type === 'added' ? 'balance-added' : 'balance-deducted' %>">
+                            <%= coinSymbol %>
+                                <%= tx.coinsOffered %>
+                                    <span class="coin-badge">🪙</span>
                         </span>
+
                         <span class="transaction-type">
                             <span class="type-badge <%= typeBadgeClass %>">
                                 <%= typeText %>
                             </span>
                         </span>
-                        <span class="transaction-balance">
-                            <%= tx.initialBalance %>
-                        </span>
-                        <span class="transaction-balance">
-                            <%= tx.coinsOffered %>
-                        </span>
-                        <span class="transaction-balance">
-                            <%= tx.totalBalance %>
-                        </span>
+
                         <span class="transaction-date">
                             <%= formattedDate %>
                         </span>
@@ -255,42 +255,43 @@
                     let amountClass = '';
                     let typeText = '';
                     let typeBadgeClass = '';
+                    let coinSymbol
 
                     // Match the backend logic for paymentStatus
                     if (tx.paymentStatus === 'completed') {
-                        amountClass = 'positive';
+                        amountClass = 'balance-added';
                         typeText = 'Added';
                         typeBadgeClass = 'badge-added';
+                        coinSymbol = '+';
                     } else if (tx.paymentStatus === 'denied' || tx.paymentStatus === 'failed') {
                         amountClass = 'negative';
                         typeText = 'Failed';
                         typeBadgeClass = 'badge-failed';
+
+                    }
+
+                    else if (tx.paymentStatus === 'deducted') {
+                        amountClass = 'balance-deducted';
+                        typeText = 'Deducted';
+                        coinSymbol = '-';
+                        typeBadgeClass = 'badge-deducted';
                     } else {
                         amountClass = '';
                         typeText = 'Pending';
                         typeBadgeClass = 'badge-pending';
                     }
-
                     item.innerHTML = `
-                    <span class="transaction-amount ${amountClass}">
-                        ${tx.amount} ${tx.currency}
-                    </span>
-                    <span class="transaction-type">
-                        <span class="type-badge ${typeBadgeClass}">${typeText}</span>
-                    </span>
-                    <span class="transaction-balance">
-                        ${tx.initialBalance}
-                    </span>
-                    <span class="transaction-balance">
-                        ${tx.coinsOffered}
-                    </span>
-                    <span class="transaction-balance">
-                        ${tx.totalBalance}
-                    </span>
-                    <span class="transaction-date">
-                        ${formattedDate}
-                    </span>
-                `;
+    <span class="transaction-balance ${amountClass}">
+        ${coinSymbol}${tx.coinsOffered}
+        <span class="coin-badge">🪙</span>
+    </span>
+    <span class="transaction-type">
+        <span class="type-badge ${typeBadgeClass}">${typeText}</span>
+    </span>     
+    <span class="transaction-date">
+        ${formattedDate}
+    </span>
+`;
 
                     document.getElementById("transactionList").appendChild(item);
                 });

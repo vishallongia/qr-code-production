@@ -42,7 +42,7 @@
                         </button> -->
                                 <!-- <button class="winner-btn btn">Draw Winner</button> -->
                                 <button class="logs-btn btn"
-                                    onclick="location.href='/tvstation/channel/<%= channel._id %>/session/<%= sessionId %>/quiz-response-tracker'">Track
+                                    onclick="location.href='/tvstation/channel/<%= channel._id %>/session/<%= sessionId %>/voting-response-tracker'">Track
                                     Logs</button>
                     </div>
                 </div>
@@ -236,14 +236,20 @@
                                     <!-- Download Button -->
                                     <!-- <button class="type-btn" onclick="handleMagicCodeUpdate('<%= channel._id %>')">Update</button> -->
 
-                                    <button class="type-btn btn"
-                                        onclick="downloadMagicCode('<%= channel._id %>', '<%= sessionId %>', true)"
-                                        style="margin-top: 10px;">Update</button>
+                                    <div class="app-actions">
+                                        <select id="languageSwitcherApp" class="language-selector-select active"
+                                            style="width: 100%; max-width: 280px;">
+                                            <option value="en">English</option>
+                                            <option value="de">Deutsch (German)</option>
+                                            <option value="hu">Hungarian</option>
+                                            <option value="ro">Romanian</option>
+                                        </select>
+                                        <button class="type-btn btn"
+                                            onclick="downloadMagicCode('<%= channel._id %>', '<%= sessionId %>', true)">Update</button>
 
-                                    <button class="type-btn btn"
-                                        onclick="downloadMagicCode('<%= channel._id %>', '<%= sessionId %>')"
-                                        style="margin-top: 10px;">Download</button>
-
+                                        <button class="type-btn btn"
+                                            onclick="downloadMagicCode('<%= channel._id %>', '<%= sessionId %>')">Download</button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -461,6 +467,7 @@
         async function downloadMagicCode(channelId, sessionId, isUpdate = false) {
             const fgHex = document.getElementById("selectedFgHex").value;
             const bgHex = document.getElementById("selectedBgHex").value;
+            const lang = document.getElementById("languageSwitcherApp").value;
 
             const loader = document.getElementById("loader");
             loader.style.display = "flex"; // show loader
@@ -470,7 +477,7 @@
                 const res = await fetch(`/tvstation/channel/${channelId}/session/${sessionId}/qr`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ qrDotColor: fgHex, backgroundColor: bgHex, type: "voting" }),
+                    body: JSON.stringify({ qrDotColor: fgHex, backgroundColor: bgHex, type: "voting", lang }),
                 });
 
 
@@ -479,11 +486,6 @@
                     showToast(data.message || "Failed to fetch QR data", "error");
                     return;
                 }
-
-
-
-
-
 
                 const qrData = data.qr;
                 const qrUrl = qrData.redirectUrl;
@@ -567,6 +569,30 @@
 
                 const qrData = data.data.qr;
                 const qrUrl = qrData.redirectUrl;
+                const lang = new URL(qrData.url).searchParams.get("lang") || "en";
+                document.getElementById("languageSwitcherApp").value = lang
+
+                // ✅ Update hidden inputs with saved values
+                const fgHexInput = document.getElementById("selectedFgHex");
+                const bgHexInput = document.getElementById("selectedBgHex");
+                fgHexInput.value = qrData.qrDotColor || "#000000";
+                bgHexInput.value = qrData.backgroundColor || "#FFFFFF";
+
+                // ✅ Highlight selected colors in the grids
+                function highlightSelected(container, hex) {
+                    container.querySelectorAll(".color-option").forEach(div => {
+                        div.classList.remove("active");
+                        const bg = div.dataset.color === "transparent"
+                            ? "transparent"
+                            : rgbToHex(div.style.backgroundColor);
+                        if (bg.toUpperCase() === hex.toUpperCase()) {
+                            div.classList.add("active");
+                        }
+                    });
+                }
+
+                highlightSelected(document.getElementById("foreground-color-grid-update"), fgHexInput.value);
+                highlightSelected(document.getElementById("background-color-grid-update"), bgHexInput.value);
 
                 const qrCode = new QRCodeStyling({
                     width: 3000,

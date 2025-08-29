@@ -206,7 +206,7 @@
  .transaction-item {
      display: grid;
      /* Updated grid to have 6 columns */
-     grid-template-columns: minmax(100px, 1fr) minmax(80px, 0.8fr) repeat(2, minmax(120px, 1fr)) minmax(120px, 1fr) minmax(140px, 1.2fr);
+     grid-template-columns: repeat(3, minmax(120px, 1fr));
      gap: 1rem;
      padding: 0.75rem 1rem;
      margin-bottom: 1rem;
@@ -309,9 +309,96 @@
      color: #92400e;
  }
 
+ .badge-deducted {
+     background-color: #fee2e2;
+     color: #b91c1c;
+     padding: 0.25rem 0.6rem;
+     /* a little extra space for short word */
+     text-transform: uppercase;
+     border-radius: 50px;
+     font-weight: 600;
+     font-size: 0.8rem;
+ }
+
+ .coin-badge {
+     display: inline-block;
+     margin-left: 2px;
+     /* golden color */
+     color: #fff;
+     font-size: 0.7rem;
+     width: 16px;
+     height: 16px;
+     text-align: center;
+     line-height: 16px;
+     border-radius: 50%;
+     vertical-align: middle;
+ }
+
+
+ .transaction-balance {
+     display: flex;
+     align-items: center;
+     /* vertically center number + coin */
+     justify-content: center;
+     /* center horizontally if needed */
+     gap: 4px;
+     /* spacing between number and coin */
+ }
+
+
+ .transaction-balance {
+     font-weight: 600;
+     display: flex;
+     align-items: center;
+     gap: 4px;
+ }
+
+ .coin-badge {
+     font-size: 14px;
+ }
+
+ .balance-added {
+     color: #16a34a;
+     /* green */
+ }
+
+ .balance-deducted {
+     color: #dc2626;
+     /* red */
+ }
+
  /* Update the transaction-type span to center the badge correctly */
  .transaction-type {
      display: flex;
      justify-content: center;
      align-items: center;
+ }
+
+
+ /* Tablet view (≤ 768px) */
+ @media (max-width: 768px) {
+     .transaction-item {
+         grid-template-columns: repeat(3, minmax(80px, 1fr));
+     }
+
+     .transaction-bar {
+         padding: 1rem 1rem
+     }
+ }
+
+ /* Mobile view (≤ 480px) */
+ @media (max-width: 480px) {
+     .transaction-item {
+         grid-template-columns: repeat(3, minmax(80px, 1fr));
+     }
+
+     /* Make list horizontally scrollable if still too tight */
+     .transaction-list {
+         overflow-x: auto;
+         -webkit-overflow-scrolling: touch;
+     }
+
+     .transaction-bar {
+         padding: 1rem 1rem
+     }
  }

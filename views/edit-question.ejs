@@ -21,6 +21,17 @@
         </div>
         <% } else { %>
             <div class="quiz-container">
+                <nav class="breadcrumbs">
+                    <a href="/tvstation/channels">Shows</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channel._id %>/sessions">Session Manager</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Apps</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/quiz">Quiz</a>
+                    <span>&rsaquo;</span>
+                    <span class="active">Edit Quiz Question</span>
+                </nav>
                 <h2>Edit Quiz Question</h2>
                 <form id="edit-question-form" enctype="multipart/form-data">
                     <input type="hidden" name="channelId" value="<%= channel._id %>" />
