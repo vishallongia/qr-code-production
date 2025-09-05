@@ -6,6 +6,7 @@ const Payment = require("../models/Payment");
 const MagicCoinPlan = require("../models/MagicCoinPlan");
 const User = require("../models/User");
 const QuizQuestionResponse = require("../models/QuizQuestionResponse");
+const VoteQuestionResponse = require("../models/VoteQuestionResponse");
 const {
   encryptPassword,
   decryptPassword,
@@ -680,21 +681,18 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
     const limit = parseInt(req.query.limit) || 5; // default 5
     const skip = parseInt(req.query.skip) || 0; // default 0
 
-    // 1️⃣ Fetch all active MagicCoinPlans (same as before)
+    // 1️⃣ Fetch all active MagicCoinPlans
     const plans = await MagicCoinPlan.find({ active: true }).sort({ price: 1 });
     const encryptedPlans = plans.map((plan) => ({
       ...plan.toObject(),
       encryptedId: encryptPassword(plan._id.toString()),
     }));
 
-    // 2️⃣ Aggregation pipeline for transactions + quiz coin deductions
+    // 2️⃣ Aggregation pipeline for transactions + quiz/vote coin deductions
     const pipeline = [
-      // --- Wallet recharge transactions ---
+      // Wallet recharge transactions
       {
-        $match: {
-          user_id: req.user._id,
-          type: "coin",
-        },
+        $match: { user_id: req.user._id, type: "coin" },
       },
       {
         $lookup: {
@@ -708,13 +706,13 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
       {
         $project: {
           _id: 0,
-          paymentStatus: "$paymentStatus", // keep original status
+          paymentStatus: "$paymentStatus",
           coinsOffered: "$planDetails.coinsOffered",
           createdAt: "$paymentDate",
         },
       },
 
-      // --- Merge quiz coin deductions ---
+      // Merge quiz coin deductions
       {
         $unionWith: {
           coll: "quizquestionresponses",
@@ -723,45 +721,60 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
             {
               $project: {
                 _id: 0,
-                paymentStatus: { $literal: "deducted" }, // always success
+                paymentStatus: { $literal: "deducted" },
                 coinsOffered: {
                   $add: ["$jackpotCoinDeducted", "$digitalCoinDeducted"],
                 },
                 createdAt: "$createdAt",
               },
             },
-            {
-              $match: {
-                coinsOffered: { $gt: 0 }, // ✅ filter here
-              },
-            },
+            { $match: { coinsOffered: { $gt: 0 } } },
           ],
         },
       },
 
-      // --- Sort all transactions by date descending ---
-      { $sort: { createdAt: -1 } },
+      // Merge voting coin deductions
+      {
+        $unionWith: {
+          coll: "votequestionresponses",
+          pipeline: [
+            { $match: { userId: req.user._id } },
+            {
+              $project: {
+                _id: 0,
+                paymentStatus: { $literal: "deducted" },
+                coinsOffered: {
+                  $add: ["$jackpotCoinDeducted", "$digitalCoinDeducted"],
+                },
+                createdAt: "$createdAt",
+              },
+            },
+            { $match: { coinsOffered: { $gt: 0 } } },
+          ],
+        },
+      },
 
-      // --- Pagination ---
-      { $skip: skip },
-      { $limit: limit },
+      // Sort by date descending
+      { $sort: { createdAt: -1 } },
     ];
 
-    // 3️⃣ Execute the aggregation pipeline
-    const transactionHistory = await Payment.aggregate(pipeline);
+    // --- Execute the main aggregation with pagination ---
+    const transactionHistory = await Payment.aggregate([
+      ...pipeline,
+      { $skip: skip },
+      { $limit: limit },
+    ]);
 
-    // 4️⃣ Get total count for hasMore pagination logic
-    // Count both wallet + quiz deductions
-    const totalWallet = await Payment.countDocuments({
-      user_id: req.user._id,
-      type: "coin",
-    });
-    const totalQuiz = await QuizQuestionResponse.countDocuments({
-      userId: req.user._id,
-    });
-    const totalTransactions = totalWallet + totalQuiz;
+    // --- Get total count of filtered transactions for hasMore ---
+    const totalTransactionsAgg = await Payment.aggregate([
+      ...pipeline,
+      { $count: "total" },
+    ]);
+    const totalTransactions = totalTransactionsAgg[0]
+      ? totalTransactionsAgg[0].total
+      : 0;
 
-    // 5️⃣ Respond with JSON or render the page
+    // --- Respond ---
     if (req.xhr || req.headers.accept.indexOf("json") > -1) {
       return res.json({
         plans: encryptedPlans,

@@ -1,5 +1,16 @@
 const mongoose = require("mongoose");
 
+const tvStationRulesSchema = new mongoose.Schema(
+  {
+    isApprovedByAdminToDrawWinner: {
+      type: Boolean,
+      default: false,
+    },
+    // Add more TV station-specific flags here
+  },
+  { _id: false } // don’t create _id for nested object
+);
+
 // Create a new schema for users
 const userSchema = new mongoose.Schema(
   {
@@ -90,6 +101,12 @@ const userSchema = new mongoose.Schema(
     isTvStation: {
       type: Boolean,
       default: false,
+    },
+    tvStationRules: {
+      type: tvStationRulesSchema,
+      default: function () {
+        return this.isTvStation ? {} : undefined;
+      },
     },
   },
   {

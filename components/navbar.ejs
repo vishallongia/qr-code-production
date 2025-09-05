@@ -70,10 +70,108 @@
                 width: 100%;
             }
         }
+
+        /* Fullscreen Loader Styling */
+        .fullscreen-loader {
+            display: none;
+            /* Initially hidden */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            /* Semi-transparent background */
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* Spinning Loader */
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #ccc;
+            border-top: 5px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        /* Loader Animation */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Animated "Please wait..." text */
+        .animated-text {
+            display: flex;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+
+        .animated-text span {
+            animation: blink 1.5s infinite;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* Create a blinking effect for each dot */
+        .animated-text span:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .animated-text span:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .animated-text span:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
 <body>
+    <div class="fullscreen-loader">
+        <div class="loader"></div>
+        <p class="animated-text">Please wait<span>.</span><span>.</span><span>.</span></p>
+    </div>
     <nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary position-relative">
         <div class="container-fluid">
             <a class="navbar-brand" href="/admindashboard">Admin</a>
@@ -115,6 +213,20 @@
                         <button class="btn custom-btn" onclick="return handleLogout(event)">
                             <i class="fa-solid fa-right-from-bracket"></i> Log Out
                         </button>
+                        <!-- Request Button with Badge -->
+                        <button type="button" class="btn custom-btn position-relative" id="requestBtn"
+                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Requests"
+                            onclick="window.location.href='/admindashboard/tvstation/requests'">
+
+                            <i class="fa-solid fa-clipboard-list"></i>
+
+                            <span id="requestBadge"
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                style="display: none;">
+                                0
+                            </span>
+                        </button>
+
                     </div>
                     <!-- Search Icon -->
                     <div class="search-bar-main-div">

@@ -28,7 +28,7 @@
             </div>
             <% } else { %>
                 <div class="quiz-admin-header">
-                    <h1>Quiz Manager</h1>
+                    <h1>Voting Quiz Manager</h1>
                     <div class="quiz-admin-controls">
                         <% if (!voteQuestions|| voteQuestions.length===0) { %>
                             <button
@@ -40,7 +40,9 @@
                                 <!-- <button id="startChannelBtn" class="start-btn btn">
                             <%= channel.isRunning && channel.typeOfRunning==="quiz" ? "Stop" : "Start" %>
                         </button> -->
-                                <!-- <button class="winner-btn btn">Draw Winner</button> -->
+                                <button class="winner-btn btn"
+                                    onclick="window.open('/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting/drawwinner', '_blank')">Draw
+                                    Winner</button>
                                 <button class="logs-btn btn"
                                     onclick="location.href='/tvstation/channel/<%= channel._id %>/session/<%= sessionId %>/voting-response-tracker'">Track
                                     Logs</button>
@@ -56,13 +58,23 @@
                                 </div>
                                 <div class="quiz-admin-info">
                                     <span>
-                                        <strong>Correct Answer:</strong>
-                                        <%= String.fromCharCode(65 + q.correctAnswerIndex) %>
-                                    </span>
-                                    <span><strong>Magic Coins Deducted:</strong>
+                                        <strong>Magic Coins Deducted:</strong>
                                         <%= q.magicCoinDeducted || 0 %>
                                     </span>
+
+                                    <% if (q.options && q.options.length) { %>
+                                        <% q.options.forEach(function(opt, idx) { %>
+                                            <span>
+                                                <strong>Option <%= idx + 1 %>:</strong>
+                                                <%= opt.text %> - <%= opt.votes %> votes (<%= opt.percentage %>%)
+                                            </span>
+                                            <% }) %>
+                                                <% } %>
                                 </div>
+
+
+
+
                                 <div class="quiz-admin-actions">
                                     <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/edit-voting-question/<%= q._id %>"
                                         target="_blank">

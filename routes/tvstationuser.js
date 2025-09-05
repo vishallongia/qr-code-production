@@ -10,6 +10,7 @@ const {
 const QuizQuestion = require("../models/QuizQuestion");
 const VoteQuestion = require("../models/VoteQuestion");
 const Channel = require("../models/Channel");
+const WinnerRequest = require("../models/WinnerRequest"); // adjust path
 const User = require("../models/User");
 const QuizQuestionResponse = require("../models/QuizQuestionResponse");
 const VoteQuestionResponse = require("../models/VoteQuestionResponse");
@@ -18,6 +19,7 @@ const Session = require("../models/Session"); // adjust path if needed
 const BASE_URL = process.env.FRONTEND_URL; // update if needed
 const { addUploadPath } = require("../utils/selectUploadDestination");
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
+const SendEmail = require("../Messages/SendEmail");
 
 // GET /channels - paginated list
 router.get("/channels", async (req, res) => {
@@ -1522,11 +1524,13 @@ router.post("/quiz-response", async (req, res) => {
         name: question.jackpotRewardName,
         image: question.jackpotRewardImage,
         description: question.jackpotRewardDescription,
+        link: question.jackpotRewardLink,
       },
       digitalReward: {
         name: question.digitalRewardName,
         image: question.digitalRewardImage,
         description: question.digitalRewardDescription,
+        link: question.digitalRewardLink,
       },
     });
   } catch (err) {
@@ -1534,6 +1538,405 @@ router.post("/quiz-response", async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+// Draw Winner Route
+router.get(
+  "/channels/:channelId/session/:sessionId/quiz/drawwinner",
+  async (req, res) => {
+    const { channelId, sessionId } = req.params;
+
+    // Validate ObjectIds
+    if (
+      !mongoose.Types.ObjectId.isValid(channelId) ||
+      !mongoose.Types.ObjectId.isValid(sessionId)
+    ) {
+      return res.render("draw-winner", {
+        channel: null,
+        error: "Invalid Channel or Session ID",
+        user: req.user,
+      });
+    }
+
+    try {
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+
+      if (!channel || !session) {
+        return res.render("draw-winner", {
+          channel: null,
+          error: "Channel or session not found",
+          user: req.user,
+        });
+      }
+
+      // Check ownership
+      if (!channel.createdBy.equals(req.user._id)) {
+        return res.render("draw-winner", {
+          channel: channel,
+          error: "Access denied",
+          user: req.user,
+          sessionId,
+        });
+      }
+      const now = new Date();
+
+      // Jackpot Participants
+      const jackpotParticipants = await QuizQuestionResponse.aggregate([
+        {
+          $match: {
+            $and: [
+              { channelId: channel._id },
+              { sessionId: session._id },
+              {
+                $or: [
+                  { isJackpotWinnerDeclared: false },
+                  { isJackpotWinnerDeclared: { $exists: false } },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userInfo",
+          },
+        },
+        { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: false } },
+        {
+          $match: {
+            $or: [
+              {
+                $expr: {
+                  $and: [
+                    { $eq: ["$userInfo.subscription.isVip", true] },
+                    { $gte: ["$userInfo.subscription.validTill", now] },
+                  ],
+                },
+              },
+              { jackpotCoinDeducted: { $gt: 0 } },
+            ],
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            user: "$userInfo.fullName",
+            coins: "$jackpotCoinDeducted",
+            isVip: "$userInfo.subscription.isVip",
+            vipValidTill: "$userInfo.subscription.validTill",
+          },
+        },
+      ]);
+
+      // Digital Reward Participants
+      const digitalRewardParticipants = await QuizQuestionResponse.aggregate([
+        {
+          $match: {
+            $and: [
+              { channelId: channel._id },
+              { sessionId: session._id },
+              {
+                $or: [
+                  { isDigitalWinnerDeclared: false },
+                  { isDigitalWinnerDeclared: { $exists: false } },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userInfo",
+          },
+        },
+        { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: false } },
+        {
+          $match: {
+            $or: [
+              {
+                $expr: {
+                  $and: [
+                    { $eq: ["$userInfo.subscription.isVip", true] },
+                    { $gte: ["$userInfo.subscription.validTill", now] },
+                  ],
+                },
+              },
+              { digitalCoinDeducted: { $gt: 0 } },
+            ],
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            user: "$userInfo.fullName",
+            coins: "$digitalCoinDeducted",
+            isVip: "$userInfo.subscription.isVip",
+            vipValidTill: "$userInfo.subscription.validTill",
+          },
+        },
+      ]);
+      return res.render("draw-winner", {
+        channel,
+        error: null,
+        user: req.user,
+        sessionId,
+        jackpotParticipants,
+        digitalRewardParticipants,
+      });
+    } catch (err) {
+      console.error("Error loading draw winner page:", err);
+      return res.render("draw-winner", {
+        channel: null,
+        error: "Server error. Please try again later.",
+        activeSection: "channel-quiz",
+        user: req.user,
+      });
+    }
+  }
+);
+
+// POST /channels/:channelId/session/:sessionId/quiz/draw
+
+router.post(
+  "/channels/:channelId/session/:sessionId/quiz/draw",
+  async (req, res) => {
+    const { channelId, sessionId } = req.params;
+    const { type, mode } = req.body; // type = "jackpot" | "digital"
+
+    if (type !== "quiz") {
+      return res.status(400).json({ message: "Invalid type", type: "error" });
+    }
+
+    if (!["jackpot", "digital"].includes(mode)) {
+      return res.status(400).json({
+        message: "Invalid draw type",
+        type: "error",
+      });
+    }
+
+    if (
+      !mongoose.Types.ObjectId.isValid(channelId) ||
+      !mongoose.Types.ObjectId.isValid(sessionId)
+    ) {
+      return res.status(400).json({
+        message: "Invalid channel or session ID",
+        type: "error",
+      });
+    }
+
+    try {
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+
+      if (!channel || !session) {
+        return res.status(404).json({
+          message: "Channel or session not found",
+          type: "error",
+        });
+      }
+
+      // Check ownership
+      if (!channel.createdBy.equals(req.user._id)) {
+        return res.status(403).json({
+          message: "Access denied",
+          type: "error",
+        });
+      }
+
+      // Choose participants based on type
+      const matchCondition =
+        mode === "jackpot"
+          ? { jackpotCoinDeducted: { $gt: 0 } }
+          : { digitalCoinDeducted: { $gt: 0 } };
+
+      const coinField =
+        mode === "jackpot" ? "jackpotCoinDeducted" : "digitalCoinDeducted";
+
+      // Get participants
+      const participants = await QuizQuestionResponse.aggregate([
+        {
+          $match: {
+            channelId: channel._id,
+            sessionId: session._id,
+            ...matchCondition,
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userInfo",
+          },
+        },
+        { $unwind: "$userInfo" },
+        {
+          $project: {
+            _id: 1,
+            userId: "$userId",
+            user: "$userInfo.fullName",
+            questionId: 1, // <-- include questionId from response
+            coins: `$${coinField}`,
+          },
+        },
+      ]);
+
+      if (!participants.length) {
+        return res.status(404).json({
+          message: "No participants found",
+          type: "error",
+        });
+      }
+
+      // Pick a random participant
+      const winner =
+        participants[Math.floor(Math.random() * participants.length)];
+
+      // Use the channel owner’s rules (req.user already loaded by auth middleware)
+      const isApprovedByUser =
+        req.user.isTvStation &&
+        req.user.tvStationRules?.isApprovedByAdminToDrawWinner === false
+          ? false
+          : true;
+      const winnerDoc = await WinnerRequest.create({
+        sessionId: session._id,
+        questionId: winner.questionId, // add questionId if needed
+        type,
+        mode: mode === "jackpot" ? "jackpot" : "digital",
+        userId: winner.userId,
+        isApprovedByUser,
+        isApprovedByAdmin: false,
+        isActive: true,
+      });
+
+      // Fetch winner user doc
+      const user = await User.findById(winner.userId);
+      const sender = {
+        email: "textildruckschweiz.com@gmail.com",
+        name: "Magic Code - Plan Update",
+      };
+
+      if (isApprovedByUser) {
+        // Handle Digital Winner
+        if (mode === "digital") {
+          const now = new Date();
+          const validTill = new Date();
+          validTill.setMonth(validTill.getMonth() + 3);
+
+          user.subscription = {
+            isVip: true,
+            qrLimit: 5,
+            subscriptionCreatedAt: now,
+            validTill: validTill,
+          };
+          await user.save();
+
+          const subject =
+            "🎉 Congratulations! Your Digital Reward is Activated";
+          const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Digital Reward Activated</title>
+          </head>
+          <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+            <div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:8px;">
+              <h2 style="color:#333;">Congratulations ${
+                user.fullName || "User"
+              }!</h2>
+              <p>Your VIP subscription has been activated as part of your <b>Digital Reward</b>.</p>
+              <b>Valid Till:</b> ${validTill.toDateString()}</p>
+              <p>Enjoy your exclusive benefits 🎁</p>
+              <div style="margin-top:20px;font-size:12px;color:#777;">© 2025 Magic Code | All rights reserved.</div>
+            </div>
+          </body>
+          </html>
+        `;
+
+          SendEmail(sender, user.email, subject, htmlContent);
+          await QuizQuestionResponseQuestionResponse.updateMany(
+            {
+              sessionId: session._id,
+              channelId: channel._id,
+              $or: [
+                { isDigitalWinnerDeclared: false }, // exists and is false
+                { isDigitalWinnerDeclared: { $exists: false } }, // field not present
+              ],
+            },
+            { $set: { isDigitalWinnerDeclared: true } }
+          );
+        }
+
+        // Handle Jackpot Winner
+        if (mode === "jackpot") {
+          const subject = "🎉 Congratulations! You are our Jackpot Winner!";
+          const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="UTF-8"><title>Jackpot Winner</title></head>
+          <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+            <div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:8px;">
+              <h2 style="color:#333;">Hi ${user.fullName || "User"},</h2>
+              <p>We are excited to announce that you have won the <b>Jackpot Reward</b> 🎊</p>
+              <p>Our team will contact you soon with further details.</p>
+              <div style="margin-top:20px;font-size:12px;color:#777;">© 2025 Magic Code | All rights reserved.</div>
+            </div>
+          </body>
+          </html>
+        `;
+
+          SendEmail(sender, user.email, subject, htmlContent);
+          await QuizQuestionResponse.updateMany(
+            {
+              sessionId: session._id,
+              channelId: channel._id,
+              $or: [
+                { isJackpotWinnerDeclared: false }, // exists and is false
+                { isJackpotWinnerDeclared: { $exists: false } }, // field not present
+              ],
+            },
+            { $set: { isJackpotWinnerDeclared: true } }
+          );
+        }
+      }
+
+      const message = isApprovedByUser
+        ? `${
+            type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+          } winner selected successfully.`
+        : `${
+            type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+          } winner request forwarded to admin.`;
+      return res.status(200).json({
+        message,
+        type: "success",
+        data: {
+          winner: {
+            user: winner.user,
+            coins: winner.coins,
+            winnerId: winnerDoc._id,
+          },
+          type: type,
+          sessionId: session._id,
+          channelId: channel._id,
+        },
+      });
+    } catch (err) {
+      console.error("Error drawing winner:", err);
+      return res.status(500).json({
+        message: "Failed to draw winner",
+        type: "error",
+      });
+    }
+  }
+);
 
 router.get(
   "/channel/:channelId/session/:sessionId/quiz-response-tracker",
@@ -2117,14 +2520,32 @@ router.get(
       const skip = parseInt(req.query.skip) || 0;
       const limit = parseInt(req.query.limit) || 5;
 
-      const voteQuestions = await VoteQuestion.find({
-        channelId,
-        sessionId,
-      })
+      let voteQuestions = await VoteQuestion.find({ channelId, sessionId })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean();
+
+      // Calculate vote percentages for each question
+      for (let q of voteQuestions) {
+        const stats = await VoteQuestionResponse.aggregate([
+          { $match: { questionId: q._id } },
+          { $group: { _id: "$selectedOptionIndex", votes: { $sum: 1 } } },
+        ]);
+
+        const totalVotes = stats.reduce((acc, s) => acc + s.votes, 0) || 1;
+
+        const votesMap = {};
+        stats.forEach((s) => {
+          votesMap[s._id] = s.votes;
+        });
+
+        q.options = q.options.map((opt, idx) => {
+          const count = votesMap[idx] || 0;
+          const percentage = ((count / totalVotes) * 100).toFixed(1);
+          return { ...opt, votes: count, percentage };
+        });
+      }
 
       const total = await VoteQuestion.countDocuments({ channelId, sessionId });
       const hasMore = skip + voteQuestions.length < total;
@@ -3204,11 +3625,13 @@ router.post("/voting-response", async (req, res) => {
         name: question.jackpotRewardName,
         image: question.jackpotRewardImage,
         description: question.jackpotRewardDescription,
+        link: question.jackpotRewardLink,
       },
       digitalReward: {
         name: question.digitalRewardName,
         image: question.digitalRewardImage,
         description: question.digitalRewardDescription,
+        link: question.digitalRewardLink,
       },
       selectedOptionIndex,
     });
@@ -3217,6 +3640,409 @@ router.post("/voting-response", async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+// Draw Winner Route for Voting
+router.get(
+  "/channels/:channelId/session/:sessionId/voting/drawwinner",
+  async (req, res) => {
+    const { channelId, sessionId } = req.params;
+
+    // Validate ObjectIds
+    if (
+      !mongoose.Types.ObjectId.isValid(channelId) ||
+      !mongoose.Types.ObjectId.isValid(sessionId)
+    ) {
+      return res.render("draw-winner-voting", {
+        channel: null,
+        error: "Invalid Channel or Session ID",
+        user: req.user,
+      });
+    }
+
+    try {
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+
+      if (!channel || !session) {
+        return res.render("draw-winner-voting", {
+          channel: null,
+          error: "Channel or session not found",
+          user: req.user,
+        });
+      }
+
+      // Check ownership
+      if (!channel.createdBy.equals(req.user._id)) {
+        return res.render("draw-winner-voting", {
+          channel: channel,
+          error: "Access denied",
+          user: req.user,
+          sessionId,
+        });
+      }
+
+      const now = new Date();
+
+      // Jackpot Participants (Voting)
+      const jackpotParticipants = await VoteQuestionResponse.aggregate([
+        {
+          $match: {
+            $and: [
+              { channelId: channel._id },
+              { sessionId: session._id },
+              {
+                $or: [
+                  { isJackpotWinnerDeclared: false },
+                  { isJackpotWinnerDeclared: { $exists: false } },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userInfo",
+          },
+        },
+        { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: false } },
+        {
+          $match: {
+            $or: [
+              {
+                $expr: {
+                  $and: [
+                    { $eq: ["$userInfo.subscription.isVip", true] },
+                    { $gte: ["$userInfo.subscription.validTill", now] },
+                  ],
+                },
+              },
+              { jackpotCoinDeducted: { $gt: 0 } },
+            ],
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            user: "$userInfo.fullName",
+            coins: "$jackpotCoinDeducted",
+            isVip: "$userInfo.subscription.isVip",
+            vipValidTill: "$userInfo.subscription.validTill",
+          },
+        },
+      ]);
+
+      // Digital Reward Participants (Voting)
+      const digitalRewardParticipants = await VoteQuestionResponse.aggregate([
+        {
+          $match: {
+            $and: [
+              { channelId: channel._id },
+              { sessionId: session._id },
+              {
+                $or: [
+                  { isDigitalWinnerDeclared: false },
+                  { isDigitalWinnerDeclared: { $exists: false } },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userInfo",
+          },
+        },
+        { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: false } },
+        {
+          $match: {
+            $or: [
+              {
+                $expr: {
+                  $and: [
+                    { $eq: ["$userInfo.subscription.isVip", true] },
+                    { $gte: ["$userInfo.subscription.validTill", now] },
+                  ],
+                },
+              },
+              { digitalCoinDeducted: { $gt: 0 } },
+            ],
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            user: "$userInfo.fullName",
+            coins: "$digitalCoinDeducted",
+            isVip: "$userInfo.subscription.isVip",
+            vipValidTill: "$userInfo.subscription.validTill",
+          },
+        },
+      ]);
+
+      return res.render("draw-winner-voting", {
+        channel,
+        error: null,
+        user: req.user,
+        sessionId,
+        jackpotParticipants,
+        digitalRewardParticipants,
+      });
+    } catch (err) {
+      console.error("Error loading voting draw winner page:", err);
+      return res.render("draw-winner-voting", {
+        channel: null,
+        error: "Server error. Please try again later.",
+        activeSection: "channel-voting",
+        user: req.user,
+      });
+    }
+  }
+);
+
+// Draw Winner Route for Voting
+router.post(
+  "/channels/:channelId/session/:sessionId/voting/draw",
+  async (req, res) => {
+    const { channelId, sessionId } = req.params;
+    const { type, mode } = req.body; // type = "voting" | mode = "jackpot" | "digital"
+
+    if (type !== "voting") {
+      return res.status(400).json({ message: "Invalid type", type: "error" });
+    }
+
+    if (!["jackpot", "digital"].includes(mode)) {
+      return res.status(400).json({
+        message: "Invalid draw type",
+        type: "error",
+      });
+    }
+
+    if (
+      !mongoose.Types.ObjectId.isValid(channelId) ||
+      !mongoose.Types.ObjectId.isValid(sessionId)
+    ) {
+      return res.status(400).json({
+        message: "Invalid channel or session ID",
+        type: "error",
+      });
+    }
+
+    try {
+      const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+
+      if (!channel || !session) {
+        return res.status(404).json({
+          message: "Channel or session not found",
+          type: "error",
+        });
+      }
+
+      // Check ownership
+      if (!channel.createdBy.equals(req.user._id)) {
+        return res.status(403).json({
+          message: "Access denied",
+          type: "error",
+        });
+      }
+
+      // Choose participants based on mode
+      const matchCondition =
+        mode === "jackpot"
+          ? { jackpotCoinDeducted: { $gt: 0 } }
+          : { digitalCoinDeducted: { $gt: 0 } };
+
+      const coinField =
+        mode === "jackpot" ? "jackpotCoinDeducted" : "digitalCoinDeducted";
+
+      // Get participants
+      const participants = await VoteQuestionResponse.aggregate([
+        {
+          $match: {
+            channelId: channel._id,
+            sessionId: session._id,
+            ...matchCondition,
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userInfo",
+          },
+        },
+        { $unwind: "$userInfo" },
+        {
+          $project: {
+            _id: 1,
+            userId: "$userId",
+            user: "$userInfo.fullName",
+            questionId: 1, // <-- include questionId from response
+            coins: `$${coinField}`,
+          },
+        },
+      ]);
+
+      if (!participants.length) {
+        return res.status(404).json({
+          message: "No participants found",
+          type: "error",
+        });
+      }
+
+      // Pick a random participant
+      const winner =
+        participants[Math.floor(Math.random() * participants.length)];
+
+      // Apply approval rules
+      const isApprovedByUser =
+        req.user.isTvStation &&
+        req.user.tvStationRules?.isApprovedByAdminToDrawWinner === false
+          ? false
+          : true;
+
+      // Save winner request
+      const winnerDoc = await WinnerRequest.create({
+        sessionId: session._id,
+        questionId: winner.questionId,
+        type, // "voting"
+        mode: mode === "jackpot" ? "jackpot" : "digital",
+        userId: winner.userId,
+        isApprovedByUser,
+        isApprovedByAdmin: false,
+        isActive: true,
+      });
+
+      // Fetch winner user doc
+      const user = await User.findById(winner.userId);
+      const sender = {
+        email: "textildruckschweiz.com@gmail.com",
+        name: "Magic Code - Plan Update",
+      };
+
+      if (isApprovedByUser) {
+        // Handle Digital Winner
+        if (mode === "digital") {
+          const now = new Date();
+          const validTill = new Date();
+          validTill.setMonth(validTill.getMonth() + 3);
+
+          user.subscription = {
+            isVip: true,
+            qrLimit: 5,
+            subscriptionCreatedAt: now,
+            validTill: validTill,
+          };
+          await user.save();
+
+          const subject =
+            "🎉 Congratulations! Your Digital Reward is Activated";
+          const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Digital Reward Activated</title>
+          </head>
+          <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+            <div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:8px;">
+              <h2 style="color:#333;">Congratulations ${
+                user.fullName || "User"
+              }!</h2>
+              <p>Your VIP subscription has been activated as part of your <b>Digital Reward</b>.</p>
+              <b>Valid Till:</b> ${validTill.toDateString()}</p>
+              <p>Enjoy your exclusive benefits 🎁</p>
+              <div style="margin-top:20px;font-size:12px;color:#777;">© 2025 Magic Code | All rights reserved.</div>
+            </div>
+          </body>
+          </html>
+        `;
+
+          SendEmail(sender, user.email, subject, htmlContent);
+          await VoteQuestionResponse.updateMany(
+            {
+              sessionId: session._id,
+              channelId: channel._id,
+              $or: [
+                { isDigitalWinnerDeclared: false }, // exists and is false
+                { isDigitalWinnerDeclared: { $exists: false } }, // field not present
+              ],
+            },
+            { $set: { isDigitalWinnerDeclared: true } }
+          );
+        }
+
+        // Handle Jackpot Winner
+        if (mode === "jackpot") {
+          const subject = "🎉 Congratulations! You are our Jackpot Winner!";
+          const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="UTF-8"><title>Jackpot Winner</title></head>
+          <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+            <div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:8px;">
+              <h2 style="color:#333;">Hi ${user.fullName || "User"},</h2>
+              <p>We are excited to announce that you have won the <b>Jackpot Reward</b> 🎊</p>
+              <p>Our team will contact you soon with further details.</p>
+              <div style="margin-top:20px;font-size:12px;color:#777;">© 2025 Magic Code | All rights reserved.</div>
+            </div>
+          </body>
+          </html>
+        `;
+
+          SendEmail(sender, user.email, subject, htmlContent);
+          await VoteQuestionResponse.updateMany(
+            {
+              sessionId: session._id,
+              channelId: channel._id,
+              $or: [
+                { isJackpotWinnerDeclared: false }, // exists and is false
+                { isJackpotWinnerDeclared: { $exists: false } }, // field not present
+              ],
+            },
+            { $set: { isJackpotWinnerDeclared: true } }
+          );
+        }
+      }
+
+      const message = isApprovedByUser
+        ? `${
+            type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+          } winner selected successfully.`
+        : `${
+            type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+          } winner request forwarded to admin.`;
+
+      return res.status(200).json({
+        message,
+        type: "success",
+        data: {
+          winner: {
+            user: winner.user,
+            coins: winner.coins,
+            winnerId: winnerDoc._id,
+          },
+          type: type,
+          sessionId: session._id,
+          channelId: channel._id,
+        },
+      });
+    } catch (err) {
+      console.error("Error drawing voting winner:", err);
+      return res.status(500).json({
+        message: "Failed to draw winner",
+        type: "error",
+      });
+    }
+  }
+);
 
 // Voting Api End Here
 

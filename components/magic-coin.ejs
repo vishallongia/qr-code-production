@@ -85,7 +85,7 @@
                     %>
                     <div class="transaction-item">
                         <span
-                            class="transaction-balance <%= tx.type === 'added' ? 'balance-added' : 'balance-deducted' %>">
+                            class="transaction-balance <%= typeText === 'Added' ? 'balance-added' : 'balance-deducted' %>">
                             <%= coinSymbol %>
                                 <%= tx.coinsOffered %>
                                     <span class="coin-badge">🪙</span>
@@ -228,7 +228,8 @@
     });
 
 
-    let skipCount = <%= transactionHistory.length %>;
+    let skipCount = <%= transactionHistory.length %>; // can keep if first batch is correct
+
 
     const loadMoreBtn = document.getElementById("loadMoreBtn");
     if (loadMoreBtn) {

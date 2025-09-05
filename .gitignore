@@ -5,5 +5,11 @@
 /node_modules
 /package-lock.json
 public/table.html
-/uploads/
-/questions-image/
+# Ignore all files in uploads and questions-image
+/uploads/*
+/questions-image/*
+
+# But keep the .gitkeep placeholders
+!/uploads/.gitkeep
+!/questions-image/.gitkeep
+

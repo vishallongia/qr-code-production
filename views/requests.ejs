@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requests Management</title>
+    <link rel="stylesheet" href="/css/request.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        .no-request {
+            text-align: center;
+            color: #888;
+            margin: 20px 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+    <%- include('../components/navbar') %>
+
+        <div class="modern-list-container">
+            <h2 class="page-title">Requests Management</h2>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="pending">Pending Requests</button>
+                <button class="tab" data-tab="history">Request History</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+
+                <!-- Pending Requests -->
+                <div class="tab-pane active" id="pending">
+                    <div class="cards" id="pending-tab">
+                        <% if (pendingRequests.length> 0) { %>
+                            <% pendingRequests.forEach((req, index)=> { %>
+                                <div class="card" data-id="<%= req._id %>">
+                                    <p><strong>Type:</strong>
+                                        <%= req.type.charAt(0).toUpperCase() + req.type.slice(1) %>
+                                    </p>
+                                    <p><strong>Mode:</strong>
+                                        <%= req.mode.charAt(0).toUpperCase() + req.mode.slice(1) %>
+                                    </p>
+
+                                    <p><strong>User Requested By:</strong>
+                                        <%= req.user.fullName %>
+                                    </p>
+                                    <!-- <p><strong>Email Requested By:</strong>
+                                        <%= req.user.email %>
+                                    </p> -->
+
+                                    <div class="actions">
+                                        <button class="btn approve"><i class="fa-solid fa-check"></i> Approve</button>
+                                        <button class="btn decline"><i class="fa-solid fa-xmark"></i> Decline</button>
+                                    </div>
+                                </div>
+                                <% }) %>
+                                    <% } else { %>
+                                        <p class="no-request">No pending requests found.</p>
+                                        <% } %>
+                    </div>
+                    <% if (pendingRequests.length> 0 && totalCounts.pending > limit) { %>
+                        <div class="load-more">
+                            <button class="btn load" id="pending-loadMore">Load More</button>
+                        </div>
+                        <% } %>
+                </div>
+
+                <!-- Request History -->
+                <div class="tab-pane" id="history">
+                    <div class="cards" id="history-tab">
+                        <% if (historyRequests.length> 0) { %>
+                            <% historyRequests.forEach((req, index)=> { %>
+                                <div class="card">
+                                    <p><strong>Type:</strong>
+                                        <%= req.type.charAt(0).toUpperCase() + req.type.slice(1) %>
+                                    </p>
+                                    <p><strong>Mode:</strong>
+                                        <%= req.mode.charAt(0).toUpperCase() + req.mode.slice(1) %>
+                                    </p>
+
+                                    <p><strong>User Requested By:</strong>
+                                        <%= req.user.fullName %>
+                                    </p>
+                                    <!-- <p><strong>Email Requested By:</strong>
+                                        <%= req.user.email %>
+                                    </p> -->
+
+                                    <span
+                                        class="status <%= req.status.includes('Admin') ? 'status-admin' : req.status.includes('User') ? 'status-tv' : 'status-declined' %>">
+                                        <i
+                                            class="fa-solid <%= req.status === 'Declined' ? 'fa-xmark-circle' : req.status.includes('Admin') ? 'fa-check-circle' : 'fa-tv' %>"></i>
+                                        <%= req.status %>
+                                    </span>
+                                </div>
+                                <% }) %>
+                                    <% } else { %>
+                                        <p class="no-request">No requests found in history.</p>
+                                        <% } %>
+                    </div>
+                    <% if (historyRequests.length> 0 && totalCounts.history > limit) { %>
+                        <div class="load-more">
+                            <button class="btn load" id="history-loadMore">Load More</button>
+                        </div>
+                        <% } %>
+                </div>
+
+            </div>
+        </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+
+<script>
+    // --- Tab switcher ---
+    const tabs = document.querySelectorAll(".tab");
+    const panes = document.querySelectorAll(".tab-pane");
+
+    tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+            tabs.forEach(t => t.classList.remove("active"));
+            panes.forEach(p => p.classList.remove("active"));
+
+            tab.classList.add("active");
+            document.getElementById(tab.dataset.tab).classList.add("active");
+        });
+    });
+
+    // --- Load More functionality ---
+    const pageMap = { pending: 1, history: 1 };
+    const limit = <%= limit %>;
+
+    async function loadMore(type) {
+        const btn = document.getElementById(`${type}-loadMore`);
+        if (btn) {
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = "Loading...";
+        }
+
+        pageMap[type]++;
+        try {
+            const res = await fetch(`requests?type=${type}&page=${pageMap[type]}&limit=${limit}`);
+            const data = await res.json();
+
+            const container = document.getElementById(`${type}-tab`);
+
+            if (data.requests.length === 0 && container.children.length === 0) {
+                const msg = document.createElement("p");
+                msg.className = "no-request";
+                msg.textContent = "No requests found.";
+                container.appendChild(msg);
+            } else {
+                data.requests.forEach((req, index) => {
+                    const div = document.createElement("div");
+                    div.classList.add("card");
+                    div.dataset.id = req._id; // attach the request ID like EJS
+
+                    // Build status HTML
+                    let statusHTML = '';
+                    if (req.status === 'Pending') {
+                        statusHTML = `
+            <div class="actions">
+                <button class="btn approve"><i class="fa-solid fa-check"></i> Approve</button>
+                <button class="btn decline"><i class="fa-solid fa-xmark"></i> Decline</button>
+            </div>
+        `;
+                    } else {
+                        let iconClass = req.status === 'Declined' ? 'fa-xmark-circle' :
+                            req.status.includes('Admin') ? 'fa-check-circle' : 'fa-tv';
+                        let statusClass = req.status === 'Declined' ? 'status-declined' :
+                            req.status.includes('Admin') ? 'status-admin' : 'status-tv';
+                        statusHTML = `<span class="status ${statusClass}"><i class="fa-solid ${iconClass}"></i> ${req.status}</span>`;
+                    }
+
+                    div.innerHTML = `
+    <p><strong>Type:</strong> ${req.type.charAt(0).toUpperCase() + req.type.slice(1)}</p>
+      <p><strong>Mode:</strong> ${req.mode.charAt(0).toUpperCase() + req.mode.slice(1)}</p>
+        <p><strong>User Requested By:</strong> ${req.user ? req.user.fullName : "Unknown"}</p>
+    
+
+        ${statusHTML}
+    `;
+
+                    // Attach approve/decline event listeners
+                    div.querySelectorAll(".approve").forEach(btn => {
+                        btn.addEventListener("click", e => {
+                            updateRequest(req._id, "approve");
+                        });
+                    });
+                    div.querySelectorAll(".decline").forEach(btn => {
+                        btn.addEventListener("click", e => {
+                            updateRequest(req._id, "decline");
+                        });
+                    });
+
+                    container.appendChild(div);
+                });
+
+            }
+
+            if ((pageMap[type] * limit) >= data.totalCount && btn) {
+                btn.style.display = "none";
+            }
+
+        } catch (err) {
+            console.error("Error loading more requests:", err);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "Load More";
+            }
+        }
+    }
+
+    // --- Add Load More button listeners ---
+    const loadMoreButtons = document.querySelectorAll(".btn.load");
+    loadMoreButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const typeMap = {
+                'pending-loadMore': 'pending',
+                'history-loadMore': 'history'
+            };
+            loadMore(typeMap[btn.id]);
+        });
+    });
+
+    async function updateRequest(id, action) {
+        try {
+            document.querySelector('.fullscreen-loader').style.display = 'flex';
+            const res = await fetch(`requests/${id}/${action}`, { method: "POST" });
+            const data = await res.json();
+
+            if (data.success) {
+                showToast(data.message, "success");
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(data.message, "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Something went wrong", "error");
+        }
+        finally {
+            document.querySelector('.fullscreen-loader').style.display = 'none';
+        }
+    }
+
+    // Attach events
+    document.querySelectorAll(".card .approve").forEach(btn => {
+        btn.addEventListener("click", e => {
+            const card = e.target.closest(".card");
+            const id = card.dataset.id;
+            updateRequest(id, "approve");
+        });
+    });
+
+    document.querySelectorAll(".card .decline").forEach(btn => {
+        btn.addEventListener("click", e => {
+            const card = e.target.closest(".card");
+            const id = card.dataset.id;
+            updateRequest(id, "decline");
+        });
+    });
+</script>
+
+</html>

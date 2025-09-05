@@ -43,6 +43,15 @@ const voteQuestionResponseSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Session",
     },
+
+    isJackpotWinnerDeclared: {
+      type: Boolean,
+      default: false,
+    },
+    isDigitalWinnerDeclared: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

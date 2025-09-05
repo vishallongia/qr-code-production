@@ -32,7 +32,10 @@
                     <p id="digitalRewardDescription" style="font-size: 0.95rem;"></p>
                 </div>
                 <div class="coin-popup-buttons">
-                    <button onclick="closeResultPopup()">Close</button>
+                    <button onclick="closeResultPopup()">Ok</button>
+                    <button id="top-up-wallet" onclick="window.location.href='/magic-coin-wallet'"
+                        style="display: none;">Top Up
+                        Wallet</button>
                 </div>
             </div>
         </div>
@@ -277,7 +280,6 @@
 <script src="/js/toastify-setup.js"></script>
 <script>
     let selectedOptionIndex = null;
-    let lastResultHadNotEnoughCoins = false; // reset before use
 
     const options = document.querySelectorAll('input[name="selectedOptionIndex"]');
     const coinPopup = document.getElementById("coinPopup");
@@ -386,6 +388,7 @@
 
 
     function showResultPopup(data) {
+        document.getElementById("top-up-wallet").style.display = "none";
         const resultPopup = document.getElementById("resultPopup");
         const resultText = document.getElementById("resultText");
         const jackpotSection = document.getElementById("jackpotRewardSection");
@@ -398,7 +401,7 @@
 
         // Extract data
         const selectedLetter = String.fromCharCode(65 + parseInt(data.selectedOptionIndex));
-        const result = data.voteResults.find(r => r.optionIndex === data.selectedOptionIndex);
+        const result = !data.notEnoughCoins && data.voteResults.find(r => r.optionIndex === data.selectedOptionIndex);
         const percentage = result ? result.percentage : 0;
         const jackpotDeducted = data.jackpotCoinDeducted;
         const digitalDeducted = data.digitalCoinDeducted;
@@ -414,14 +417,13 @@
 
         // Check if user had enough coins
         if (data.notEnoughCoins) {
-            lastResultHadNotEnoughCoins = true;
+            document.getElementById("top-up-wallet").style.display = "block"
             resultText.innerHTML = `❌ You do not have enough coins to participate.<br>
         You have <strong>${data.availableCoins}</strong> coins, but <strong>${data.requiredCoins}</strong> are required.`;
         } else {
             // Show message
             resultText.textContent = `✅ Thank you for voting. Option ${selectedLetter} received ${percentage}% votes.`;
-
-            // Show rewards if any deduction was done
+            // Jackpot reward
             if (jackpotDeducted && data.jackpotReward) {
                 jackpotSection.style.display = "block";
                 const jackpotImage = document.getElementById("jackpotRewardImage");
@@ -439,9 +441,18 @@
 
                 jackpotImage.src = data.jackpotReward.image || "";
                 jackpotDesc.textContent = data.jackpotReward.description || "";
+
+                // Make image clickable if link exists
+                if (data.jackpotReward.link) {
+                    jackpotImage.style.cursor = "pointer";
+                    jackpotImage.onclick = () => window.open(data.jackpotReward.link, "_blank");
+                } else {
+                    jackpotImage.onclick = null; // normal image
+                    jackpotImage.style.cursor = "default";
+                }
             }
 
-
+            // Digital reward
             if (digitalDeducted && data.digitalReward) {
                 digitalSection.style.display = "block";
                 const digitalImage = document.getElementById("digitalRewardImage");
@@ -460,7 +471,17 @@
 
                 digitalImage.src = data.digitalReward.image || "";
                 digitalDesc.textContent = data.digitalReward.description || "";
+
+                // Make image clickable if link exists
+                if (data.digitalReward.link) {
+                    digitalImage.style.cursor = "pointer";
+                    digitalImage.onclick = () => window.open(data.digitalReward.link, "_blank");
+                } else {
+                    digitalImage.onclick = null; // normal image
+                    digitalImage.style.cursor = "default";
+                }
             }
+
 
         }
 
@@ -475,9 +496,7 @@
 
     function closeResultPopup() {
         document.getElementById("resultPopup").style.display = "none";
-        if (lastResultHadNotEnoughCoins) {
-            window.location.href = "/magic-coin-wallet";
-        }
+
     }
 
 </script>

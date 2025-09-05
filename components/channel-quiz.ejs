@@ -40,7 +40,9 @@
                                 <!-- <button id="startChannelBtn" class="start-btn btn">
                             <%= channel.isRunning && channel.typeOfRunning==="quiz" ? "Stop" : "Start" %>
                         </button> -->
-                                <!-- <button class="winner-btn btn">Draw Winner</button> -->
+                                <button class="winner-btn btn"
+                                    onclick="window.open('/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/quiz/drawwinner', '_blank')">Draw
+                                    Winner</button>
                                 <button class="logs-btn btn"
                                     onclick="location.href='/tvstation/channel/<%= channel._id %>/session/<%= sessionId %>/quiz-response-tracker'">Track
                                     Logs</button>

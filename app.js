@@ -74,9 +74,9 @@ app.set("view engine", "ejs");
 // // Use routes from the index.js file
 app.use("/", indexRouter);
 app.use("/", plansPaymentsRouter); // Handles both plans and payments
-app.use("/admindashboard/affiliate", authMiddleware, affiliateUserRouter); // Handles both plans and payments
-app.use("/admindashboard/tvstation", authMiddleware, tvStationAdminRouter); // Handles both plans and payments
-app.use("/tvstation", authMiddleware, tvStationUserRouter); // Handles both plans and payments
+app.use("/admindashboard/affiliate", authMiddleware, affiliateUserRouter);
+app.use("/admindashboard/tvstation", authMiddleware, tvStationAdminRouter);
+app.use("/tvstation", authMiddleware, tvStationUserRouter);
 
 // Run every 5 minutes
 cron.schedule("*/5 * * * *", () => {

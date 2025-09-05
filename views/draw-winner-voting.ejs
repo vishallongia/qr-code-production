@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Draw Winner</title>
+    <link rel="stylesheet" href="/css/draw-winner.css" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- Breadcrumbs -->
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <% if (error) { %>
+        <div class="quiz-admin-error">
+            <%= error %>
+        </div>
+        <% } else { %>
+            <nav class="breadcrumbs">
+                <a href="/tvstation/channels">Shows</a>
+                <span>&rsaquo;</span>
+                <a href="/tvstation/channels/<%= channel._id %>/sessions">Session Manager</a>
+                <span>&rsaquo;</span>
+                <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Apps</a>
+                <span>&rsaquo;</span>
+                <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting">Voting</a>
+                <span>&rsaquo;</span>
+                <span class="active">Voting Quiz Draw</span>
+            </nav>
+            <!-- Winner Animation Container -->
+            <!-- Jackpot Winner Animation -->
+            <div id="jackpotWinnerAnimation" class="winner-animation hidden">
+                <div class="winner-card">
+                    <button class="close-btn" onclick="closeAnimation('jackpot')">&times;</button>
+                    <h2>🎰 Jackpot Winner!</h2>
+                    <p id="jackpotWinnerName"></p>
+                    <p id="jackpotWinnerCoins"></p>
+                </div>
+            </div>
+
+            <!-- Digital Winner Animation -->
+            <div id="digitalWinnerAnimation" class="winner-animation hidden">
+                <div class="winner-card">
+                    <button class="close-btn" onclick="closeAnimation('digital')">&times;</button>
+                    <h2>🎁 Digital Reward Winner!</h2>
+                    <p id="digitalWinnerName"></p>
+                    <p id="digitalWinnerCoins"></p>
+                </div>
+            </div>
+            <div class="modern-list-container">
+                <h1 style="text-align:center;">🎉 Draw Voting Quiz Winner</h1>
+
+                <div class="draw-wrapper">
+                    <!-- Jackpot Participants -->
+                    <div class="participants-container" id="jackpotContainer">
+                        <h2>Jackpot Participants</h2>
+                        <div class="list-wrapper">
+                            <% if (jackpotParticipants && jackpotParticipants.length> 0) { %>
+                                <div class="list-header jackpot-header">
+                                    <span>#</span>
+                                    <span>User</span>
+                                    <span>Coins Used</span>
+                                </div>
+                                <ul class="user-list" id="jackpotList">
+                                    <% jackpotParticipants.forEach((p, index)=> { %>
+                                        <li class="user-item jackpot-item">
+                                            <span>
+                                                <%= index + 1 %>
+                                            </span>
+                                            <span>
+                                                <%= p.user %>
+                                            </span>
+                                            <span>
+                                                <%= p.coins %>
+                                            </span>
+                                        </li>
+                                        <% }) %>
+                                </ul>
+                                <% } else { %>
+                                    <p style="text-align:center; color:#888; padding: 20px; font-style: italic;">
+                                        No contestants participated yet.
+                                    </p>
+                                    <% } %>
+                        </div>
+                    </div>
+
+
+                    <!-- Separator only if both sections exist -->
+                    <% if ((jackpotParticipants && jackpotParticipants.length> 0) && (digitalRewardParticipants
+                        && digitalRewardParticipants.length > 0)) { %>
+                        <div class="separator-vertical"></div>
+                        <% } %>
+
+                            <!-- Digital Reward Participants -->
+                            <div class="participants-container" id="digitalContainer">
+                                <h2>Digital Reward Participants</h2>
+                                <div class="list-wrapper">
+                                    <% if (digitalRewardParticipants && digitalRewardParticipants.length> 0) {
+                                        %>
+                                        <div class="list-header digital-header">
+                                            <span>#</span>
+                                            <span>User</span>
+                                            <span>Coins Used</span>
+                                        </div>
+                                        <ul class="user-list" id="digitalList">
+                                            <% digitalRewardParticipants.forEach((p, index)=> { %>
+                                                <li class="user-item digital-item">
+                                                    <span>
+                                                        <%= index + 1 %>
+                                                    </span>
+                                                    <span>
+                                                        <%= p.user %>
+                                                    </span>
+                                                    <span>
+                                                        <%= p.coins %>
+                                                    </span>
+                                                </li>
+                                                <% }) %>
+                                        </ul>
+                                        <% } else { %>
+                                            <p
+                                                style="text-align:center; color:#888; padding: 20px; font-style: italic;">
+                                                No contestants participated yet.
+                                            </p>
+                                            <% } %>
+                                </div>
+                            </div>
+
+                </div>
+
+                <!-- Draw Buttons -->
+                <!-- Draw Buttons -->
+                <div class="draw-buttons">
+                    <% if (jackpotParticipants && jackpotParticipants.length> 0) { %>
+                        <button class="draw-btn" id="drawJackpot">🎰 Draw Jackpot Winner</button>
+                        <% } %>
+
+                            <% if (digitalRewardParticipants && digitalRewardParticipants.length> 0) { %>
+                                <button class="draw-btn" id="drawDigital">🎁 Draw Digital Reward Winner</button>
+                                <% } %>
+                </div>
+            </div>
+            <% } %>
+
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+                <script src="/js/toastify-setup.js"></script>
+
+                <script>
+                    const jackpotBtn = document.getElementById("drawJackpot");
+                    const digitalBtn = document.getElementById("drawDigital");
+                    const loader = document.getElementById("loader");
+
+                    async function drawWinner(mode) {
+                        if (!mode) return;
+                        loader.style.display = "flex"; // show loader
+
+                        try {
+                            const res = await fetch(
+                                `/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting/draw`,
+                                {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ type: "voting", mode }),
+                                }
+                            );
+
+                            const result = await res.json();
+
+                            if (result.type === "success") {
+                                // showToast(result.message || "Winner drawn successfully!", "success");
+
+                                const winner = result.data.winner;
+
+                                // Hide the draw button permanently
+                                if (mode === "jackpot") jackpotBtn.style.visibility = "hidden";
+                                else digitalBtn.style.visibility = "hidden";
+
+                                if (mode === "jackpot") {
+                                    const list = document.getElementById("jackpotList");
+                                    if (list) {
+                                        list.innerHTML = `<li class="user-item jackpot-item winner-badge">
+            <span class="winner-badge">Winner</span>                               
+            <span>${winner.user}</span>
+            <span>${winner.coins}</span>
+        </li>`;
+                                    }
+                                } else if (mode === "digital") {
+                                    const list = document.getElementById("digitalList");
+                                    if (list) {
+                                        list.innerHTML = `<li class="user-item digital-item winner-badge">
+            <span class="winner-badge">Winner</span>
+            <span>${winner.user}</span>
+            <span>${winner.coins}</span>  
+        </li>`;
+                                    }
+                                }
+
+
+
+                                // Show winner animation
+                                const animId = mode === "jackpot" ? "jackpotWinnerAnimation" : "digitalWinnerAnimation";
+                                const nameId = mode === "jackpot" ? "jackpotWinnerName" : "digitalWinnerName";
+                                const coinsId = mode === "jackpot" ? "jackpotWinnerCoins" : "digitalWinnerCoins";
+
+                                document.getElementById(animId).style.display = "flex";
+                                document.getElementById(nameId).textContent = winner.user;
+                                document.getElementById(coinsId).textContent = `Coins Used: ${winner.coins}`;
+                                const msgPara = document.createElement("p");
+                                msgPara.className = "winner-message";
+                                msgPara.textContent = result.message;
+                                document.getElementById(animId).querySelector(".winner-card").appendChild(msgPara);
+                            } else {
+                                showToast(result.message || "Something went wrong.", "error");
+                            }
+                        } catch (err) {
+                            console.error("Error drawing winner:", err);
+                            showToast("Failed to draw winner. Please try again.", "error");
+                        } finally {
+                            loader.style.display = "none"; // hide loader
+                        }
+                    }
+
+                    // Close animation
+                    function closeAnimation(mode) {
+                        const animId = mode === "jackpot" ? "jackpotWinnerAnimation" : "digitalWinnerAnimation";
+                        document.getElementById(animId).style.display = "none";
+                    }
+
+                    if (jackpotBtn) {
+                        jackpotBtn.addEventListener("click", () => drawWinner("jackpot"));
+                    }
+
+                    if (digitalBtn) {
+                        digitalBtn.addEventListener("click", () => drawWinner("digital"));
+                    }
+                </script>
+
+
+</body>
+
+</html>
