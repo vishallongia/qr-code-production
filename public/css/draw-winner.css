@@ -77,20 +77,43 @@ body {
 }
 
 .list-wrapper {
-    width: 100%;
     overflow-x: auto;
-    border-radius: 8px;
-    overflow: hidden;
+    /* enable horizontal scroll */
+    -webkit-overflow-scrolling: touch;
 }
 
+
+
+/* Update the base styles for mobile-first approach */
 .list-header,
 .user-item {
     display: grid;
-    grid-template-columns: 0.4fr 1fr;
+    /* Use flexible columns that take up space, with minimum sizes to prevent squishing */
+    grid-template-columns: minmax(20px, 0.5fr) minmax(100px, 1.5fr) minmax(100px, 1fr) minmax(40px, 1fr);
     gap: 10px;
     padding: 14px 16px;
     align-items: center;
 }
+
+/* No min-width needed here, as grid-template-columns handles it. */
+.list-header,
+.user-item {
+    min-width: unset;
+}
+
+/* ✅ Allow text to wrap fully */
+.user-item span {
+    display: block;
+    white-space: normal;
+    /* allow wrapping */
+    overflow: visible;
+    /* don’t hide text */
+    text-overflow: unset;
+    /* remove ellipsis */
+    word-break: break-word;
+    /* break long words like emails */
+}
+
 
 .list-header {
     font-weight: 600;
@@ -135,15 +158,11 @@ body {
 
 .user-item span {
     display: block;
-    overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
-.list-header span:last-child,
-.user-item span:last-child {
-    display: none;
-}
+
 
 .draw-buttons {
     display: grid;
@@ -165,6 +184,7 @@ body {
     box-shadow: var(--box-shadow);
     transition: background 0.25s ease, transform 0.2s ease;
     letter-spacing: 0.3px;
+    width: max-content;
 }
 
 .draw-btn:hover {
@@ -271,7 +291,7 @@ body {
 
     .list-header,
     .user-item {
-        grid-template-columns: 0.5fr 1.5fr 1fr;
+        grid-template-columns: 0.5fr 1.5fr 1fr 1fr;
         gap: 15px;
         min-width: 420px;
     }
@@ -298,16 +318,14 @@ body {
 
 @media (min-width: 900px) {
     .draw-wrapper {
-        grid-template-columns: 1fr 1fr auto;
+        grid-template-columns: 1fr 1fr;
         gap: 30px;
         margin-top: 30px;
     }
 
     .separator-vertical {
-        display: block;
-        width: 2px;
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 4px;
+        display: none;
+        /* no need as grid column */
     }
 
     .draw-buttons {
@@ -426,4 +444,67 @@ body {
     to {
         box-shadow: 0 0 16px rgba(102, 187, 106, 0.8);
     }
+}
+
+
+/* Pre-confirmation Winner Popup */
+#winnerPopup,
+#preWinnerPopup {
+    /* existing winner popup kept as-is */
+    font-family: var(--font-family);
+}
+
+.winner-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9999;
+}
+
+.winner-popup.hidden {
+    display: none;
+}
+
+.popup-card {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 24px 36px;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+}
+
+.popup-buttons button {
+    margin: 5px 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s ease;
+}
+
+.popup-buttons button:hover {
+    transform: translateY(-2px);
+}
+
+#preConfirmBtn {
+    background-color: #2e7d32;
+    color: #fff;
+}
+
+#preRetryBtn {
+    background-color: #f9a825;
+    color: #fff;
+}
+
+#preCloseBtn {
+    background-color: #c62828;
+    color: #fff;
 }

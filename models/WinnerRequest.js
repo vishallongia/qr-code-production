@@ -7,6 +7,11 @@ const winnerRequestSchema = new mongoose.Schema(
       ref: "Session",
       required: true,
     },
+    channelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Channel",
+      required: true,
+    },
     type: {
       type: String,
       enum: ["quiz", "voting"],
@@ -28,7 +33,7 @@ const winnerRequestSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-    },
+    }, // WInner One
     isApprovedByAdmin: {
       type: Boolean,
       default: false,
@@ -51,6 +56,12 @@ const winnerRequestSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: ["QuizQuestion", "VotingQuestion"], // add all possible ref models
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
   },
   { timestamps: true }

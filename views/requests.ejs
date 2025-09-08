@@ -50,11 +50,24 @@
                                     </p>
 
                                     <p><strong>User Requested By:</strong>
-                                        <%= req.user.fullName %>
+                                        <%= req.requesterName %>
                                     </p>
-                                    <!-- <p><strong>Email Requested By:</strong>
-                                        <%= req.user.email %>
-                                    </p> -->
+                                    <p><strong>Email Requested By:</strong>
+                                        <%= req.requesterEmail %>
+                                    </p>
+                                    <p><strong>Winner:</strong>
+                                        <%= req.winnerName %>
+                                    </p>
+                                    <p><strong>Winner Email:</strong>
+                                        <%= req.winnerEmail %>
+                                    </p>
+                                    <p><strong>Channel Name:</strong>
+                                        <%= req.channelName %>
+                                    </p>
+                                    <p><strong>Session Name:</strong>
+                                        <%= req.sessionName %>
+                                    </p>
+
 
                                     <div class="actions">
                                         <button class="btn approve"><i class="fa-solid fa-check"></i> Approve</button>
@@ -87,11 +100,24 @@
                                     </p>
 
                                     <p><strong>User Requested By:</strong>
-                                        <%= req.user.fullName %>
+                                        <%= req.requesterName %>
                                     </p>
-                                    <!-- <p><strong>Email Requested By:</strong>
-                                        <%= req.user.email %>
-                                    </p> -->
+                                    <p><strong>Email Requested By:</strong>
+                                        <%= req.requesterEmail %>
+                                    </p>
+                                    <p><strong>Winner:</strong>
+                                        <%= req.winnerName %>
+                                    </p>
+                                    <p><strong>Winner Email:</strong>
+                                        <%= req.winnerEmail %>
+                                    </p>
+                                    <p><strong>Channel Name:</strong>
+                                        <%= req.channelName %>
+                                    </p>
+                                    <p><strong>Session Name:</strong>
+                                        <%= req.sessionName %>
+                                    </p>
+
 
                                     <span
                                         class="status <%= req.status.includes('Admin') ? 'status-admin' : req.status.includes('User') ? 'status-tv' : 'status-declined' %>">
@@ -180,14 +206,19 @@
                         statusHTML = `<span class="status ${statusClass}"><i class="fa-solid ${iconClass}"></i> ${req.status}</span>`;
                     }
 
-                    div.innerHTML = `
+        div.innerHTML = `
     <p><strong>Type:</strong> ${req.type.charAt(0).toUpperCase() + req.type.slice(1)}</p>
-      <p><strong>Mode:</strong> ${req.mode.charAt(0).toUpperCase() + req.mode.slice(1)}</p>
-        <p><strong>User Requested By:</strong> ${req.user ? req.user.fullName : "Unknown"}</p>
-    
+    <p><strong>Mode:</strong> ${req.mode.charAt(0).toUpperCase() + req.mode.slice(1)}</p>
 
-        ${statusHTML}
-    `;
+    <p><strong>User Requested By:</strong> ${req.requesterName || "Unknown"}</p>
+    <p><strong>Email Requested By:</strong> ${req.requesterEmail || "Unknown"}</p>
+    <p><strong>Winner:</strong> ${req.winnerName || "N/A"}</p>
+    <p><strong>Winner Email:</strong> ${req.winnerEmail || "N/A"}</p>
+    <p><strong>Channel Name:</strong> ${req.channelName || "N/A"}</p>
+    <p><strong>Session Name:</strong> ${req.sessionName || "N/A"}</p>
+
+    ${statusHTML}
+`;
 
                     // Attach approve/decline event listeners
                     div.querySelectorAll(".approve").forEach(btn => {

@@ -200,7 +200,18 @@
                     </div>
 
                     <a class="nav-link" href="/admindashboard/vip-users">Vip Users</a>
-                    <a class="nav-link" href="/admindashboard/tvstation/tvstation-users">Tv Station Users</a>
+                    <!-- Tv Station Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="tvstationDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Tv Station
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="tvstationDropdown">
+                            <li><a class="dropdown-item" href="/admindashboard/tvstation/tvstation-users">Tv Station
+                                    Users</a></li>
+                            <li><a class="dropdown-item" href="/admindashboard/tvstation/requests">Requests</a></li>
+                        </ul>
+                    </div>
                     <a class="nav-link" href="/admindashboard/scanner">Scanner</a>
                 </div>
 
@@ -214,7 +225,7 @@
                             <i class="fa-solid fa-right-from-bracket"></i> Log Out
                         </button>
                         <!-- Request Button with Badge -->
-                        <button type="button" class="btn custom-btn position-relative" id="requestBtn"
+                        <!-- <button type="button" class="btn custom-btn position-relative" id="requestBtn"
                             data-bs-toggle="tooltip" data-bs-placement="bottom" title="Requests"
                             onclick="window.location.href='/admindashboard/tvstation/requests'">
 
@@ -225,7 +236,7 @@
                                 style="display: none;">
                                 0
                             </span>
-                        </button>
+                        </button> -->
 
                     </div>
                     <!-- Search Icon -->

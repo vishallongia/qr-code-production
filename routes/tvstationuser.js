@@ -1622,8 +1622,10 @@ router.get(
         },
         {
           $project: {
-            _id: 0,
+            _id: 1,
             user: "$userInfo.fullName",
+            userId: "$userInfo._id", // ✅ include user ID
+            email: "$userInfo.email", // ✅ include email
             coins: "$jackpotCoinDeducted",
             isVip: "$userInfo.subscription.isVip",
             vipValidTill: "$userInfo.subscription.validTill",
@@ -1673,8 +1675,10 @@ router.get(
         },
         {
           $project: {
-            _id: 0,
+            _id: 1,
             user: "$userInfo.fullName",
+            userId: "$userInfo._id", // ✅ include user ID
+            email: "$userInfo.email", // ✅ include email
             coins: "$digitalCoinDeducted",
             isVip: "$userInfo.subscription.isVip",
             vipValidTill: "$userInfo.subscription.validTill",
@@ -1707,7 +1711,7 @@ router.post(
   "/channels/:channelId/session/:sessionId/quiz/draw",
   async (req, res) => {
     const { channelId, sessionId } = req.params;
-    const { type, mode } = req.body; // type = "jackpot" | "digital"
+    const { type, mode, userId, responseId } = req.body; // include responseId
 
     if (type !== "quiz") {
       return res.status(400).json({ message: "Invalid type", type: "error" });
@@ -1722,10 +1726,12 @@ router.post(
 
     if (
       !mongoose.Types.ObjectId.isValid(channelId) ||
-      !mongoose.Types.ObjectId.isValid(sessionId)
+      !mongoose.Types.ObjectId.isValid(sessionId) ||
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !mongoose.Types.ObjectId.isValid(responseId)
     ) {
       return res.status(400).json({
-        message: "Invalid channel or session ID",
+        message: "Invalid channel or session ID or user ID or response ID",
         type: "error",
       });
     }
@@ -1749,22 +1755,27 @@ router.post(
         });
       }
 
-      // Choose participants based on type
-      const matchCondition =
-        mode === "jackpot"
-          ? { jackpotCoinDeducted: { $gt: 0 } }
-          : { digitalCoinDeducted: { $gt: 0 } };
+      // Validate user
+      const user = await User.findById(userId);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ message: "User not found", type: "error" });
+      }
 
       const coinField =
         mode === "jackpot" ? "jackpotCoinDeducted" : "digitalCoinDeducted";
 
-      // Get participants
-      const participants = await QuizQuestionResponse.aggregate([
+      // Validate participant
+      const now = new Date();
+
+      const participant = await QuizQuestionResponse.aggregate([
         {
           $match: {
+            _id: new mongoose.Types.ObjectId(responseId), // 👈 response must match
             channelId: channel._id,
             sessionId: session._id,
-            ...matchCondition,
+            userId: new mongoose.Types.ObjectId(userId),
           },
         },
         {
@@ -1777,26 +1788,27 @@ router.post(
         },
         { $unwind: "$userInfo" },
         {
-          $project: {
-            _id: 1,
-            userId: "$userId",
-            user: "$userInfo.fullName",
-            questionId: 1, // <-- include questionId from response
-            coins: `$${coinField}`,
+          $match: {
+            $or: [
+              { [coinField]: { $gt: 0 } }, // user has coins deducted
+              {
+                $and: [
+                  { "userInfo.subscription.isVip": true }, // VIP
+                  { "userInfo.subscription.validTill": { $gte: now } }, // still valid
+                ],
+              },
+            ],
           },
         },
+        { $limit: 1 },
       ]);
 
-      if (!participants.length) {
+      if (!participant.length) {
         return res.status(404).json({
-          message: "No participants found",
+          message: "This user did not participate or has no eligible coins",
           type: "error",
         });
       }
-
-      // Pick a random participant
-      const winner =
-        participants[Math.floor(Math.random() * participants.length)];
 
       // Use the channel owner’s rules (req.user already loaded by auth middleware)
       const isApprovedByUser =
@@ -1806,17 +1818,17 @@ router.post(
           : true;
       const winnerDoc = await WinnerRequest.create({
         sessionId: session._id,
-        questionId: winner.questionId, // add questionId if needed
+        channelId: channel._id,
+        questionId: participant[0].questionId, // add questionId if needed
         type,
         mode: mode === "jackpot" ? "jackpot" : "digital",
-        userId: winner.userId,
+        userId: participant[0].userId,
         isApprovedByUser,
         isApprovedByAdmin: false,
         isActive: true,
+        createdBy: req.user._id,
       });
 
-      // Fetch winner user doc
-      const user = await User.findById(winner.userId);
       const sender = {
         email: "textildruckschweiz.com@gmail.com",
         name: "Magic Code - Plan Update",
@@ -1861,7 +1873,7 @@ router.post(
         `;
 
           SendEmail(sender, user.email, subject, htmlContent);
-          await QuizQuestionResponseQuestionResponse.updateMany(
+          await QuizQuestionResponse.updateMany(
             {
               sessionId: session._id,
               channelId: channel._id,
@@ -1905,6 +1917,35 @@ router.post(
             { $set: { isJackpotWinnerDeclared: true } }
           );
         }
+      } else {
+        // 🚨 User NOT approved yet → only update DB flags
+        if (mode === "digital") {
+          await QuizQuestionResponse.updateMany(
+            {
+              sessionId: session._id,
+              channelId: channel._id,
+              $or: [
+                { isDigitalWinnerDeclared: false },
+                { isDigitalWinnerDeclared: { $exists: false } },
+              ],
+            },
+            { $set: { isDigitalWinnerDeclared: true } }
+          );
+        }
+
+        if (mode === "jackpot") {
+          await QuizQuestionResponse.updateMany(
+            {
+              sessionId: session._id,
+              channelId: channel._id,
+              $or: [
+                { isJackpotWinnerDeclared: false },
+                { isJackpotWinnerDeclared: { $exists: false } },
+              ],
+            },
+            { $set: { isJackpotWinnerDeclared: true } }
+          );
+        }
       }
 
       const message = isApprovedByUser
@@ -1914,13 +1955,19 @@ router.post(
         : `${
             type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
           } winner request forwarded to admin.`;
+
+      const coinsUsed =
+        mode === "jackpot"
+          ? participant[0].jackpotCoinDeducted
+          : participant[0].digitalCoinDeducted;
       return res.status(200).json({
         message,
         type: "success",
         data: {
           winner: {
-            user: winner.user,
-            coins: winner.coins,
+            user: user.fullName,
+            email: user.email,
+            coins: coinsUsed,
             winnerId: winnerDoc._id,
           },
           type: type,
@@ -1975,6 +2022,34 @@ router.get(
         {
           $match: {
             "question.sessionId": new mongoose.Types.ObjectId(sessionId),
+            $expr: {
+              $not: {
+                $or: [
+                  // Jackpot only
+                  {
+                    $and: [
+                      { $eq: ["$question.mode", "jackpot"] },
+                      { $eq: ["$isJackpotWinnerDeclared", true] },
+                    ],
+                  },
+                  // Digital only
+                  {
+                    $and: [
+                      { $eq: ["$question.mode", "digital"] },
+                      { $eq: ["$isDigitalWinnerDeclared", true] },
+                    ],
+                  },
+                  // Both (exclude only if both declared)
+                  {
+                    $and: [
+                      { $eq: ["$question.mode", "both"] },
+                      { $eq: ["$isJackpotWinnerDeclared", true] },
+                      { $eq: ["$isDigitalWinnerDeclared", true] },
+                    ],
+                  },
+                ],
+              },
+            },
           },
         },
         {
@@ -1989,6 +2064,7 @@ router.get(
         {
           $project: {
             questionText: "$question.question",
+            mode: "$question.mode",
             selectedOptionIndex: 1,
             isCorrect: 1,
             deductCoin: 1,
@@ -3314,6 +3390,34 @@ router.get(
         {
           $match: {
             "question.sessionId": new mongoose.Types.ObjectId(sessionId),
+            $expr: {
+              $not: {
+                $or: [
+                  // Jackpot only
+                  {
+                    $and: [
+                      { $eq: ["$question.mode", "jackpot"] },
+                      { $eq: ["$isJackpotWinnerDeclared", true] },
+                    ],
+                  },
+                  // Digital only
+                  {
+                    $and: [
+                      { $eq: ["$question.mode", "digital"] },
+                      { $eq: ["$isDigitalWinnerDeclared", true] },
+                    ],
+                  },
+                  // Both (exclude only if both declared)
+                  {
+                    $and: [
+                      { $eq: ["$question.mode", "both"] },
+                      { $eq: ["$isJackpotWinnerDeclared", true] },
+                      { $eq: ["$isDigitalWinnerDeclared", true] },
+                    ],
+                  },
+                ],
+              },
+            },
           },
         },
         {
@@ -3328,6 +3432,7 @@ router.get(
         {
           $project: {
             questionText: "$question.question",
+            mode: "$question.mode",
             selectedOptionIndex: 1,
             deductCoin: 1,
             jackpotCoinDeducted: 1,
@@ -3725,8 +3830,10 @@ router.get(
         },
         {
           $project: {
-            _id: 0,
+            _id: 1,
             user: "$userInfo.fullName",
+            userId: "$userInfo._id", // ✅ include user ID
+            email: "$userInfo.email", // ✅ include email
             coins: "$jackpotCoinDeducted",
             isVip: "$userInfo.subscription.isVip",
             vipValidTill: "$userInfo.subscription.validTill",
@@ -3776,8 +3883,10 @@ router.get(
         },
         {
           $project: {
-            _id: 0,
+            _id: 1,
             user: "$userInfo.fullName",
+            userId: "$userInfo._id", // ✅ include user ID
+            email: "$userInfo.email", // ✅ include email
             coins: "$digitalCoinDeducted",
             isVip: "$userInfo.subscription.isVip",
             vipValidTill: "$userInfo.subscription.validTill",
@@ -3810,7 +3919,7 @@ router.post(
   "/channels/:channelId/session/:sessionId/voting/draw",
   async (req, res) => {
     const { channelId, sessionId } = req.params;
-    const { type, mode } = req.body; // type = "voting" | mode = "jackpot" | "digital"
+    const { type, mode, userId, responseId } = req.body; // type = "voting" | mode = "jackpot" | "digital"
 
     if (type !== "voting") {
       return res.status(400).json({ message: "Invalid type", type: "error" });
@@ -3825,10 +3934,12 @@ router.post(
 
     if (
       !mongoose.Types.ObjectId.isValid(channelId) ||
-      !mongoose.Types.ObjectId.isValid(sessionId)
+      !mongoose.Types.ObjectId.isValid(sessionId) ||
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !mongoose.Types.ObjectId.isValid(responseId)
     ) {
       return res.status(400).json({
-        message: "Invalid channel or session ID",
+        message: "Invalid channel or session ID or user ID or response ID",
         type: "error",
       });
     }
@@ -3852,22 +3963,26 @@ router.post(
         });
       }
 
-      // Choose participants based on mode
-      const matchCondition =
-        mode === "jackpot"
-          ? { jackpotCoinDeducted: { $gt: 0 } }
-          : { digitalCoinDeducted: { $gt: 0 } };
+      // Validate user
+      const user = await User.findById(userId);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ message: "User not found", type: "error" });
+      }
 
       const coinField =
         mode === "jackpot" ? "jackpotCoinDeducted" : "digitalCoinDeducted";
 
-      // Get participants
-      const participants = await VoteQuestionResponse.aggregate([
+      const now = new Date();
+
+      const participant = await VoteQuestionResponse.aggregate([
         {
           $match: {
+            _id: new mongoose.Types.ObjectId(responseId),
             channelId: channel._id,
             sessionId: session._id,
-            ...matchCondition,
+            userId: new mongoose.Types.ObjectId(userId),
           },
         },
         {
@@ -3880,27 +3995,27 @@ router.post(
         },
         { $unwind: "$userInfo" },
         {
-          $project: {
-            _id: 1,
-            userId: "$userId",
-            user: "$userInfo.fullName",
-            questionId: 1, // <-- include questionId from response
-            coins: `$${coinField}`,
+          $match: {
+            $or: [
+              { [coinField]: { $gt: 0 } }, // user has coins deducted
+              {
+                $and: [
+                  { "userInfo.subscription.isVip": true }, // VIP
+                  { "userInfo.subscription.validTill": { $gte: now } }, // still valid
+                ],
+              },
+            ],
           },
         },
+        { $limit: 1 },
       ]);
 
-      if (!participants.length) {
+      if (!participant.length) {
         return res.status(404).json({
-          message: "No participants found",
+          message: "This user did not participate or has no eligible coins",
           type: "error",
         });
       }
-
-      // Pick a random participant
-      const winner =
-        participants[Math.floor(Math.random() * participants.length)];
-
       // Apply approval rules
       const isApprovedByUser =
         req.user.isTvStation &&
@@ -3911,17 +4026,18 @@ router.post(
       // Save winner request
       const winnerDoc = await WinnerRequest.create({
         sessionId: session._id,
-        questionId: winner.questionId,
+        channelId: channel._id,
+        questionId: participant[0].questionId,
         type, // "voting"
         mode: mode === "jackpot" ? "jackpot" : "digital",
-        userId: winner.userId,
+        userId: participant[0].userId,
         isApprovedByUser,
         isApprovedByAdmin: false,
         isActive: true,
+        createdBy: req.user._id,
       });
 
-      // Fetch winner user doc
-      const user = await User.findById(winner.userId);
+      // Use existing sender and reward logic
       const sender = {
         email: "textildruckschweiz.com@gmail.com",
         name: "Magic Code - Plan Update",
@@ -3957,7 +4073,7 @@ router.post(
                 user.fullName || "User"
               }!</h2>
               <p>Your VIP subscription has been activated as part of your <b>Digital Reward</b>.</p>
-              <b>Valid Till:</b> ${validTill.toDateString()}</p>
+              <p><b>Valid Till:</b> ${validTill.toDateString()}</p>
               <p>Enjoy your exclusive benefits 🎁</p>
               <div style="margin-top:20px;font-size:12px;color:#777;">© 2025 Magic Code | All rights reserved.</div>
             </div>
@@ -3971,8 +4087,8 @@ router.post(
               sessionId: session._id,
               channelId: channel._id,
               $or: [
-                { isDigitalWinnerDeclared: false }, // exists and is false
-                { isDigitalWinnerDeclared: { $exists: false } }, // field not present
+                { isDigitalWinnerDeclared: false },
+                { isDigitalWinnerDeclared: { $exists: false } },
               ],
             },
             { $set: { isDigitalWinnerDeclared: true } }
@@ -4003,14 +4119,52 @@ router.post(
               sessionId: session._id,
               channelId: channel._id,
               $or: [
-                { isJackpotWinnerDeclared: false }, // exists and is false
-                { isJackpotWinnerDeclared: { $exists: false } }, // field not present
+                { isJackpotWinnerDeclared: false },
+                { isJackpotWinnerDeclared: { $exists: false } },
               ],
             },
             { $set: { isJackpotWinnerDeclared: true } }
           );
         }
       }
+
+      // Only proceed if user hasn't been approved yet
+      else {
+        // Handle Digital Winner
+        if (mode === "digital") {
+          await VoteQuestionResponse.updateMany(
+            {
+              sessionId: session._id,
+              channelId: channel._id,
+              $or: [
+                { isDigitalWinnerDeclared: false },
+                { isDigitalWinnerDeclared: { $exists: false } },
+              ],
+            },
+            { $set: { isDigitalWinnerDeclared: true } }
+          );
+        }
+
+        // Handle Jackpot Winner
+        if (mode === "jackpot") {
+          await VoteQuestionResponse.updateMany(
+            {
+              sessionId: session._id,
+              channelId: channel._id,
+              $or: [
+                { isJackpotWinnerDeclared: false },
+                { isJackpotWinnerDeclared: { $exists: false } },
+              ],
+            },
+            { $set: { isJackpotWinnerDeclared: true } }
+          );
+        }
+      }
+
+      const coinsUsed =
+        mode === "jackpot"
+          ? participant[0].jackpotCoinDeducted
+          : participant[0].digitalCoinDeducted;
 
       const message = isApprovedByUser
         ? `${
@@ -4025,8 +4179,9 @@ router.post(
         type: "success",
         data: {
           winner: {
-            user: winner.user,
-            coins: winner.coins,
+            user: user.fullName,
+            email: user.email,
+            coins: coinsUsed,
             winnerId: winnerDoc._id,
           },
           type: type,

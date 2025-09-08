@@ -87,6 +87,7 @@
                                         <span>Email</span>
                                         <span>Password</span>
                                         <span>Action</span>
+                                        <span>Winner Declaration</span>
                                         <span>Vip</span>
                                         <span>Affiliate</span>
                                         <span>MC's</span>
@@ -116,13 +117,16 @@
                                                     <button class="view-qr-btn">
                                                         View
                                                     </button>
-
-                                                    <% if (user.isTvStation && (!user.tvStationRules ||
-                                                        !user.tvStationRules.isApprovedByAdminToDrawWinner)) { %>
-                                                        <button class="view-qr-btn" data-user-id="<%= user._id %>"
-                                                            data-action="approve-winner">
-                                                            Allow Winner Declaration
-                                                        </button>
+                                                </span>
+                                                <span>
+                                                    <% if (user.isTvStation) { %>
+                                                        <label class="toggle-switch">
+                                                            <input type="checkbox" class="winner-declaration-checkbox"
+                                                                data-user-id="<%= user._id %>" <%=user.tvStationRules &&
+                                                                user.tvStationRules.isApprovedByAdminToDrawWinner
+                                                                ? 'checked' : '' %>>
+                                                            <span class="toggle-slider"></span>
+                                                        </label>
                                                         <% } %>
                                                 </span>
                                                 <span>
@@ -384,43 +388,44 @@
         }
     });
 
-    document.addEventListener('click', async (e) => {
-        const btn = e.target.closest('[data-action="approve-winner"]');
-        if (!btn) return; // exit if clicked element is not the button
+    document.addEventListener("change", async (e) => {
+        const checkbox = e.target.closest(".winner-declaration-checkbox");
+        if (!checkbox) return;
 
-        const userId = btn.getAttribute('data-user-id');
+        const userId = checkbox.getAttribute("data-user-id");
+        const isChecked = checkbox.checked;
+
         if (!userId) {
             showToast("User ID not found", "error");
             return;
         }
 
         try {
-            document.querySelector('.fullscreen-loader').style.display = 'flex';
+            document.querySelector(".fullscreen-loader").style.display = "flex";
 
             const res = await fetch(`approve-to-draw-winner/${userId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({})
+                body: JSON.stringify({ allow: isChecked })
             });
 
             const data = await res.json();
 
             if (data.success) {
-                showToast(data.message || "User approved successfully", "success");
-                btn.disabled = true; // optional: prevent double clicks
-                btn.textContent = "Approved";
-                setTimeout(() => location.reload(), 1000);
+                showToast(data.message || "Updated successfully", "success");
             } else {
-                showToast(data.message || "Failed to approve", "error");
+                showToast(data.message || "Failed to update", "error");
+                checkbox.checked = !isChecked; // rollback if error
             }
-
         } catch (err) {
             console.error(err);
             showToast("Something went wrong", "error");
+            checkbox.checked = !isChecked; // rollback if error
         } finally {
-            document.querySelector('.fullscreen-loader').style.display = 'none';
+            document.querySelector(".fullscreen-loader").style.display = "none";
         }
     });
+
 
 </script>
 

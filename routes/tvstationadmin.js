@@ -9,6 +9,7 @@ const {
   generateCode,
 } = require("../public/js/cryptoUtils");
 const WinnerRequest = require("../models/WinnerRequest"); // your Mongoose model
+const SendEmail = require("../Messages/SendEmail");
 
 // Set user as TV Station
 router.post("/make-tvstation", async (req, res) => {
@@ -177,6 +178,44 @@ router.get("/requests", async (req, res) => {
               preserveNullAndEmptyArrays: true, // optional: keeps request even if user is missing
             },
           },
+
+          {
+            $lookup: {
+              from: "users",
+              localField: "createdBy",
+              foreignField: "_id",
+              as: "createdByUser",
+            },
+          },
+          {
+            $unwind: {
+              path: "$createdByUser",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+
+          // Populate channel
+          {
+            $lookup: {
+              from: "channels",
+              localField: "channelId",
+              foreignField: "_id",
+              as: "channel",
+            },
+          },
+          { $unwind: { path: "$channel", preserveNullAndEmptyArrays: true } },
+
+          // Populate session
+          {
+            $lookup: {
+              from: "sessions",
+              localField: "sessionId",
+              foreignField: "_id",
+              as: "session",
+            },
+          },
+          { $unwind: { path: "$session", preserveNullAndEmptyArrays: true } },
+
           {
             $project: {
               sessionId: 1,
@@ -189,8 +228,12 @@ router.get("/requests", async (req, res) => {
               isDeclined: 1,
               createdAt: 1,
               updatedAt: 1,
-              "user.fullName": 1,
-              "user.email": 1,
+              winnerName: "$user.fullName",
+              winnerEmail: "$user.email",
+              requesterName: "$createdByUser.fullName",
+              requesterEmail: "$createdByUser.email",
+              channelName: "$channel.channelName",
+              sessionName: "$session.name",
               status: {
                 $switch: {
                   branches: [
@@ -255,8 +298,76 @@ router.get("/requests", async (req, res) => {
 // Approve request
 router.post("/requests/:id/approve", async (req, res) => {
   try {
+    const sender = {
+      email: "textildruckschweiz.com@gmail.com",
+      name: "Magic Code - Plan Update",
+    };
+
     const request = await WinnerRequest.findById(req.params.id);
+    if (request.isApprovedByAdmin) {
+      return res.status(400).json({ message: "Request already approved" });
+    }
     if (!request) return res.status(404).json({ message: "Request not found" });
+
+    const user = await User.findById(request.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (request.mode === "jackpot") {
+      const subject = "🎉 Congratulations! You are our Jackpot Winner!";
+      const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="UTF-8"><title>Jackpot Winner</title></head>
+          <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+            <div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:8px;">
+              <h2 style="color:#333;">Hi ${user.fullName || "User"},</h2>
+              <p>We are excited to announce that you have won the <b>Jackpot Reward</b> 🎊</p>
+              <p>Our team will contact you soon with further details.</p>
+              <div style="margin-top:20px;font-size:12px;color:#777;">© 2025 Magic Code | All rights reserved.</div>
+            </div>
+          </body>
+          </html>
+        `;
+
+      SendEmail(sender, user.email, subject, htmlContent);
+    }
+
+    if (request.mode === "digital") {
+      const now = new Date();
+      const validTill = new Date();
+      validTill.setMonth(validTill.getMonth() + 3);
+
+      user.subscription = {
+        isVip: true,
+        qrLimit: 5,
+        subscriptionCreatedAt: now,
+        validTill: validTill,
+      };
+      await user.save();
+      const subject = "🎉 Congratulations! Your Digital Reward is Activated";
+      const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <meta charset="UTF-8">
+                  <title>Digital Reward Activated</title>
+                </head>
+                <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+                  <div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:8px;">
+                    <h2 style="color:#333;">Congratulations ${
+                      user.fullName || "User"
+                    }!</h2>
+                    <p>Your VIP subscription has been activated as part of your <b>Digital Reward</b>.</p>
+                 <p><b>Valid Till:</b> ${validTill.toDateString()}</p>
+                    <p>Enjoy your exclusive benefits 🎁</p>
+                    <div style="margin-top:20px;font-size:12px;color:#777;">© 2025 Magic Code | All rights reserved.</div>
+                  </div>
+                </body>
+                </html>
+              `;
+
+      SendEmail(sender, user.email, subject, htmlContent);
+    }
 
     request.isApprovedByAdmin = true; // or set appropriate flag
     await request.save();
@@ -294,37 +405,41 @@ router.post("/requests/:id/decline", async (req, res) => {
   }
 });
 
-// Approve user to declare winner
+// Approve or disapprove user to declare winner
 router.post("/approve-to-draw-winner/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
+    const { allow } = req.body; // comes from frontend: true/false
 
     // Find the user
     const user = await User.findById(userId);
-    if (!user)
+    if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
+    }
 
     // Ensure tvStationRules object exists
     if (!user.tvStationRules) {
       user.tvStationRules = {};
     }
 
-    // Set the flag
-    user.tvStationRules.isApprovedByAdminToDrawWinner = true;
+    // Toggle based on request body
+    user.tvStationRules.isApprovedByAdminToDrawWinner = !!allow;
 
     await user.save();
 
     return res.json({
       success: true,
-      message: "User approved to declare winner successfully",
+      message: allow
+        ? "User approved to declare winner successfully"
+        : "User approval revoked successfully",
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error approving to draw winner:", err);
     return res
       .status(500)
-      .json({ success: false, message: "Failed to approve user" });
+      .json({ success: false, message: "Failed to update user approval" });
   }
 });
 
