@@ -45,7 +45,7 @@
         <div class="coin-popup">
             <div class="coin-popup-inner">
                 <% if (currentQuestion?.mode==="jackpot" || currentQuestion?.mode==="both" ||
-                    currentQuestion?.mode==="none" ) { %>
+                    currentQuestion?.mode==="none" || currentQuestion?.mode==="digital" ) { %>
                     <div class="jackpot-parent-div">
                         <!-- <h3>Confirm Answer</h3> -->
                         <p id="selectedOptionText"></p> <!-- ✅ Option text will be shown here -->
@@ -231,23 +231,23 @@
                         <div class="uq-options">
                             <% currentQuestion.options.forEach((opt, i)=> { %>
                                 <div class="uq-option">
-                                    <div class="uq-option-text-wrapper" style="font-size: 1.0rem; font-weight: 600;">
-                                        <span class="uq-option-letter">
-                                            <%= String.fromCharCode(65 + i) %>.
-                                        </span>
-                                        <span class="uq-option-text">
-                                            <%= opt.text %>
-                                        </span>
-                                    </div>
-                                    <input type="radio" name="selectedOptionIndex" id="opt<%= i %>" value="<%= i %>">
                                     <label for="opt<%= i %>">
+                                        <input type="radio" name="selectedOptionIndex" id="opt<%= i %>"
+                                            value="<%= i %>">
+                                        <div class="uq-option-text-wrapper"
+                                            style="font-size: 1.0rem; font-weight: 600;">
+                                            <span class="uq-option-letter">
+                                                <%= String.fromCharCode(65 + i) %>.
+                                            </span>
+                                            <span class="uq-option-text">
+                                                <%= opt.text %>
+                                            </span>
+                                        </div>
                                         <% if (opt.image) { %>
                                             <img class="uq-option-image-large" src="<%= opt.image %>"
                                                 alt="Option Image" />
                                             <% } %>
-
                                     </label>
-                                    <!-- ✅ Progress bar for this option -->
                                     <div class="progress-bar-container" id="barContainer<%= i %>">
                                         <div class="progress-bar-fill" id="bar<%= i %>"
                                             style="width: <%= opt.percentage %>%;">
