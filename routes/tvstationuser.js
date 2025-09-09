@@ -1581,21 +1581,42 @@ router.get(
       const now = new Date();
 
       // Jackpot Participants
+      // Jackpot Participants
       const jackpotParticipants = await QuizQuestionResponse.aggregate([
+        { $match: { channelId: channel._id, sessionId: session._id } },
+
+        // Join with QuizQuestion to get mode
+        {
+          $lookup: {
+            from: "quizquestions",
+            localField: "questionId",
+            foreignField: "_id",
+            as: "question",
+          },
+        },
+        { $unwind: "$question" },
+
+        // Exclude already declared & restrict to jackpot/both modes
         {
           $match: {
             $and: [
-              { channelId: channel._id },
-              { sessionId: session._id },
               {
                 $or: [
                   { isJackpotWinnerDeclared: false },
                   { isJackpotWinnerDeclared: { $exists: false } },
                 ],
               },
+              {
+                $or: [
+                  { "question.mode": "jackpot" },
+                  { "question.mode": "both" },
+                ],
+              },
             ],
           },
         },
+
+        // Join with users
         {
           $lookup: {
             from: "users",
@@ -1605,6 +1626,8 @@ router.get(
           },
         },
         { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: false } },
+
+        // Only VIPs or coin-deducted
         {
           $match: {
             $or: [
@@ -1620,12 +1643,14 @@ router.get(
             ],
           },
         },
+
+        // Final projection
         {
           $project: {
             _id: 1,
             user: "$userInfo.fullName",
-            userId: "$userInfo._id", // ✅ include user ID
-            email: "$userInfo.email", // ✅ include email
+            userId: "$userInfo._id",
+            email: "$userInfo.email",
             coins: "$jackpotCoinDeducted",
             isVip: "$userInfo.subscription.isVip",
             vipValidTill: "$userInfo.subscription.validTill",
@@ -1634,21 +1659,42 @@ router.get(
       ]);
 
       // Digital Reward Participants
+      // Digital Reward Participants
       const digitalRewardParticipants = await QuizQuestionResponse.aggregate([
+        { $match: { channelId: channel._id, sessionId: session._id } },
+
+        // Join with QuizQuestion to get mode
+        {
+          $lookup: {
+            from: "quizquestions",
+            localField: "questionId",
+            foreignField: "_id",
+            as: "question",
+          },
+        },
+        { $unwind: "$question" },
+
+        // Exclude already declared & restrict to digital/both modes
         {
           $match: {
             $and: [
-              { channelId: channel._id },
-              { sessionId: session._id },
               {
                 $or: [
                   { isDigitalWinnerDeclared: false },
                   { isDigitalWinnerDeclared: { $exists: false } },
                 ],
               },
+              {
+                $or: [
+                  { "question.mode": "digital" },
+                  { "question.mode": "both" },
+                ],
+              },
             ],
           },
         },
+
+        // Join with users
         {
           $lookup: {
             from: "users",
@@ -1658,6 +1704,8 @@ router.get(
           },
         },
         { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: false } },
+
+        // Only VIPs or coin-deducted
         {
           $match: {
             $or: [
@@ -1673,18 +1721,21 @@ router.get(
             ],
           },
         },
+
+        // Final projection
         {
           $project: {
             _id: 1,
             user: "$userInfo.fullName",
-            userId: "$userInfo._id", // ✅ include user ID
-            email: "$userInfo.email", // ✅ include email
+            userId: "$userInfo._id",
+            email: "$userInfo.email",
             coins: "$digitalCoinDeducted",
             isVip: "$userInfo.subscription.isVip",
             vipValidTill: "$userInfo.subscription.validTill",
           },
         },
       ]);
+
       return res.render("draw-winner", {
         channel,
         error: null,
@@ -2021,34 +2072,44 @@ router.get(
         { $unwind: "$question" },
         {
           $match: {
-            "question.sessionId": new mongoose.Types.ObjectId(sessionId),
             $expr: {
-              $not: {
-                $or: [
-                  // Jackpot only
-                  {
-                    $and: [
-                      { $eq: ["$question.mode", "jackpot"] },
-                      { $eq: ["$isJackpotWinnerDeclared", true] },
+              $and: [
+                // ✅ Restrict to current session
+                {
+                  $eq: [
+                    "$question.sessionId",
+                    new mongoose.Types.ObjectId(sessionId),
+                  ],
+                },
+
+                // ✅ Exclude based on winner + mode
+                {
+                  $not: {
+                    $or: [
+                      {
+                        $and: [
+                          { $eq: ["$question.mode", "jackpot"] },
+                          { $eq: ["$isJackpotWinnerDeclared", true] },
+                        ],
+                      },
+                      {
+                        $and: [
+                          { $eq: ["$question.mode", "digital"] },
+                          { $eq: ["$isDigitalWinnerDeclared", true] },
+                        ],
+                      },
+                      {
+                        $and: [
+                          { $eq: ["$question.mode", "both"] },
+                          { $eq: ["$isJackpotWinnerDeclared", true] },
+                          { $eq: ["$isDigitalWinnerDeclared", true] },
+                        ],
+                      },
+                      { $eq: ["$question.mode", "none"] },
                     ],
                   },
-                  // Digital only
-                  {
-                    $and: [
-                      { $eq: ["$question.mode", "digital"] },
-                      { $eq: ["$isDigitalWinnerDeclared", true] },
-                    ],
-                  },
-                  // Both (exclude only if both declared)
-                  {
-                    $and: [
-                      { $eq: ["$question.mode", "both"] },
-                      { $eq: ["$isJackpotWinnerDeclared", true] },
-                      { $eq: ["$isDigitalWinnerDeclared", true] },
-                    ],
-                  },
-                ],
-              },
+                },
+              ],
             },
           },
         },
@@ -3389,34 +3450,44 @@ router.get(
         { $unwind: "$question" },
         {
           $match: {
-            "question.sessionId": new mongoose.Types.ObjectId(sessionId),
             $expr: {
-              $not: {
-                $or: [
-                  // Jackpot only
-                  {
-                    $and: [
-                      { $eq: ["$question.mode", "jackpot"] },
-                      { $eq: ["$isJackpotWinnerDeclared", true] },
+              $and: [
+                // ✅ Restrict to current session
+                {
+                  $eq: [
+                    "$question.sessionId",
+                    new mongoose.Types.ObjectId(sessionId),
+                  ],
+                },
+
+                // ✅ Exclude records based on winner + mode
+                {
+                  $not: {
+                    $or: [
+                      {
+                        $and: [
+                          { $eq: ["$question.mode", "jackpot"] },
+                          { $eq: ["$isJackpotWinnerDeclared", true] },
+                        ],
+                      },
+                      {
+                        $and: [
+                          { $eq: ["$question.mode", "digital"] },
+                          { $eq: ["$isDigitalWinnerDeclared", true] },
+                        ],
+                      },
+                      {
+                        $and: [
+                          { $eq: ["$question.mode", "both"] },
+                          { $eq: ["$isJackpotWinnerDeclared", true] },
+                          { $eq: ["$isDigitalWinnerDeclared", true] },
+                        ],
+                      },
+                      { $eq: ["$question.mode", "none"] },
                     ],
                   },
-                  // Digital only
-                  {
-                    $and: [
-                      { $eq: ["$question.mode", "digital"] },
-                      { $eq: ["$isDigitalWinnerDeclared", true] },
-                    ],
-                  },
-                  // Both (exclude only if both declared)
-                  {
-                    $and: [
-                      { $eq: ["$question.mode", "both"] },
-                      { $eq: ["$isJackpotWinnerDeclared", true] },
-                      { $eq: ["$isDigitalWinnerDeclared", true] },
-                    ],
-                  },
-                ],
-              },
+                },
+              ],
             },
           },
         },
@@ -3790,20 +3861,40 @@ router.get(
 
       // Jackpot Participants (Voting)
       const jackpotParticipants = await VoteQuestionResponse.aggregate([
+        { $match: { channelId: channel._id, sessionId: session._id } },
+
+        // Join with votequestions to get mode
+        {
+          $lookup: {
+            from: "votequestions",
+            localField: "questionId",
+            foreignField: "_id",
+            as: "question",
+          },
+        },
+        { $unwind: "$question" },
+
+        // Exclude already declared & restrict to jackpot/both modes
         {
           $match: {
             $and: [
-              { channelId: channel._id },
-              { sessionId: session._id },
               {
                 $or: [
                   { isJackpotWinnerDeclared: false },
                   { isJackpotWinnerDeclared: { $exists: false } },
                 ],
               },
+              {
+                $or: [
+                  { "question.mode": "jackpot" },
+                  { "question.mode": "both" },
+                ],
+              },
             ],
           },
         },
+
+        // Join with users
         {
           $lookup: {
             from: "users",
@@ -3813,6 +3904,8 @@ router.get(
           },
         },
         { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: false } },
+
+        // Only include eligible VIPs or coin-deducted users
         {
           $match: {
             $or: [
@@ -3828,12 +3921,14 @@ router.get(
             ],
           },
         },
+
+        // Final projection
         {
           $project: {
             _id: 1,
             user: "$userInfo.fullName",
-            userId: "$userInfo._id", // ✅ include user ID
-            email: "$userInfo.email", // ✅ include email
+            userId: "$userInfo._id",
+            email: "$userInfo.email",
             coins: "$jackpotCoinDeducted",
             isVip: "$userInfo.subscription.isVip",
             vipValidTill: "$userInfo.subscription.validTill",
@@ -3843,20 +3938,40 @@ router.get(
 
       // Digital Reward Participants (Voting)
       const digitalRewardParticipants = await VoteQuestionResponse.aggregate([
+        { $match: { channelId: channel._id, sessionId: session._id } },
+
+        // Join with votequestions to get mode
+        {
+          $lookup: {
+            from: "votequestions",
+            localField: "questionId",
+            foreignField: "_id",
+            as: "question",
+          },
+        },
+        { $unwind: "$question" },
+
+        // Exclude already declared & restrict to digital/both modes
         {
           $match: {
             $and: [
-              { channelId: channel._id },
-              { sessionId: session._id },
               {
                 $or: [
                   { isDigitalWinnerDeclared: false },
                   { isDigitalWinnerDeclared: { $exists: false } },
                 ],
               },
+              {
+                $or: [
+                  { "question.mode": "digital" },
+                  { "question.mode": "both" },
+                ],
+              },
             ],
           },
         },
+
+        // Join with users
         {
           $lookup: {
             from: "users",
@@ -3866,6 +3981,8 @@ router.get(
           },
         },
         { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: false } },
+
+        // Only include eligible VIPs or coin-deducted users
         {
           $match: {
             $or: [
@@ -3881,12 +3998,14 @@ router.get(
             ],
           },
         },
+
+        // Final projection
         {
           $project: {
             _id: 1,
             user: "$userInfo.fullName",
-            userId: "$userInfo._id", // ✅ include user ID
-            email: "$userInfo.email", // ✅ include email
+            userId: "$userInfo._id",
+            email: "$userInfo.email",
             coins: "$digitalCoinDeducted",
             isVip: "$userInfo.subscription.isVip",
             vipValidTill: "$userInfo.subscription.validTill",

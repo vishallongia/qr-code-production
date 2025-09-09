@@ -106,7 +106,7 @@
                                 </ul>
                                 <% } else { %>
                                     <p style="text-align:center; color:#888; padding: 20px; font-style: italic;">
-                                        No contestants participated yet.
+                                        No contestants participated or no jackpot reward for this.
                                     </p>
                                     <% } %>
                         </div>
@@ -158,7 +158,7 @@
                                         <% } else { %>
                                             <p
                                                 style="text-align:center; color:#888; padding: 20px; font-style: italic;">
-                                                No contestants participated yet.
+                                                No contestants participated or no digital reward for this.
                                             </p>
                                             <% } %>
                                 </div>
@@ -241,14 +241,14 @@
 
 
                     // --- Main drawWinner function ---
-                    async function drawWinner(mode, userId = null,responseId = null) { // optional userId for pre-selected winner
+                    async function drawWinner(mode, userId = null, responseId = null) { // optional userId for pre-selected winner
                         if (!mode) return;
                         loader.style.display = "flex"; // show loader
 
                         try {
                             const bodyData = { type: "voting", mode };
-                            if (userId) bodyData.userId = userId; 
-                            if (responseId) bodyData.responseId = responseId; 
+                            if (userId) bodyData.userId = userId;
+                            if (responseId) bodyData.responseId = responseId;
 
                             const res = await fetch(
                                 `/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting/draw`,
