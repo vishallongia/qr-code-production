@@ -236,24 +236,32 @@ router.post(
       const eventBody = JSON.parse(rawBody);
       const eventType = eventBody.event_type;
 
-      // 3️⃣ Find payment in database
+      console.log(
+        "Received PayPal webhook:",
+        eventBody.event_type,
+        eventBody.resource
+      );
+
       const transactionId = eventBody.resource.id;
-      const payment = await Payment.findOne({ transactionId });
+      let payment = await Payment.findOne({ transactionId });
 
-      if (!payment) {
-        console.warn(`Payment with transaction ID ${transactionId} not found.`);
-        return res.sendStatus(200);
-      }
-
-      const isSubscription =
-        payment.planRef === "Plan" && payment.type === "subscription";
-
+      // Check if this is a subscription payment or renewal
+      const billingAgreementId = eventBody.resource.billing_agreement_id;
+      const isSubscription = Boolean(
+        billingAgreementId ||
+          (payment &&
+            payment.planRef === "Plan" &&
+            payment.type === "subscription")
+      );
       if (isSubscription) {
         await handleSubscription(payment, eventType, eventBody);
-      } else {
+      } else if (payment) {
         await handleOneTimePayment(payment, eventType, eventBody);
+      } else {
+        console.warn(
+          `Payment not found and not a subscription renewal for transaction ${transactionId}`
+        );
       }
-
       res.sendStatus(200);
     } catch (err) {
       console.error("Webhook error:", err?.response?.data || err.message);
@@ -299,6 +307,50 @@ async function handleOneTimePayment(payment, eventType, eventBody) {
  * Handles subscription payments
  */
 async function handleSubscription(payment, eventType, eventBody) {
+  // 🔹 If payment doesn't exist, it might be a renewal
+  if (!payment) {
+    const originalSubId =
+      eventBody.resource.billing_agreement_id || eventBody.resource.id;
+    if (originalSubId) {
+      const originalPayment = await Payment.findOne({
+        transactionId: originalSubId,
+      });
+      if (originalPayment) {
+        // Create new Payment for renewal
+        try {
+          payment = new Payment({
+            user_id: originalPayment.user_id,
+            plan_id: originalPayment.plan_id,
+            planRef: originalPayment.planRef,
+            type: originalPayment.type,
+            paymentMethod: originalPayment.paymentMethod,
+            amount: parseFloat(
+              eventBody.resource.amount?.value ?? originalPayment.amount ?? 0
+            ),
+            currency:
+              eventBody.resource.amount?.currency_code ??
+              originalPayment.currency ??
+              "CHF",
+            transactionId: eventBody.resource.id,
+            paymentStatus: "pending",
+            paymentDate: new Date(),
+            paymentDetails: eventBody.resource,
+          });
+          await payment.save();
+          console.log(
+            `Created new Payment record for subscription renewal: ${payment.transactionId}`
+          );
+        } catch (err) {
+          console.error("Error creating renewal subscription payment:", err);
+          return;
+        }
+      }
+    }
+  }
+
+  if (!payment)
+    return console.warn("Payment not found, cannot process subscription.");
+
   const user = await User.findById(payment.user_id);
   if (!user) return console.warn(`User with ID ${payment.user_id} not found`);
 
@@ -315,6 +367,17 @@ async function handleSubscription(payment, eventType, eventBody) {
   } else if (eventType === "PAYMENT.SALE.PENDING") {
     payment.paymentStatus = "pending";
     console.log(`Subscription payment pending for ${payment._id}`);
+  } else if (
+    eventType === "BILLING.SUBSCRIPTION.CANCELLED" ||
+    eventType === "BILLING.SUBSCRIPTION.EXPIRED"
+  ) {
+    payment.isActive = false;
+    payment.paymentStatus = "cancelled";
+    console.log(`Subscription cancelled/expired for user ${user._id}`);
+  } else {
+    console.log(
+      `Unhandled subscription event type: ${eventType} for transaction ${payment.transactionId}`
+    );
   }
 
   await payment.save();

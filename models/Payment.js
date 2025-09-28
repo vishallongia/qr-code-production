@@ -28,7 +28,7 @@ const paymentSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ["pending", "completed", "failed", "refunded"], // Payment status
+    enum: ["pending", "completed", "failed", "refunded","cancelled"], // Payment status
     default: "pending",
   },
   amount: {
@@ -37,7 +37,7 @@ const paymentSchema = new mongoose.Schema({
   },
   currency: {
     type: String,
-    default: "USD", // Default currency is USD
+    default: "CHF", // Default currency is USD
   },
   transactionId: {
     type: String, // Transaction ID from payment gateway (Stripe/PayPal)
