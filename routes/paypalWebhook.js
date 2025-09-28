@@ -177,6 +177,7 @@ router.post(
   "/paypal/webhook",
   bodyParser.raw({ type: "application/json" }),
   async (req, res) => {
+    console.log("Webhook hit at", new Date().toISOString());
     try {
       const transmissionId = req.headers["paypal-transmission-id"];
       const timestamp = req.headers["paypal-transmission-time"];
@@ -193,9 +194,14 @@ router.post(
         !certUrl ||
         !authAlgo
       ) {
+        console.warn("Missing required PayPal headers.");
         return res.status(400).send("Missing required PayPal headers.");
       }
-
+      console.log("Using PayPal client ID:", process.env.PAYPAL_CLIENT_ID);
+      console.log(
+        "Using PayPal client SECRET:",
+        process.env.PAYPAL_CLIENT_SECRET ? "SET" : "NOT SET"
+      );
       // 1️⃣ Get PayPal access token
       const { data: authData } = await axios({
         method: "post",
@@ -207,6 +213,10 @@ router.post(
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         data: "grant_type=client_credentials",
       });
+      console.log(
+        "PayPal access token obtained:",
+        authData.access_token ? "YES" : "NO"
+      );
       const accessToken = authData.access_token;
 
       // 2️⃣ Verify webhook signature
