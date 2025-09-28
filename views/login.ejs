@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login to Magic Code</title>
+  <title data-translate="login_to_magic_code">Login to Magic Code</title>
   <link href="/css/login.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -38,19 +38,19 @@
       <select id="languageSwitcher" class="language-selector-select">
         <option value="en">English</option>
         <option value="de">Deutsch (German)</option>
+        <option value="hu">Hungarian</option>
+        <option value="ro">Romanian</option>
       </select>
     </div>
   </div>
 
   <div class="container">
     <form class="login-box" method="POST" action="/login" onsubmit="return handleLogin(event)">
-      <input type="hidden" name="redirectUrl" id="redirectUrl"
-        value="<%= typeof redirectUrl !== 'undefined' ? redirectUrl : '' %>">
-      <h2 id="LoginText"> Login to Your Account</h2>
+      <h2 id="LoginText" data-translate="login_to_your_account"> Login to Your Account</h2>
 
-      <input type="email" name="email" placeholder="Enter email address..." id="EmailText" required />
+      <input type="email" name="email" placeholder="Enter email address..." id="EmailText" data-translate="enter_email_address" required />
       <div class="password-wrapper">
-        <input type="password" name="password" id="PasswordText" placeholder="Enter password..." required />
+        <input type="password" name="password" id="PasswordText" placeholder="Enter password..." data-translate="enter_password" required />
         <span class="toggle-password" id="togglePassword">
           <!-- Eye Slash Icon SVG -->
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -62,16 +62,16 @@
       </div>
 
 
-      <button type="submit" class="login-btn" id="LoginBtnText">Login</button>
+      <button type="submit" class="login-btn" id="LoginBtnText" data-translate="login">Login</button>
 
-      <div class="divider"><span>OR</span></div>
+      <div class="divider"><span data-translate="or"> OR</span></div>
 
 
-      <button type="button" class="google-btn" onclick="window.location.href='/google'">Login With Gmail</button>
+      <button type="button" class="google-btn" onclick="window.location.href='/google'" data-translate="login_with_gmail">Login With Gmail</button>
 
-      <div class="divider"><span>OR</span></div>
+      <div class="divider"><span data-translate="or">OR</span></div>
 
-      <button type="button" class="google-btn" onclick="window.location.href='/register'">Activate a New
+      <button type="button" class="google-btn" onclick="window.location.href='/register'" data-translate="activate_a_new_account">Activate a New
         Account</button>
 
       <!-- <button type="button" class="magic-link-btn" id="magicLinkText" onclick="toggleMagicLink('login')">Login With
@@ -80,8 +80,8 @@
 
 
       <div class="options">
-        <label><input type="checkbox" /> Remember me</label>
-        <a href="/forgotpassword/">Reset My Password</a>
+        <label ><input type="checkbox" /> <span data-translate="remember_me">Remember me</span> </label>
+        <a href="/forgotpassword/" data-translate="reset_my_password">Reset My Password</a>
       </div>
 
 
@@ -136,11 +136,7 @@
   <% } %>
 </script>
 
-<script>
-  //   toggleMagicLink('login')
-  // document.getElementById("magicLinkText").style.display = "none"
-</script>
-<!-- <script src="/js/translations.js"></script> -->
+<script src="/js/translations.js"></script>
 
 
 </html>

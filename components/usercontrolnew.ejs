@@ -92,13 +92,13 @@
         <div class="content-section">
 
             <div>
-                <h2>When Scanning My Magic Code</h2>
+                <h2 data-translate="when_scanning_my_magic_code">When Scanning My Magic Code</h2>
 
                 <div>
                     <button class="start-camera" onclick="BeforeStartCamera()">
                         <img src="/images/Scan.png" alt="Edit Icon">
 
-                        SCAN
+                        <span data-translate="scan">SCAN</span>
                     </button>
                 </div>
             </div>
@@ -110,7 +110,7 @@
                         isSpecialOffer===false ? "checked" : "" %>
                     onchange="SetUserControl(<%= isSpecialOffer===true ? 'true' : 'false' %>)">
                         <img src="/images/ShowChangeMessage.png" alt="Edit Icon">
-                        <span>Show Change Message</span>
+                        <span data-translate="show_change_message">Show Change Message</span>
                 </label>
 
                 <label class="radio-button">
@@ -118,7 +118,7 @@
                         isSpecialOffer===false ? "checked" : "" %>
                     onchange="SetUserControl(<%= isSpecialOffer===true ? 'true' : 'false' %>)">
                         <img src="/images/ShowMyMessage.png" alt="Content Icon">
-                        <span>Show My Message</span>
+                        <span data-translate="show_my_message">Show My Message</span>
                 </label>
 
                 <label class="radio-button">
@@ -126,7 +126,7 @@
                         ? "checked" : "" %>
                     onchange="location.href='/special-offers'">
                     <img src="/images/ShowPartnerMessage.png" alt="Special Offer Icon">
-                    <span>Show Partner Message</span>
+                    <span data-translate="show_partner_message">Show Partner Message</span>
                 </label>
             </div>
             <% if (isSpecialOffer===true) { %>

@@ -5,13 +5,16 @@ const Plan = require("../models/Plan");
 const Payment = require("../models/Payment");
 const MagicCoinPlan = require("../models/MagicCoinPlan");
 const User = require("../models/User");
-const QuizQuestionResponse = require("../models/QuizQuestionResponse");
-const VoteQuestionResponse = require("../models/VoteQuestionResponse");
 const {
   encryptPassword,
   decryptPassword,
 } = require("../public/js/cryptoUtils");
 const { client } = require("../config/paypal");
+const {
+  createSubscription,
+  ensurePaypalPlan,
+  getAccessToken,
+} = require("../utils/paypalSubscription");
 
 const { authMiddleware } = require("../middleware/auth");
 const Coupon = require("../models/Coupon");
@@ -270,6 +273,254 @@ router.get("/payment/status/:sessionId", async (req, res) => {
     res.status(500).json({ status: "error" });
   }
 });
+
+router.post("/paypal/create-subscription", authMiddleware, async (req, res) => {
+  try {
+    const { planId, couponCode, isMagicPlan = false } = req.body;
+    const decryptedPlanId = decryptPassword(planId);
+
+    let plan = isMagicPlan
+      ? await MagicCoinPlan.findById(decryptedPlanId)
+      : await Plan.findById(decryptedPlanId);
+
+    if (!plan) return res.status(404).json({ error: "Plan not found" });
+
+    const currency = req.user?.currency || "EUR"; // default
+    const priceObj =
+      plan.prices.find((p) => p.currency === currency) ||
+      plan.prices.find((p) => p.currency === "EUR");
+
+    if (!priceObj)
+      return res
+        .status(400)
+        .json({ error: `Price not found for currency: ${currency}` });
+
+    let finalPrice = priceObj.amount;
+    let isCouponUsed = false;
+    let discountAmount = 0;
+    let commissionAmount = 0;
+    let coupon = null;
+
+    // Coupon logic
+    if (couponCode) {
+      coupon = await Coupon.findOne({
+        code: couponCode.toUpperCase(),
+        isActive: true,
+      });
+      if (!coupon)
+        return res.status(400).json({ message: "Invalid coupon code." });
+
+      if (plan.durationInDays === 15) {
+        const existingFree15Day = await Payment.findOne({
+          user_id: req.user._id,
+          isCouponUsed: true,
+          amount: 0,
+        });
+        if (existingFree15Day)
+          return res
+            .status(400)
+            .json({ message: "Coupon already used for free plan." });
+
+        finalPrice = 0;
+        discountAmount = priceObj.amount;
+        isCouponUsed = true;
+      } else {
+        isCouponUsed = true;
+        discountAmount = coupon.discountPercent
+          ? (coupon.discountPercent / 100) * priceObj.amount
+          : 0;
+        finalPrice = parseFloat((priceObj.amount - discountAmount).toFixed(2));
+        commissionAmount = coupon.commissionPercent
+          ? (coupon.commissionPercent / 100) * priceObj.amount
+          : 0;
+      }
+    }
+
+    // Free plan
+    if (finalPrice === 0) {
+      const paymentRecord = await Payment.create({
+        user_id: req.user._id,
+        plan_id: plan._id,
+        paymentMethod: "manual",
+        paymentStatus: "completed",
+        amount: 0,
+        currency,
+        transactionId: "manual_zero_txn_" + Date.now(),
+        paymentDetails: {
+          mode: "manual-paypal",
+          reason: "Free plan or coupon",
+        },
+        isActive: true,
+        coupon: couponCode || null,
+        coupon_id: coupon?._id || null,
+        isCouponUsed,
+        paymentDate: new Date(),
+        originalAmount: priceObj.amount,
+        discountAmount,
+        commissionAmount,
+      });
+
+      return res.status(200).json({
+        message: "Free Plan activated",
+        type: "success",
+        data: { paymentId: paymentRecord._id },
+      });
+    }
+
+    const token = await getAccessToken();
+    const paypalPlanId = await ensurePaypalPlan(plan, currency, token);
+    const subscription = await createSubscription(
+      paypalPlanId,
+      req.user,
+      `${process.env.FRONTEND_URL}/successpayment`,
+      `${process.env.FRONTEND_URL}/cancel`,
+      token
+    );
+
+    const metaToken = jwt.sign(
+      {
+        originalAmount: priceObj.amount,
+        discountAmount,
+        commissionAmount,
+        couponCode,
+        coupon_id: coupon?._id,
+        isCouponUsed,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.json({ id: subscription.id, metaToken });
+  } catch (err) {
+    console.error("PayPal Create Order Error:", err.message);
+    res.status(500).json({ error: "Unable to create PayPal order" });
+  }
+});
+
+// Route to capture PayPal subscription
+router.post(
+  "/paypal/capture-subscription",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const {
+        subscriptionID,
+        planId,
+        metaToken,
+        isMagicPlan = false,
+      } = req.body;
+      const decryptedPlanId = decryptPassword(planId);
+
+      // Pick correct model
+      const planModel = isMagicPlan ? MagicCoinPlan : Plan;
+      const plan = await planModel.findById(decryptedPlanId);
+      if (!plan) {
+        return res.status(404).json({ error: "Plan not found" });
+      }
+
+      // Verify JWT metaToken
+      let metaData;
+      try {
+        metaData = jwt.verify(metaToken, process.env.JWT_SECRET);
+      } catch (err) {
+        return res.status(400).json({
+          message: "Invalid token. Please refresh and try again.",
+          type: "error",
+        });
+      }
+
+      const {
+        originalAmount = plan.price,
+        discountAmount = 0,
+        commissionAmount = 0,
+        couponCode = null,
+        coupon_id = null,
+        isCouponUsed = false,
+      } = metaData;
+
+      // ✅ Fetch subscription details from PayPal
+      const token = await getAccessToken();
+      const response = await fetch(
+        `https://api-m.sandbox.paypal.com/v1/billing/subscriptions/${subscriptionID}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const subscriptionData = await response.json();
+      if (!response.ok) {
+        console.error("PayPal Subscription Fetch Error:", subscriptionData);
+        return res
+          .status(400)
+          .json({ error: "Failed to fetch PayPal subscription" });
+      }
+
+      const status = subscriptionData.status; // e.g., ACTIVE, APPROVED
+      const amount =
+        subscriptionData.billing_info?.last_payment?.amount?.value || 0;
+      const currency =
+        subscriptionData.billing_info?.last_payment?.amount?.currency_code ||
+        "EUR";
+
+      const priceObj =
+        plan.prices.find((p) => p.currency === currency) ||
+        plan.prices.find((p) => p.currency === "EUR");
+
+      if (!priceObj)
+        return res
+          .status(400)
+          .json({ error: `Price not found for currency: ${currency}` });
+
+      // 3️⃣ Calculate VAT from plan VAT rates
+      const vatRate =
+        plan.vatRates?.find((v) => v.currency === currency)?.rate || 0;
+      const vatAmount = parseFloat(
+        ((originalAmount * vatRate) / 100).toFixed(2)
+      );
+      const totalPrice = parseFloat((originalAmount + vatAmount).toFixed(2));
+
+      // Save payment
+      const paymentData = {
+        user_id: req.user._id,
+        plan_id: plan._id,
+        planRef: isMagicPlan ? "MagicCoinPlan" : "Plan",
+        type: isMagicPlan ? "coin" : "subscription",
+        paymentMethod: "paypal",
+        paymentStatus: "pending",
+        amount: Number(amount),
+        currency,
+        transactionId: subscriptionData.id,
+        paymentDetails: subscriptionData,
+        vatRate,
+        vatAmount,
+        ...(!isMagicPlan && {
+          coupon: couponCode,
+          isCouponUsed,
+          originalAmount: Number(originalAmount),
+          discountAmount: Number(discountAmount),
+          commissionAmount: Number(commissionAmount),
+          ...(coupon_id && { coupon_id }),
+        }),
+      };
+
+      const payment = await Payment.create(paymentData);
+
+      res.json({
+        message: "Subscription captured successfully",
+        status,
+        subscriptionId: subscriptionData.id,
+        transactionId: subscriptionData.id,
+      });
+    } catch (err) {
+      console.error("PayPal Capture Subscription Error:", err.message);
+      res.status(500).json({ error: "Capture subscription failed" });
+    }
+  }
+);
 
 // Route to create PayPal order
 router.post("/paypal/create-order", authMiddleware, async (req, res) => {
@@ -637,24 +888,19 @@ router.post("/validate-coupon", authMiddleware, async (req, res) => {
     // - discountedPrice: Final amount user pays after discount.
     // Note: This ensures the site owner keeps full revenue, and the affiliate sacrifices part of their commission to offer a discount.
 
-    const commissionAmount = (coupon.commissionPercent / 100) * plan.price;
-    const discountAmount = (coupon.discountPercent / 100) * plan.price;
-    const discountedPrice = parseFloat(
-      (plan.price - discountAmount).toFixed(2)
+    // For recurring plans, pick the price based on a selected currency (default EUR)
+    let selectedCurrency = req.body.currency || "EUR"; // frontend can send currency
+    let planPriceObj = plan.prices?.find(
+      (p) => p.currency === selectedCurrency
     );
+    const planPrice = planPriceObj
+      ? planPriceObj.amount
+      : plan.prices[0].amount;
 
-    // if (discountAmount > commissionAmount) {
-    //   return res.status(400).json({
-    //     message: "Discount exceeds affiliate commission. Not allowed.",
-    //     type: "error",
-    //   });
-    // }
-
-    // For other plans: allow same/different coupon multiple times
-    // const discountAmount = (coupon.discountPercent / 100) * plan.price;
-    // const discountedPrice = parseFloat(
-    //   (plan.price - discountAmount).toFixed(2)
-    // );
+    // Calculate commission & discount based on selected currency price
+    const commissionAmount = (coupon.commissionPercent / 100) * planPrice;
+    const discountAmount = (coupon.discountPercent / 100) * planPrice;
+    const discountedPrice = parseFloat((planPrice - discountAmount).toFixed(2));
 
     return res.status(200).json({
       message: "Coupon applied.",
@@ -746,6 +992,23 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
                 coinsOffered: {
                   $add: ["$jackpotCoinDeducted", "$digitalCoinDeducted"],
                 },
+                createdAt: "$createdAt",
+              },
+            },
+            { $match: { coinsOffered: { $gt: 0 } } },
+          ],
+        },
+      },
+      {
+        $unionWith: {
+          coll: "applauseresponses",
+          pipeline: [
+            { $match: { userId: req.user._id, isActive: true } },
+            {
+              $project: {
+                _id: 0,
+                paymentStatus: { $literal: "deducted" },
+                coinsOffered: "$magicCoinDeducted",
                 createdAt: "$createdAt",
               },
             },

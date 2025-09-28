@@ -85,6 +85,14 @@ const paymentSchema = new mongoose.Schema({
     type: Number,
     default: null, // default is none
   },
+  vatAmount: {
+    type: Number,
+    default: 0, // how much tax was applied
+  },
+  vatRate: {
+    type: Number,
+    default: 0, // percentage, e.g., 19 for 19%
+  },
 });
 
 paymentSchema.pre("save", async function (next) {

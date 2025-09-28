@@ -4,23 +4,19 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Channels List</title>
+    <title>Projects List</title>
     <link rel="stylesheet" href="/css/sales.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
 </head>
 
 <body style="padding: 0">
-
-
-
-
     <!-- Add / Edit Show Popup -->
     <div id="popup-add-edit-show" class="popup-overlay" style="display: none;">
         <div class="popup-content" style="position: relative; max-width: 500px; width: 90%;">
             <span id="close-popup-show"
                 style="position: absolute; top: 10px; right: 15px; font-size: 25px; cursor: pointer;">&times;</span>
-            <h2 id="show-popup-header" style="text-align: center; margin-bottom: 20px;">Add New Show</h2>
+            <h2 id="show-popup-header" style="text-align: center; margin-bottom: 20px;">Add New Project</h2>
 
             <form id="add-edit-show-form" enctype="multipart/form-data">
                 <input type="hidden" name="showId" id="show-id" value="">
@@ -29,7 +25,7 @@
 
 
                 <div class="form-group" style="margin-bottom: 20px;">
-                    <input type="text" id="show-name" name="name" placeholder="Show Name" required />
+                    <input type="text" id="show-name" name="name" placeholder="Project Name" required />
                 </div>
 
                 <div class="form-group" style="margin-bottom: 20px;">
@@ -38,7 +34,7 @@
 
                 <!-- Description -->
                 <div class="form-group" style="margin-bottom: 20px;">
-                    <textarea id="session-description" name="description" placeholder="Show Description" rows="3"
+                    <textarea id="session-description" name="description" placeholder="Project Description" rows="3"
                         style="resize: vertical;"></textarea>
                 </div>
 
@@ -60,7 +56,7 @@
                 </div>
 
                 <div class="form-group" style="text-align: center;">
-                    <button type="submit" class="btn" id="submit-add-edit-show">Save Show</button>
+                    <button type="submit" class="btn" id="submit-add-edit-show">Save Project</button>
                 </div>
             </form>
         </div>
@@ -69,10 +65,10 @@
 
 
     <div class="modern-list-container">
-        <h2>Shows</h2>
+        <h2> Your Projects</h2>
         <div style="display: flex; justify-content: end;">
             <button id="add-channel-btn" class="btn primary" style="margin-bottom: 16px;">
-                + Add New Show
+                + Add a New Project
             </button>
         </div>
 
@@ -83,14 +79,14 @@
                         <% } else if (channels && channels.length> 0) { %>
 
                             <!-- Total Count Display -->
-                            <p><strong>Total Shows:</strong>
+                            <p><strong>Your Projects in Total:</strong>
                                 <%= totalChannels %>
                             </p>
 
                             <div class="list-wrapper">
                                 <div class="list-header">
-                                    <th>Logo</th>
-                                    <span>Name</span>
+                                    <span>Your Project Logos</span>
+                                    <span>Title of Your Projects</span>
                                     <span>Go</span>
                                     <span>Edit</span>
                                     <span>Delete</span>
@@ -98,19 +94,19 @@
 
                                 <ul class="user-list">
                                     <% channels.forEach(channel=> {
-                                        const logoUrl = channel.logo ? channel.logo : '/uploads/no-image.png';
+                                        const logoUrl = channel.logo ? channel.logo : '/images/no-image.png';
                                         %>
 
                                         <li class="user-item">
                                             <span>
                                                 <% if(channel.logo && channel.link) { %>
-                                                    <a href="<%= channel.link %>" target="_blank">
+                                                    <a>
                                                         <img src="<%= logoUrl %>" alt="<%= channel.channelName %>"
-                                                            class="channel-logo">
+                                                            class="channel-logo" onclick="OpenEditFromImg('<%= channel._id %>')">
                                                     </a>
                                                     <% } else { %>
                                                         <img src="<%= logoUrl %>" alt="<%= channel.channelName %>"
-                                                            class="channel-logo">
+                                                            class="channel-logo" onclick="OpenEditFromImg('<%= channel._id %>')">
                                                         <% } %>
                                             </span>
                                             <span>
@@ -119,7 +115,7 @@
 
                                             <span>
                                                 <button class="btn go-btn"
-                                                    onclick="location.href='channels/<%= channel._id %>/sessions'">Go</button>
+                                                    onclick="location.href='channels/<%= channel._id %>/sessions'">Go to Episodes</button>
                                             </span>
 
                                             <span>
@@ -127,12 +123,11 @@
                                                     data-logo-title="<%= channel.logoTitle %>"
                                                     data-description="<%= channel.description %>"
                                                     data-link="<%= channel.link %>"
-                                                    data-logo-url="<%= channel.logo %>">Edit</button>
+                                                    data-logo-url="<%= channel.logo %>">Edit This Project</button>
                                             </span>
 
                                             <span>
-                                                <button class="btn delete-btn"
-                                                    data-id="<%= channel._id %>">Delete</button>
+                                                <button class="btn delete-btn" data-id="<%= channel._id %>">Delete This Project</button>
 
                                             </span>
                                         </li>
@@ -166,7 +161,7 @@
                             </div>
 
                             <% } else { %>
-                                <p class="no-data-message">No channels found.</p>
+                                <p class="no-data-message">No Projects found.</p>
                                 <% } %>
     </div>
 

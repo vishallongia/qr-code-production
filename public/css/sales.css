@@ -15,8 +15,9 @@
     --link-hover-color: #18024b;
     --text-color: #333333;
     --grid-columns-7: 0.8fr 0.8fr 0.8fr 1.0fr 0.5fr 0.5fr 0.5fr;
+    --grid-columns-5: 0.3fr 0.6fr 0.6fr 0.6fr 0.6fr;
     --grid-columns-9: 0.7fr 0.7fr 0.7fr 1.0fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr;
-    --grid-columns-6: 0.7fr 0.7fr 0.7fr 0.7fr 0.5fr 0.5fr;
+    --grid-columns-6: 0.7fr 0.6fr 0.7fr 0.7fr 0.5fr 0.5fr;
     --grid-columns-8: 0.7fr 0.7fr 0.7fr 0.7fr 0.6fr 0.7fr 0.5fr 0.6fr;
 }
 
@@ -51,6 +52,9 @@ canvas {
 .list-wrapper {
     width: 100%;
     overflow-x: auto;
+    position: relative;
+    overflow-y: auto;
+    /* enable vertical scroll */
 }
 
 .list-header,
@@ -58,10 +62,12 @@ canvas {
     display: grid;
     grid-template-columns: var(--grid-columns-8);
     /* Default to 8 columns */
-    gap: 15px;
     padding: 15px 0;
     min-width: 950px;
+    gap: 10px;
+    align-items: center;
 }
+
 
 /* If the container has exactly 7 children, change the grid */
 .list-header:has(> *:nth-child(7):last-child),
@@ -69,9 +75,26 @@ canvas {
     grid-template-columns: var(--grid-columns-7);
 }
 
+/* If the container has exactly 5 children, change the grid */
+.list-header:has(> *:nth-child(5):last-child),
+.user-item:has(> *:nth-child(5):last-child) {
+    grid-template-columns: var(--grid-columns-5);
+}
+
+/* If the container has exactly 6 children, change the grid */
+.list-header:has(> *:nth-child(6):last-child),
+.user-item:has(> *:nth-child(6):last-child) {
+    grid-template-columns: var(--grid-columns-6);
+}
+
 .list-header {
+    position: sticky;
+    top: 0;
     font-weight: bold;
     border-bottom: 2px solid var(--input-border-color);
+    z-index: 1;
+    background: white;
+    /* make sure it stays on top */
 }
 
 .user-list {
@@ -764,7 +787,7 @@ input:checked+.toggle-slider:before {
 
 .status-sticker {
     display: inline-block;
-    padding: 6px 14px;
+    padding: 6px 20px;
     border-radius: 50px;
     font-size: 0.85rem;
     font-weight: 600;
@@ -772,11 +795,11 @@ input:checked+.toggle-slider:before {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
     position: relative;
     white-space: nowrap;
-    min-width: 120px;
     text-align: center;
     letter-spacing: 0.5px;
     transition: transform 0.2s ease;
     height: max-content;
+    width: fit-content;
 }
 
 .status-sticker.success {
@@ -875,7 +898,7 @@ input:checked+.toggle-slider:before {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 99;
+    z-index: 115;
     overflow-y: auto;
     /* allows vertical scroll */
     padding: 20px;

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login to Magic Code</title>
+    <title data-translate="activate_your_new_account">Login to Magic Code</title>
     <!-- Standard favicon -->
 <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
 
@@ -26,15 +26,17 @@
             <select id="languageSwitcher" class="language-selector-select">
                 <option value="en">English</option>
                 <option value="de">Deutsch (German)</option>
+                <option value="hu">Hungarian</option>
+                <option value="ro">Romanian</option>
             </select>
         </div>
     </div>
 
     <div class="container">
         <form class="login-box" action="/register" method="POST" onsubmit="return handleRegister(event)">
-            <h2>Activate Your New Account</h2>
-            <input type="text" name="fullName" id="FullNameText" placeholder="Enter name..." required />
-            <input type="email" name="email" id="EmailText" placeholder="Enter email address..." required />
+            <h2 data-translate="activate_your_new_account">Activate Your New Account</h2>
+            <input type="text" name="fullName" id="FullNameText" placeholder="Enter name..." required data-translate="enter_email_address"/>
+            <input type="email" name="email" id="EmailText" placeholder="Enter email address..." required data-translate="enter_password"/>
             <div class="password-wrapper">
                 <input type="password" name="password" id="RegisterPasswordText" placeholder="Enter password..."
                     required />
@@ -54,11 +56,11 @@
                 <a href="/forgotpassword/">Set My Password</a>
             </div> -->
 
-            <button class="login-btn" id="RegisterBtnText">Sign Up</button>
+            <button class="login-btn" id="RegisterBtnText" data-translate="activate_via_magic_link">Sign Up</button>
 
-            <div class="divider"><span>OR</span></div>
+            <div class="divider"><span data-translate="or">OR</span></div>
 
-            <button type="button" class="google-btn" onclick="window.location.href='/google'">Activate with Gmail</button>
+            <button type="button" class="google-btn" onclick="window.location.href='/google'" data-translate="activate_with_gmail">Activate with Gmail</button>
             <button type="button" class="magic-link-btn" id="registerMagicLinkText"
                 onclick="toggleMagicLink('register')">Register With Magic Link (No
                 password Needed)</button>
@@ -111,7 +113,7 @@
     <% } %>
 </script>
 
-<!-- <script src="/js/translations.js"></script> -->
+<script src="/js/translations.js"></script>
 
 
 </html>

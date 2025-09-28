@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Magic TV × ATV Magyarország</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZNB2G4J8G"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-0ZNB2G4J8G');
+    </script>
+
+    <link rel="icon" type="image/png" sizes="192x192" href="\images/atv_hu/ATV LANDING PAGE HEADER.png">
+    <link rel="apple-touch-icon" href="\images/atv_hu/ATV LANDING PAGE HEADER.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            /* background-color: white; */
+            text-align: center;
+            /* padding: 40px; */
+            margin-bottom: 20px;
+            /* border-bottom: 4px solid #0073e6; */
+        }
+
+        header h1 {
+            font-size: 2.8em;
+            margin: 0;
+        }
+
+        header p {
+            font-size: 1.2em;
+            color: #555;
+        }
+
+        header img {
+            width: 100%;
+            max-width: 1500px;
+            height: auto;
+        }
+
+        .section {
+            padding: 40px;
+            max-width: 900px;
+            margin: auto;
+            background-color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            font-size: 1.1em;
+
+        }
+
+        .section p {
+            line-height: 1.6rem;
+        }
+
+        li {
+            list-style: disc;
+            padding: 0;
+            margin: 15px auto;
+            text-align: left;
+            max-width: 800px;
+            font-size: 1.1rem;
+        }
+
+        h2 {
+            color: #e40001;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: #333;
+            color: #fff;
+            margin-top: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: #222;
+            color: #eee;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        img {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .fullscreen-overlay.show {
+            display: flex;
+        }
+
+        .fullscreen-overlay img {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            color: #333;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 10000;
+            background: #fff;
+            padding: 0;
+            border-radius: 50%;
+            /* box-shadow: 0 0px 0px rgba(0, 0, 0, 0.2); */
+            width: 40px;
+            height: 40px;
+            text-align: center;
+        }
+
+        .close-btn:hover {
+            color: red;
+        }
+
+        .section img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .highlight {
+            background-color: #ffe3e7;
+            border-left: 5px solid #e40001;
+            padding: 20px;
+            margin: 40px auto;
+            font-size: 1.1em;
+            max-width: 800px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-highlight {
+            background-color: #e40001;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn-highlight:hover {
+            background-color: #a80016;
+            transform: translateY(-2px);
+        }
+
+        .btn-highlight:active {
+            background-color: #870013;
+            transform: translateY(0);
+        }
+
+        .ImagesInList img {
+            margin-top: 1.4rem;
+            margin-bottom: 2rem;
+
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-auto-rows: 200px;
+            gap: 10px;
+        }
+
+        .gallery img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Layout pattern for 20 images */
+        .gallery div:nth-child(1) {
+            grid-column: span 6;
+        }
+
+        .gallery div:nth-child(2),
+        .gallery div:nth-child(3) {
+            grid-column: span 3;
+        }
+
+        .gallery div:nth-child(4) {
+            grid-column: span 2;
+        }
+
+        .gallery div:nth-child(5) {
+            grid-column: span 4;
+        }
+
+        .gallery div:nth-child(6),
+        .gallery div:nth-child(7) {
+            grid-column: span 2;
+        }
+
+        .gallery div:nth-child(7) {
+            grid-column: span 4;
+        }
+
+        .gallery div:nth-child(9) {
+            grid-column: span 6;
+        }
+
+        .gallery div:nth-child(10),
+        .gallery div:nth-child(11) {
+            grid-column: span 3;
+        }
+
+        .gallery div:nth-child(12) {
+            grid-column: span 4;
+        }
+
+        .gallery div:nth-child(13) {
+            grid-column: span 2;
+        }
+
+        .gallery div:nth-child(14),
+        .gallery div:nth-child(15),
+        .gallery div:nth-child(16) {
+            grid-column: span 2;
+        }
+
+        .gallery div:nth-child(17) {
+            grid-column: span 2;
+        }
+
+        .gallery div:nth-child(18) {
+            grid-column: span 4;
+        }
+
+        .gallery div:nth-child(19),
+        .gallery div:nth-child(20) {
+            grid-column: span 6;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+                grid-auto-rows: 150px;
+            }
+
+            .gallery div {
+                grid-column: span 1 !important;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .gallery {
+                grid-template-columns: 1fr;
+                grid-auto-rows: 200px;
+            }
+
+            .gallery div {
+                grid-column: span 1 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <img src="\images\atv_hu\ATV LANDING PAGE HEADER.png" alt="">
+    </header>
+
+
+    <div class="section">
+        <h2>Stratégiai partnerségi javaslat</h2>
+        <p>Az ATV Magyarország hiteles újságírásáról, erős politikai műsorairól és magas színvonalú beszélgetős
+            formátumairól ismert. Ez kiváló alapot teremt a Magic TV és annak interaktív másodképernyős élményeinek
+            bevezetéséhez.</p>
+        <p>A Magic Code integrálásával az ATV a passzív nézőket átformálja aktív résztvevőkké, miközben mérhető
+            elköteleződést és fenntartható új bevételi forrásokat teremt, és egyúttal tartalmi értéket is hoz létre.</p>
+    </div>
+
+    <div class="section">
+        <h2>Mi az a Magic TV?</h2>
+        <p>A Magic TV egy interaktív másodképernyős élmény, amely a nézőket valós időben vonja be a televíziós
+            műsorfolyamba. A rendszer központi eleme a Magic Code – egy televízióra optimalizált vizuális kód, amelyet a
+            nézők telefonjuk kamerájával azonnal be tudnak olvasni, alkalmazás nélkül. A Magic TV az alábbi formátumokat
+            jelenti:</p>
+        <ul>
+            <li><strong>Magic Vote</strong> – Valós idejű szavazás vitákban, talkshow-kban, vagy akár zenei műsorokban.
+                A nézők élőben nyilváníthatnak véleményt, amely azonnal megjeleníthető a képernyőn – micropayment alapú
+                – magic coins.</li>
+            <li><strong>Magic Quiz</strong> – Tudásalapú játék, ahol a nézők kérdésekre válaszolva nyereményekért vagy
+                Magic Code VIP előfizetésért játszanak – micropayment alapú.</li>
+            <li><strong>Magic Brands</strong> – Interaktív reklámblokk: vásárlás közvetlenül a képernyőről – pay/lead
+                alapú.</li>
+            <li><strong>Magic Shopping</strong> – Vásárlás a képernyőről: a Magic Code segítségével a nézők azonnal
+                elérhetik a műsorban megjelenő termékeket – pay/lead alapú.</li>
+            <li><strong>Magic Moments</strong> – Exkluzív tartalmak: kulisszák mögötti videók, bónuszinterjúk – pay/view
+                alapú – magic coins.</li>
+            <li><strong>Magic Stories</strong> – Interaktív történetmesélés – pay/view.</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Miért most?</h2>
+        <ul>
+            <li>A Magic Code elhozza a másodképernyős tartalomfogyasztás korszakát</li>
+            <li>A közönség egyre inkább interaktív élményekre vágyik</li>
+            <li>Az ATV formátumai kiválóan alkalmasak nézői részvételre</li>
+            <li>A Magic TV azonnal bevezethető, technikai beruházás nélkül</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>A kihívás: új vizuális nyelv és csatornaintegritás összhangja</h2>
+        <p>A Magic Code és a Magic TV megbízható rendszer és infrastruktúra, amelyet egy márka képvisel. Kifejezetten
+            televíziós felhasználásra optimalizált. Illeszkedik a műsor tartalmához és arculatához, egységes,
+            biztonságos élményt nyújt.</p>
+        <ul>
+            <li>Növeli a részvételi arányt</li>
+            <li>Erősíti az interakciókat</li>
+            <li>Fokozza a figyelmet a képernyőn</li>
+            <li>Növeli a csatornahűséget</li>
+            <li>Több digitális forgalmat generál</li>
+            <li>Növeli a bevételeket</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Az együttműködés előnyei az ATV számára</h2>
+        <ul>
+            <li>Növekvő nézői bevonódás</li>
+            <li>Több digitális forgalom</li>
+            <li>Új, fenntartható bevételi lehetőségek</li>
+            <li>Exkluzív tartalombővítés</li>
+            <li>Új márkapozíció</li>
+            <li>Nincs technikai, etikai vagy anyagi kockázat</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Bevételi modellek</h2>
+        <ul>
+            <li>40–70%-os jutalék minden felhasználó után</li>
+            <li>Prémium szavazások</li>
+            <li>Pay/Lead micropayments</li>
+            <li><strong>Magic Wallet & Magic Coins:</strong>
+                <ul>
+                    <li>Magic Coins: virtuális pénzegység – szavazások, kvízek, tartalmak</li>
+                    <li>Magic Wallet: azonnali, regisztráció nélküli fizetés</li>
+                </ul>
+            </li>
+        </ul>
+        <p>Ezek a megoldások nem csökkentik a nézői élményt – épp ellenkezőleg: növelik azt.</p>
+    </div>
+
+    <div class="section">
+        <h2>Pilot javaslat: START</h2>
+        <p>A START példáján teszteltük a Magic Code integrációját. Az eredmény: elegáns, hatékony megvalósítás.</p>
+    </div>
+
+    <div class="section">
+        <h2>Összefoglalás</h2>
+        <ul>
+            <li>Tartalmi mélységet ad a műsoroknak</li>
+            <li>Növeli a nézői elköteleződést</li>
+            <li>Új, folyamatos bevételi forrásokat teremt</li>
+        </ul>
+        <p><strong>A Magic TV és a Magic Code készen áll.<br>Alakítsuk együtt a magyar televíziózás új interaktív
+                korszakát!</strong></p>
+
+
+        <div class="gallery">
+            <div><img src="\images\atv_hu\1 .png" alt=""></div>
+            <div><img src="\images\atv_hu\2.png" alt=""></div>
+            <div><img src="\images\atv_hu\3.png" alt=""></div>
+            <div><img src="\images\atv_hu\4.png" alt=""></div>
+            <div><img src="\images\atv_hu\5.png" alt=""></div>
+            <div><img src="\images\atv_hu\6.png" alt=""></div>
+            <div><img src="\images\atv_hu\7.png" alt=""></div>
+        </div>
+    </div>
+
+
+    <footer>
+        <p>
+            Schmidt Arnold<br>
+            A Magic TV & Magic Code alapítója<br>
+            📧 arnoldschmidt.com@gmail.com<br>
+            📞 +41 76 328 6283<br>
+            &copy; 2025 Schmidt Arnold
+        </p>
+    </footer>
+
+    <!-- Fullscreen Overlay -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="close-btn" id="closeBtn">×</div>
+        <img id="fullscreenImg" src="" alt="Fullscreen View" />
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const allImages = document.querySelectorAll("img");
+        const overlay = document.getElementById("fullscreenOverlay");
+        const fullscreenImg = document.getElementById("fullscreenImg");
+        const closeBtn = document.getElementById("closeBtn");
+
+        let startX = 0, startY = 0, moved = false;
+
+        allImages.forEach(img => {
+            img.addEventListener("mousedown", (e) => {
+                startX = e.clientX;
+                startY = e.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("mousemove", (e) => {
+                if (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("mouseup", (e) => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+
+            // For touch devices
+            img.addEventListener("touchstart", (e) => {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("touchmove", (e) => {
+                const touch = e.touches[0];
+                if (Math.abs(touch.clientX - startX) > 5 || Math.abs(touch.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("touchend", () => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+        });
+
+        closeBtn.addEventListener("click", () => {
+            overlay.classList.remove("show");
+            fullscreenImg.src = "";
+        });
+
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+    </script>
+</body>
+
+</html>

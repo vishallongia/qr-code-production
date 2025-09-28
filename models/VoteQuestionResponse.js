@@ -52,6 +52,10 @@ const voteQuestionResponseSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isNoResposneGiven: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

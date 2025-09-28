@@ -16,14 +16,14 @@
         <a href="/" class="back-home-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
 
         <!-- Tabs -->
-       <div class="tabs">
-    <% if (!user.subscription?.isVip) { %>
-        <div class="tab active" id="plans-tab">Subscription Plans</div>
-        <div class="tab" id="current-subscription-tab">Current Subscription</div>
-    <% } else { %>
-        <div class="tab active" id="current-subscription-tab">VIP Subscription</div>
-    <% } %>
-</div>
+        <div class="tabs">
+            <% if (!user.subscription?.isVip) { %>
+                <div class="tab active" id="plans-tab">Subscription Plans</div>
+                <div class="tab" id="current-subscription-tab">Current Subscription</div>
+                <% } else { %>
+                    <div class="tab active" id="current-subscription-tab">VIP Subscription</div>
+                    <% } %>
+        </div>
 
         <!-- Subscription Plans Tab -->
         <div class="tab-content active" id="plans-tab-content">
@@ -93,36 +93,70 @@
     </div>
 
     <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+    <script src="/js/toastify-setup.js"></script>
     <script src="https://js.stripe.com/v3/"></script>
     <script
-        src="https://www.paypal.com/sdk/js?client-id=AeUlyT2WmljAHqGaXytGewyz61xmfAJ4woW1wA_2TwjcaqbbjJTkPHy47FsEJhcH68BGlm9-AdDfmbrU&currency=CHF"></script>
+        src="https://www.paypal.com/sdk/js?client-id=ARlL9iKwH-ib4SALn8uUCwXs7yMUdALrHPYk8_5l6uETER8_3fMGUb3Fc0ulLyWA-LAlGFdFxtSXXEcQ&currency=CHF"></script>
     <script src="/js/plan.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const containers = document.querySelectorAll(".paypal-button-container");
+            // Initialize the global object to store meta tokens if not already present
+            window.paypalMetaTokens = window.paypalMetaTokens || {};
+
 
             containers.forEach(container => {
                 const planId = container.dataset.planId;
+                const sanitizedId = container.id.replace("paypal-button-container-", "");
+                // Get the related coupon input field using the plan ID
+                const couponInput = document.querySelector(`#coupon-code-${sanitizedId}`);
 
                 paypal.Buttons({
-                    style: {
-                        color: 'blue',       // 'gold', 'blue', 'silver', 'white', 'black'
-                        shape: 'pill',       // 'pill' or 'rect'
-                        label: 'pay',        // 'checkout', 'pay', 'buynow', 'paypal'
-                        height: 40
-                    },
                     createOrder: function () {
+                        const couponCode = couponInput ? couponInput.value.trim() : "";
                         return fetch("/paypal/create-order", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json"
                             },
-                            body: JSON.stringify({ planId })
+                            body: JSON.stringify({ planId, couponCode })
                         })
-                            .then(res => res.json())
-                            .then(data => data.id);
+                            .then(async res => {
+                                if (!res.ok) {
+                                    const errorData = await res.json();
+                                    throw new Error(errorData.message || "Failed to create order");
+                                }
+                                return res.json();
+                            })
+                            .then(data => {
+                                console.log(data)
+                                // Check if a success message exists
+                                if (data.message) {
+                                    // Show success message
+                                    showToast(data.message, "success");
+                                    if (couponInput) couponInput.value = ""; // Clear the coupon input
+                                    // Reload the page after 3 seconds (to allow time for the toast to show)
+                                    setTimeout(() => {
+                                        location.reload(); // Reload the page
+                                    }, 2000); // 3000 ms (3 seconds) delay before reload
+
+                                }
+                                // Store metaToken indexed by order ID for later use in capture
+                                if (data.id && data.metaToken) {
+                                    window.paypalMetaTokens[data.id] = data.metaToken;
+                                }
+                                return data.id;
+                            })
+                            .catch(err => {
+                                console.error("Create Order Error:", err);
+                                showToast(err.message || "An error occurred while creating the order", "error");
+                                if (couponInput) couponInput.value = ""; // Clear the coupon input
+                                throw err; // rethrow so PayPal knows it failed
+                            });
                     },
                     onApprove: function (data) {
+                        const metaToken = window.paypalMetaTokens[data.orderID];
                         return fetch("/paypal/capture-order", {
                             method: "POST",
                             headers: {
@@ -130,24 +164,36 @@
                             },
                             body: JSON.stringify({
                                 orderID: data.orderID,
-                                planId
+                                planId,
+                                metaToken,
                             })
                         })
                             .then(res => res.json())
                             .then(response => {
-                                if (data.status === 'COMPLETED') {
-                                    // Now redirect user to success page
-                                    window.location.href = `/successpayment?session_id=${orderID}`;
+                                // Clear the metaToken no matter what
+                                delete window.paypalMetaTokens[data.orderID];
+                                if (response.status === 'COMPLETED') {
+                                    if (response.transactionId) {
+                                        if (couponInput) couponInput.value = ""; // Clear the coupon input
+                                        // ✅ Redirect to success page with transaction ID
+                                        window.location.href = `/successpayment?session_id=${response.transactionId}`;
+                                    } else {
+                                        alert("Transaction ID not found.");
+                                    }
                                 } else {
-                                    // Show error or retry
-                                    alert("Payment wasn't completed yet.");
+                                    showToast(response.message, "error");
+                                    setTimeout(() => {
+                                        window.location.href = `/cancel`;
+                                    }, 1000); // 1000 milliseconds = 1 second delay
                                 }
-                                // You can redirect or refresh here
                             });
                     },
                     onError: function (err) {
-                        console.error("PayPal Button Error:", err);
-                        alert("An error occurred during the transaction.");
+                        // Also clear in case of error to avoid memory leaks
+                        delete window.paypalMetaTokens[data.orderID];
+                        console.log(err)
+                        console.error("PayPal Button Error:", err.message);
+                        // showToast("An error occurred during the transaction.", "error");
                     }
                 }).render(container);
             });

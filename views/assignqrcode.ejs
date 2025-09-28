@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Assign Magic Code</title>
+    <title data-translate="assign_magic_code">Assign Magic Code</title>
     <!-- Standard favicon -->
     <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
 
@@ -26,6 +26,8 @@
             <select id="languageSwitcher" class="language-selector-select">
                 <option value="en">English</option>
                 <option value="de">Deutsch (German)</option>
+                <option value="hu">Hungarian</option>
+                <option value="ro">Romanian</option>
             </select>
         </div>
     </div>
@@ -65,27 +67,27 @@
     <% if (showPopup) { %>
         <div id="theme-popup" class="popup-overlay">
             <div class="popup-content">
-                <p>This MAGIC CODE has been assigned to you now. The Magic Link for Login has been sent to your e-mail
+                <p data-translate="assign_pop1">This MAGIC CODE has been assigned to you now. The Magic Link for Login has been sent to your e-mail
                     address.</p>
-                <button id="popup-ok-btn" style="display: none;">Check My E-Mail</button>
-                <p style="margin-top: 2rem;">CHECK BOTH: YOUR INBOX AND YOUR SPAM FOLDER</p>
+                <button id="popup-ok-btn" style="display: none;" >Check My E-Mail</button>
+                <p style="margin-top: 2rem;" data-translate="assign_pop2">CHECK BOTH: YOUR INBOX AND YOUR SPAM FOLDER</p>
             </div>
         </div>
         <% } else { %>
             <div id="theme-popup" class="popup-overlay" style="display: none;">
                 <div class="popup-content">
-                    <p>This is a themed popup message!</p>
+                    <p data-translate="assign_pop1">This is a themed popup message!</p>
                     <button id="popup-ok-btn" style="display: none;">Check My E-Mail</button>
-                    <p style="margin-top: 2rem;">CHECK BOTH: YOUR INBOX AND YOUR SPAM FOLDER</p>
+                    <p style="margin-top: 2rem;"  data-translate="assign_pop2">CHECK BOTH: YOUR INBOX AND YOUR SPAM FOLDER</p>
                 </div>
             </div>
             <% } %>
 
                 <div class="container">
                     <form class="login-box" method="POST">
-                        <h2>Activate This Magic Code to Belong to You Forever</h2>
+                        <h2  data-translate="assign_heading">Activate This Magic Code to Belong to You Forever</h2>
 
-                        <input type="email" name="email" placeholder="Enter email address..." id="assignedemail"
+                        <input type="email" name="email" placeholder="Enter email address..." id="assignedemail"  data-translate="enter_email_address"
                             required />
                         <!-- <input type="text" style="display: none;" id="couponcode" name="couponcode"
                             placeholder="Enter Coupon Code" class="input" /> -->
@@ -94,14 +96,14 @@
 
                         <button type="submit" class="login-btn" id="assignedemailbutton"
                             onclick="return handleAssignQrCode(event, 'assignedemail', 'couponcode')"><span
-                                class="btn-text">Get Magic Link</span>
+                                class="btn-text" data-translate="get_magic_link">Get Magic Link</span>
                             <span class="spinner" style="display: none; margin-left: 8px;">
                                 <span class="loader"></span>
                             </span></button>
                         </span>
 
 
-                        <button type="button" class="login-btn" onclick="Redirect()">Find Out More</button>
+                        <button type="button" class="login-btn" onclick="Redirect()" data-translate="find_out_more">Find Out More</button>
 
                     </form>
                 </div>
@@ -144,6 +146,8 @@
     document.getElementById("theme-popup-have-cc").style.display = "none";
   });
 </script>
+<script src="/js/translations.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
 <script src="/js/admindashboard-api-calls.js"></script>
@@ -153,7 +157,6 @@
         showToast("<%= message %>", "<%= type || 'success' %>");
   <% } %>
 </script>
-<script src="/js/translations.js"></script>
 
 
 </html>

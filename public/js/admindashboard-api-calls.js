@@ -428,7 +428,6 @@ function showThemePopup(message) {
 
   // Optional: set custom message
   popup.querySelector("p").innerText = message;
-
   popup.style.display = "flex";
 
   // Add one-time event listener

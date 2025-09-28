@@ -12,8 +12,8 @@
   --card-bg: #ffffff;
   --card-hover-transform: translateY(-5px);
   --card-transition: all 0.3s ease;
-  --link-color: #4db6ac;
-  --link-hover-color: #26a69a;
+  --link-color: #18024b;
+  --link-hover-color: rgba(26, 1, 97, 0.9);;
 }
 
 * {

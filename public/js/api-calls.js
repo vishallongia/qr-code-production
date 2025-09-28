@@ -101,9 +101,19 @@ async function handleLogin(event) {
 
     showToast(result.message, "success");
     loginBtn.disabled = false;
-    console.log(result);
     // Redirect to login page after successful logout
     setTimeout(() => {
+      const currentUrl = window.location.href;
+
+      // ✅ If current URL contains voting-play, quiz-play, or applause-play, just reload to same URL
+      if (
+        currentUrl.includes("voting-play") ||
+        currentUrl.includes("quiz-play") ||
+        currentUrl.includes("applause-play")
+      ) {
+        window.location.href = currentUrl;
+        return;
+      }
       if (result.redirectUrl) {
         window.location.href = result.redirectUrl;
       } else if (result.role === "admin") {

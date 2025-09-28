@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Die Einführung von Magic TV auf SRF</title>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZNB2G4J8G"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-0ZNB2G4J8G');
+    </script>
+
+    <link rel="icon" type="image/png" sizes="192x192" href="\images\MTV LOGO FAVICON.png">
+    <link rel="apple-touch-icon" href="\images\MTV LOGO FAVICON.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            /* background-color: white; */
+            text-align: center;
+            /* padding: 40px; */
+            margin-bottom: 20px;
+            /* border-bottom: 4px solid #0073e6; */
+        }
+
+        header h1 {
+            font-size: 2.8em;
+            margin: 0;
+        }
+
+        header p {
+            font-size: 1.2em;
+            color: #555;
+        }
+
+        header img {
+            width: 100%;
+            max-width: 1500px;
+            height: auto;
+        }
+
+        section {
+            padding: 40px;
+            max-width: 900px;
+            margin: auto;
+            background-color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            font-size: 1.1em;
+
+        }
+
+        .section p {
+            line-height: 1rem;
+        }
+
+        li {
+            list-style: disc;
+            padding: 0;
+            margin: 15px auto;
+            text-align: left;
+            max-width: 800px;
+            font-size: 1.1rem;
+        }
+
+        h2 {
+            color: #d1001c;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: #333;
+            color: #fff;
+            margin-top: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: #222;
+            color: #eee;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        img {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .fullscreen-overlay.show {
+            display: flex;
+        }
+
+        .fullscreen-overlay img {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            color: #333;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 10000;
+            background: #fff;
+            padding: 0;
+            border-radius: 50%;
+            /* box-shadow: 0 0px 0px rgba(0, 0, 0, 0.2); */
+            width: 40px;
+            height: 40px;
+            text-align: center;
+        }
+
+        .close-btn:hover {
+            color: red;
+        }
+
+        section img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+        }
+
+        .highlight {
+            background-color: #ffe3e7;
+            border-left: 5px solid #d1001c;
+            padding: 20px;
+            margin: 40px auto;
+            font-size: 1.1em;
+            max-width: 800px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-highlight {
+            background-color: #d1001c;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn-highlight:hover {
+            background-color: #a80016;
+            transform: translateY(-2px);
+        }
+
+        .btn-highlight:active {
+            background-color: #870013;
+            transform: translateY(0);
+        }
+
+        .ImagesInList img {
+            margin-top: 1.4rem;
+            margin-bottom: 2rem;
+
+        }
+
+        footer a {
+            text-decoration: none;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <header>
+        <img src="\images\JOYN LANDING PAGE.png" alt="">
+    </header> -->
+
+    <section>
+        <h2>Die Einführung von Magic TV auf SRF</h2>
+        <p>Die Einführung von Magic TV oder interaktiven QR-Codes beim SRF – Schweizer Radio und Fernsehen.</p>
+    </section>
+
+    <section>
+        <h2>Aktueller Stand beim SRF zu interaktiven QR-Codes</h2>
+
+        <h3>1. Konservativ, aber offen für kontrollierte Innovation</h3>
+        <p>SRF ist als öffentlich-rechtlicher Sender institutionell vorsichtig, vor allem im Vergleich zu kommerziellen
+            Privatsendern. Neue Technologien werden selten spontan übernommen – Transparenz, Datenschutz und
+            gesellschaftlicher Mehrwert stehen im Vordergrund.</p>
+        <p>Aber: SRF scheut Innovation nicht per se, wenn sie:</p>
+        <ul>
+            <li>einen öffentlichen Auftrag erfüllen (z. B. demokratische Teilhabe, Bildung, Kultur)</li>
+            <li>journalistische Standards wahren, datenschutzkonform und werbefrei oder werbereguliert sind</li>
+        </ul>
+
+        <p>Beispiele:</p>
+        <p>SRF hat bereits QR-Codes in Sendungen wie <strong>Arena</strong> oder <strong>Einstein</strong> verwendet,
+            meist für Zuschauerinteraktion, Voting oder zusätzliche Informationen – allerdings meist passiv (z. B.
+            Umfrage-Link), ohne kommerzielle Absicht und nicht permanent eingeblendet.</p>
+
+        <h3>2. Skepsis bei Monetarisierung & Werbung</h3>
+        <p>SRF ist gebührenfinanziert – das bedeutet:</p>
+        <ul>
+            <li>Es darf keine Werbung innerhalb der Hauptsendezeit (20–22 Uhr) senden.</li>
+            <li>Jegliche Monetarisierung durch Interaktion (z. B. kostenpflichtige Gewinnspiele) ist nicht zulässig.
+            </li>
+        </ul>
+
+        <h3>3. Interaktive Formate nur mit klarer redaktioneller Relevanz</h3>
+        <p>Technologische Erweiterungen müssen einen redaktionellen Mehrwert bieten – z. B. durch:</p>
+        <ul>
+            <li>Wissensvermittlung (Einstein)</li>
+            <li>Demokratische Partizipation (Arena, Abstimmungen)</li>
+            <li>Kulturelle Interaktion (SRF Kultur, Festivals)</li>
+        </ul>
+        <p>Ein bloßer „interaktiver QR-Code“ ohne Kontext wird eher als Spielerei oder Fremdkörper wahrgenommen. Wird er
+            jedoch sinnvoll eingebettet, kann das die Akzeptanz erhöhen.</p>
+
+        <h3>Fazit:</h3>
+        <p>Damit SRF einem intelligenten Magic Code zustimmen kann, müssen folgende Bedingungen erfüllt sein:
+        </p>
+        <ul>
+            <li>Datenschutzkonformität (kein Tracking, keine Drittplattformen ohne Schweizer Standards)</li>
+            <li>Keine Monetarisierung oder nur im Rahmen von Gebührenrecht und ohne kommerziellen Charakter</li>
+            <li>Redaktionelle Relevanz und inhaltlicher Mehrwert</li>
+            <li>Moderate Gestaltung (nicht aufdringlich, unpolitisch, wertneutral)</li>
+            <li>Pilotbetrieb oder Testprojekt im Bildungs-, Kultur- oder Partizipationsbereich</li>
+        </ul>
+    </section>
+
+
+    <section>
+        <h2>Strategische Empfehlung</h2>
+        <p>„Der Magic Code wird als nicht-kommerzielles, interaktives Werkzeug zur demokratischen oder kulturellen
+            Partizipation eingesetzt – mit der Absicht zur Förderung von Inklusion, Medienbildung und Interaktion
+            zwischen Zuschauer:innen und Redaktion, bei gleichzeitig voller Wahrung der Datenhoheit.“</p>
+    </section>
+
+    <section>
+        <h2>Erste Schritte</h2>
+
+        <h3>1. Substitution bestehender QR-Codes durch den Magic Code</h3>
+        <p><strong>Argumentation:</strong><br>
+            SRF verwendet bereits gelegentlich QR-Codes – z. B. in der Arena, bei Einstein oder bei Abstimmungsformaten.
+        </p>
+        <p>Warum also nicht gleich ein besseres, visuell optimiertes und funktional erweitertes Format wie den Magic
+            Code verwenden?</p>
+
+        <img src="\images\SRF 1 ARENA VOTE.png" alt="Magic Code Beispiel 1" />
+
+        <h3>Vorteile:</h3>
+
+        <ul>
+            <li>Keine Umstellung für Redaktion/Zuschauer – Mechanismus (Scan) bleibt gleich</li>
+            <li>Optisch hochwertiger – besser für SRF-CI & Sendungsästhetik</li>
+            <li>Mehr Funktionen – z. B. Langzeitbindung, Nachnutzung, Sicherheit</li>
+            <li>Flexibler – auch in Print, Events, Kulturförderung einsetzbar</li>
+        </ul>
+
+        <img src="\images\SRF 1 ARENA VOTE 2.png" alt="Magic Code Beispiel 1" />
+
+        <div>
+
+            <h3>Schlussfolgerung:</h3>
+
+            <p>„SRF nutzt bereits QR-Codes – der Magic Code ist deren logische Weiterentwicklung, visuell abgestimmt auf
+                TV-Ästhetik, datenschutzkonform und ohne technische Hürden direkt einsetzbar.“</p>
+        </div>
+
+
+        <img src="\images\SRF 6 EINSTEIN QUIZ.png" alt="Magic Code Beispiel 1" />
+
+        <h3>2. Anregung für häufigeren und bewussteren Einsatz</h3>
+        <p>Der Magic Code kann helfen, den öffentlich-rechtlichen Auftrag mit Leben zu füllen – durch mehr Inklusion,
+            Partizipation, Medienbildung und Sicherheit.</p>
+
+
+        <h3>Mögliche Anwendungsbereiche:</h3>
+        <ul>
+            <li>Partizipation in Politformaten (Arena mit Magic Voting oder Magic Quiz)</li>
+            <li>Kulturelle Interaktion (z. B. bei Dokus, Livestreams von Festivals)</li>
+            <li>Bildung & Jugend (z. B. Schulprojekte, SRF Kids)</li>
+            <li>Barrierefreie Kommunikation (Lost & Found bei Events, Magic Safety)</li>
+            <li>Dialog mit Zuschauer:innen (personalisierte Feedbackformate)</li>
+        </ul>
+
+        <img src="\images\SRF 6 EINSTEIN QUIZ 2.png" alt="Magic Code Beispiel 1" />
+
+
+        <h3>Fazit:</h3>
+        <p>
+            „Der Magic Code erlaubt SRF, seine Interaktionen mit dem Publikum zu vertiefen – im Sinne des öffentlichen
+            Auftrags. Ob bei politischen Diskussionen, kulturellen Projekten oder als sichere Kommunikationshilfe bei
+            Live-Events: Der Magic Code ist ein Werkzeug für moderne Medienbildung und gesellschaftliche Teilhabe.“
+        </p>
+
+
+
+    </section>
+
+
+
+    <section>
+
+        <img src="\images\SRF 2-5 SPORT.png" alt="Magic Code Beispiel 1" />
+        <br>
+        <img src="\images\SRF 2-5 0 SPORT.png" alt="Magic Code Beispiel 1" />
+
+        <br>
+
+        <img src="\images\SRF 3 SPORT.png" alt="Magic Code Beispiel 1" />
+
+
+    </section>
+
+
+    <footer>
+        <h3>Kontakt</h3>
+        <p>
+            Arnold Schmidt<br>
+            Gründer des Magic Code<br>
+            ✉️ <a href="mailto:arnoldschmidt.com@gmail.com">arnoldschmidt.com@gmail.com</a><br>
+            📞 +41 76 328 62 83<br>
+            🌐 <a href="https://magic-code.net" target="_blank">magic-code.net</a>
+        </p>
+    </footer>
+
+    <!-- Fullscreen Overlay -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="close-btn" id="closeBtn">×</div>
+        <img id="fullscreenImg" src="" alt="Fullscreen View" />
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const allImages = document.querySelectorAll("img");
+        const overlay = document.getElementById("fullscreenOverlay");
+        const fullscreenImg = document.getElementById("fullscreenImg");
+        const closeBtn = document.getElementById("closeBtn");
+
+        let startX = 0, startY = 0, moved = false;
+
+        allImages.forEach(img => {
+            img.addEventListener("mousedown", (e) => {
+                startX = e.clientX;
+                startY = e.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("mousemove", (e) => {
+                if (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("mouseup", (e) => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+
+            // For touch devices
+            img.addEventListener("touchstart", (e) => {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("touchmove", (e) => {
+                const touch = e.touches[0];
+                if (Math.abs(touch.clientX - startX) > 5 || Math.abs(touch.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("touchend", () => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+        });
+
+        closeBtn.addEventListener("click", () => {
+            overlay.classList.remove("show");
+            fullscreenImg.src = "";
+        });
+
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+    </script>
+</body>
+
+</html>

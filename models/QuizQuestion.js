@@ -10,6 +10,10 @@ const optionSchema = new mongoose.Schema({
     type: String, // URL or path to the option image
     default: null,
   },
+  description: {
+    type: String, // URL or path to the option image
+    default: null,
+  },
 });
 
 const quizQuestionSchema = new mongoose.Schema(
@@ -106,6 +110,12 @@ const quizQuestionSchema = new mongoose.Schema(
     logoLink: {
       type: String,
       default: null, // External or internal session link
+    },
+    // ✅ New field: Linked with Magic Code (QR)
+    linkedQRCode: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "QRCodeData", // Reference to the QRCodeData model
+      default: null, // Optional
     },
   },
   {

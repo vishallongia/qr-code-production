@@ -5,8 +5,8 @@
     --text-color: #333333;
     --input-border-color: rgba(0, 0, 0, 0.2);
     --input-focus-border-color: #80deea;
-    --submit-btn-bg: #4db6ac;
-    --submit-btn-hover-bg: #26a69a;
+    --submit-btn-bg: #18024b;
+    --submit-btn-hover-bg: rgba(26, 1, 97, 0.9);;
 }
 
 * {

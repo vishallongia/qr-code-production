@@ -39,11 +39,11 @@
         <% } else { %>
             <!-- Breadcrumbs -->
             <nav class="breadcrumbs">
-                <a href="/tvstation/channels">Shows</a>
+                <a href="/tvstation/channels">Projects</a>
                 <span>&rsaquo;</span>
-                <a href="/tvstation/channels/<%= channel._id %>/sessions">Session Manager</a>
+                <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                 <span>&rsaquo;</span>
-                <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Apps</a>
+                <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Events</a>
                 <span>&rsaquo;</span>
                 <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/quiz">Quiz</a>
                 <span>&rsaquo;</span>
@@ -105,7 +105,7 @@
                                 </ul>
                                 <% } else { %>
                                     <p style="text-align:center; color:#888; padding:20px; font-style:italic;">
-                                        No contestants participated or no jackpot reward for this.
+                                        No contestants participated yet.
                                     </p>
                                     <% } %>
                         </div>
@@ -154,7 +154,7 @@
                                         </ul>
                                         <% } else { %>
                                             <p style="text-align:center; color:#888; padding:20px; font-style:italic;">
-                                                No contestants participated or no digital reward for this.
+                                                No contestants participated yet.
                                             </p>
                                             <% } %>
                                 </div>

@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===================== Open Add Popup =====================
   openAddBtn?.addEventListener("click", () => {
     popup.style.display = "flex";
-    popupHeader.textContent = "Add New Show";
+    popupHeader.textContent = "Add New Project";
     form.reset();
     showIdInput.value = "";
     removeLogoFlag.value = "false";
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => {
       const channelId = btn.dataset.id?.trim(); // remove extra spaces
       showIdInput.value = channelId;
-      popupHeader.textContent = "Edit Show";
+      popupHeader.textContent = "Edit Project";
 
       // Populate name
       const secondSpan = btn
@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const channelId = btn.dataset.id;
-      const confirmed = confirm("Are you sure you want to delete this show?");
+      const confirmed = confirm("Are you sure you want to delete this Project?");
       if (!confirmed) return;
       document.getElementById("loader").style.display = "flex"; // 👈 Show loader
       try {
@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         const data = await res.json();
         if (res.ok) {
-          showToast(data.message || "Show deleted successfully", "success");
+          showToast(data.message || "Project deleted successfully", "success");
           setTimeout(() => location.reload(), 1000);
         } else {
           showToast(data.message || "Failed to delete show", "error");
@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
 
       if (res.ok) {
-        showToast(data.message || "Show saved successfully", "success");
+        showToast(data.message || "Project saved successfully", "success");
         popup.style.display = "none";
         form.reset();
         logoPreviewContainer.style.display = "none";
@@ -160,3 +160,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+function OpenEditFromImg(id) {
+    console.log("Edit button clicked for ID:", id);
+
+    // Find button by data-id
+    const btn = document.querySelector(`.edit-btn[data-id="${id}"]`);
+    if (btn) {
+        btn.click(); // triggers its click event
+    } else {
+        console.warn("Button not found for ID:", id);
+    }
+}

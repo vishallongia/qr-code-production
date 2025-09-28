@@ -12,4 +12,7 @@ public/table.html
 # But keep the .gitkeep placeholders
 !/uploads/.gitkeep
 !/questions-image/.gitkeep
+!/uploads/no-image.png
 
+envForPreview
+questions-image

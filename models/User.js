@@ -108,6 +108,11 @@ const userSchema = new mongoose.Schema(
         return this.isTvStation ? {} : undefined;
       },
     },
+    tags: {
+      type: [String],
+      default: [],
+      set: (tags) => [...new Set(tags.map((tag) => tag.trim().toLowerCase()))], // remove duplicates and trim
+    },
   },
   {
     timestamps: true, // adds createdAt and updatedAt automatically

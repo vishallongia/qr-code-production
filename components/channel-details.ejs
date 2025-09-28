@@ -17,11 +17,11 @@
   <div id="qr-download-container" style="display: none;"></div>
 
   <nav class="breadcrumbs">
-    <a href="/tvstation/channels">Shows</a>
+    <a href="/tvstation/channels">Projects</a>
     <span>&rsaquo;</span>
-    <a href="/tvstation/channels/<%= channel._id %>/sessions">Session Manager</a>
+    <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
     <span>&rsaquo;</span>
-    <span class="active">Apps</span>
+    <span class="active">Events</span>
   </nav>
   <div class="container-channel-details">
     <% if (error) { %>
@@ -33,7 +33,7 @@
         <% if (channel && !error) { %>
           <div class="header-custom-channel-details">
             <h1>
-              Show Name: <%= channel.channelName %>
+              Project Name: <%= channel.channelName %>
             </h1>
             <!-- <div class="status <%= channel.isRunning ? 'running' : 'stopped' %>">
               Status: <%= channel.isRunning ? "Running (" + channel.typeOfRunning + ")" : "Stopped" %>
@@ -52,14 +52,6 @@
                 </svg>
               </div>
               <div class="type-title">Quiz</div>
-              <!-- <div class="status-bar">
-                <div class="status-fill <%= channel.isRunning && channel.typeOfRunning === 'quiz' ? 'active' : '' %>">
-                </div>
-              </div>
-              <button class="type-btn"
-                onclick="toggleChannel('<%= channel._id %>', <%= channel.isRunning && channel.typeOfRunning === 'quiz' %>, 'quiz')">
-                <%= channel.isRunning && channel.typeOfRunning==='quiz' ? 'Stop' : 'Start' %> Quiz
-              </button> -->
             </div>
 
             <!-- Voting Box -->
@@ -73,16 +65,19 @@
                 </svg>
               </div>
               <div class="type-title">Voting</div>
-              <!-- <div class="status-bar">
-                <div
-                  class="status-fill voting <%= channel.isRunning && channel.typeOfRunning === 'voting' ? 'active' : '' %>">
-                </div>
-              </div>
-              <button class="type-btn"
-                onclick="toggleChannel('<%= channel._id %>', <%= channel.isRunning && channel.typeOfRunning === 'voting' %>, 'voting')">
-                <%= channel.isRunning && channel.typeOfRunning==='voting' ? 'Stop' : 'Start' %> Voting
-              </button> -->
             </div>
+
+            <div class="type-box"
+              onclick="location.href='/tvstation/applause/channels/<%= channel._id %>/session/<%= sessionId %>/applause'">
+              <div class="type-icon">
+                <!-- Applause SVG: Clapping Hands -->
+               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="#18024b">
+  <path d="M14 11.5c.28 0 .5-.22.5-.5V8c0-1.1-.9-2-2-2h-3c-1.1 0-2 .9-2 2v3c0 .55.45 1 1 1h5zm-7-1c.55 0 1-.45 1-1V9H5v1h2zm10 0c-.55 0-1-.45-1-1V9h2v1h-2zm-2.5 4c-.28 0-.5.22-.5.5v2.5c0 1.1.9 2 2 2h3c1.1 0 2-.9 2-2v-2.5c0-.28-.22-.5-.5-.5h-7zM12 13.5c-.28 0-.5.22-.5.5v1.5c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.5c0-.28-.22-.5-.5-.5h-1zM9.5 16c-.28 0-.5.22-.5.5v2.5c0 1.1.9 2 2 2h1c1.1 0 2-.9 2-2v-2.5c0-.28-.22-.5-.5-.5h-4z"/>
+</svg>
+              </div>
+              <div class="type-title">Applause</div>
+            </div>
+
 
             <% if (channel.isRunning && channel.typeOfRunning) { %>
               <!-- Magic Code Download Box -->

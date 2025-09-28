@@ -12,9 +12,29 @@
 </head>
 
 <body>
-    <input type="hidden" id="qrCodePrintData" name="qrCodePrintData" 
+<input type="hidden" id="qrCodePrintData" name="qrCodePrintData"
     value='<%- JSON.stringify(qrCode).replace(/'/g, "&#39;") %>'>
     <div id="show-section" class="fade-in">
+        <div style="display: flex; justify-content:space-around; align-items: baseline;">
+        <button class="btn" id="backtomymagiccode" onclick="window.location.href='/magiccode'">Back</button>
+                            <div class="multi-dropdown" id="multiDropdown" style="display: none; align-items: center; gap: 8px;">
+                    <button type="button">Link Tag</button>
+                    <div class="dropdown-content">
+                    </div>
+                    <button id="confirmSelection" class="confirm-btn" title="Confirm" 
+    style="background: #4CAF50; color: white; border: none; border-radius: 50%; 
+           width: 28px; height: 28px; cursor: pointer; display: flex; 
+           align-items: center; justify-content: center; font-size: 16px; line-height: 1;">
+    ✔
+</button>
+ <button id="removeSelection" class="remove-btn" title="Remove" 
+    style="background: #f44336; color: white; border: none; border-radius: 50%; 
+           width: 28px; height: 28px; cursor: pointer; display: flex; 
+           align-items: center; justify-content: center; font-size: 16px; line-height: 1;">
+    ✖
+  </button>
+                </div>
+                </div>
         <div class="qr-page" id="showandupdateqr">
             <div class="container">
                 <!-- QR Code Card -->
@@ -34,42 +54,67 @@
                             <% if (!qrCode.isFirstQr) { %>
                                 <button class="icon-button" title="Make It Free"
                                     onclick="makeItFree('<%= qrCode._id %>')">
-                                    <img src="\images\free.png" alt="Make It Free" class="action-icon" style="width: 60px; height: auto;" />
+                                    <img src="\images\free.png" alt="Make It Free" class="action-icon"
+                                        style="width: 60px; height: auto;" />
                                 </button>
                                 <% } %>
                         </div>
                     </div>
                 </div>
 
+
+
+              <div id="infoAnnouncement" style="display: none; 
+    background: #f0f7ff; border: 1px solid #cce5ff; color: #084298; 
+    padding: 14px 18px; border-radius: 8px; font-family: 'Poppins', sans-serif; 
+    font-size: 15px; margin-top: 12px;">
+
+  <!-- Info Icon -->
+  <span style="font-size: 18px; flex-shrink: 0;">ℹ️</span>
+  <strong>You don’t have any tags yet.</strong><br>
+
+  <!-- Text -->
+  <div>
+    By appending tags, it becomes easier to <strong>remember</strong> and <strong>search</strong> your Magic Codes later.<br>
+    To get started, please 
+    <a href="/magiccode" style="color: #0d6efd; font-weight: 500; text-decoration: underline;">
+      create your first tag here
+    </a>.
+  </div>
+</div>
+
+
                 <!-- Action Buttons -->
                 <div class="action-buttons">
                     <div class="action-card">
                         <img class="action-icon" alt="Create" src="/images/ICONS CONTEXT.png" />
-                        <div class="action-text">Change Magic Code <br> Message</div>
+                        <div class="action-text" data-translate="change_magic_code_message">Change Magic Code <br>
+                            Message</div>
                     </div>
                     <div class="action-card">
                         <img class="action-icon" alt="Color" src="/images/edit-color.png" />
-                        <div class="action-text">Change Magic Code <br> Color</div>
+                        <div class="action-text" data-translate="change_magic_code_color">Change Magic Code <br> Color
+                        </div>
                     </div>
                     <div class="action-card" id="print-magic-code-parent-tab">
                         <img class="action-icon large" alt="Print" src="/images/ICONS PRINT.png" />
-                        <div class="action-text">Print<br>Magic Code</div>
+                        <div class="action-text" data-translate="print_magic_code">Print<br>Magic Code</div>
                     </div>
                 </div>
 
                 <!-- Content Section -->
                 <div class="content-section" id="content-section-1">
-                    <h2>Magic Code Message</h2>
+                    <h2 data-translate="magic_code_message">Magic Code Message</h2>
 
                     <!-- Content Type Selection -->
                     <div class="content-types">
-                        <button class="content-type-button">Link</button>
-                        <button class="content-type-button">Text</button>
-                        <button class="content-type-button">Photo/Video</button>
+                        <button class="content-type-button" data-translate="link">Link</button>
+                        <button class="content-type-button" data-translate="text">Text</button>
+                        <button class="content-type-button" data-translate="photo_video">Photo/Video</button>
                     </div>
                     <div id="media-section">
                         <div class="form-group">
-                            <label for="media-file-update">Upload Your File</label>
+                            <label for="media-file-update" data-translate="upload_your_file">Upload Your File</label>
                             <div class="upload-box" onclick="document.getElementById('media-file-update').click();">
                                 <img src="/vuesax-linear-export.svg" alt="Upload icon">
                                 <p>Drag & Drop or <span class="browse-text">Browse</span></p>
@@ -80,17 +125,17 @@
 
                     <div id="text-section">
                         <div class="form-group">
-                            <label for="text-file-update">Enter Your Text</label>
+                            <label for="text-file-update" data-translate="enter_your_text">Enter Your Text</label>
                             <textarea id="text-file-update" name="TextLang" placeholder="Write your text here"
-                                class="input-group"></textarea>
+                                class="input-group" data-translate=""></textarea>
                         </div>
                     </div>
 
                     <div id="url-section">
                         <div class="form-group">
-                            <label for="url-update">Enter Link URL</label>
-                            <input type="text" id="url-update" name="UrlLang" placeholder="Paste your link here"
-                                class="input-group">
+                            <label for="url-update" data-translate="enter_link_url">Enter Link URL</label>
+                            <input type="text" id="url-update" data-translate="" name="UrlLang"
+                                placeholder="Paste your link here" class="input-group">
                         </div>
                     </div>
 
@@ -111,17 +156,20 @@
 
                 <div id="content-section-2">
                     <div class="form-group" id="background-setting-update">
-                        <label for="background-options-update">Background</label>
+                        <label for="background-options-update" data-translate="background">Background</label>
                         <div class="button-group" id="background-options-update">
-                            <button type="button" class="btn-outline active" id="keep-background-update">Keep
+                            <button type="button" class="btn-outline active" id="keep-background-update"
+                                data-translate="keep_background">Keep
                                 Background</button>
-                            <button type="button" class="btn-outline" id="remove-background-update">Remove
+                            <button type="button" class="btn-outline" id="remove-background-update"
+                                data-translate="remove_background">Remove
                                 Background</button>
                         </div>
                     </div>
 
                     <div class="form-group" id="foreground-color-setting-update">
-                        <label for="foreground-color-grid-update">Foreground Color</label>
+                        <label for="foreground-color-grid-update" data-translate="foreground_color">Foreground
+                            Color</label>
                         <div class="color-grid" id="foreground-color-grid-update">
                             <div class="color-option" style="background-color: #000000" id="fg-color-black-update">
                             </div>
@@ -157,7 +205,8 @@
                     </div>
 
                     <div class="form-group" id="background-color-setting-update">
-                        <label for="background-color-grid-update">Background Color</label>
+                        <label for="background-color-grid-update" data-translate="background_color">Background
+                            Color</label>
                         <div class="color-grid" id="background-color-grid-update">
                             <div class="color-option" style="background-color: #000000" id="bg-color-black-update">
                             </div>
@@ -199,22 +248,22 @@
                 </div>
                 <div id="content-section-3">
                     <div class="container-print">
-                        <h1>Print Magic Code</h1>
+                        <h1 data-translate="print_magic_code">Print Magic Code</h1>
 
                         <div class="content">
                             <div class="action-buttons">
                                 <div class="action-child-card active" data-preview="garment">
-                                    <div class="action-text">On Garment</div>
+                                    <div class="action-text" data-translate="on_garment">On Garment</div>
                                     <img class="action-icon" alt="Create" src="/images/ICONS T-SHIRT STICKERS.png" />
                                 </div>
 
                                 <div class="action-child-card" data-preview="sticker">
-                                    <div class="action-text">As Sticker</div>
+                                    <div class="action-text" data-translate="as_sticker">As Sticker</div>
                                     <img class="action-icon" alt="Color" src="\images\MAGIC STICKER BUTTON.png" />
                                 </div>
 
                                 <div class="action-child-card" data-preview="tattoo">
-                                    <div class="action-text">As Tattoo</div>
+                                    <div class="action-text" data-translate="as_tattoo">As Tattoo</div>
                                     <img class="action-icon" alt="Color" src="/images/MAGIC TATTOO-BUTTON.png" />
                                 </div>
 
@@ -233,17 +282,22 @@
 
                             <div class="card preview-card" data-type="tattoo"
                                 style="text-align: center; margin-top: 24px; ">
-                                <img src="/images/MAGIC TATTOOS PRODUCT PAGE.png" alt="QR Code Preview" class="qr-image" style="width: 170px;">
+                                <img src="/images/MAGIC TATTOOS PRODUCT PAGE.png" alt="QR Code Preview" class="qr-image"
+                                    style="width: 170px;">
                             </div>
 
                         </div>
                     </div>
                 </div>
                 <!-- Save Button -->
-                <button class="save-button" id="submit-btn-update" style="display:none;">Save Content</button>
-                <button class="save-button" id="PrintMyQR" style="display:none;">Print</button>
-                <button class="save-button" id="PrintMyQRAsSticker" style="display:none;">Print As Sticker</button>
-                <button class="save-button" id="PrintMyQRAsTattoo" style="display:none;">Print As Tattoo</button>
+                <button class="save-button" id="submit-btn-update" style="display:none;" data-translate="send">Save
+                    Content</button>
+                <button class="save-button" id="PrintMyQR" style="display:none;"
+                    data-translate="print_my_magic_code">Print</button>
+                <button class="save-button" id="PrintMyQRAsSticker" style="display:none;"
+                    data-translate="print_as_sticker">Print As Sticker</button>
+                <button class="save-button" id="PrintMyQRAsTattoo" style="display:none;"
+                    data-translate="print_as_tattoo">Print As Tattoo</button>
             </div>
         </div>
     </div>
@@ -469,5 +523,165 @@
                 }
             });
         });
+</script>
+<script> // EJS variable from backend
+const userTags = <%- JSON.stringify(user.tags || []) %>;
+const qrCodeData = JSON.parse(document.getElementById("qrCodePrintData").value);
+
+if (userTags.length > 0) {
+  document.getElementById("multiDropdown").style.display = "flex";
+} else {
+  document.getElementById("infoAnnouncement").style.display = "none";
+}
+
+const multiDropdown = document.getElementById("multiDropdown");
+const button = multiDropdown.querySelector("button");
+const dropdownContent = multiDropdown.querySelector(".dropdown-content");
+
+// Get tags already attached to this QR
+const existingTags = qrCodeData.tags || [];
+
+// Append tags dynamically and pre-check if already attached
+userTags.forEach(tag => {
+  const label = document.createElement("label");
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.value = tag;
+
+  if (existingTags.includes(tag)) {
+    checkbox.checked = true; // ✅ pre-check if already attached
+  }
+
+  label.appendChild(checkbox);
+  label.appendChild(document.createTextNode(` ${tag}`));
+  dropdownContent.appendChild(label);
+});
+
+// Now select checkboxes AFTER they are appended
+const checkboxes = dropdownContent.querySelectorAll("input[type='checkbox']");
+
+// Toggle dropdown open/close
+button.addEventListener("click", () => {
+  multiDropdown.classList.toggle("open");
+});
+
+// Close dropdown when clicking outside
+document.addEventListener("click", (e) => {
+  if (!multiDropdown.contains(e.target)) {
+    multiDropdown.classList.remove("open");
+  }
+});
+
+// Update selected values on change
+function updateButtonText() {
+  const selected = Array.from(checkboxes)
+    .filter(c => c.checked)
+    .map(c => c.value);
+
+  if (selected.length === 0) {
+    button.textContent = "Link Tag";
+  } else if (selected.length <= 2) {
+    button.textContent = selected.join(", ");
+  } else {
+    button.textContent = selected.slice(0, 2).join(", ") + ` +${selected.length - 2} more`;
+  }
+}
+
+
+// Run once on load to show pre-selected tags
+updateButtonText();
+
+// Attach event listeners
+checkboxes.forEach(cb => {
+  cb.addEventListener("change", updateButtonText);
+});
+
+const confirmBtn = document.getElementById("confirmSelection");
+const removeBtn = document.getElementById("removeSelection");
+
+confirmBtn.addEventListener("click", async () => {
+    const selectedTags = Array.from(dropdownContent.querySelectorAll("input[type='checkbox']:checked"))
+        .map(cb => cb.value);
+
+    if (selectedTags.length === 0) {
+        showToast("Please select at least one tag", "error");
+        return;
+    }
+  const loader = document.getElementById("loader");
+                if (loader) loader.style.display = "flex";
+    try {
+        const response = await fetch("/append-tag-with-qr", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                qrcodeId: qrCodeData._id,
+                tags: selectedTags
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showToast("Tags updated successfully!", "success");
+            // Reload after 1 second
+    setTimeout(() => {
+        window.location.reload();
+    }, 1000);
+        } else {
+            showToast(result.message || "Failed to update tags", "error");
+        }
+    } catch (error) {
+        console.error("Error updating tags:", error);
+        showToast("Something went wrong", "error");
+    }
+  finally {
+                    if (loader) loader.style.display = "none";
+                }
+});
+
+removeBtn.addEventListener("click", async () => {
+   const selectedTags = Array.from(dropdownContent.querySelectorAll("input[type='checkbox']:checked"))
+        .map(cb => cb.value);
+
+    if (selectedTags.length === 0) {
+        showToast("No Tag Currently Linked with Magic Code ", "error");
+        return;
+    }
+
+    const loader = document.getElementById("loader");
+    if (loader) loader.style.display = "flex";
+
+    try {
+        const response = await fetch("/unlink-tags-from-qr", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                qrcodeId: qrCodeData._id,
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showToast("Tags removed successfully!", "success");
+            // Reload after 1 second
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showToast(result.message || "Failed to remove tags", "error");
+        }
+    } catch (error) {
+        console.error("Error unlinking tags:", error);
+        showToast("Something went wrong", "error");
+    } finally {
+        if (loader) loader.style.display = "none";
+    }
+});
+
 </script>
 <html>

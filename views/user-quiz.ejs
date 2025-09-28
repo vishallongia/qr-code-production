@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quiz</title>
+    <title>Magic Quiz</title>
     <link rel="stylesheet" href="/css/user-quiz.css" />
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -51,8 +51,10 @@
                         <p id="selectedOptionText"></p> <!-- ✅ Option text will be shown here -->
 
                         <% if (currentQuestion?.jackpotCoinDeducted) { %>
-                            <p>Do you want to compete for the jackpot for <%= currentQuestion.jackpotCoinDeducted %>
-                                    coins?
+                            <p><span data-translate="doYouWantToCompeteForTheJackpotFor">Do you want to compete for the
+                                    jackpot for</span>
+                                <%= currentQuestion.jackpotCoinDeducted %>
+                                    <span data-translate="coins">coins</span> ?
                             </p>
 
                             <% } %>
@@ -64,10 +66,19 @@
 
                                         <% if (currentQuestion?.jackpotRewardImage) { %>
                                             <div style="margin:15px 0px;">
-                                                <img src="<%= currentQuestion.jackpotRewardImage %>"
-                                                    alt="Jackpot Reward">
+                                                <% if (currentQuestion.jackpotRewardLink) { %>
+                                                    <a href="<%= currentQuestion.jackpotRewardLink %>" target="_blank"
+                                                        rel="noopener noreferrer">
+                                                        <img src="<%= currentQuestion.jackpotRewardImage %>"
+                                                            alt="Jackpot Reward">
+                                                    </a>
+                                                    <% } else { %>
+                                                        <img src="<%= currentQuestion.jackpotRewardImage %>"
+                                                            alt="Jackpot Reward">
+                                                        <% } %>
                                             </div>
                                             <% } %>
+
 
                                                 <% if (currentQuestion?.jackpotRewardDescription) { %>
                                                     <p style="font-size: 0.95rem;">
@@ -78,10 +89,10 @@
                     <% if (currentQuestion?.jackpotCoinDeducted) { %>
 
                         <label class="coin-toggle">
-                            NO
+                            <span data-translate="no">NO</span>
                             <input type="checkbox" id="deductJackpotCoinSwitch" checked>
                             <span class="slider"></span>
-                            Yes
+                            <span data-translate="yes">Yes</span>
                         </label>
                         <% } %>
                             <% } %>
@@ -91,8 +102,12 @@
 
 
                                         <% if (currentQuestion?.digitalCoinDeducted) { %>
-                                            <p>Do you want to compete for the digital reward for <%=
-                                                    currentQuestion.digitalCoinDeducted %> coins?</p>
+                                            <p><span
+                                                    data-translate="doYouWantToWinTheSpecialPriceFreeVipPlanFor3MonthsFor">Do
+                                                    you want to compete for the digital reward for</span>
+                                                <%= currentQuestion.digitalCoinDeducted %> <span
+                                                        data-translate="coins">coins</span>?
+                                            </p>
                                             <% } %>
 
                                                 <% if (currentQuestion?.digitalRewardName) { %>
@@ -103,8 +118,16 @@
 
                                                         <% if (currentQuestion?.digitalRewardImage) { %>
                                                             <div style="margin:15px 0px;">
-                                                                <img src="<%= currentQuestion.digitalRewardImage %>"
-                                                                    alt="Digital Reward">
+                                                                <% if (currentQuestion.digitalRewardLink) { %>
+                                                                    <a href="<%= currentQuestion.digitalRewardLink %>"
+                                                                        target="_blank" rel="noopener noreferrer">
+                                                                        <img src="<%= currentQuestion.digitalRewardImage %>"
+                                                                            alt="Digital Reward">
+                                                                    </a>
+                                                                    <% } else { %>
+                                                                        <img src="<%= currentQuestion.digitalRewardImage %>"
+                                                                            alt="Digital Reward">
+                                                                        <% } %>
                                                             </div>
                                                             <% } %>
 
@@ -118,10 +141,10 @@
                                     </div>
                                     <% if (currentQuestion?.digitalCoinDeducted) { %>
                                         <label class="coin-toggle">
-                                            No
+                                            <span data-translate="no">No</span>
                                             <input type="checkbox" id="deductDigitalCoinSwitch" checked>
                                             <span class="slider"></span>
-                                            Yes
+                                            <span data-translate="yes">Yes</span>
                                         </label>
                                         <% } %>
                                             <% } %>
@@ -136,7 +159,7 @@
     </div>
     <input type="hidden" name="sessionId" value="<%= sessionId %>">
     <div class="uq-header">
-        <div class="uq-logo" onclick="window.location.href='/'">Magic Code</div>
+        <div class="uq-logo" onclick="window.location.href='/'">Magic Quiz</div>
         <div class="uq-coins" id="walletCoins" onclick="window.location.href='/magic-coin-wallet'">
             🪙 Magic Coins: <%= availableCoins || 0 %>
         </div>
@@ -145,7 +168,7 @@
     </div>
 
     <div class="language-selector-container">
-        <select id="languageSwitcher" class="language-selector-select active">
+        <select id="languageSwitcher" class="language-selector-select">
             <option value="en">English</option>
             <option value="de">Deutsch (German)</option>
             <option value="hu">Hungarian</option>
@@ -247,6 +270,11 @@
                                             <img class="uq-option-image-large" src="<%= opt.image %>"
                                                 alt="Option Image" />
                                             <% } %>
+
+                                                <span class="" style="font-weight: normal;">
+                                                    <%= opt.description %>
+                                                </span>
+                                    </label>
                                     </label>
                                 </div>
                                 <% }) %>
@@ -303,9 +331,9 @@
         const optionTextSpan = label.closest('.uq-option').querySelector('.uq-option-text');
 
         if (optionTextSpan) {
-            optionTextElInPopup.textContent = `You selected option ${optionLetter}, anwser "${optionTextSpan.innerText.trim()}".`;
+            optionTextElInPopup.innerHTML = `<span data-translate="youSelectedOption">You selected option</span> ${optionLetter}, <span data-translate="answer">anwser</span> "${optionTextSpan.innerText.trim()}".`;
         } else {
-            optionTextElInPopup.textContent = `You selected option ${optionLetter}: "(text not found)"`;
+            optionTextElInPopup.innerHTML = `<span data-translate="youSelectedOption">You selected option</span> ${optionLetter}: "(text not found)"`;
         }
 
         coinPopup.style.display = "flex";
@@ -354,6 +382,7 @@
                 if (data.success || data.notEnoughCoins) {
                     // Show result popup instead of reloading
                     showResultPopup(data);
+                    localStorage.setItem(`quiz_response_${questionId}_${sessionId}`, "answered");
                 } else {
                     showToast(data.message || "Failed to save response", "error");
                 }
@@ -402,16 +431,16 @@
             // Determine text for normal result
             if (isCorrect) {
                 if (!jackpotDeducted && !digitalDeducted) {
-                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are not participating in the contest.`;
+                    resultText.innerHTML = `<span data-translate="Answer">Answer</span> ${correctLetter} <span data-translate="isTheCorrectAnswer">is the correct answer</span>. <span data-translate="youAreNotParticipatingInTheContest">You are not participating in the contest</span>.`;
                 } else if (jackpotDeducted && !digitalDeducted) {
-                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are qualified to win the jackpot.`;
+                    resultText.innerHTML = `<span data-translate="Answer">Answer</span> ${correctLetter} <span data-translate="isTheCorrectAnswer">is the correct answer</span>. <span data-translate="youAreQualifiedToWinTheJackpot">You are qualified to win the jackpot</span>.`;
                 } else if (!jackpotDeducted && digitalDeducted) {
-                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are qualified to win the 3 Months VIP PLAN.`;
+                    resultText.innerHTML = `<span data-translate="Answer">Answer</span> ${correctLetter} <span data-translate="isTheCorrectAnswer">is the correct answer</span>. <span data-translate="youAreQualifiedToWinThe3MonthsVipPlan">You are qualified to win the 3 Months VIP PLAN</span>.`;
                 } else if (jackpotDeducted && digitalDeducted) {
-                    resultText.textContent = `Answer ${correctLetter} is the correct answer. You are qualified to win both: the JACKPOT, and 3 Months VIP PLAN.`;
+                    resultText.innerHTML = `<span data-translate="Answer">Answer</span> ${correctLetter} <span data-translate="isTheCorrectAnswer">is the correct answer</span>. <span data-translate="youAreQualifiedToWinBothTheJackpotAndThe3MonthsVipPlan">You are qualified to win both: the JACKPOT, and 3 Months VIP PLAN</span>.`;
                 }
             } else {
-                resultText.textContent = `The correct answer is ${correctLetter}. Thank you for your participation.`;
+                resultText.innerHTML = `<span data-translate="theCorrectAnswerIs">The correct answer is</span> ${correctLetter}. <span data-translate="thankYouForYourParticipation">Thank you for your participation</span>.`;
             }
 
             if (jackpotDeducted && data.jackpotReward) {
@@ -482,6 +511,85 @@
     }
 
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const questionId = document.querySelector('input[name="questionId"]').value;
+        const channelId = document.querySelector('input[name="channelId"]').value;
+        const sessionId = document.querySelector('input[name="sessionId"]').value;
 
+        const responseKey = `quiz_response_${questionId}_${sessionId}`;
+        const landKey = `quiz_land_${questionId}_${sessionId}`;
+
+        // ✅ Reset answer state here, before first visit/session checks
+        if (localStorage.getItem(responseKey) === "answered") {
+            localStorage.setItem(responseKey, "never");
+            console.log("Reset answered → now marked as never for this load.");
+        }
+
+        // First visit: mark response state if not present
+        if (!localStorage.getItem(responseKey)) {
+            localStorage.setItem(responseKey, "never"); // never answered
+        }
+
+        // Mark session land to differentiate first load vs reload
+        if (!sessionStorage.getItem(landKey)) {
+            sessionStorage.setItem(landKey, "visited");
+            // console.log("Valid first land → no Beacon will fire now.");
+        } else {
+            // console.log("Intentional reload detected.");
+        }
+
+        // Fire Beacon only on unload if unanswered AND it’s not the first land
+        window.addEventListener("beforeunload", () => {
+            if (
+                localStorage.getItem(responseKey) === "never" && // not answered
+                sessionStorage.getItem(landKey) === "visited"    // means reload/close
+            ) {
+                const payload = JSON.stringify({ questionId, channelId, sessionId, type: "quiz" });
+
+                if (navigator.sendBeacon) {
+                    const blob = new Blob([payload], { type: "application/json" });
+                    navigator.sendBeacon("/tvstation/quiz-viewed", blob);
+                    // console.log("Beacon sent on unload (user didn’t answer).");
+                } else {
+                    fetch("/tvstation/quiz-viewed", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: payload
+                    })
+                        .then(() => console.log("Fallback Beacon sent on unload."))
+                        .catch(err => console.error("Error recording viewed-only response:", err));
+                }
+            }
+        });
+    });
+</script>
+
+
+<script>
+    const langSelector = document.querySelector('.language-selector-select');
+    const selectedLang = document.querySelector('.selected-lang');
+    const dropdownItems = document.querySelectorAll('.language-dropdown li');
+
+    langSelector.addEventListener('click', () => {
+        langSelector.classList.toggle('active');
+    });
+
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const lang = e.target.getAttribute('data-lang');
+            selectedLang.textContent = lang;
+            langSelector.classList.remove('active');
+        });
+    });
+
+    // Optional: Click outside to close dropdown
+    document.addEventListener('click', (e) => {
+        if (!langSelector.contains(e.target)) {
+            langSelector.classList.remove('active');
+        }
+    });
+</script>
+<script src="\js\translationsForMiniApps.js"></script>
 
 </html>

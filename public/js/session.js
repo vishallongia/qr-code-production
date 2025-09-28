@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           json.data.forEach((s) => {
             const hasLogo = !!s.logo;
-            const imageSrc = hasLogo ? s.logo : "/uploads/no-image.png";
+            const imageSrc = hasLogo ? s.logo : "/images/no-image.png";
 
             const div = document.createElement("div");
             div.className = "quiz-admin-question-card";
@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!sessionId) return;
 
       const confirmed = confirm(
-        "Are you sure you want to delete this session?"
+        "Are you sure you want to delete this Episode?"
       );
       if (!confirmed) return;
 
@@ -135,16 +135,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (result.type === "success") {
           showToast(
-            result.message || "Session deleted successfully",
+            result.message || "Episode deleted successfully",
             "success"
           );
           setTimeout(() => location.reload(), 1000);
         } else {
-          showToast(result.message || "Failed to delete the session", "error");
+          showToast(result.message || "Failed to delete the Episode", "error");
         }
       } catch (err) {
         console.error("Delete failed", err);
-        showToast("Server error while deleting the session", "error");
+        showToast("Server error while deleting the Episode", "error");
       } finally {
         document.getElementById("loader").style.display = "none"; // 👈 Hide loader
       }
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("create-session-btn")
     ?.addEventListener("click", () => {
       popupAddSession.style.display = "flex";
-      headerText.textContent = "Create New Session";
+      headerText.textContent = "Create New Episode";
     });
 
   // Close popup
@@ -222,9 +222,9 @@ document.addEventListener("DOMContentLoaded", () => {
       label.textContent = "Choose Logo";
     }
 
-    submitBtn.textContent = "Update Session";
+    submitBtn.textContent = "Update Episode";
     popupAddSession.style.display = "flex";
-    headerText.textContent = "Update Session";
+    headerText.textContent = "Update Episode";
   });
   // Form submission
   form?.addEventListener("submit", async (e) => {
@@ -246,12 +246,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
-        showToast(data.message || "Session saved successfully", "success");
+        showToast(data.message || "Episode saved successfully", "success");
         resetForm();
         popupAddSession.style.display = "none";
         setTimeout(() => location.reload(), 1000);
       } else {
-        showToast(data.message || "Failed to save session", "error");
+        showToast(data.message || "Failed to save Episode", "error");
       }
     } catch (error) {
       console.error("Session Save Error:", error);
@@ -270,5 +270,5 @@ function resetForm() {
   previewContainer.style.display = "none";
   clearBtn.style.display = "none";
   label.textContent = "Choose Logo";
-  submitBtn.textContent = "Create Session";
+  submitBtn.textContent = "Create Episode";
 }

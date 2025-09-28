@@ -88,9 +88,151 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/events", async (req, res) => {
+router.get("/m_events", async (req, res) => {
   try {
     res.render("EventsForPromotion.ejs"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/viorel", async (req, res) => {
+  try {
+    res.render("viorel"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/seven_one", async (req, res) => {
+  try {
+    res.render("seven_one"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/atv_sr", async (req, res) => {
+  try {
+    res.render("atv"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/atv_mao", async (req, res) => {
+  try {
+    res.render("presentations/atv_hu"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/srf_arena", async (req, res) => {
+  try {
+    res.render("srf_arena"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/news", async (req, res) => {
+  try {
+    res.render("magic-tv-news-offer"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/joyn", async (req, res) => {
+  try {
+    res.render("joyn"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/mtv_srf", async (req, res) => {
+  try {
+    res.render("mtv_srf"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/srf_schule", async (req, res) => {
+  try {
+    res.render("srf_schule"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/Umsatzprognose", async (req, res) => {
+  try {
+    res.render("Umsatzprognose"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/presentations", async (req, res) => {
+  try {
+    res.render("presentation"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/stingray_deck", async (req, res) => {
+  try {
+    res.render("stingraydeck"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+router.get("/euronews_int", async (req, res) => {
+  try {
+    res.render("euronews"); // Send type as 'success'
   } catch (error) {
     res.status(500).render("login", {
       message: "Failed to load login page",
@@ -1618,6 +1760,8 @@ router.post("/usemagiclink", async (req, res) => {
 
     const magicLink = `${process.env.FRONTEND_URL}/verify-magiclink/${magicToken}`;
 
+    const username = email.split("@")[0];
+
     const sender = {
       email: "arnoldschmidt@magic-code.net",
       name: "Magic Code - Login Link",
@@ -1676,15 +1820,15 @@ router.post("/usemagiclink", async (req, res) => {
     </head>
     <body>
       <div class="container">
-        <h2>Login with Magic Link</h2>
+        <h2>Activate Your Magic Code</h2>
         <p>Hi ${user.fullName},</p>
-        <p>Use the magic link below to securely log in to your account. This link will expire in 30 minutes.</p>
-        <a href="${magicLink}" class="btn">Login Now</a>
+        <p>Click the ACTIVATE button below that will securely log you in to your Magic Code account. This button will expire in 30 minutes.</p>
+        <a href="${magicLink}" class="btn">ACTIVATE</a>
         ${
           isAffiliate
             ? `<p><strong>Email:</strong> ${user.email}</p>
                <p><strong>Password:</strong> ${decryptedPassword}</p>`
-            : `<p>After Login SET YOUR PASSWORD under My Profile.</p>`
+            : `<p>Your first password will be ${username} - which you can change any time under My Profile in your account.</p>`
         }
         <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
       </div>
@@ -2266,50 +2410,75 @@ router.post("/change-my-profile", authMiddleware, async (req, res) => {
   }
 });
 
-// Home route
+// Home route with filters
 router.get("/magiccode", authMiddleware, async (req, res) => {
   let user;
   try {
-    const userId = req.user._id; // Assuming the auth middleware adds the user object to the request
-    // Query for QR codes where the user either created them or is assigned to them
-    const qrCodes = await QRCodeData.find({
-      $or: [
-        { user_id: userId }, // QR codes created by the user
-        { assignedTo: userId }, // QR codes assigned to the user
-      ],
-    }).sort({ createdAt: -1 });
+    const userId = req.user._id;
+    const { search, tags, sortBy } = req.query; // Get query params
 
-    // Find the user by ID
+    // Base query: QR codes created by or assigned to the user
+    let query = {
+      $or: [{ user_id: userId }, { assignedTo: userId }],
+    };
+
+    // Filter by search text if provided
+    if (search && search.trim() !== "") {
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [
+          { qrName: { $regex: search.trim(), $options: "i" } },
+          { text: { $regex: search.trim(), $options: "i" } },
+        ],
+      });
+    }
+
+    // Filter by tags if provided (comma-separated string or array)
+    if (tags) {
+      let tagsArray = Array.isArray(tags) ? tags : tags.split(",");
+      if (tagsArray.length > 0) {
+        query.$and = query.$and || [];
+        query.$and.push({ tags: { $in: tagsArray } });
+      }
+    }
+
+    // Determine sort order
+    let sortOption = { createdAt: -1 }; // default: newest first
+    if (sortBy === "dateAsc") sortOption = { createdAt: 1 };
+    else if (sortBy === "dateDesc") sortOption = { createdAt: -1 };
+    else if (sortBy === "alphaAsc") sortOption = { qrName: 1 }; // A → Z
+    else if (sortBy === "alphaDesc") sortOption = { qrName: -1 }; // Z → A
+
+  
+
+    // Fetch QR codes with query and sort
+    const qrCodes = await QRCodeData.find(query).sort(sortOption);
+
+    // Fetch user
     user = await User.findById(userId);
-    // If user is a demo-user, fetch QRCodeData matching user ID
-    if (user.role === "demo-user") {
+
+    // Demo user redirect
+    if (user.role === "demo-user" && qrCodes.length > 0) {
       return res.redirect(`/dashboard?magiccode=${qrCodes[0]._id.toString()}`);
     }
-    if (qrCodes.length > 0) {
-      // QR codes found for the user
-      res.render("dashboardnew", {
-        qrCodes, // Pass the QR codes to the template
-        message: "Welcome! Here are your Magic Codes.",
-        activeSection: "show",
-        user,
-        type: "hidden",
-      });
-    } else {
-      // No QR codes found for the user
-      res.render("dashboardnew", {
-        qrCodes: [], // Pass an empty array for QR codes
-        message: "No Magic Codes found.",
-        activeSection: "show",
-        user,
-        type: "hidden",
-      });
-    }
+
+    // Render dashboard
+    res.render("dashboardnew", {
+      qrCodes,
+      message:
+        qrCodes.length > 0
+          ? "Welcome! Here are your Magic Codes."
+          : "No Magic Codes found.",
+      activeSection: "show",
+      user,
+      type: "hidden",
+    });
   } catch (error) {
     console.error("Error fetching Magic Code data:", error);
     res.status(500).render("dashboardnew", {
       qrCodes: [],
       message: "An error occurred while fetching your Magic Codes.",
-      type: "error", // Send type as 'error' to trigger toast notification
+      type: "error",
       user,
       activeSection: "show",
     });
@@ -4900,10 +5069,42 @@ router.get("/stingray", async (req, res) => {
     });
   }
 });
+router.get("/euronews_ro", async (req, res) => {
+  try {
+    res.render("euronews_ro"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
 
 router.get("/broadcaster-sheet", async (req, res) => {
   try {
     res.render("sheet.ejs"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/calculator", async (req, res) => {
+  try {
+    res.render("presentations/calculator"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
+router.get("/victormicula", async (req, res) => {
+  try {
+    res.render("victormicula"); // Send type as 'success'
   } catch (error) {
     res.status(500).render("login", {
       message: "Failed to load login page",
@@ -5511,7 +5712,7 @@ router.get("/special-offers", authMiddleware, async (req, res) => {
 });
 
 // Home route
-router.get("/authenticateqr/:couponId", authMiddleware, async (req, res) => {
+router.get("/authenticateqr/:couponId?", authMiddleware, async (req, res) => {
   let user;
   try {
     const userId = req.user._id; // Assuming the auth middleware adds the user object to the request
@@ -5632,6 +5833,152 @@ router.post("/update-discount/:couponId", authMiddleware, async (req, res) => {
     return res
       .status(500)
       .json({ message: "Internal server error", success: false });
+  }
+});
+
+// create tag api
+
+router.post("/create-tag", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { tag } = req.body;
+
+    if (!tag || !tag.trim()) {
+      return res.status(400).json({
+        message: "Tag value is required",
+        success: false,
+      });
+    }
+
+    const cleanTag = tag.trim().toLowerCase();
+
+    // ✅ Use $addToSet to automatically prevent duplicates
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { tags: cleanTag } }, // only adds if not exists
+      { new: true } // return updated document
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Tag created successfully",
+      success: true,
+      tags: updatedUser.tags,
+    });
+  } catch (error) {
+    console.error("Error creating tag:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+      success: false,
+    });
+  }
+});
+
+router.post("/append-tag-with-qr", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { qrcodeId, tags } = req.body;
+
+    if (!qrcodeId) {
+      return res.status(400).json({
+        message: "QR code ID is required",
+        success: false,
+      });
+    }
+
+    if (!Array.isArray(tags)) {
+      return res.status(400).json({
+        message: "Tags array is required",
+        success: false,
+      });
+    }
+
+    // Clean tags
+    const cleanTags = tags.map((t) => t?.trim().toLowerCase()).filter(Boolean);
+
+    // ✅ Fetch user tags
+    const user = await User.findById(userId).select("tags");
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
+      });
+    }
+
+    // ✅ Keep only tags that exist in user.tags
+    const allowedTags = cleanTags.filter((t) => user.tags.includes(t));
+
+    // ✅ Update QR with the *exact* tags (overwrite instead of append)
+    const updatedQR = await QRCodeData.findByIdAndUpdate(
+      qrcodeId,
+      { $set: { tags: allowedTags } },
+      { new: true }
+    );
+
+    if (!updatedQR) {
+      return res.status(404).json({
+        message: "QR code not found",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Tags updated successfully",
+      success: true,
+      tags: updatedQR.tags,
+    });
+  } catch (error) {
+    console.error("Error appending tags to QR code:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+      success: false,
+    });
+  }
+});
+
+// Unlink (clear all) tags from QR
+router.post("/unlink-tags-from-qr", authMiddleware, async (req, res) => {
+  try {
+    const { qrcodeId } = req.body;
+
+    if (!qrcodeId) {
+      return res.status(400).json({
+        message: "QR code ID is required",
+        success: false,
+      });
+    }
+
+    // ✅ Find QR and clear tags
+    const updatedQR = await QRCodeData.findByIdAndUpdate(
+      qrcodeId,
+      { $set: { tags: [] } },
+      { new: true }
+    );
+
+    if (!updatedQR) {
+      return res.status(404).json({
+        message: "QR code not found",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "All tags removed successfully",
+      success: true,
+      tags: updatedQR.tags,
+    });
+  } catch (error) {
+    console.error("Error unlinking tags from QR:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+      success: false,
+    });
   }
 });
 

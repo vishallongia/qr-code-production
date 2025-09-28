@@ -40,11 +40,11 @@
         </div>
         <% } else { %>
             <nav class="breadcrumbs">
-                <a href="/tvstation/channels">Shows</a>
+                <a href="/tvstation/channels">Projects</a>
                 <span>&rsaquo;</span>
-                <a href="/tvstation/channels/<%= channel._id %>/sessions">Session Manager</a>
+                <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                 <span>&rsaquo;</span>
-                <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Apps</a>
+                <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Events</a>
                 <span>&rsaquo;</span>
                 <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting">Voting</a>
                 <span>&rsaquo;</span>
@@ -71,7 +71,7 @@
                 </div>
             </div>
             <div class="modern-list-container">
-                <h1 style="text-align:center;">🎉 Draw Voting Quiz Winner</h1>
+                <h1 style="text-align:center;">🎉 Draw Voting Winner</h1>
 
                 <div class="draw-wrapper">
                     <!-- Jackpot Participants -->
@@ -106,7 +106,7 @@
                                 </ul>
                                 <% } else { %>
                                     <p style="text-align:center; color:#888; padding: 20px; font-style: italic;">
-                                        No contestants participated or no jackpot reward for this.
+                                        No contestants participated yet.
                                     </p>
                                     <% } %>
                         </div>
@@ -158,7 +158,7 @@
                                         <% } else { %>
                                             <p
                                                 style="text-align:center; color:#888; padding: 20px; font-style: italic;">
-                                                No contestants participated or no digital reward for this.
+                                                No contestants participated yet.
                                             </p>
                                             <% } %>
                                 </div>
@@ -241,14 +241,14 @@
 
 
                     // --- Main drawWinner function ---
-                    async function drawWinner(mode, userId = null, responseId = null) { // optional userId for pre-selected winner
+                    async function drawWinner(mode, userId = null,responseId = null) { // optional userId for pre-selected winner
                         if (!mode) return;
                         loader.style.display = "flex"; // show loader
 
                         try {
                             const bodyData = { type: "voting", mode };
-                            if (userId) bodyData.userId = userId;
-                            if (responseId) bodyData.responseId = responseId;
+                            if (userId) bodyData.userId = userId; 
+                            if (responseId) bodyData.responseId = responseId; 
 
                             const res = await fetch(
                                 `/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting/draw`,

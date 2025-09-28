@@ -10,41 +10,45 @@
 </head>
 
 <body>
-
-    <nav class="breadcrumbs">
-        <a href="/tvstation/channels">Shows</a>
-        <span>&rsaquo;</span>
-        <a href="/tvstation/channels/<%= channel._id %>/sessions">Session Manager</a>
-        <span>&rsaquo;</span>
-        <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Apps</a>
-        <span>&rsaquo;</span>
-        <span class="active">Quiz</span>
-    </nav>
-
     <div class="quiz-admin-container">
         <% if (error) { %>
             <div class="quiz-admin-error">
                 <%= error %>
             </div>
             <% } else { %>
+
+                <nav class="breadcrumbs">
+                    <a href="/tvstation/channels">Projects</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channelId %>/sessions">Episodes</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channelId %>/session/<%= sessionId %>">Events</a>
+                    <span>&rsaquo;</span>
+                    <span class="active">Quiz</span>
+                </nav>
                 <div class="quiz-admin-header">
-                    <h1>Quiz Manager</h1>
+                    <h1>
+                        <%= channel && channel.channelName ? channel.channelName + ' ' : '' %>
+                            <span>&rsaquo;</span>
+                            <%= session && session.name ? session.name + ' ' : '' %>
+                                <span>&rsaquo;</span>&nbsp;Quiz Manager
+                    </h1>
                     <div class="quiz-admin-controls">
                         <% if (!quizQuestions || quizQuestions.length===0) { %>
                             <button
-                                onclick="window.open('/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/addquestion', '_blank')"
+                                onclick="window.open('/tvstation/channels/<%= channelId %>/session/<%= sessionId %>/addquestion', '_blank')"
                                 class="btn">
-                                + Add New Question
+                                + Create a New Quiz Event
                             </button>
                             <% } %>
                                 <!-- <button id="startChannelBtn" class="start-btn btn">
                             <%= channel.isRunning && channel.typeOfRunning==="quiz" ? "Stop" : "Start" %>
                         </button> -->
                                 <button class="winner-btn btn"
-                                    onclick="window.open('/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/quiz/drawwinner', '_blank')">Draw
+                                    onclick="window.open('/tvstation/channels/<%= channelId %>/session/<%= sessionId %>/quiz/drawwinner', '_blank')">Draw
                                     Winner</button>
                                 <button class="logs-btn btn"
-                                    onclick="location.href='/tvstation/channel/<%= channel._id %>/session/<%= sessionId %>/quiz-response-tracker'">Track
+                                    onclick="location.href='/tvstation/channel/<%= channelId %>/session/<%= sessionId %>/quiz-response-tracker'">Track
                                     Logs</button>
                     </div>
                 </div>
@@ -56,27 +60,72 @@
                                 <div class="quiz-admin-question-text">
                                     <%= q.question %>
                                 </div>
-                                <div class="quiz-admin-info">
-                                    <span>
-                                        <strong>Correct Answer:</strong>
-                                        <%= String.fromCharCode(65 + q.correctAnswerIndex) %>
-                                    </span>
-                                    <span><strong>Magic Coins Deducted:</strong>
-                                        <%= q.magicCoinDeducted || 0 %>
-                                    </span>
-                                </div>
-                                <div class="quiz-admin-actions">
-                                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/editquestion/<%= q._id %>"
-                                        target="_blank">
-                                        <button>Edit</button>
-                                    </a>
-                                    <button class="delete-btn delete" data-question-id="<%= q._id %>">Delete</button>
+                                <% if (q.questionImage) { %>
+                                    <div class="quiz-admin-question-image" style="margin-top: 8px;">
+                                        <img src="<%= q.questionImage %>" alt="Question Image"
+                                            style="max-width: 150px; height: auto; border-radius: 4px;" />
+                                    </div>
+                                    <% } %>
+                                        <div class="quiz-admin-info">
+                                            <span>
+                                                <strong>Correct Answer:</strong>
+                                                <%= String.fromCharCode(65 + q.correctAnswerIndex) %>
+                                            </span>
+                                            <span><strong>Magic Coins Value:</strong>
+                                                <%= q.magicCoinDeducted || 0 %>
+                                            </span>
+                                        </div>
+                                        <div class="quiz-admin-actions">
+                                            <a href="/tvstation/channels/<%= channelId %>/session/<%= sessionId %>/editquestion/<%= q._id %>"
+                                                target="_blank">
+                                                <button>Edit</button>
+                                            </a>
+                                            <button class="delete-btn delete"
+                                                data-question-id="<%= q._id %>">Delete</button>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;"
+                                            id="quiz-admin-actions-parent-div">
 
-                                </div>
+                                            <div class="quiz-new-actions">
+                                                <button class="btn open-app-quiz"
+                                                    style="padding: 7px 12px; border-radius: 4px;"
+                                                    data-question-id="<%= q._id %>"
+                                                    onclick="window.open('/tvstation/channels/<%= channelId %>/session/<%= sessionId %>/quiz-play/?lang=en', '_blank')">Open
+                                                    Front Screen</button>
+                                                <button class="btn" id="toggleMagicUpdateBtn"
+                                                    style="padding: 7px 12px; border-radius: 4px;"
+                                                    data-question-id="<%= q._id %>">Open Magic Code</button>
+                                                <button class="btn" id="linkWithMagicCodeBtn"
+                                                    style="padding: 7px 12px; border-radius: 4px;"
+                                                    data-question-id="<%= q._id %>"
+                                                    onclick="window.location.href='/authenticateqr?sessionId=<%= sessionId %>&channelId=<%= channelId %>&type=quiz&linked=true'">
+                                                    Send to a Magic Code
+                                                </button>
+                                                <button class="btn" style="padding: 7px 12px; border-radius: 4px;"
+                                                    data-question-id="<%= q._id %>" id="unlinkBtn">Unsend</button>
+
+                                                <button class="btn"
+                                                    style="padding: 7px 12px; border-radius: 4px; display: none;"
+                                                    id="linkNewMagicCode" data-question-id="<%= q._id %>"
+                                                    onclick="window.location.href='/dashboard?sessionId=<%= sessionId %>&channelId=<%= channelId %>&type=quiz&linked=true'">
+                                                    Send to New Magic Code
+                                                </button>
+
+
+                                                <button class="type-btn btn"
+                                                    style="padding: 7px 12px; border-radius: 4px;"
+                                                    onclick="downloadMagicCode('<%= channelId %>', '<%= sessionId %>')"
+                                                    id="download-qr-code-btn">Download</button>
+
+                                                <!-- Placeholder for Copy Link -->
+                                                <button class="btn copy-qr-link-btn" data-question-id="<%= q._id %>"
+                                                    style="padding: 7px 12px; border-radius: 4px;">Copy</button>
+                                            </div>
+                                        </div>
                             </div>
                             <% }) %>
                                 <% } else { %>
-                                    <p style="padding: 1rem;">No quiz questions available.</p>
+                                    <p style="padding: 1rem;">No Event available.</p>
                                     <% } %>
                 </div>
                 <% if (hasMore) { %>
@@ -92,7 +141,7 @@
                         <script>
 
                             let skipCount = <%= quizQuestions.length %>;
-                            const channelId = "<%= channel._id %>";
+                            const channelId = "<%= channelId %>";
 
                             const loadMoreBtn = document.getElementById("loadMoreBtn");
                             const loadingText = document.getElementById("loadingText");
@@ -167,7 +216,7 @@
                                                 "Content-Type": "application/json"
                                             },
                                             body: JSON.stringify({
-                                                channelId: "<%= channel._id %>"
+                                                channelId: "<%= channelId %>"
                                             })
                                         });
 
@@ -193,10 +242,10 @@
                                 }
                             });
                         </script>
-                        <% } %>
+                        <div id="magicCodeSection">
                             <h1>Magic Code</h1>
                             <div class="quiz-admin-question-card app-qr-box quiz-admin-questions">
-                                <div id="qr-download-container"></div>
+                                <div id="qr-download-container" style="display: none;"></div>
                                 <!-- Magic Code Download Box -->
                                 <div class="type-box">
                                     <!-- Hidden fields for JS -->
@@ -236,7 +285,7 @@
                                         </div>
                                     </div>
                                     <!-- Download Button -->
-                                    <!-- <button class="type-btn" onclick="handleMagicCodeUpdate('<%= channel._id %>')">Update</button> -->
+                                    <!-- <button class="type-btn" onclick="handleMagicCodeUpdate('<%= channelId %>')">Update</button> -->
 
                                     <div class="app-actions">
                                         <select id="languageSwitcherApp" class="language-selector-select active"
@@ -247,19 +296,27 @@
                                             <option value="ro">Romanian</option>
                                         </select>
 
-                                        <button class="type-btn btn"
-                                            onclick="downloadMagicCode('<%= channel._id %>', '<%= sessionId %>', true)">Update</button>
+                                        <select id="LogoSelect" class="language-selector-select active"
+                                            style="width: 100%; max-width: 280px;">
+                                            <option value="red">Red</option>
+                                            <option value="white">White</option>
+
+                                        </select>
 
                                         <button class="type-btn btn"
-                                            onclick="downloadMagicCode('<%= channel._id %>', '<%= sessionId %>')">Download</button>
+                                            onclick="downloadMagicCode('<%= channelId %>', '<%= sessionId %>', true)">Update</button>
+
+
+                                        <button class="type-btn btn open-app-quiz" style="display: none;"
+                                            onclick="window.open('/tvstation/channels/<%= channelId %>/session/<%= sessionId %>/quiz-play/?lang=en', '_blank')">Open</button>
+
+
+
                                     </div>
-
-
-
-
-
                                 </div>
                             </div>
+                        </div>
+                        <% } %>
 
     </div>
 
@@ -388,13 +445,6 @@
                         bgDiv.style.display = (allowed.includes(bgName) && bgName !== fgName) ? "inline-block" : "none";
                     }
 
-                    // Transparent always visible except when FG = white
-                    // if (bgDiv.dataset.color === "transparent") {
-                    //     bgDiv.style.display = fgName === "white" ? "none" : "inline-block";
-                    //     bgHexInput.value = "#00000";
-                    // } else {
-                    // bgDiv.style.display = (allowed.includes(bgName) && bgName !== fgName) ? "inline-block" : "none";
-                    // }
 
 
                 });
@@ -413,65 +463,12 @@
                 } else {
                     bgHexInput.value = rgbToHex(bgDiv.style.backgroundColor);
                 }
-
-
-
-                // Hide white in FG only if BG is transparent
-                // fgGrid.querySelectorAll(".color-option").forEach(fgDiv => {
-                //     if (bgData === "transparent" && fgDiv.dataset.color === "white") {
-                //         fgDiv.style.display = "none";
-                //         if (fgDiv.classList.contains("active")) {
-                //             clearActive(fgGrid);
-                //             fgHexInput.value = "";
-                //         }
-                //     } else {
-                //         fgDiv.style.display = "inline-block";
-                //     }
-                // });
-
-                // const bgHex = rgbToHex(bgDiv.style.backgroundColor);
-                // bgHexInput.value = bgHex;
             });
         });
     </script>
 
-
     <script>
-        async function handleMagicCodeUpdate(channelId) {
-            const fgHex = document.getElementById("selectedFgHex").value;
-            const bgHex = document.getElementById("selectedBgHex").value;
-
-            const body = {};
-
-            if (fgHex) body.qrDotColor = fgHex;
-            if (bgHex) body.backgroundColor = bgHex;
-
-            try {
-                const res = await fetch(`/tvstation/channel/${channelId}/qr`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(body),
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    showToast("Magic code updated!", "success");
-                } else {
-                    showToast(data.message || "Failed to update magic code", "error");
-                }
-            } catch (err) {
-                console.error("QR update error:", err);
-                showToast("Something went wrong", "error");
-            }
-        }
-    </script>
-
-
-
-    <script>
+        let UrlOfQR = ""
         async function downloadMagicCode(channelId, sessionId, isUpdate = false) {
             const fgHex = document.getElementById("selectedFgHex").value;
             const bgHex = document.getElementById("selectedBgHex").value;
@@ -479,12 +476,22 @@
             const loader = document.getElementById("loader");
             loader.style.display = "flex"; // show loader
 
+            let logo = document.getElementById("LogoSelect").value;
+
+            let imageURL = `${window.location.origin}/images/logo1.jpg`;
+            logoImage = `/images/logo1.jpg`
+
+            if (logo == "white") {
+                imageURL = `${window.location.origin}/images/Mc_white_logo.png`;
+                logoImage = `/images/Mc_white_logo.png`
+            }
+
             try {
                 // Fetch QR data from server
                 const res = await fetch(`/tvstation/channel/${channelId}/session/${sessionId}/qr`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ qrDotColor: fgHex, backgroundColor: bgHex, type: "quiz", lang }),
+                    body: JSON.stringify({ qrDotColor: fgHex, backgroundColor: bgHex, type: "quiz", lang, logo: logoImage }),
                 });
 
 
@@ -494,52 +501,108 @@
                     return;
                 }
 
+                if (data?.url) {
+                    setOpenAppButtonsRedirect(data?.url)
+                    return
+                }
+
                 const qrData = data.qr;
                 const qrUrl = qrData.redirectUrl;
-                const qrCode = new QRCodeStyling({
-                    width: 3000,
-                    height: 3000,
-                    type: "canvas",
-                    data: qrUrl,
-                    dotsOptions: {
-                        color: qrData.qrDotColor || "#000000",
-                        type: qrData.dotStyle || "square",
-                        gradient: qrData.applyGradient === "linear" ? {
-                            type: "linear",
-                            colorStops: [
-                                { offset: 0, color: "#ff0000" },
-                                { offset: 1, color: qrData.qrDotColor || "#000000" }
-                            ]
-                        } : qrData.applyGradient === "radial" ? {
-                            type: "radial",
-                            colorStops: [
-                                { offset: 0, color: "#ff0000" },
-                                { offset: 1, color: qrData.qrDotColor || "#000000" }
-                            ]
-                        } : null
-                    },
-                    backgroundOptions: {
-                        color: qrData.backgroundColor || "#FFFFFF"
-                    },
-                    cornersSquareOptions: {
-                        type: qrData.cornerStyle || "square"
-                    },
-                    image: window.location.origin ? `${window.location.origin}/images/logo1.jpg` : "",
-                    imageOptions: {
-                        crossOrigin: "anonymous",
-                        margin: 10
+                // Helper to create and append QR code
+                function createAndAppendQRCode(container, clearContainer = true) {
+                    if (!container) return;
+
+                    // If we need to clear the container entirely
+                    if (clearContainer) {
+                        container.innerHTML = "";
                     }
-                });
 
-                const container = document.getElementById("qr-download-container");
-                container.innerHTML = ""; // clear previous
+                    // Add qrName <p> before QR
+                    if (qrData.qrName) {
+                        const nameP = document.createElement("p");
+                        nameP.textContent = qrData.qrName;
+                        nameP.style.textAlign = "center";
+                        nameP.style.margin = "0 0 6px 0";
+                        nameP.style.fontWeight = "600";
+                        // nameP.style.paddingTop = "10px"; // top padding
+                        container.appendChild(nameP);
+                    }
 
-                await qrCode.append(container);
+                    // Create QRCodeStyling instance
+                    const qrCode = new QRCodeStyling({
+                        width: 3000,
+                        height: 3000,
+                        type: "canvas",
+                        data: qrUrl,
+                        dotsOptions: {
+                            color: qrData.qrDotColor || "#000000",
+                            type: qrData.dotStyle || "square",
+                            gradient: qrData.applyGradient === "linear" ? {
+                                type: "linear",
+                                colorStops: [
+                                    { offset: 0, color: "#ff0000" },
+                                    { offset: 1, color: qrData.qrDotColor || "#000000" }
+                                ]
+                            } : qrData.applyGradient === "radial" ? {
+                                type: "radial",
+                                colorStops: [
+                                    { offset: 0, color: "#ff0000" },
+                                    { offset: 1, color: qrData.qrDotColor || "#000000" }
+                                ]
+                            } : null
+                        },
+                        backgroundOptions: {
+                            color: qrData.backgroundColor || "#FFFFFF"
+                        },
+                        cornersSquareOptions: {
+                            type: qrData.cornerStyle || "square"
+                        },
+                        image: qrData?.logo || `${window.location.origin}/images/logo1.jpg`,
+                        imageOptions: {
+                            crossOrigin: "anonymous",
+                            margin: 10
+                        }
+                    });
+
+
+                    // Append QR to container
+                    qrCode.append(container);
+                    return qrCode; // 👈 return it
+                }
+
+                // --- Global container: clear everything ---
+                createAndAppendQRCode(document.getElementById("qr-download-container"));
+
+                const localContainer = document.getElementById("quiz-admin-actions-parent-div");
+                if (localContainer) {
+                    // Check if a previous QR wrapper exists
+                    let wrapperDiv = localContainer.querySelector(".qr-download-container");
+                    if (!wrapperDiv) {
+                        // Create new wrapper if not found
+                        wrapperDiv = document.createElement("div");
+                        wrapperDiv.className = "qr-download-container"; // same class for symmetry
+                        wrapperDiv.style.marginBottom = "10px"; // optional spacing
+                        // Prepend at the beginning
+                        localContainer.insertBefore(wrapperDiv, localContainer.firstChild);
+                    } else {
+                        // Clear previous QR inside existing wrapper
+                        wrapperDiv.innerHTML = "";
+                    }
+
+                    // Append QR inside wrapper
+                    createAndAppendQRCode(wrapperDiv, false);
+                }
+                setOpenAppButtonsRedirect(qrData.url);
 
                 // ⛔ Early return for update (skip download)
                 if (isUpdate) {
                     return;
                 }
+
+                const qrCode = createAndAppendQRCode(document.getElementById("qr-download-container"));
+
+                // ⛔ Skip if QR not created
+                if (!qrCode) return;
 
                 setTimeout(() => {
                     qrCode.download({ name: "magic-code", extension: "png", width: 1600, height: 1600 });
@@ -561,23 +624,50 @@
     <script>
         const sessionId = "<%= sessionId %>";
         const qrType = "quiz"; // or dynamically pass from backend
-
         async function loadMagicCodeOnPageLoad(sessionId, type) {
             const loader = document.getElementById("loader");
             loader.style.display = "flex"; // show loader
+            document.getElementById("magicCodeSection").style.display = "none";
             try {
                 const res = await fetch(`/tvstation/session/${sessionId}/qr/${type}`);
                 const data = await res.json();
+
+                // ✅ if backend says no QR linked
+                if (data.isNoQrLinked) {
+                    document.getElementById("magicCodeSection").style.display = "none";
+                    document.getElementById("download-qr-code-btn").style.display = "none";
+                    document.getElementById("unlinkBtn").style.display = "none";
+                    document.getElementById("qr-download-container").style.display = "flex";
+                    document.getElementById("linkWithMagicCodeBtn").textContent = "Send to Magic Code"
+                    document.getElementById("linkNewMagicCode").style.display = "inline-block";
+                    document.getElementById("qr-download-container").innerHTML = `
+<p style="margin-bottom: 1rem; text-align:center;">This Event has no Magic Code yet.</p>`;
+                    // Disable all color options
+                    document.querySelectorAll(
+                        "#foreground-color-grid-update .color-option, #background-color-grid-update .color-option"
+                    ).forEach(opt => opt.classList.add("disabled"));
+
+                    // Disable LogoSelect dropdown
+                    const logoSelect = document.getElementById("LogoSelect");
+                    if (logoSelect) {
+                        logoSelect.disabled = true;
+                    }
+                    console.warn("No QR linked to this session.");
+                    setOpenAppButtonsRedirect(data.url)
+                    return;
+                }
 
                 if (!data.success) {
                     console.error(data.message || "Failed to fetch QR details");
                     return;
                 }
 
+
+
                 const qrData = data.data.qr;
                 const qrUrl = qrData.redirectUrl;
-                const lang = new URL(qrData.url).searchParams.get("lang") || "en";
-                document.getElementById("languageSwitcherApp").value = lang
+                const lang = qrData?.url ? new URL(qrData.url).searchParams.get("lang") || "en" : "en";
+                document.getElementById("languageSwitcherApp").value = lang;
 
                 // ✅ Update hidden inputs with saved values
                 const fgHexInput = document.getElementById("selectedFgHex");
@@ -592,63 +682,198 @@
                         const bg = div.dataset.color === "transparent"
                             ? "transparent"
                             : rgbToHex(div.style.backgroundColor);
-                        if (bg.toUpperCase() === hex.toUpperCase()) {
-                            div.classList.add("active");
-                        }
+                        if (bg.toUpperCase() === hex.toUpperCase()) div.classList.add("active");
                     });
                 }
-
                 highlightSelected(document.getElementById("foreground-color-grid-update"), fgHexInput.value);
                 highlightSelected(document.getElementById("background-color-grid-update"), bgHexInput.value);
 
-                const qrCode = new QRCodeStyling({
-                    width: 3000,
-                    height: 3000,
-                    type: "canvas",
-                    data: qrUrl,
-                    dotsOptions: {
-                        color: qrData.qrDotColor || "#000000",
-                        type: qrData.dotStyle || "square",
-                        gradient: qrData.applyGradient === "linear" ? {
-                            type: "linear",
-                            colorStops: [
-                                { offset: 0, color: "#ff0000" },
-                                { offset: 1, color: qrData.qrDotColor || "#000000" }
-                            ]
-                        } : qrData.applyGradient === "radial" ? {
-                            type: "radial",
-                            colorStops: [
-                                { offset: 0, color: "#ff0000" },
-                                { offset: 1, color: qrData.qrDotColor || "#000000" }
-                            ]
-                        } : null
-                    },
-                    backgroundOptions: {
-                        color: qrData.backgroundColor || "#FFFFFF"
-                    },
-                    cornersSquareOptions: {
-                        type: qrData.cornerStyle || "square"
-                    },
-                    image: `${window.location.origin}/images/logo1.jpg` || "",
-                    imageOptions: {
-                        crossOrigin: "anonymous",
-                        margin: 10
-                    }
-                });
+                // Helper to create and append QR code
+                function createAndAppendQRCode(container, clearContainer = true) {
+                    if (!container) return;
 
-                const container = document.getElementById("qr-download-container");
-                container.innerHTML = ""; // clear previous QR
-                await qrCode.append(container);
+                    // If we need to clear the container entirely
+                    if (clearContainer) {
+                        container.innerHTML = "";
+                    }
+
+                    // Make container a column flex with gap + top padding
+                    container.style.display = "flex";
+                    container.style.flexDirection = "column";
+                    container.style.alignItems = "center";
+                    container.style.gap = "8px";         // spacing between name & QR
+
+
+                    // Add qrName <p> before QR
+                    if (qrData.qrName) {
+                        const nameP = document.createElement("p");
+                        nameP.textContent = qrData.qrName;
+                        nameP.style.textAlign = "center";
+                        nameP.style.margin = "0 0 6px 0";
+                        nameP.style.fontWeight = "600";
+                        // nameP.style.paddingTop = "10px"; // top padding
+                        container.appendChild(nameP);
+                    }
+
+                    // Create QRCodeStyling instance
+                    const qrCode = new QRCodeStyling({
+                        width: 3000,
+                        height: 3000,
+                        type: "canvas",
+                        data: qrUrl,
+                        dotsOptions: {
+                            color: qrData.qrDotColor || "#000000",
+                            type: qrData.dotStyle || "square",
+                            gradient: qrData.applyGradient === "linear" ? {
+                                type: "linear",
+                                colorStops: [
+                                    { offset: 0, color: "#ff0000" },
+                                    { offset: 1, color: qrData.qrDotColor || "#000000" }
+                                ]
+                            } : qrData.applyGradient === "radial" ? {
+                                type: "radial",
+                                colorStops: [
+                                    { offset: 0, color: "#ff0000" },
+                                    { offset: 1, color: qrData.qrDotColor || "#000000" }
+                                ]
+                            } : null
+                        },
+                        backgroundOptions: {
+                            color: qrData.backgroundColor || "#FFFFFF"
+                        },
+                        cornersSquareOptions: {
+                            type: qrData.cornerStyle || "square"
+                        },
+                        image: qrData?.logo || `${window.location.origin}/images/logo1.jpg`,
+                        imageOptions: {
+                            crossOrigin: "anonymous",
+                            margin: 10
+                        }
+                    });
+
+                    // Append QR to container
+                    qrCode.append(container);
+                }
+
+                // --- Global container: clear everything ---
+                createAndAppendQRCode(document.getElementById("qr-download-container"));
+
+                const localContainer = document.getElementById("quiz-admin-actions-parent-div");
+                if (localContainer) {
+                    // Check if a previous QR wrapper exists
+                    let wrapperDiv = localContainer.querySelector(".qr-download-container");
+                    if (!wrapperDiv) {
+                        // Create new wrapper if not found
+                        wrapperDiv = document.createElement("div");
+                        wrapperDiv.className = "qr-download-container"; // same class for symmetry
+                        wrapperDiv.style.marginBottom = "10px"; // optional spacing
+                        // Prepend at the beginning
+                        localContainer.insertBefore(wrapperDiv, localContainer.firstChild);
+                    } else {
+                        // Clear previous QR inside existing wrapper
+                        wrapperDiv.innerHTML = "";
+                    }
+
+                    // Append QR inside wrapper
+                    createAndAppendQRCode(wrapperDiv, false);
+                }
+
+
+                setOpenAppButtonsRedirect(qrData.url);
+
             } catch (error) {
                 console.error("Error loading magic code:", error);
-            }
-            finally {
+            } finally {
                 loader.style.display = "none";
             }
         }
 
+        document.addEventListener("click", async (e) => {
+            if (e.target && e.target.id === "unlinkBtn") {
+                if (!confirm("Are you sure you want to unlink the Magic Code?")) return;
+
+                const loader = document.getElementById("loader");
+                loader.style.display = "flex";
+
+                try {
+                    const res = await fetch(
+                        `/tvstation/unlink-magic-code?sessionId=${sessionId}&type=quiz`,
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" }
+                        }
+                    );
+                    const data = await res.json();
+
+                    if (res.ok && data.type === "success") {
+                        showToast("Magic Code unlinked successfully", "success");
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showToast(data.message || "Failed to unlink", "error");
+                    }
+                } catch (err) {
+                    console.error("Unlink failed", err);
+                    showToast("Server error while unlinking Magic Code", "error");
+                } finally {
+                    loader.style.display = "none";
+                }
+            }
+        });
+
+
+
+
         document.addEventListener("DOMContentLoaded", () => {
+            const toggleBtn = document.getElementById("toggleMagicUpdateBtn");
+            const magicSection = document.getElementById("magicCodeSection");
+
+            if (toggleBtn && magicSection) {
+                toggleBtn.addEventListener("click", () => {
+                    if (magicSection.style.display === "none" || magicSection.style.display === "") {
+                        magicSection.style.display = "block";
+                        toggleBtn.textContent = "Hide Magic Code";
+                    } else {
+                        magicSection.style.display = "none";
+                        toggleBtn.textContent = "Open Magic Code";
+                    }
+                });
+            }
+
             loadMagicCodeOnPageLoad(sessionId, qrType);
+        });
+
+        function setOpenAppButtonsRedirect(qrUrl) {
+            document.querySelectorAll(".open-app-quiz").forEach(btn => {
+                btn.onclick = () => {
+                    if (!qrUrl) return alert("No QR URL available yet");
+                    window.open(qrUrl, "_blank");
+                };
+            });
+            // Similarly, set the copy button(s) if you want
+            document.querySelectorAll(".copy-qr-link-btn").forEach(copyBtn => {
+                copyBtn.dataset.link = qrUrl;
+            });
+        }
+        document.addEventListener("click", async (e) => {
+            if (e.target && e.target.classList.contains("copy-qr-link-btn")) {
+                const btn = e.target;
+                const link = btn.dataset.link;
+
+                if (!link) {
+                    showToast("No link available to copy", "error");
+                    return;
+                }
+
+                try {
+                    await navigator.clipboard.writeText(link);
+                    showToast("Link copied to clipboard!", "success");
+                } catch (err) {
+                    console.error("Copy failed", err);
+                    showToast("Failed to copy link", "error");
+                }
+            }
         });
     </script>
 

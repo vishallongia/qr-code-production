@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Quiz Questions</title>
+    <title>Add Quiz Event</title>
     <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
     <link rel="stylesheet" href="/css/add-quiz-question.css" />
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
@@ -24,20 +24,20 @@
         <% } else { %>
             <div class="quiz-container">
                 <nav class="breadcrumbs">
-                    <a href="/tvstation/channels">Shows</a>
+                    <a href="/tvstation/channels">Projects</a>
                     <span>&rsaquo;</span>
-                    <a href="/tvstation/channels/<%= channel._id %>/sessions">Session Manager</a>
+                    <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                     <span>&rsaquo;</span>
-                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Apps</a>
+                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Events</a>
                     <span>&rsaquo;</span>
                     <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/quiz">Quiz</a>
                     <span>&rsaquo;</span>
-                    <span class="active">Add a Quiz Question</span>
+                    <span class="active">Create a New Quiz Event</span>
                 </nav>
-                <h2>Add a Quiz Question</h2>
+                <h2>Create a New Quiz</h2>
                 <form id="questions-form">
                     <div id="questions-wrapper"></div>
-                    <button type="submit" class="quiz-btn-submit">Submit Question</button>
+                    <button type="submit" class="quiz-btn-submit">Submit Event</button>
                 </form>
             </div>
 
@@ -46,7 +46,7 @@
             <template id="question-template">
                 <div class="quiz-question-wrapper">
                     <div class="quiz-question-header">
-                        <span class="quiz-question-title">New Question</span>
+                        <span class="quiz-question-title">Quiz</span>
                         <div class="quiz-question-actions">
                             <button type="button" class="quiz-btn-collapse" style="display: none;">Collapse</button>
                             <button type="button" style="display: none;" class="quiz-btn-delete">Delete</button>
@@ -107,10 +107,10 @@
                         </div>
 
                         <div class="quiz-option-wrapper">
+                            <div class="quiz-option-blocks quiz-options-grid"></div>
                             <div class="quiz-option-controls">
                                 <button type="button" class="quiz-btn-add-option">+ Add Option</button>
                             </div>
-                            <div class="quiz-option-blocks quiz-options-grid"></div>
                         </div>
 
                         <div class="quiz-form-group">
@@ -312,6 +312,13 @@
         const inputText = document.createElement("input");
         inputText.type = "text";
         inputText.required = true;
+        inputText.placeholder = "Enter option text";
+
+        // Option Description
+        const inputDesc = document.createElement("input");
+        inputDesc.type = "text";
+        inputDesc.placeholder = "Enter option description (optional)";
+        inputDesc.className = "quiz-option-description";
 
         const fileLabel = document.createElement("label");
         fileLabel.className = "quiz-file-label";
@@ -369,7 +376,7 @@
             }
         });
 
-        optDiv.append(label, inputText, fileLabel, previewImg, deleteBtn);
+        optDiv.append(label, inputText, inputDesc, fileLabel, previewImg, deleteBtn);
         return optDiv;
     }
 
@@ -507,10 +514,11 @@
 
         options.forEach((opt, index) => {
             const text = opt.querySelector('input[type="text"]').value.trim();
+            const description = opt.querySelector('.quiz-option-description')?.value.trim() || "";
             const file = opt.querySelector('input[type="file"]')?.files[0];
             const imageName = file ? file.name : null;
 
-            optionData.push({ text, imageName });
+            optionData.push({ text, description, imageName });
 
             if (file) {
                 formData.append("optionsImages", file); // all images under same key

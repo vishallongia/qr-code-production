@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Presentations</title>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZNB2G4J8G"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-0ZNB2G4J8G');
+    </script>
+
+    <!-- Standard favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+    <!-- Apple Touch Icon (for iOS home screen) -->
+    <link rel="apple-touch-icon" href="/app-icon-192.png">
+
+    <!-- Android Chrome Web App Manifest (optional but useful for PWAs) -->
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+        :root {
+            --primary: #5898b7;
+            --background: #f9f9f9;
+            --card-bg: #fff;
+            --text-dark: #2c3e50;
+            --radius: 12px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background-color: var(--background);
+            color: var(--text-dark);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+        }
+
+        .card img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        .card .content {
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .card .title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .card img {
+                height: 160px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1> Presentations</h1>
+    <div class="grid" id="presentationGrid"></div>
+
+    <script>
+        const presentations = [
+            {
+                name: "ATV",
+                image: "/images/ATV Favicon.png",
+                url: "/atv_sr"
+            },
+            {
+                name: "Broadcasters",
+                image: "/images/mtv-logo.png",
+                url: "/broadcasters"
+            },
+            {
+                name: "Euronews ro",
+                image: "/images/euronews romania logo.png",
+                url: "/euronews_ro"
+            },
+            {
+                name: "Euronews",
+                image: "/images/euronews_favicon.png",
+                url: "/euronews_int"
+            },
+            {
+                name: "Events",
+                image: "/images/header-event.png",
+                url: "/m_events"
+            },
+            {
+                name: "NEWS GLOBAL",
+                image: "/images/MTV LOGO FAVICON.png",
+                url: "/news"
+            },
+            {
+                name: "Stingray",
+                image: "/images/stingray.png",
+                url: "/stingray"
+            },
+            {
+                name: "Stingray_deck",
+                image: "/images/STINGRAY%20HEADER1.png",
+                url: "/stingray_deck"
+            },
+            {
+                name: "Victormicula",
+                image: "/images/victormicula.png",
+                url: "/victormicula"
+            },
+            {
+                name: "Viorel",
+                image: "/images/viorel.png",
+                url: "/viorel"
+            },
+            {
+                name: "Joyn",
+                image: "/images/JOYN%20LANDING%20PAGE.png",
+                url: "/joyn"
+            },
+            {
+                name: "Umsatzprognose",
+                image: "/images/JOYN%20LANDING%20PAGE.png",
+                url: "/Umsatzprognose"
+            },
+            {
+                name: "Magic TV auf SRF",
+                image: "/images/mtv-logo.png",
+                url: "/mtv_srf"
+            },
+            {
+                name: "Magic Code SCHULE",
+                image: "/images/mtv-logo.png",
+                url: "/srf_schule"
+            },
+            {
+                name: "Seven One",
+                image: "/images/SEVEN%20ONE%20HEADER.png",
+                url: "/seven_one"
+            },
+
+            {
+                name: "SRF Arena",
+                image: "/images/SRF%20ARENA%20LANDING%20PAGE%20HEADER%203.png",
+                url: "/srf_arena"
+            },
+
+            {
+                name: "ATV Hu",
+                image: "/images/atv_hu/ATV LANDING PAGE HEADER.png",
+                url: "/atv_mao"
+            },
+
+            // {
+            //     name: "",
+            //     image: "",
+            //     url: ""
+            // },
+
+            // {
+            //     name: "",
+            //     image: "",
+            //     url: ""
+            // },
+
+            // {
+            //     name: "",
+            //     image: "",
+            //     url: ""
+            // },
+
+            // {
+            //     name: "",
+            //     image: "",
+            //     url: ""
+            // },
+
+            // {
+            //     name: "",
+            //     image: "",
+            //     url: ""
+            // },
+
+            // {
+            //     name: "",
+            //     image: "",
+            //     url: ""
+            // },
+
+            // {
+            //     name: "",
+            //     image: "",
+            //     url: ""
+            // },
+
+            // {
+            //     name: "",
+            //     image: "",
+            //     url: ""
+            // },
+
+            // {
+            //     name: "",
+            //     image: "",
+            //     url: ""
+            // },
+
+
+
+        ];
+
+        const container = document.getElementById("presentationGrid");
+
+        presentations.forEach(pres => {
+            const card = document.createElement("a");
+            card.className = "card";
+            card.href = pres.url;
+            card.target = "_blank";
+            card.innerHTML = `
+        <img src="${pres.image}" alt="${pres.name}">
+        <div class="content">
+          <div class="title">${pres.name}</div>
+        </div>
+      `;
+            container.appendChild(card);
+        });
+    </script>
+</body>
+
+</html>

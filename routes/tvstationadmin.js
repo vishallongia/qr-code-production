@@ -299,7 +299,7 @@ router.get("/requests", async (req, res) => {
 router.post("/requests/:id/approve", async (req, res) => {
   try {
     const sender = {
-      email: "textildruckschweiz.com@gmail.com",
+      email: "arnoldschmidt@magic-code.net",
       name: "Magic Code - Plan Update",
     };
 

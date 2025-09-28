@@ -21,23 +21,27 @@
                         src="/Vip.png">VIP
                     Subscription</div>
                 <% } else { %>
-                    <div class="tab active" id="plans-tab">Subscription Plans</div>
-                    <div class="tab" id="current-subscription-tab">Current Subscription</div>
+                    <div class="tab active" id="plans-tab" data-translate="subscription_plans">Subscription Plans</div>
+                    <div class="tab" id="current-subscription-tab" data-translate="current_subscription">Current
+                        Subscription</div>
                     <% } %>
         </div>
         <% if (!user?.subscription?.isVip) { %>
             <div class="tab-content active" id="plans-tab-content">
                 <div class="plans">
-                    <% plans.forEach(plan=> {
-                        const sanitizedId = plan.encryptedId.replace(/[^a-zA-Z0-9-_]/g, ""); // Remove special
+                    <% plans.filter(plan=> plan.recurring).forEach(plan => {
+                        const sanitizedId = plan.encryptedId.replace(/[^a-zA-Z0-9-_]/g, "");
+                        const eurPriceObj = plan.prices.find(p => p.currency === "EUR"); // default to EUR
+                        const displayPrice = eurPriceObj ? eurPriceObj.amount : plan.prices[0].amount;
+                        const displayCurrency = eurPriceObj ? eurPriceObj.currency : plan.prices[0].currency;
                         %>
                         <div class="plan-card">
                             <div class="plan-duration">
-                                <%= plan.duration %>
+                                <%= plan.publicName %>
                             </div>
                             <div class="plan-price" id="plan-price-<%= sanitizedId %>">
-                                <%= plan.price %>
-                                    <%= plan.currency %>
+                                <%= displayPrice %>
+                                    <%= displayCurrency %>
                             </div>
                             <ul class="features">
                                 <% plan.features.forEach(feature=> { %>
@@ -46,6 +50,7 @@
                                     </li>
                                     <% }); %>
                             </ul>
+
                             <!-- ✅ Coupon Code Input -->
                             <div class="coupon-section" style="margin-bottom: 10px; display: none;">
                                 <input type="text" class="coupon-input" placeholder="Enter coupon code"
@@ -55,22 +60,27 @@
                                 data-plan-id="<%= plan.encryptedId %>" style="margin-bottom: 10px;">
                                 Add Coupon
                             </button>
-                            <div id="coupon-success-message-<%= plan.encryptedId %>" style=" display: none;"
+                            <div id="coupon-success-message-<%= plan.encryptedId %>" style="display: none;"
                                 class="coupon-success-message">
                                 Coupon Added
                             </div>
+
                             <div>
-                                <!-- <button id="checkout-button-<%= plan.encryptedId %>" class="checkout-btn subscribe-btn">
-                                Pay with Credit Card
-                            </button> -->
+                                <!-- ✅ Pay with Credit Card Button -->
+                                <!-- <button id="checkout-button-<%= plan.encryptedId %>" class="checkout-btn subscribe-btn"
+                                    style="margin-bottom: 10px;">
+                                    Pay with Credit Card
+                                </button> -->
+
+                                <!-- ✅ PayPal Button Container -->
                                 <div id="paypal-button-container-<%= sanitizedId %>" class="paypal-button-container"
                                     style="margin-top: 20px;" data-plan-id="<%= plan.encryptedId %>">
-
                                 </div>
                             </div>
                         </div>
                         <% }); %>
                 </div>
+
             </div>
             <% } %>
 
@@ -101,20 +111,24 @@
                         </div>
                         <% } else { %>
                             <div class="subscription-card">
-                                <% if (!user.validUntil || new Date(user.validUntil) < new Date()) { %>
+                                <% if (new Date(user.validUntil) < new Date()) { %>
                                     <div class="status-badge expired">No Active Subscription</div>
                                     <p class="no-subscription-message">Subscribe now to enjoy premium features.</p>
                                     <% } else { %>
-                                        <div class="status-badge active">Active Subscription</div>
+                                        <div class="status-badge active" data-translate="active_subscription">Active
+                                            Subscription</div>
                                         <div class="subscription-details">
-                                            <p><i class="fas fa-user"></i> <strong>Name :&nbsp;</strong>
+                                            <p><i class="fas fa-user"></i> <strong> <span
+                                                        data-translate="full_name">Name</span> :&nbsp;</strong>
                                                 <%= user.name %>
                                             </p>
-                                            <p><i class="fas fa-envelope"></i> <strong>Email :&nbsp;</strong>
+                                            <p><i class="fas fa-envelope"></i> <strong> <span
+                                                        data-translate="email_address">Email</span> :&nbsp;</strong>
                                                 <%= user.email %>
                                             </p>
-                                            <p><i class="fas fa-calendar-alt"></i> <strong>Valid
-                                                    Until&nbsp;:&nbsp;</strong>
+                                            <p><i class="fas fa-calendar-alt"></i> <strong><span
+                                                        data-translate="valid_until">Valid
+                                                        Until</span>&nbsp;:&nbsp;</strong>
                                                 <% if (user.validUntil) { const date=new Date(user.validUntil); const
                                                     dd=String(date.getDate()).padStart(2, '0' ); const
                                                     mm=String(date.getMonth() + 1).padStart(2, '0' ); const
@@ -125,7 +139,8 @@
                                                             <% } %>
                                             </p>
                                             <p><i class="fas fa-clock"></i> <strong>Time Remaining&nbsp;:&nbsp;</strong>
-                                                <span id="time-remaining">Loading...</span>
+                                                <span id="time-remaining"
+                                                    data-translate="time_remaining">Loading...</span>
                                             </p>
                                         </div>
                                         <% } %>
@@ -143,9 +158,9 @@
 <script src="/js/toastify-setup.js"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script
-    src="https://www.paypal.com/sdk/js?client-id=AeUlyT2WmljAHqGaXytGewyz61xmfAJ4woW1wA_2TwjcaqbbjJTkPHy47FsEJhcH68BGlm9-AdDfmbrU&currency=CHF"></script>
-<script src="/js/plan.js"></script>
-<script>
+    src="https://www.paypal.com/sdk/js?client-id=AeUlyT2WmljAHqGaXytGewyz61xmfAJ4woW1wA_2TwjcaqbbjJTkPHy47FsEJhcH68BGlm9-AdDfmbrU&vault=true&intent=subscription""></script>
+<script src=" /js/plan.js"></script>
+<!-- <script>
     document.addEventListener("DOMContentLoaded", function () {
         const containers = document.querySelectorAll(".paypal-button-container");
         // Initialize the global object to store meta tokens if not already present
@@ -176,7 +191,6 @@
                             return res.json();
                         })
                         .then(data => {
-
                             // Check if a success message exists
                             if (data.message) {
                                 // Show success message
@@ -240,6 +254,83 @@
                     console.log(err)
                     console.error("PayPal Button Error:", err.message);
                     // showToast("An error occurred during the transaction.", "error");
+                }
+            }).render(container);
+        });
+    });
+</script> -->
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const containers = document.querySelectorAll(".paypal-button-container");
+
+        // Initialize global meta token storage
+        window.paypalMetaTokens = window.paypalMetaTokens || {};
+
+        containers.forEach(container => {
+            const planId = container.dataset.planId;
+            const sanitizedId = container.id.replace("paypal-button-container-", "");
+            const couponInput = document.querySelector(`#coupon-code-${sanitizedId}`);
+
+            paypal.Buttons({
+                createSubscription: function () {  // ⚡ For recurring subscriptions
+                    const couponCode = couponInput ? couponInput.value.trim() : "";
+                    return fetch("/paypal/create-subscription", {  // endpoint for recurring
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ planId, couponCode })
+                    })
+                        .then(async res => {
+                            if (!res.ok) {
+                                const errorData = await res.json();
+                                throw new Error(errorData.message || "Failed to create subscription");
+                            }
+                            return res.json();
+                        })
+                        .then(data => {
+                            if (data.message) {
+                                showToast(data.message, "success");
+                                if (couponInput) couponInput.value = ""; // Clear input
+                            }
+                            if (data.id && data.metaToken) {
+                                window.paypalMetaTokens[data.id] = data.metaToken;
+                            }
+                            return data.id;
+                        })
+                        .catch(err => {
+                            console.error("Create Subscription Error:", err);
+                            showToast(err.message || "An error occurred while creating subscription", "error");
+                            if (couponInput) couponInput.value = "";
+                            throw err;
+                        });
+                },
+                onApprove: function (data) {
+                    const metaToken = window.paypalMetaTokens[data.subscriptionID];
+                    return fetch("/paypal/capture-subscription", { // endpoint for capturing recurring
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ subscriptionID: data.subscriptionID, planId, metaToken })
+                    })
+                        .then(res => res.json())
+                        .then(response => {
+                            delete window.paypalMetaTokens[data.subscriptionID];
+                            if (response.status === 'ACTIVE' || response.status === 'APPROVED') {
+                                if (response.transactionId) {
+                                    if (couponInput) couponInput.value = "";
+                                    window.location.href = `/successpayment?session_id=${response.transactionId}`;
+                                } else {
+                                    alert("Transaction ID not found.");
+                                }
+                            } else {
+                                showToast(response.message, "error");
+                                setTimeout(() => window.location.href = `/cancel`, 1000);
+                            }
+                        });
+                },
+                onError: function (err) {
+                    console.error("PayPal Subscription Error:", err.message);
+                    showToast("An error occurred during the transaction.", "error");
                 }
             }).render(container);
         });

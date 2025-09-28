@@ -15,17 +15,17 @@
   --input-border-color: rgba(0, 0, 0, 0.2);
   --input-focus-border-color: #80deea;
   /* Light cyan */
-  --submit-btn-bg: #4db6ac;
+  --submit-btn-bg: #18024b;
   /* Teal */
-  --submit-btn-hover-bg: #26a69a;
+  --submit-btn-hover-bg: rgba(26, 1, 97, 0.9);;
   /* Darker teal */
   --submit-btn-disabled-bg: #b2dfdb;
   /* Light muted teal for disabled state */
   --submit-btn-disabled-text-color: #8d8d8d;
   /* Muted grey for disabled text */
-  --link-color: #4db6ac;
+  --link-color: #18024b;
   /* Teal */
-  --link-hover-color: #26a69a;
+  --link-hover-color: rgba(26, 1, 97, 0.9);;
   /* Darker teal */
   --text-color: #333333;
   /* Dark grey */

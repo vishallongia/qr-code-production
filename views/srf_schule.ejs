@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Code SCHULE</title>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZNB2G4J8G"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-0ZNB2G4J8G');
+    </script>
+
+    <link rel="icon" type="image/png" sizes="192x192" href="\images\MTV LOGO FAVICON.png">
+    <link rel="apple-touch-icon" href="\images\MTV LOGO FAVICON.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            /* background-color: white; */
+            text-align: center;
+            /* padding: 40px; */
+            margin-bottom: 20px;
+            /* border-bottom: 4px solid #0073e6; */
+        }
+
+        header h1 {
+            font-size: 2.8em;
+            margin: 0;
+        }
+
+        header p {
+            font-size: 1.2em;
+            color: #555;
+        }
+
+        header img {
+            width: 100%;
+            max-width: 1500px;
+            height: auto;
+        }
+
+        section {
+            padding: 40px;
+            max-width: 900px;
+            margin: auto;
+            background-color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            font-size: 1.1em;
+
+        }
+
+        .section p {
+            line-height: 1rem;
+        }
+
+        li {
+            list-style: disc;
+            padding: 0;
+            margin: 15px auto;
+            text-align: left;
+            max-width: 800px;
+            font-size: 1.1rem;
+        }
+
+        h2 {
+            color: #d1001c;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: #333;
+            color: #fff;
+            margin-top: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: #222;
+            color: #eee;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        img {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .fullscreen-overlay.show {
+            display: flex;
+        }
+
+        .fullscreen-overlay img {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            color: #333;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 10000;
+            background: #fff;
+            padding: 0;
+            border-radius: 50%;
+            /* box-shadow: 0 0px 0px rgba(0, 0, 0, 0.2); */
+            width: 40px;
+            height: 40px;
+            text-align: center;
+        }
+
+        .close-btn:hover {
+            color: red;
+        }
+
+        section img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+        }
+
+        .highlight {
+            background-color: #ffe3e7;
+            border-left: 5px solid #d1001c;
+            padding: 20px;
+            margin: 40px auto;
+            font-size: 1.1em;
+            max-width: 800px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-highlight {
+            background-color: #d1001c;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn-highlight:hover {
+            background-color: #a80016;
+            transform: translateY(-2px);
+        }
+
+        .btn-highlight:active {
+            background-color: #870013;
+            transform: translateY(0);
+        }
+
+        .ImagesInList img {
+            margin-top: 1.4rem;
+            margin-bottom: 2rem;
+
+        }
+
+        footer a {
+            text-decoration: none;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <header>
+        <img src="\images\JOYN LANDING PAGE.png" alt="">
+    </header> -->
+
+    <section>
+        <h2>Magic Code × SRF</h2>
+        <p>Gemeinsam für mehr Sicherheit, Zusammenhalt und Medienkompetenz in der Schweiz</p>
+    </section>
+
+    <section>
+        <h2>1. Einleitung</h2>
+        <p><strong>Projektvorschlag an SRF</strong></p>
+        <p><strong>Ziel:</strong> Jedes Schulkind in der Schweiz soll kostenlos einen Magic Code als Safety Sticker
+            erhalten.</p>
+
+
+        <div
+            style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 2rem 0;">
+            <iframe src="https://www.youtube.com/embed/YkZCcWhtm9M?si=vl53npXNOQIzFP3j" title="YouTube video player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin" allowfullscreen
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+            </iframe>
+        </div>
+
+
+
+
+
+
+
+        <p>Wir möchten dieses Vorhaben gemeinsam mit SRF umsetzen und damit einen Beitrag zur Medienkompetenz,
+            Sicherheit und sozialen Verantwortung leisten.</p>
+    </section>
+
+    <section>
+        <h2>2. Was ist der Magic Code?</h2>
+        <p><strong>Er ist keine App</strong></p>
+
+
+        <div
+            style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 2rem 0;">
+            <iframe src="https://www.youtube.com/embed/kT3_ZKtpgLA?si=yeScJ7k6W9ZVA0A0" title="YouTube video player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin" allowfullscreen
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+            </iframe>
+        </div>
+
+
+        <p>Der Magic Code ist ein in der Schweiz entwickelter, lebendiger Code, der nach seiner Aktivierung zu einem
+            digitalen Begleiter seines Besitzers wird – ein persönliches Kommunikationsinstrument, das jederzeit zur
+            Verfügung steht. Er ist sichtbar, scanbar und jederzeit aktivierbar – aber erst durch die bewusste
+            Aktivierung durch eine Person „erwacht“ der Code zum Leben und entfaltet seine Funktionen.</p>
+
+        <div
+            style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 2rem 0;">
+            <iframe src="https://www.youtube.com/embed/hKGxKXQRApQ?si=m7NZzEExspnQKVoc" title="YouTube video player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin" allowfullscreen
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+            </iframe>
+        </div>
+
+        <p>Einmal aktiviert, bleibt der Magic Code dauerhaft mit seinem Nutzer verbunden – in der realen Welt ebenso wie
+            auf dem Bildschirm. Im Alltag dient er als persönlicher Kommunikationspunkt auf Gegenständen wie Kleidung,
+            Schulranzen, Helmen, Velos oder anderen Wertgegenständen wie Mobiltelefonen. Im Fernsehen wiederum wird er
+            zur Brücke zwischen Zuschauer und Sendung – ein direkter Interaktionskanal, der echte Partizipation
+            ermöglicht.</p>
+
+        <p><strong>Wie Magic Code funktioniert:</strong></p>
+        <ul>
+            <li>Im Alltag als sicheres Lost-&-Found-Tool, Notfallkontakt, digitales Visitenkärtchen oder
+                Kommunikationshilfe</li>
+            <li>Im Fernsehen als Interaktions-Tool für Quiz, Voting, Shopping oder Feedback – in direkter Verbindung mit
+                TV-Inhalten</li>
+
+            <li>Immer steht dabei die Kontrolle beim Nutzer: keine App, keine Registrierung, keine kommerzielle Werbung
+                –
+                sondern ein Code, der nur das preisgibt, was der Besitzer freigibt.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>3. Warum SRF?</h2>
+        <p>SRF ist der ideale Partner für dieses Projekt, weil:</p>
+        <ul>
+            <li>Bildung und Medienkompetenz zum zentralen Auftrag von SRF gehören (z. B. SRF school, mySchool, DOK).
+            </li>
+            <li>SRF eine neutrale, vertrauensvolle Stimme im Medienraum ist.</li>
+            <li>SRF gesellschaftliche Innovationen aktiv begleitet und unterstützt.</li>
+            <li>Durch eine Kooperation würde SRF nicht nur berichten, sondern gestaltender Teil eines landesweiten
+                Bildungs-
+                und Sicherheitsprojekts sein.</li>
+        </ul>
+
+        <h3>3.1 Substitution bestehender QR-Codes durch den Magic Code</h3>
+        <p>SRF verwendet bereits QR-Codes – etwa in Formaten wie Arena oder Einstein. Warum also nicht auf ein besseres,
+            visuell optimiertes und funktional erweitertes Format umsteigen?</p>
+
+        <h4>Vorteile:</h4>
+
+        <ul>
+            <li>Keine Umstellung für Redaktion oder Publikum – der Scan-Prozess bleibt erhalten</li>
+            <li>Höhere optische Qualität, abgestimmt auf SRF-Designstandards</li>
+            <li>Mehr Funktionalität: z. B. langfristige Nutzung, Nachnutzung durch Zuschauer:innen, Sicherheitsaspekte
+            </li>
+            <li>Breitere Einsatzmöglichkeiten: Fernsehen, Print, Events, Bildungsbereich</li>
+        </ul>
+
+        <div class="highlight">
+            <p>SRF nutzt bereits QR-Codes – der Magic Code ist deren logische Weiterentwicklung, visuell abgestimmt auf
+                TV-Ästhetik, datenschutzkonform und ohne technische Hürden direkt einsetzbar.“</p>
+        </div>
+
+        <h3>3.2 Häufigerer und bewusster Einsatz zur Stärkung des öffentlichen Interesses</h3>
+        <p>Der Magic Code kann dabei helfen, SRF’s öffentlich-rechtlichen Auftrag sichtbar zu machen – durch
+            Partizipation, Medienbildung, Inklusion und Sicherheit.</p>
+
+        <h4>Mögliche Einsatzfelder:</h4>
+        <ul>
+            <li>Politische Formate (z. B. Arena mit Magic Voting)</li>
+            <li>Kulturelle Interaktion (z. B. bei Dokus, Livestreams, Festivals)</li>
+            <li>Kinder- und Jugendformate (z. B. SRF Kids, SRF school)</li>
+            <li>Eventsicherheit (Magic Safety bei Live-Veranstaltungen)</li>
+        </ul>
+
+        <h3>Feedback und Interaktion mit Zuschauer:innen</h3>
+        <div>
+            <p>„Der Magic Code erlaubt SRF, seine Interaktionen mit dem Publikum zu vertiefen – im Sinne des
+                öffentlichen Auftrags. Ob bei politischen Diskussionen, kulturellen Projekten oder als sichere
+                Kommunikationshilfe bei Live-Events: Der Magic Code ist ein Werkzeug für moderne Medienbildung und
+                gesellschaftliche Teilhabe.“</p>
+        </div>
+
+        <h4>Zusammenfassung der Argumentationslinie:</h4>
+        <table style="width:100%; border-collapse: collapse; font-size: 1em;">
+            <thead>
+                <tr style="background: #f0f0f0;">
+                    <th style="padding: 10px; border: 1px solid #ccc;">Ziel</th>
+                    <th style="padding: 10px; border: 1px solid #ccc;">Argument</th>
+                    <th style="padding: 10px; border: 1px solid #ccc;">Vorteil für SRF</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ccc;">Bestehende QR-Codes ersetzen</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">Bessere Optik, Flexibilität, Zukunftsfähigkeit
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">Höherer Standard ohne Mehraufwand</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ccc;">Gezielter Einsatz</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">Fördert Partizipation, Sicherheit, Medienbildung
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">Stärkt den öffentlich-rechtlichen Auftrag</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>4. Ziele der Initiative</h2>
+        <ul>
+            <li><strong>Medienkompetenz fördern:</strong> Ein neues Kommunikationstool für Kinder und Jugendliche – ohne
+                negative Wirkungen.</li>
+            <li><strong>Sicherheit erhöhen:</strong>
+                <ul>
+                    <li>Aktuell liegt die Quote der verlorenen Wertgegenst&auml;nde, die an die Besitzer:in
+                        zur&uuml;ckfinden, bei unter 1%. Grund daf&uuml;r ist prim&auml;r die damit verbundene
+                        B&uuml;rokratie und der zeitliche Aufwand.</li>
+                    <li>Aufgrund unserer nichtwissenschaftlich durchgef&uuml;hrten Meinungsumfragen, w&uuml;rde
+                        praktisch jeder Finder sofort den Besitzer kontaktieren, wenn er den Magic Code scannen
+                        w&uuml;rde.</li>
+                    <li>Verlorene Gegenst&auml;nde k&ouml;nnen einfach zur&uuml;ckgegeben werden; anonyme Kommunikation
+                        in Ausnahmesituationen wird erm&ouml;glicht.</li>
+                    <li>Bein Not- oder Unf&auml;llen ist der Magic Code auf dem Helm oder Velo &bdquo;mein zweites
+                        ich&ldquo;.</li>
+                </ul>
+            </li>
+            <li><strong>Soziale Teilhabe stärken:</strong> Nicht-kommerziell, inklusiv, fördert Zusammenhalt & Fairness.
+            </li>
+            <li><strong>Verantwortungsvoller Umgang mit Daten:</strong> Kein Tracking, keine App, volle Nutzerkontrolle.
+            </li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>5. Wie funktioniert der Magic Code?</h2>
+        <ul>
+            <li>Der Code wird als Sticker oder Transferdruck auf Kleidung oder Alltagsgegenst&auml;nde aufgebracht
+                &ndash; z.  Schuletiketten, Trinkflaschen, Velohelme, Rucks&auml;cke oder das reflektierende
+                Warndreieck, das in vielen Schulen bereits kostenlos verteilt wird.</li>
+            <li>Eltern oder Erziehungsberechtigte k&ouml;nnen den Code freiwillig per Smartphone aktivieren.</li>
+            <li>Nach Aktivierung wird er der Familie / dem Kind zugeordnet.</li>
+            <li>Der Code bleibt lebenslang im Besitz, kann jederzeit deaktiviert oder angepasst werden.</li>
+            <li>Inhalte und Kontaktm&ouml;glichkeiten sind komplett kontrollierbar durch die Eigent&uuml;mer.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>6. Umsetzungsvorschlag</h2>
+        <h3>Was wir bereitstellen:</h3>
+        <ul>
+            <li>Kostenloser Magic Code pro Schüler:in</li>
+            <li>Druck auf hochwertige, haltbare Sticker oder Transfermaterialien</li>
+            <li>Begleitmaterialien für Eltern, Schulen und Kinder (Flyer, Anleitung, Datenschutzblatt)</li>
+        </ul>
+
+        <h3>Was wir uns von SRF wünschen:</h3>
+        <ul>
+            <li>Redaktionelle Begleitung des Projekts, z.  in "SRF school", "Puls", "Einstein" oder "Mitenand"</li>
+            <li>Beitr&auml;ge &uuml;ber die Idee &amp; Anwendung (Erkl&auml;rvideos, Interviews mit Familien, Schulen)
+            </li>
+            <li>Langfristige Bildungspartnerschaft f&uuml;r Medienkompetenz-Programme</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>7. Vorteile für SRF</h2>
+        <ul>
+            <li>Innovationsfreundliches Image als gesellschaftlich aktive Medienorganisation</li>
+            <li>Erf&uuml;llung des Bildungsauftrags auf konkrete, sichtbare Weise</li>
+            <li>Beitrag zur digitalen Inklusion &amp; Kindersicherheit</li>
+            <li>Berichterstattung mit Mehrwert f&uuml;r Familien, Schulen, Lehrpersonen</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>8. Warum jetzt?</h2>
+        <p>Wir verstehen, dass SRF neuen Technologien gegenüber grundsätzlich offen, aber zurecht vorsichtig ist. Daher
+            betonen wir:</p>
+
+
+        <ul>
+            <li>Datenschutzkonformit&auml;t: Kein Tracking, keine externen Plattformen, volle Nutzerkontrolle</li>
+            <li>Keine Monetarisierung: Keine Werbung oder kommerziellen Absichten in diesem Projekt</li>
+            <li>Redaktioneller Mehrwert: Der Einsatz dient ausschlie&szlig;lich der Medienbildung, Partizipation und
+                Sicherheit</li>
+            <li>Unaufdringliche Gestaltung: Der Code ist visuell hochwertig, aber nicht st&ouml;rend</li>
+            <li>Pilotf&auml;hig: Ideal als Testprojekt in Kooperation mit Bildungs- oder Kulturredaktionen</li>
+        </ul>
+
+
+        <p>„Der Magic Code als nicht-kommerzielles, interaktives Werkzeug zur demokratischen oder kulturellen
+            Partizipation – für den Einsatz zur Förderung von Inklusion, Medienbildung und Interaktion zwischen
+            Zuschauer:innen und Redaktion, bei gleichzeitig voller Wahrung der Datenhoheit.“</p>
+
+    </section>
+
+    <section>
+        <h2>9. Nächste Schritte</h2>
+
+        <p>
+            Wir freuen uns auf ein Gespräch mit Ihnen und schlagen vor:
+        </p>
+        <ul>
+            <li>Pers&ouml;nliche oder virtuelle Vorstellung des Magic Code</li>
+            <li>Gemeinsames Planen einer Pilotphase (z.  mit 2 Schulen pro Sprachregion)</li>
+            <li>Entwicklung redaktioneller Begleitformate durch SRF</li>
+        </ul>
+    </section>
+
+
+    <footer>
+        <h3>Kontakt</h3>
+        <p>
+            Arnold Schmidt<br>
+            Gründer des Magic Code<br>
+            ✉️ <a href="mailto:arnoldschmidt.com@gmail.com">arnoldschmidt.com@gmail.com</a><br>
+            📞 +41 76 328 62 83<br>
+            🌐 <a href="https://magic-code.net" target="_blank">magic-code.net</a>
+        </p>
+    </footer>
+
+    <!-- Fullscreen Overlay -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="close-btn" id="closeBtn">×</div>
+        <img id="fullscreenImg" src="" alt="Fullscreen View" />
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const allImages = document.querySelectorAll("img");
+        const overlay = document.getElementById("fullscreenOverlay");
+        const fullscreenImg = document.getElementById("fullscreenImg");
+        const closeBtn = document.getElementById("closeBtn");
+
+        let startX = 0, startY = 0, moved = false;
+
+        allImages.forEach(img => {
+            img.addEventListener("mousedown", (e) => {
+                startX = e.clientX;
+                startY = e.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("mousemove", (e) => {
+                if (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("mouseup", (e) => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+
+            // For touch devices
+            img.addEventListener("touchstart", (e) => {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("touchmove", (e) => {
+                const touch = e.touches[0];
+                if (Math.abs(touch.clientX - startX) > 5 || Math.abs(touch.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("touchend", () => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+        });
+
+        closeBtn.addEventListener("click", () => {
+            overlay.classList.remove("show");
+            fullscreenImg.src = "";
+        });
+
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+    </script>
+</body>
+
+</html>

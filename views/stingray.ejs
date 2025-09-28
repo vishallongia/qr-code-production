@@ -22,23 +22,95 @@
     <link rel="manifest" href="/manifest.json">
 
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #fdfdfd;
-            margin: 0;
-            padding: 2rem;
+       body {
+            font-family: Arial, sans-serif;
             color: #222;
-            font-size: 1.2rem;
+            line-height: 1.6;
+            /* padding: 40px;
+            max-width: 900px; */
+            margin: auto;
+        }
+
+        h1,
+        h2 {
+            color: #000;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            margin-bottom: 0.2em;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            margin-top: 1rem;
+            margin-bottom: 0.5em;
+            /* border-bottom: 2px solid #ddd; */
+            padding-bottom: 4px;
+        }
+
+        p,
+        ul {
+            margin-bottom: 1em;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .section {
+            margin-bottom: 2em;
         }
 
         .container {
+            max-width: 960px;
+            margin: 40px auto;
+            padding: 0 20px;
+
+        }
+
+        .section {
             max-width: 900px;
             margin: auto;
             background: #ffffff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 3rem;
+            padding: 1.5rem;
             border-radius: 10px;
+            margin-top: 3rem;
         }
+
+        .section h2 {
+            color: #0173f0;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .section p {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            background-color: #f1fdff;
+            border-left: 5px solid #00b7ec;
+            padding: 20px;
+            margin: 24px auto;
+            font-size: 1.1em;
+            max-width: 800px;
+            border-radius: 5px;
+        }
+
+
 
         .header {
             display: flex;
@@ -58,62 +130,6 @@
             font-size: 2.5rem;
             margin: 0 1rem;
             color: #111;
-        }
-
-        h2 {
-            font-size: 1.6rem;
-            margin-top: 2rem;
-            color: #2b2b2b;
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        li::before {
-            content: "✔";
-            margin-right: 10px;
-            color: #3a86ff;
-        }
-
-        p {
-            line-height: 1.6;
-            margin-bottom: 1rem;
-        }
-
-        .section {
-            margin-bottom: 2.5rem;
-        }
-
-        .cta {
-            text-align: center;
-            margin-top: 3rem;
-            display: flex;
-            justify-content: end;
-        }
-
-        .cta a {
-            background: #3a86ff;
-            color: #fff;
-            padding: 1rem 2rem;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 1.1rem;
-        }
-
-        .highlight {
-            background: #e8f0fe;
-            padding: 0.5rem;
-            border-radius: 5px;
-        }
-
-        ol {
-            padding-left: 1.2rem;
-        }
-
-        ol li {
-            margin-bottom: 0.5rem;
         }
 
         .mtv {
@@ -150,194 +166,160 @@
             }
         }
 
-        .namediv {
-            font-size: 1.2rem;
-            margin-top: 3rem;
-        }
 
-        .open-popup-btn {
-            background: #3a86ff;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-
-        .popup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            backdrop-filter: blur(6px);
-            background-color: rgba(240, 240, 240, 0.6);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .popup-box {
-            background: #fff;
-            padding: 2rem;
-            border-radius: 10px;
-            max-width: 400px;
-            width: 78%;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            position: relative;
+        footer {
             text-align: center;
+            padding: 40px 20px;
+            background: #222;
+            color: #eee;
         }
 
-        .popup-close {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
+        footer p {
+            margin: 5px 0;
+        }
+
+        @media (max-width: 768px) {
+            .section {
+                max-width: 900px;
+                margin: auto;
+                background: #ffffff;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                padding: 0.5rem;
+                border-radius: 10px;
+                margin-top: 1.5rem;
+            }
+        }
+
+        li::before {
+            content: "✔";
+            margin-right: 10px;
             color: #3a86ff;
-            cursor: pointer;
         }
 
-        .popup-content h2 {
-            margin-top: 0;
-            font-size: 1.7rem;
+                .title {
+            position: relative;
+            top: 30px;
         }
 
-        .popup-content p {
-            color: #333;
-            font-size: 1rem;
-            margin-top: 1rem;
-            line-height: 1.6;
+        @media (max-width: 600px) {
+            .title {
+                position: relative;
+                top: 0;
+            }
         }
 
-        .popup-link {
-            color: #3a86ff;
-            text-decoration: none;
-            font-weight: 500;
+         li {
+            list-style: none;
+            padding: 0;
+            margin: 10px auto;
+            text-align: left;
+            max-width: 800px;
         }
 
-        .popup-link:hover {
-            text-decoration: underline;
+        li {
+            margin-bottom: 8px;
+            padding-left: 25px;
+            position: relative;
+            font-size: 1.2rem;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
+
+    <div class="section">
+
+        <div style="text-align: center;">
+
+            <h1 class="title">Partnership Proposal: Magic TV x Stingray</h1>
+        </div>
         <div class="header">
             <img src="/images/stingray.png" alt="Stingray Logo">
-            <h1>Magic TV - Stingray Partnership Proposal</h1>
+            <h1>
+
+                <!-- MAGIC TV FOR STINGRAY -->
+                <p style="font-size: 1.5rem; font-weight: 400;">Unlock New Revenue Streams & Audience Engagement with
+                    Magic TV</p>
+            </h1>
             <img class="mtv" src="/images/mtv-logo.png" alt="Magic TV Logo">
         </div>
 
-        <div class="section">
-            <h2>Unlock New Revenue Streams & Audience Engagement with Magic TV</h2>
-            <p>Magic TV is an interactive broadcast overlay powered by the Magic Code: a camera-readable, app-free
-                visual
-                signal that turns any TV screen into a direct, real-time connection between content and viewer. This
-                technology
-                enables Stingray Channels to monetize viewer interaction, increase engagement, and offer value-added
-                services—all without disrupting programming.</p>
-        </div>
+        <div style="text-align: center;">
 
-        <div class="section">
-            <h2>Key Benefits for Stingray</h2>
-            <ul>
-                <li><strong>New Revenue Channel:</strong> Generate direct revenue via premium viewer activations
-                    (€12/year
-                    subscription per user).</li>
-                <li><strong>No Upfront Investment:</strong> Zero cost for Stingray. Fully turnkey solution.</li>
-                <li><strong>40% Revenue Share:</strong> Each activation through Stingray channels brings recurring
-                    income.</li>
-                <li><strong>FAST Channel Enhancement:</strong> Make linear music TV interactive, actionable, and
-                    measurable.</li>
-                <li><strong>Viewer Experience:</strong> Boost viewer retention by linking music shows with real-world
-                    content,
-                    artist engagement, voting, or live reactions.</li>
-                <li><strong>No App Required:</strong> Viewers scan the Magic Code on-screen using any phone camera.</li>
-            </ul>
-        </div>
-
-        <div class="section">
-            <h2>Real-Life Applications</h2>
-            <ul>
-                <li>Scan to discover more about the artist or song currently playing.</li>
-                <li>Participate in real-time polls, contests, and giveaways.</li>
-                <li>Buy concert tickets or artist merch directly from screen.</li>
-                <li>Support a cause, vote for fan awards, or unlock exclusive content.</li>
-            </ul>
-        </div>
-
-        <div class="section">
-            <h2>Activation Timeframe</h2>
-            <p><span class="highlight">Fully operational within 7 days.</span> Stingray only needs to embed a static
-                code into
-                the video feed.</p>
-        </div>
-
-        <div class="section">
-            <h2>Next Step</h2>
-            <p>Let’s explore a pilot with 1–2 Stingray channels and evaluate results. Minimal setup, maximum impact.</p>
-        </div>
-
-        <div class="section">
-            <h2>Pitch Deck Overview</h2>
-            <ol>
-                <li>Magic TV x Stingray – The Future of Interactive Music Broadcasting</li>
-                <li>Problem: Linear TV is Passive. Engagement is Low.</li>
-                <li>Solution: Magic TV Adds Interactivity Without Apps</li>
-                <li>How Magic Code Works (Visual Example on Screen)</li>
-                <li>Viewer Benefits – Scan to Interact, Vote, Shop, Support</li>
-                <li>Broadcaster Benefits – Revenue, Engagement, Zero Cost</li>
-                <li>Revenue Model – 12€/year/user | 40% Share</li>
-                <li>Integration – Simple Overlay, No Development Needed</li>
-                <li>Pilot Proposal for Stingray</li>
-                <li>Timeline – Ready in 7 Days</li>
-                <li>Call to Action – Schedule a Demo & Unlock Interactive Revenue</li>
-            </ol>
-
-            <div class="namediv">
-
-                <b>Arnold Schmidt</b> <br>
-                Founder of the Magic Code and Magic TV<br>
-                Switzerland, June 2025
-            </div>
-
-
-        </div>
-
-        <!-- Popup Container -->
-        <div id="popupOverlay" class="popup-overlay">
-            <div class="popup-box">
-                <button class="popup-close" onclick="closePopup()">×</button>
-                <div class="popup-content">
-                    <h2>Arnold Schmidt</h2>
-                    <p>
-                        <a href="mailto:arnoldschmidt.com@gmail.com"
-                            class="popup-link">arnoldschmidt.com@gmail.com</a><br>
-                        <a href="tel:+41763286283" class="popup-link">+41 76 328 6283</a>
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="cta">
-            <a type="button" class="open-popup-btn" onclick="openPopup()">Schedule a Demo</a>
         </div>
     </div>
 
-    <script>
-        function openPopup() {
-            document.getElementById('popupOverlay').style.display = 'flex';
-        }
+    <div class="section">
+        <h2>Overview</h2>
+        <p>
+            Magic TV is an interactive broadcast overlay powered by the Magic Code—a camera-readable, app-free visual
+            signal that turns any TV screen into a real-time, two-way connection between viewer and content. This
+            turnkey technology enables Stingray to monetize viewer interaction, drive engagement, and offer value-added
+            services—all without interrupting programming or requiring additional infrastructure.
+        </p>
+    </div>
 
-        function closePopup() {
-            document.getElementById('popupOverlay').style.display = 'none';
-        }
-    </script>
+    <div class="section">
+        <h2>Key Benefits for Stingray</h2>
+        <ul>
+            <li><strong>New Revenue Stream:</strong> Generate direct, recurring revenue through premium viewer
+                activations (€29.90/year per user).</li>
+            <li><strong>Zero Upfront Cost:</strong> No technical development or platform investment required from
+                Stingray. Magic TV is fully plug-and-play.</li>
+            <li><strong>40% Revenue Share:</strong> For every paying user activation through a Stingray channel,
+                Stingray receives a 40% share—turning passive viewership into recurring net profit.</li>
+            <li><strong>FAST Channel Enhancement:</strong> Make Stingray’s linear music programming interactive,
+                measurable, and commerce-ready with minimal operational effort.</li>
+            <li><strong>Improved Viewer Experience:</strong> Increase retention and loyalty by connecting live music
+                content with real-time viewer actions: votes, reactions, contests, and exclusive content access.</li>
+            <li><strong>App-Free and Device-Agnostic:</strong> Viewers participate simply by scanning the Magic Code
+                using their smartphone camera. No download or account creation needed.</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Real-Life Applications</h2>
+        <ul>
+            <li>Scan to learn more about the artist or song currently playing.</li>
+            <li>Participate in real-time polls, fan contests, or viewer-driven programming.</li>
+            <li>Buy concert tickets or artist merchandise directly from the screen.</li>
+            <li>Vote for fan awards, support a cause, or unlock exclusive video content.</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Activation Timeframe</h2>
+        <p class="highlight">
+            Magic TV can be operational on selected Stingray channels within 7 days. All that is required is embedding a
+            static Magic Code in the video feed.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Pitch Deck Overview</h2>
+        <ul>
+            <li><strong>Magic TV x Stingray – The Future of Interactive Music Broadcasting</strong></li>
+            <li><strong>Problem:</strong> Linear TV is passive. Engagement is low.</li>
+            <li><strong>Solution:</strong> Magic TV adds interactivity without apps.</li>
+            <li><strong>How Magic Code Works:</strong> Visual example on screen</li>
+            <li><strong>Viewer Benefits:</strong> Scan to interact, vote, shop, support</li>
+            <li><strong>Broadcaster Benefits:</strong> Revenue, engagement, zero cost</li>
+            <li><strong>Revenue Model:</strong> €29.90/year/user | 40% share</li>
+            <li><strong>Integration:</strong> Simple overlay, no development needed</li>
+            <li><strong>Pilot Proposal:</strong> 1–2 Stingray channels to evaluate</li>
+            <li><strong>Timeline:</strong> Ready in 7 days</li>
+            <li><strong>Call to Action:</strong> Schedule a demo & unlock interactive revenue</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Contact</h2>
+        <p>
+            <strong>Arnold Schmidt</strong><br>
+            Founder of the Magic Code and Magic TV<br>
+            Switzerland, June 2025
+        </p>
+    </div>
 
 </body>
 

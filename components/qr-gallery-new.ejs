@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <title>Magic Code Cards</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="/css/qr-gallery-new.css" rel="stylesheet">
 </head>
 
@@ -13,7 +14,64 @@
         <span style="font-family: Poppins;
         font-weight: 600;
         font-size: 20px;
-        line-height: 20px;">My Magic Codes</span>
+        margin-bottom: 10px;
+        line-height: 20px;" data-translate="my_magic_codes">My Magic Codes</span>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <!-- Search Text -->
+            <input type="text" id="searchInput" placeholder="Search Magic Codes..." />
+
+            <!-- Sort -->
+            <select id="sortSelect">
+                <option value="dateAsc">Sort by Date ↑</option>
+                <option value="dateDesc">Sort by Date ↓</option>
+                <option value="alphaAsc">Sort by Name A → Z</option>
+                <option value="alphaDesc">Sort by Name Z → A</option>
+            </select>
+
+            <!-- Tags Multi Select -->
+            <div class="multi-dropdown" id="multiDropdown">
+                <button type="button" id="tagsDropdownBtn">Select Tags ▾</button>
+                <div class="dropdown-content" id="tagsDropdownContent">
+                    <% if (user && user.tags && user.tags.length> 0) { %>
+                        <% user.tags.forEach(function(tag) { %>
+                            <label>
+                                <input type="checkbox" value="<%= tag %>">
+                                <%= tag %>
+                            </label>
+                            <% }) %>
+                                <% } else { %>
+                                    <p style="padding:6px; font-size: 13px; color:#555;">You don’t have any tags yet.
+                                    </p>
+                                    <% } %>
+
+                                        <!-- Create new tag inside dropdown -->
+                                        <div class="create-tag-inline">
+                                            <input type="text" name="newTag" placeholder="Enter new tag..." />
+                                            <button type="submit" name="createTagBtn">+</button>
+                                        </div>
+                </div>
+            </div>
+
+
+            <!-- Search Button -->
+
+            <button class="btn" style="margin: 0px;" id="filter-search-btn"><i class="fas fa-search"></i></button>
+            <button class="btn" style="margin: 0px;" id="filter-clear-btn" onclick="window.location.href='/magiccode'">
+                <i class="fas fa-times"></i>
+            </button>
+
+
+        </div>
+        <!-- Create New Tag Section (Separate from filter bar) -->
+        <!-- Create New Tag Section -->
+        <!-- <div class="create-tag-section" s>
+            <input type="text" name="newTag" placeholder="Enter new tag..." />
+            <button type="submit" name="createTagBtn">Create Tag</button>
+        </div> -->
+
+
 
         <div class="grid">
             <% if (qrCodes.length> 0) { %>
@@ -33,7 +91,8 @@
                             <% if (!qrCode.isFirstQr) { %>
                                 <button class="icon-button" title="Make It Free"
                                     onclick="makeItFree('<%= qrCode._id %>')">
-                                    <img src="\images\free.png" alt="Make It Free" class="action-icon" style="width: 50px;"/>
+                                    <img src="\images\free.png" alt="Make It Free" class="action-icon"
+                                        style="width: 50px;" />
                                 </button>
                                 <% } %>
 
@@ -50,7 +109,7 @@
         </div>
     </div>
 
-    <script src="/js/api-calls.js"></script>
+    <!-- <script src="/js/api-calls.js"></script> -->
     <script src="/js/qr-gallery.js"></script>
     <script>
         const qrCodesMap = {};
@@ -142,6 +201,153 @@
         // Initialize QR codes
         const qrCodesFromServer = <%- JSON.stringify(qrCodes) %>;
         showQrCodes(qrCodesFromServer);
+
+
+
+        const multiDropdown = document.getElementById("multiDropdown");
+        const dropdownBtn = document.getElementById("tagsDropdownBtn");
+
+        dropdownBtn.addEventListener("click", () => {
+            multiDropdown.classList.toggle("open");
+        });
+
+        // Close if clicked outside
+        document.addEventListener("click", (e) => {
+            if (!multiDropdown.contains(e.target)) {
+                multiDropdown.classList.remove("open");
+            }
+        });
+
+        // Show selected tags in button
+        multiDropdown.querySelectorAll("input[type=checkbox]").forEach(cb => {
+            cb.addEventListener("change", () => {
+                const selected = [...multiDropdown.querySelectorAll("input:checked")]
+                    .map(c => c.value);
+
+                if (selected.length === 0) {
+                    dropdownBtn.textContent = "Select Tags ▾";
+                } else if (selected.length <= 2) {
+                    // Show all if 1 or 2 selected
+                    dropdownBtn.textContent = selected.join(", ");
+                } else {
+                    // Show first 2 and then add "..."
+                    dropdownBtn.textContent = `${selected.slice(0, 2).join(", ")}... (${selected.length})`;
+                }
+            });
+        });
+
+        // --- Create Tag Integration ---
+        document.addEventListener("click", async (e) => {
+            if (e.target && e.target.name === "createTagBtn") {
+                const input = document.querySelector(".create-tag-inline input[name='newTag']");
+                const newTag = input.value.trim();
+                if (!newTag) {
+                    showToast("Please enter a tag", "error");
+                    return;
+                }
+
+                // Optional: show loader (if you have one)
+                const loader = document.getElementById("loader");
+                if (loader) loader.style.display = "flex";
+
+                try {
+                    const res = await fetch("/create-tag", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ tag: newTag })
+                    });
+                    const data = await res.json();
+
+                    if (res.ok && data.success) {
+                        input.value = ""; // clear input
+                        showToast("Tag created successfully", "success");
+                        // Dynamically append new tag checkbox inside dropdown
+                        const newLabel = document.createElement("label");
+                        newLabel.innerHTML = `
+      <input type="checkbox" value="${newTag}">
+      ${newTag}
+    `;
+                        const dropdownContent = document.getElementById("tagsDropdownContent");
+                        dropdownContent.insertBefore(newLabel, dropdownContent.querySelector(".create-tag-inline"));
+                    } else {
+                        showToast(data.message || "Failed to create tag", "error");
+                    }
+                } catch (err) {
+                    console.error("Error creating tag:", err);
+                    showToast("Server error while creating tag", "error");
+                } finally {
+                    if (loader) loader.style.display = "none";
+                }
+            }
+        });
+
+
+        // Handle Search button click
+        document.querySelector(".filter-bar .btn").addEventListener("click", () => {
+            const searchText = document.getElementById("searchInput").value.trim();
+            const sortValue = document.getElementById("sortSelect").value;
+
+            const selectedTags = [...multiDropdown.querySelectorAll("input:checked")]
+                .map(c => c.value);
+
+            // If nothing is selected, show toast
+            if (!searchText && selectedTags.length === 0 && !sortValue) {
+                showToast("Please enter search text or select tags/sort option", "error");
+                return; // Stop further execution
+            }
+
+            // Build query string
+            const params = new URLSearchParams();
+            if (searchText) params.append("search", searchText);
+            if (selectedTags.length) params.append("tags", selectedTags.join(","));
+            if (sortValue) params.append("sortBy", sortValue);
+
+            // Redirect
+            const queryString = params.toString();
+            window.location.href = queryString ? `/magiccode?${queryString}` : `/magiccode`;
+
+
+
+        });
+
+
+        // --- Restore filter values from query string ---
+        window.addEventListener("DOMContentLoaded", () => {
+            const params = new URLSearchParams(window.location.search);
+
+            // Restore search text
+            const searchInput = document.getElementById("searchInput");
+            if (params.has("search")) {
+                searchInput.value = params.get("search");
+            }
+
+            // Restore sort
+            const sortSelect = document.getElementById("sortSelect");
+            if (params.has("sortBy")) {
+                sortSelect.value = params.get("sortBy");
+            }
+
+            // Restore tags
+            const selectedTags = params.get("tags") ? params.get("tags").split(",") : [];
+            const checkboxes = document.querySelectorAll("#tagsDropdownContent input[type=checkbox]");
+            checkboxes.forEach(cb => {
+                if (selectedTags.includes(cb.value)) {
+                    cb.checked = true;
+                }
+            });
+
+            // Update dropdown button text accordingly
+            const dropdownBtn = document.getElementById("tagsDropdownBtn");
+            if (selectedTags.length === 0) {
+                dropdownBtn.textContent = "Select Tags ▾";
+            } else if (selectedTags.length <= 2) {
+                dropdownBtn.textContent = selectedTags.join(", ");
+            } else {
+                dropdownBtn.textContent = `${selectedTags.slice(0, 2).join(", ")}... (${selectedTags.length})`;
+            }
+        });
+
+
     </script>
 </body>
 

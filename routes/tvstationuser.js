@@ -9,17 +9,21 @@ const {
 } = require("../middleware/multerQuizUploader");
 const QuizQuestion = require("../models/QuizQuestion");
 const VoteQuestion = require("../models/VoteQuestion");
+const Applause = require("../models/Applause");
 const Channel = require("../models/Channel");
 const WinnerRequest = require("../models/WinnerRequest"); // adjust path
 const User = require("../models/User");
 const QuizQuestionResponse = require("../models/QuizQuestionResponse");
 const VoteQuestionResponse = require("../models/VoteQuestionResponse");
+const ApplauseResponse = require("../models/ApplauseResposne");
 const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
+const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
 const Session = require("../models/Session"); // adjust path if needed
 const BASE_URL = process.env.FRONTEND_URL; // update if needed
 const { addUploadPath } = require("../utils/selectUploadDestination");
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
 const SendEmail = require("../Messages/SendEmail");
+const { session } = require("passport");
 
 // GET /channels - paginated list
 router.get("/channels", async (req, res) => {
@@ -464,6 +468,9 @@ router.get("/channels/:channelId/session/:sessionId/quiz", async (req, res) => {
       error: "Invalid Channel or Session ID",
       activeSection: "channel-quiz",
       user: req.user,
+      sessionId: null,
+      channelId: null,
+      session: null,
     });
   }
 
@@ -477,6 +484,9 @@ router.get("/channels/:channelId/session/:sessionId/quiz", async (req, res) => {
         error: "Channel or session not found",
         activeSection: "channel-quiz",
         user: req.user,
+        sessionId: null,
+        session: null,
+        channelId: null,
       });
     }
 
@@ -487,7 +497,9 @@ router.get("/channels/:channelId/session/:sessionId/quiz", async (req, res) => {
         error: "Access denied",
         activeSection: "channel-quiz",
         user: req.user,
-        sessionId,
+        sessionId: null,
+        channelId: null,
+        session: null,
       });
     }
 
@@ -518,6 +530,8 @@ router.get("/channels/:channelId/session/:sessionId/quiz", async (req, res) => {
       quizQuestions,
       hasMore,
       sessionId,
+      channelId,
+      session,
     });
   } catch (err) {
     console.error("Error fetching quiz for session:", err);
@@ -568,27 +582,6 @@ router.delete("/quiz-question/:id", async (req, res) => {
 
     // 🧹 Use cascadeDelete to remove quiz question + all related data
     await cascadeDelete("quizQuestion", questionId);
-
-    // // 🧹 3. Delete related file assets (if exist)
-    // const fileFieldsToCheck = [
-    //   quiz.questionImage,
-    //   quiz.questionLogo,
-    //   quiz.logo,
-    // ];
-
-    // fileFieldsToCheck.forEach((filePath) => {
-    //   if (filePath) deleteFileIfExists(filePath);
-    // });
-
-    // // Also clean up any option images
-    // if (Array.isArray(quiz.options)) {
-    //   quiz.options.forEach((option) => {
-    //     if (option.image) deleteFileIfExists(option.image);
-    //   });
-    // }
-
-    // // ❌ 4. Delete the quiz
-    // await QuizQuestion.deleteOne({ _id: questionId });
 
     return res.status(200).json({
       message: "Quiz question deleted successfully",
@@ -907,6 +900,7 @@ router.post(
 
         return {
           text: opt.text?.trim(),
+          description: opt.description?.trim() || "", // ✅ NEW
           image: imageFile ? `/questions-image/${imageFile.filename}` : null,
         };
       });
@@ -1197,6 +1191,7 @@ router.post(
         return {
           _id: optId,
           text: opt.text?.trim() || "",
+          description: opt.description?.trim() || "", // ✅ save description
           image: newImage,
         };
       });
@@ -1583,7 +1578,16 @@ router.get(
       // Jackpot Participants
       // Jackpot Participants
       const jackpotParticipants = await QuizQuestionResponse.aggregate([
-        { $match: { channelId: channel._id, sessionId: session._id } },
+        {
+          $match: {
+            channelId: channel._id,
+            sessionId: session._id,
+            $or: [
+              { isNoResposneGiven: false },
+              { isNoResposneGiven: { $exists: false } },
+            ],
+          },
+        },
 
         // Join with QuizQuestion to get mode
         {
@@ -1661,7 +1665,16 @@ router.get(
       // Digital Reward Participants
       // Digital Reward Participants
       const digitalRewardParticipants = await QuizQuestionResponse.aggregate([
-        { $match: { channelId: channel._id, sessionId: session._id } },
+        {
+          $match: {
+            channelId: channel._id,
+            sessionId: session._id,
+            $or: [
+              { isNoResposneGiven: false },
+              { isNoResposneGiven: { $exists: false } },
+            ],
+          },
+        },
 
         // Join with QuizQuestion to get mode
         {
@@ -1806,6 +1819,19 @@ router.post(
         });
       }
 
+      // ✅ Fetch the QuizQuestion by channel + session and get mode
+      const question = await QuizQuestion.findOne(
+        { channelId, sessionId },
+        { mode: 1, linkedQRCode: 1 } // only fetch mode
+      );
+      if (!question) {
+        return res.status(404).json({
+          message: "Quiz question not found for this channel and session",
+          type: "error",
+        });
+      }
+      const questionCurrentMode = question.mode;
+
       // Validate user
       const user = await User.findById(userId);
       if (!user) {
@@ -1881,7 +1907,7 @@ router.post(
       });
 
       const sender = {
-        email: "textildruckschweiz.com@gmail.com",
+        email: "arnoldschmidt@magic-code.net",
         name: "Magic Code - Plan Update",
       };
 
@@ -1998,6 +2024,33 @@ router.post(
           );
         }
       }
+      // ✅ After declaring winners and before sending response
+      if (mode === questionCurrentMode || questionCurrentMode === "both") {
+        let shouldDelete = false;
+
+        if (questionCurrentMode === "both") {
+          const winnerCheck = await QuizQuestionResponse.findOne({
+            sessionId: session._id,
+            channelId: channel._id,
+            isJackpotWinnerDeclared: true,
+            isDigitalWinnerDeclared: true,
+          });
+
+          if (winnerCheck) shouldDelete = true;
+        } else {
+          shouldDelete = true;
+        }
+
+        if (shouldDelete) {
+          const qrRecord = await QRCodeData.findOne({
+            _id: question.linkedQRCode,
+          });
+          if (qrRecord) {
+            await QRScanLog.deleteMany({ qrCodeId: qrRecord._id });
+            console.log(`Deleted all scan logs for QR ID ${qrRecord._id}`);
+          }
+        }
+      }
 
       const message = isApprovedByUser
         ? `${
@@ -2059,6 +2112,40 @@ router.get(
       });
     }
 
+    // ✅ Step 2: Validate session exists for this channel
+    const session = await Session.findOne({ _id: sessionId, channelId });
+    if (!session) {
+      return res.render("dashboardnew", {
+        quizResponses: [],
+        totalResponsesWithoutPagination: 0,
+        currentPage: 1,
+        totalPages: 0,
+        activeSection: "quiz-response-tracker",
+        user: req.user,
+        error: "Session not found",
+        sessionId,
+        channelId,
+      });
+    }
+
+    // ✅ Step 3: Extract quiz code from channel.code array
+
+    const question = await QuizQuestion.findOne(
+      { sessionId },
+      "linkedQRCode"
+    ).lean();
+    const quizQrCodeId = question?.linkedQRCode || null;
+
+    // Step 4: Find QR in qrcodedatas by code (if exists)
+    let qrScanCount = 0;
+    if (quizQrCodeId) {
+      const qrDoc = await QRCodeData.findById(quizQrCodeId);
+      if (qrDoc) {
+        // Step 5: Count total qrscanlogs for this QR
+        qrScanCount = await QRScanLog.countDocuments({ qrCodeId: qrDoc._id });
+      }
+    }
+
     try {
       const result = await QuizQuestionResponse.aggregate([
         {
@@ -2105,7 +2192,7 @@ router.get(
                           { $eq: ["$isDigitalWinnerDeclared", true] },
                         ],
                       },
-                      { $eq: ["$question.mode", "none"] },
+                      // { $eq: ["$question.mode", "none"] },
                     ],
                   },
                 },
@@ -2131,6 +2218,7 @@ router.get(
             deductCoin: 1,
             jackpotCoinDeducted: 1,
             digitalCoinDeducted: 1,
+            isNoResposneGiven: 1,
             coinsDeducted: {
               $cond: [
                 { $eq: ["$deductCoin", true] },
@@ -2148,6 +2236,10 @@ router.get(
           $facet: {
             data: [{ $skip: skip }, { $limit: recordsPerPage }],
             totalCount: [{ $count: "total" }],
+            totalCountExcludingNoResponse: [
+              { $match: { isNoResposneGiven: { $ne: true } } },
+              { $count: "total" },
+            ],
           },
         },
       ]);
@@ -2155,10 +2247,14 @@ router.get(
       const quizResponses = result[0].data;
       const totalResponses = result[0].totalCount[0]?.total || 0;
       const totalPages = Math.ceil(totalResponses / recordsPerPage);
+      const totalResponsesExcludingNoResponse =
+        result[0].totalCountExcludingNoResponse[0]?.total || 0;
 
       res.render("dashboardnew", {
         quizResponses,
         totalResponsesWithoutPagination: totalResponses,
+        totalResponsesExcludingNoResponse,
+        qrScanCount,
         currentPage,
         totalPages,
         error: null,
@@ -2184,13 +2280,22 @@ router.get(
   }
 );
 
-// POST /api/channel/:channelId/qr
+// POST /api/channel/:channelId/session/:sessionId/qr
 router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
   try {
     const { channelId, sessionId } = req.params;
-    const { backgroundColor, qrDotColor, type, lang = "en" } = req.body;
+    const {
+      backgroundColor,
+      qrDotColor,
+      type,
+      lang = "en",
+      logo = `/images/logo1.jpg`,
+    } = req.body;
 
-    if (!type || !["quiz", "voting", "shopping", "brand"].includes(type)) {
+    if (
+      !type ||
+      !["quiz", "voting", "shopping", "brand", "applause"].includes(type)
+    ) {
       return res
         .status(400)
         .json({ success: false, message: "Invalid app type" });
@@ -2198,69 +2303,94 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
 
     // Step 1: Find the channel
     const channel = await Channel.findById(channelId);
-    if (!channel) {
+    if (!channel)
       return res
         .status(404)
         .json({ success: false, message: "Channel not found" });
-    }
 
+    // Step 2: Find the session
     const session = await Session.findById(sessionId);
-    if (!session) {
+    if (!session)
       return res
         .status(404)
         .json({ success: false, message: "Session not found" });
+
+    // Step 3: Find the first question of the given type to get linked QR
+    let questionModel = null;
+
+    switch (type) {
+      case "quiz":
+        questionModel = QuizQuestion;
+        break;
+      case "voting":
+        questionModel = VoteQuestion;
+        break;
+      case "shopping":
+        questionModel = ProductQuestion;
+        break;
+      case "brand":
+        questionModel = BrandQuestion;
+        break;
+      case "applause":
+        questionModel = Applause;
+        break;
     }
 
-    // Step 3: Find the code for the given type in session.code[]
-    const codeObj = session.code.find((c) => c.type === type);
-    if (!codeObj) {
+    if (!questionModel)
       return res
         .status(400)
-        .json({ success: false, message: "Code for this type not found" });
-    }
+        .json({ success: false, message: "Invalid question type" });
 
-    const sessionCode = codeObj.value;
-    const qrUrl = `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=${lang}`;
+    const question = await questionModel
+      .findOne({ sessionId })
+      .populate("linkedQRCode")
+      .lean();
 
-    // Step 4: Find or create QR
-    let qr = await QRCodeData.findOne({ code: sessionCode });
+    let qr = question?.linkedQRCode || null;
 
-    if (qr) {
-      // Update colors if provided
-      if (backgroundColor) qr.backgroundColor = backgroundColor;
-      if (qrDotColor) qr.qrDotColor = qrDotColor;
+    if (!qr) {
+      const defaultUrl =
+        type === "applause"
+          ? `${BASE_URL}/tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=${encodeURIComponent(
+              lang
+            )}`
+          : `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=${encodeURIComponent(
+              lang
+            )}`;
 
-      // Always update URL for the current lang
-      qr.url = qrUrl;
-
-      await qr.save();
-    } else {
-      qr = await QRCodeData.create({
-        qrName: sessionCode,
-        type: "url",
-        url: qrUrl,
-        text: "",
-        code: sessionCode, // ✅ now uses session code for given type
-        qrDotColor: qrDotColor || "#000000",
-        backgroundColor: backgroundColor || "#FFFFFF",
-        dotStyle: "rounded",
-        cornerStyle: "dot",
-        applyGradient: "none",
-        ColorList: "first",
-        isDemo: false,
-        isQrActivated: true,
-        isFirstQr: false,
-        usedId: null,
+      return res.status(200).json({
+        success: true,
+        message: "No linked QR found for this session",
+        url: defaultUrl,
       });
     }
 
-    const qrObj = qr.toObject();
-    qrObj.redirectUrl = `${BASE_URL}/${sessionCode}`;
+    let qrUrl;
+    if (type === "applause") {
+      qrUrl = `${BASE_URL}/tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=${encodeURIComponent(
+        lang
+      )}`;
+    } else {
+      qrUrl = `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=${encodeURIComponent(
+        lang
+      )}`;
+    }
 
-    // Step 5: Return response
-    res.json({ success: true, qr: qrObj });
+    qr.url = qrUrl;
+
+    if (backgroundColor) qr.backgroundColor = backgroundColor;
+    if (qrDotColor) qr.qrDotColor = qrDotColor;
+    if (logo) qr.logo = logo;
+
+    // Save updates
+    await QRCodeData.findByIdAndUpdate(qr._id, qr, { new: true });
+
+    // No toObject() needed since qr is already plain object
+    qr.redirectUrl = `${BASE_URL}/${qr.code || qr.qrName}`;
+
+    res.json({ success: true, qr });
   } catch (error) {
-    console.error("QR generation error:", error);
+    console.error("QR update error:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
@@ -2271,7 +2401,7 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
     const { sessionId, type } = req.params;
 
     // ✅ Validate type
-    if (!["quiz", "voting", "shopping", "brand"].includes(type)) {
+    if (!["quiz", "voting", "shopping", "brand", "applause"].includes(type)) {
       return res.status(400).json({
         success: false,
         message: "Invalid app type",
@@ -2282,7 +2412,9 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
     const session = await Session.findById(
       sessionId,
       "name logo logoTitle description link code channelId"
-    ).lean();
+    );
+
+    const channelId = session.channelId;
 
     if (!session) {
       return res.status(404).json({
@@ -2291,23 +2423,50 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
       });
     }
 
-    // ✅ Get session code for given type
-    const codeObj = session.code.find((c) => c.type === type);
-    if (!codeObj) {
-      return res.status(404).json({
-        success: false,
-        message: `No code found for type: ${type}`,
-      });
+    let qr = null;
+
+    // ✅ Handle type-specific QR lookup
+    if (type === "quiz") {
+      const question = await QuizQuestion.findOne({ sessionId }, "linkedQRCode")
+        .populate("linkedQRCode")
+        .lean();
+
+      qr = question?.linkedQRCode || null;
+    } else if (type === "voting") {
+      const voteQuestion = await VoteQuestion.findOne(
+        { sessionId },
+        "linkedQRCode"
+      )
+        .populate("linkedQRCode")
+        .lean();
+
+      qr = voteQuestion?.linkedQRCode || null;
     }
 
-    const sessionCode = codeObj.value;
+    if (type === "applause") {
+      const applauseQuestion = await Applause.findOne(
+        { sessionId },
+        "linkedQRCode"
+      )
+        .populate("linkedQRCode")
+        .lean();
 
-    // ✅ Find QR for that code only
-    const qr = await QRCodeData.findOne({ code: sessionCode }).lean();
+      qr = applauseQuestion?.linkedQRCode || null;
+    }
+
+    // ⚠️ Later: add for shopping, brand
+
+    const defaultUrl =
+      type === "applause"
+        ? `${BASE_URL}/tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=en`
+        : `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=en`;
+
     if (!qr) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
-        message: "QR data not found",
+        message: "No linked Magic Code found for this session",
+        isNoQrLinked: true,
+        url: defaultUrl,
       });
     }
 
@@ -2316,10 +2475,10 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
       success: true,
       data: {
         type,
-        code: sessionCode,
+        code: qr.code,
         qr: {
           ...qr,
-          redirectUrl: `${BASE_URL}/${sessionCode}`,
+          redirectUrl: `${BASE_URL}/${qr.code}`,
         },
       },
     });
@@ -2384,7 +2543,6 @@ router.get("/channels/:id/sessions", async (req, res) => {
     if (req.xhr || req.headers.accept.includes("json")) {
       return res.json({ type: "success", data: sessions, hasMore });
     }
-
     return res.render("dashboardnew", {
       channel,
       error: null,
@@ -2411,9 +2569,6 @@ router.post(
   addUploadPath("uploads"),
   upload.fields([{ name: "logo", maxCount: 1 }]),
   async (req, res) => {
-    const mongoSession = await mongoose.startSession();
-    mongoSession.startTransaction();
-
     try {
       const { name, logoTitle, description, link } = req.body;
       const { channelId } = req.params;
@@ -2429,82 +2584,37 @@ router.post(
       const logoFile = req.files["logo"]?.[0];
       const logoPath = logoFile ? `/uploads/${logoFile.filename}` : null;
 
+      // Ensure channel exists
+      const channel = await Channel.findById(channelId);
+      if (!channel) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(404).json({
+          message: "Channel not found",
+          type: "error",
+        });
+      }
+
       // Create session
-      const newSession = await Session.create(
-        [
-          {
-            name: name.trim(),
-            logo: logoPath,
-            logoTitle: logoTitle?.trim() || "",
-            description: description?.trim() || "",
-            link: link?.trim() || null,
-            channelId: channelId,
-          },
-        ],
-        { session: mongoSession }
-      );
-
-      const channel = await Channel.findById(channelId).session(mongoSession);
-      if (!channel) throw new Error("Channel not found");
-
-      // Create 4 QR codes based on session.code array
-      const qrDocs = newSession[0].code.map((codeObj) => {
-        let url;
-        switch (codeObj.type) {
-          case "quiz":
-            url = `${BASE_URL}/tvstation/channels/${channelId}/session/${newSession[0]._id}/quiz-play`;
-            break;
-          case "voting":
-            url = `${BASE_URL}/tvstation/channels/${channelId}/session/${newSession[0]._id}/voting-play`;
-            break;
-          case "shopping":
-            url = `${BASE_URL}/tvstation/channels/${channelId}/session/${newSession[0]._id}/shopping-play`;
-            break;
-          case "brand":
-            url = `${BASE_URL}/tvstation/channels/${channelId}/session/${newSession[0]._id}/brand-play`;
-            break;
-          default:
-            url = `${BASE_URL}/tvstation/channels/${channelId}/session/${newSession[0]._id}`;
-        }
-
-        return {
-          qrName: codeObj.value,
-          type: "url",
-          url,
-          text: "",
-          code: codeObj.value,
-          qrDotColor: "#000000",
-          backgroundColor: "#FFFFFF",
-          dotStyle: "rounded",
-          cornerStyle: "dot",
-          applyGradient: "none",
-          ColorList: "first",
-          isDemo: false,
-          isQrActivated: true,
-          isFirstQr: false,
-          usedId: null,
-        };
+      const newSession = await Session.create({
+        name: name.trim(),
+        logo: logoPath,
+        logoTitle: logoTitle?.trim() || "",
+        description: description?.trim() || "",
+        link: link?.trim() || null,
+        channelId,
       });
-
-      await QRCodeData.insertMany(qrDocs, { session: mongoSession });
-
-      await mongoSession.commitTransaction();
-      mongoSession.endSession();
 
       return res.status(201).json({
-        message: "Session and QRs created successfully.",
+        message: "Session created successfully.",
         type: "success",
-        data: newSession[0],
+        data: newSession,
       });
     } catch (err) {
-      await mongoSession.abortTransaction();
-      mongoSession.endSession();
-
-      console.error("Error creating session & QRs:", err);
+      console.error("Error creating session:", err);
       cleanupUploadedFiles(req.files, "uploads");
 
       return res.status(500).json({
-        message: "Failed to create session and QRs.",
+        message: "Failed to create session.",
         type: "error",
       });
     }
@@ -2627,6 +2737,9 @@ router.get(
         error: "Invalid Channel or Session ID",
         activeSection: "channel-vote",
         user: req.user,
+        channelId: null,
+        sessionId: null,
+        session: null,
       });
     }
 
@@ -2640,6 +2753,9 @@ router.get(
           error: "Channel or session not found",
           activeSection: "channel-vote",
           user: req.user,
+          channelId: null,
+          sessionId: null,
+          session: null,
         });
       }
 
@@ -2651,6 +2767,9 @@ router.get(
           activeSection: "channel-vote",
           user: req.user,
           sessionId,
+          channelId: null,
+          sessionId: null,
+          session: null,
         });
       }
 
@@ -2666,7 +2785,15 @@ router.get(
       // Calculate vote percentages for each question
       for (let q of voteQuestions) {
         const stats = await VoteQuestionResponse.aggregate([
-          { $match: { questionId: q._id } },
+          {
+            $match: {
+              questionId: q._id,
+              $or: [
+                { isNoResposneGiven: { $exists: false } },
+                { isNoResposneGiven: false },
+              ],
+            },
+          },
           { $group: { _id: "$selectedOptionIndex", votes: { $sum: 1 } } },
         ]);
 
@@ -2699,6 +2826,9 @@ router.get(
         voteQuestions,
         hasMore,
         sessionId,
+        channelId,
+        sessionId,
+        session,
       });
     } catch (err) {
       console.error("Error fetching vote for session:", err);
@@ -2908,6 +3038,7 @@ router.post(
         );
         return {
           text: opt.text?.trim(),
+          description: opt.description?.trim() || "",
           image: imageFile ? `/questions-image/${imageFile.filename}` : null,
         };
       });
@@ -3265,6 +3396,7 @@ router.post(
         return {
           _id: optId,
           text: opt.text?.trim() || "",
+          description: opt.description?.trim() || "",
           image: newImage,
         };
       });
@@ -3437,6 +3569,38 @@ router.get(
       });
     }
 
+    // ✅ Step 2: Validate session exists for this channel
+    const session = await Session.findOne({ _id: sessionId, channelId });
+    if (!session) {
+      return res.render("dashboardnew", {
+        quizResponses: [],
+        totalResponsesWithoutPagination: 0,
+        currentPage: 1,
+        totalPages: 0,
+        activeSection: "voting-response-tracker",
+        user: req.user,
+        error: "Session not found",
+        sessionId,
+        channelId,
+      });
+    }
+    // Step 3: Find first vote question for this session and get linkedQRCode
+    const question = await VoteQuestion.findOne(
+      { sessionId },
+      "linkedQRCode"
+    ).lean();
+    const voteQrCodeId = question?.linkedQRCode || null;
+
+    // Step 4 & 5: Find QR and count scan logs (if exists)
+    let qrScanCount = 0;
+    if (voteQrCodeId) {
+      const qrDoc = await QRCodeData.findById(voteQrCodeId);
+      if (qrDoc) {
+        qrScanCount = await QRScanLog.countDocuments({ qrCodeId: qrDoc._id });
+      }
+    }
+    // If no voteQrCodeId or QR not found, qrScanCount remains 0
+
     try {
       const result = await VoteQuestionResponse.aggregate([
         {
@@ -3483,7 +3647,7 @@ router.get(
                           { $eq: ["$isDigitalWinnerDeclared", true] },
                         ],
                       },
-                      { $eq: ["$question.mode", "none"] },
+                      // { $eq: ["$question.mode", "none"] },
                     ],
                   },
                 },
@@ -3515,6 +3679,7 @@ router.get(
                 0,
               ],
             },
+            isNoResposneGiven: 1,
             createdAt: 1,
             userName: "$user.fullName",
             userEmail: "$user.email",
@@ -3525,6 +3690,10 @@ router.get(
           $facet: {
             data: [{ $skip: skip }, { $limit: recordsPerPage }],
             totalCount: [{ $count: "total" }],
+            totalCountExcludingNoResponse: [
+              { $match: { isNoResposneGiven: { $ne: true } } },
+              { $count: "total" },
+            ],
           },
         },
       ]);
@@ -3532,10 +3701,14 @@ router.get(
       const quizResponses = result[0].data;
       const totalResponses = result[0].totalCount[0]?.total || 0;
       const totalPages = Math.ceil(totalResponses / recordsPerPage);
+      const totalResponsesExcludingNoResponse =
+        result[0].totalCountExcludingNoResponse[0]?.total || 0;
 
       res.render("dashboardnew", {
         quizResponses,
         totalResponsesWithoutPagination: totalResponses,
+        totalResponsesExcludingNoResponse,
+        qrScanCount,
         currentPage,
         totalPages,
         error: null,
@@ -3639,7 +3812,15 @@ router.get(
 
       if (currentQuestion) {
         const stats = await VoteQuestionResponse.aggregate([
-          { $match: { questionId: currentQuestion._id } },
+          {
+            $match: {
+              questionId: currentQuestion._id,
+              $or: [
+                { isNoResposneGiven: { $exists: false } },
+                { isNoResposneGiven: false },
+              ],
+            },
+          },
           { $group: { _id: "$selectedOptionIndex", votes: { $sum: 1 } } },
         ]);
 
@@ -3861,7 +4042,16 @@ router.get(
 
       // Jackpot Participants (Voting)
       const jackpotParticipants = await VoteQuestionResponse.aggregate([
-        { $match: { channelId: channel._id, sessionId: session._id } },
+        {
+          $match: {
+            channelId: channel._id,
+            sessionId: session._id,
+            $or: [
+              { isNoResposneGiven: false },
+              { isNoResposneGiven: { $exists: false } },
+            ],
+          },
+        },
 
         // Join with votequestions to get mode
         {
@@ -3938,7 +4128,16 @@ router.get(
 
       // Digital Reward Participants (Voting)
       const digitalRewardParticipants = await VoteQuestionResponse.aggregate([
-        { $match: { channelId: channel._id, sessionId: session._id } },
+        {
+          $match: {
+            channelId: channel._id,
+            sessionId: session._id,
+            $or: [
+              { isNoResposneGiven: false },
+              { isNoResposneGiven: { $exists: false } },
+            ],
+          },
+        },
 
         // Join with votequestions to get mode
         {
@@ -4043,6 +4242,21 @@ router.post(
     if (type !== "voting") {
       return res.status(400).json({ message: "Invalid type", type: "error" });
     }
+
+    // ✅ Fetch the VoteQuestion by channel + session and get mode
+    const question = await VoteQuestion.findOne(
+      { channelId, sessionId },
+      { mode: 1, linkedQRCode: 1 } // only fetch mode
+    );
+
+    if (!question) {
+      return res.status(404).json({
+        message: "Voting question not found for this channel and session",
+        type: "error",
+      });
+    }
+
+    const questionCurrentMode = question.mode; // 🎯 safely get mode
 
     if (!["jackpot", "digital"].includes(mode)) {
       return res.status(400).json({
@@ -4158,7 +4372,7 @@ router.post(
 
       // Use existing sender and reward logic
       const sender = {
-        email: "textildruckschweiz.com@gmail.com",
+        email: "arnoldschmidt@magic-code.net",
         name: "Magic Code - Plan Update",
       };
 
@@ -4293,6 +4507,38 @@ router.post(
             type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
           } winner request forwarded to admin.`;
 
+      // ✅ After declaring winners and before sending response
+      if (mode === questionCurrentMode || questionCurrentMode === "both") {
+        let shouldDelete = false;
+
+        if (questionCurrentMode === "both") {
+          // Check if both winners are declared
+          const winnerCheck = await VoteQuestionResponse.findOne({
+            sessionId: session._id,
+            channelId: channel._id,
+            isJackpotWinnerDeclared: true,
+            isDigitalWinnerDeclared: true,
+          });
+
+          if (winnerCheck) {
+            shouldDelete = true;
+          }
+        } else {
+          // Normal case: request mode matches question mode
+          shouldDelete = true;
+        }
+
+        if (shouldDelete) {
+          const qrRecord = await QRCodeData.findOne({
+            _id: question.linkedQRCode,
+          });
+          if (qrRecord) {
+            await QRScanLog.deleteMany({ qrCodeId: qrRecord._id });
+            console.log(`Deleted all scan logs for QR ID ${qrRecord._id}`);
+          }
+        }
+      }
+
       return res.status(200).json({
         message,
         type: "success",
@@ -4319,5 +4565,298 @@ router.post(
 );
 
 // Voting Api End Here
+
+router.post("/quiz-viewed", async (req, res) => {
+  const { questionId, channelId, sessionId, type } = req.body;
+  const userId = req.user?._id;
+
+  // Validate type first
+  if (!type || !["quiz", "voting", "applause"].includes(type)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid type. Must be 'quiz', 'voting' or 'applause'.",
+    });
+  }
+
+  if (!channelId || !sessionId || !questionId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing required fields" });
+  }
+
+  try {
+    if (type === "quiz") {
+      await QuizQuestionResponse.create({
+        userId,
+        questionId,
+        channelId,
+        sessionId,
+        selectedOptionIndex: 0,
+        isCorrect: false, // Not answered
+        deductCoin: false,
+        jackpotCoinDeducted: 0,
+        digitalCoinDeducted: 0,
+        isNoResposneGiven: true,
+      });
+    } else if (type === "voting") {
+      await VoteQuestionResponse.create({
+        userId,
+        questionId,
+        channelId,
+        sessionId,
+        selectedOptionIndex: 0,
+        deductCoin: false,
+        jackpotCoinDeducted: 0,
+        digitalCoinDeducted: 0,
+        isNoResposneGiven: true,
+      });
+    } else if (type === "applause") {
+      await ApplauseResponse.create({
+        userId,
+        questionId,
+        channelId,
+        sessionId,
+        selectedOptionIndex: 0,
+        deductCoin: false,
+        magicCoinDeducted: 0,
+        isNoResposneGiven: true,
+      });
+    }
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("Error recording viewed event:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.post("/link-magic-code", async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { sessionId, type } = req.query; // type = "quiz" | "voting"
+    const { qrCodeId } = req.body; // QR code ID from request body
+    // ✅ Ensure req.user is populated (authentication middleware required)
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized. User not logged in.",
+        type: "error",
+      });
+    }
+
+    if (!sessionId || !qrCodeId || !type) {
+      return res.status(400).json({
+        message: "sessionId, qrCodeId, and type (quiz|voting) are required",
+        type: "error",
+      });
+    }
+
+    const Model =
+      type === "quiz"
+        ? QuizQuestion
+        : type === "voting"
+        ? VoteQuestion
+        : type === "applause"
+        ? Applause
+        : null;
+
+    if (!Model) {
+      return res.status(400).json({
+        message: "Invalid type. Must be 'quiz' or 'voting' or 'applause'.",
+        type: "error",
+      });
+    }
+
+    // 1️⃣ Find the Question and channel
+    const question = await Model.findOne({ sessionId })
+      .populate({ path: "channelId", select: "createdBy" })
+      .lean();
+
+    if (!question) {
+      return res.status(404).json({
+        message: `No ${type} question found for the provided sessionId`,
+        type: "error",
+      });
+    }
+
+    // 2️⃣ Validate channel ownership
+    if (
+      !question.channelId ||
+      question.channelId.createdBy.toString() !== userId.toString()
+    ) {
+      return res.status(403).json({
+        message: "You are not authorized to link a Magic Code to this question",
+        type: "error",
+      });
+    }
+
+    // 3️⃣ Find the QR code by ID
+    const qrCode = await QRCodeData.findById(qrCodeId).select(
+      "user_id assignedTo"
+    );
+    if (!qrCode) {
+      return res
+        .status(404)
+        .json({ message: "QR code not found", type: "error" });
+    }
+
+    const isOwner = qrCode.user_id?.toString() === userId.toString();
+    const isAssigned = qrCode.assignedTo?.toString() === userId.toString();
+
+    if (!isOwner && !isAssigned) {
+      return res.status(403).json({
+        message: "You are not authorized to use this QR code",
+        type: "error",
+      });
+    }
+
+    await Promise.all([
+      QuizQuestion.updateMany(
+        { linkedQRCode: qrCode._id },
+        { $unset: { linkedQRCode: "" } }
+      ),
+      VoteQuestion.updateMany(
+        { linkedQRCode: qrCode._id },
+        { $unset: { linkedQRCode: "" } }
+      ),
+      Applause.updateMany(
+        { linkedQRCode: qrCode._id },
+        { $unset: { linkedQRCode: "" } }
+      ),
+    ]);
+
+    // 5️⃣ Link QR code to this question
+    let playUrl;
+
+    if (type === "applause") {
+      playUrl = `${process.env.FRONTEND_URL}/tvstation/applause/channels/${question.channelId._id}/session/${sessionId}/applause-play/?lang=en`;
+    } else {
+      playUrl = `${process.env.FRONTEND_URL}/tvstation/channels/${question.channelId._id}/session/${sessionId}/${type}-play/?lang=en`;
+    }
+
+    await Promise.all([
+      Model.updateOne(
+        { _id: question._id },
+        { $set: { linkedQRCode: qrCode._id } }
+      ),
+      QRCodeData.updateOne(
+        { _id: qrCode._id },
+        { $set: { type: "url", url: playUrl } }
+      ),
+      // 6️⃣ Set showEditOnScan to false
+      User.updateOne({ _id: userId }, { $set: { showEditOnScan: false } }),
+    ]);
+
+    return res.status(200).json({
+      message: "Magic Code linked successfully",
+      type: "success",
+      link:
+        type === "applause"
+          ? `${process.env.FRONTEND_URL}/tvstation/applause/channels/${question.channelId._id}/session/${sessionId}/applause`
+          : `${process.env.FRONTEND_URL}/tvstation/channels/${question.channelId._id}/session/${sessionId}/${type}`,
+    });
+  } catch (err) {
+    console.error("Error linking Magic Code:", err);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", type: "error" });
+  }
+});
+
+router.post("/unlink-magic-code", async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { sessionId, type } = req.query; // type = "quiz" | "voting" | "applause"
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized. User not logged in.",
+        type: "error",
+      });
+    }
+
+    if (!sessionId || !type) {
+      return res.status(400).json({
+        message: "sessionId and type (quiz|voting|applause) are required",
+        type: "error",
+      });
+    }
+
+    const Model =
+      type === "quiz"
+        ? QuizQuestion
+        : type === "voting"
+        ? VoteQuestion
+        : type === "applause"
+        ? Applause
+        : null;
+
+    if (!Model) {
+      return res.status(400).json({
+        message: "Invalid type. Must be 'quiz', 'voting', or 'applause'.",
+        type: "error",
+      });
+    }
+
+    // 1️⃣ Find the Question and channel
+    const question = await Model.findOne({ sessionId })
+      .populate({ path: "channelId", select: "createdBy" })
+      .lean();
+
+    if (!question) {
+      return res.status(404).json({
+        message: `No ${type} question found for the provided sessionId`,
+        type: "error",
+      });
+    }
+
+    // 2️⃣ Validate channel ownership
+    if (
+      !question.channelId ||
+      question.channelId.createdBy.toString() !== userId.toString()
+    ) {
+      return res.status(403).json({
+        message:
+          "You are not authorized to unlink a Magic Code from this question",
+        type: "error",
+      });
+    }
+
+    // 3️⃣ Get linked QR code
+    if (!question.linkedQRCode) {
+      return res.status(400).json({
+        message: "This question has no linked Magic Code",
+        type: "error",
+      });
+    }
+
+    const qrCodeId = question.linkedQRCode;
+
+    // 4️⃣ Unlink QR from this question
+    await Model.updateOne(
+      { _id: question._id },
+      { $unset: { linkedQRCode: "" } }
+    );
+
+    // 5️⃣ Reset QR code data (optional — set back to default)
+    await QRCodeData.updateOne(
+      { _id: qrCodeId },
+      {
+        $unset: { url: "" },
+        $set: { type: "text", text: "Your Message" }, // optional marker
+      }
+    );
+
+    return res.status(200).json({
+      message: "Magic Code unlinked successfully",
+      type: "success",
+    });
+  } catch (err) {
+    console.error("Error unlinking Magic Code:", err);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", type: "error" });
+  }
+});
 
 module.exports = router;

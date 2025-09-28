@@ -63,13 +63,13 @@
 
                     // Set classes and text based on status
                     if (tx.paymentStatus === 'completed') {
-                    typeText = 'Added';
+                    typeText = 'GAINED';
                     typeBadgeClass = 'badge-added';
                     coinSymbol = '+';
                     }
 
                     else if (tx.paymentStatus === 'deducted') {
-                    typeText = 'Deducted';
+                    typeText = 'USED';
                     typeBadgeClass = 'badge-deducted';
                     coinSymbol = '-';
                     }
@@ -261,7 +261,7 @@
                     // Match the backend logic for paymentStatus
                     if (tx.paymentStatus === 'completed') {
                         amountClass = 'balance-added';
-                        typeText = 'Added';
+                        typeText = 'GAINED';
                         typeBadgeClass = 'badge-added';
                         coinSymbol = '+';
                     } else if (tx.paymentStatus === 'denied' || tx.paymentStatus === 'failed') {
@@ -273,7 +273,7 @@
 
                     else if (tx.paymentStatus === 'deducted') {
                         amountClass = 'balance-deducted';
-                        typeText = 'Deducted';
+                        typeText = 'USED';
                         coinSymbol = '-';
                         typeBadgeClass = 'badge-deducted';
                     } else {

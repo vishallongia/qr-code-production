@@ -33,7 +33,17 @@
         </div>
 
     </div>
-    <button class="btn" onclick="authenticateQRCodes()">Authenticate</button>
+    <div style="display: flex; justify-content: center; gap: 12px;">
+        <button class="btn" style="margin: 0px;" id="btn-authenticate"
+            onclick="authenticateQRCodes()">Authenticate</button>
+        <!-- Link with Magic Code button (hidden by default) -->
+        <button id="btn-create-magic-code" style="margin: 0px;" class="btn" style="display:none;">Create New Magic
+            Code</button>
+        <button id="btn-link-magic" style="margin:0px;" class="btn" style="display:none;" onclick="linkMagicCode()">Link
+            with Magic
+            Code</button>
+    </div>
+
 
 
     <script>
@@ -130,24 +140,66 @@
 
     <script>
         const selectedQrIds = new Set();
+        // Get sessionId from URL query param
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get("sessionId");
+        channelId = urlParams.get("channelId");
+        const type = urlParams.get("type");
+        const singleSelection = !!sessionId; // only one QR can be selected if sessionId exists
 
         document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll(".card[data-id]").forEach(card => {
                 card.addEventListener("click", () => {
                     const id = card.getAttribute("data-id");
 
-                    if (card.classList.contains("tile-selected")) {
-                        card.classList.remove("tile-selected");
-                        selectedQrIds.delete(id);
-                    } else {
+                    if (singleSelection) {
+                        // Unselect all other cards
+                        document.querySelectorAll(".card.tile-selected").forEach(c => c.classList.remove("tile-selected"));
+                        selectedQrIds.clear();
                         card.classList.add("tile-selected");
                         selectedQrIds.add(id);
+                    } else {
+                        // Multiple selection
+                        if (card.classList.contains("tile-selected")) {
+                            card.classList.remove("tile-selected");
+                            selectedQrIds.delete(id);
+                        } else {
+                            card.classList.add("tile-selected");
+                            selectedQrIds.add(id);
+                        }
                     }
-
-                    console.log("Selected QR IDs:", [...selectedQrIds]);
-                    // You can send this array to your API when needed
                 });
+
+                //
             });
+
+            // Show/hide buttons based on sessionId
+            if (sessionId) {
+                document.getElementById("btn-authenticate").style.display = "none";
+                document.getElementById("btn-link-magic").style.display = "block";
+                const linkBtn = document.getElementById("btn-link-magic");
+                const createMagicButton = document.getElementById("btn-create-magic-code");
+                linkBtn.style.display = "flex";
+                createMagicButton.style.display = "flex"
+
+                createMagicButton.onclick = () => {
+                    window.location.href = `/dashboard?sessionId=${sessionId}&channelId=${channelId}&type=${type}&linked=true`;
+                };
+
+                if (document.getElementById("NoQR")) {
+                    linkBtn.textContent = "Link to New Magic Code";
+                    linkBtn.onclick = () => {
+                        window.location.href = `/dashboard?sessionId=${sessionId}&channelId=${channelId}&type=${type}&linked=true`;
+                    };
+                } else {
+                    linkBtn.onclick = linkMagicCode;
+                }
+
+            } else {
+                document.getElementById("btn-authenticate").style.display = "flex";
+                document.getElementById("btn-link-magic").style.display = "none";
+            }
+
         });
     </script>
 
@@ -163,6 +215,8 @@
                 showToast("Please select at least one QR and ensure coupon ID is available.", "error");
                 return;
             }
+
+            document.getElementById("loader").style.display = "flex"
 
             try {
                 const res = await fetch("/set-special-offer-qrs", {
@@ -189,7 +243,51 @@
                 console.error("Request error:", err);
                 showToast("Something went wrong.", "error");
             }
+            finally {
+                document.getElementById("loader").style.display = "none"
+            }
         }
+
+        // Function to call your link-magic-code API
+        async function linkMagicCode() {
+            const selectedQRs = Array.from(document.querySelectorAll(".tile-selected"))
+                .map(card => card.getAttribute("data-id"));
+
+            if (selectedQRs.length === 0) {
+                showToast("Please select at least one QR code.", "error");
+                return;
+            }
+
+            document.getElementById("loader").style.display = "flex"
+
+            try {
+                const res = await fetch(`/tvstation/link-magic-code?sessionId=${sessionId}&type=${type}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ qrCodeId: selectedQRs[0] }) // if multiple, you can handle multiple IDs
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message, "success");
+                    // Redirect to the quiz link sent by backend
+                    if (data.link) {
+                        setTimeout(() => {
+                            window.location.href = data.link;
+                        }, 1000); // small delay to show success toast
+                    }
+                } else {
+                    showToast(data.message || "Failed to link Magic Code.", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Something went wrong.", "error");
+            }
+            finally {
+                document.getElementById("loader").style.display = "none"
+            }
+        }
+
     </script>
 
 </body>

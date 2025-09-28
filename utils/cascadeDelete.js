@@ -4,7 +4,7 @@ const QuizQuestion = require("../models/QuizQuestion");
 const QuizQuestionResponse = require("../models/QuizQuestionResponse");
 const VoteQuestion = require("../models/VoteQuestion");
 const VoteQuestionResponse = require("../models/VoteQuestionResponse");
-const QRCodeData = require("../models/QRCODEDATA"); // Adjust path as per your structure
+const Applause = require("../models/Applause");
 const { deleteFileIfExists } = require("../middleware/multerQuizUploader");
 async function cascadeDelete(type, id) {
   switch (type) {
@@ -48,10 +48,9 @@ async function cascadeDelete(type, id) {
           await cascadeDelete("voteQuestion", vote._id);
         }
 
-        // Delete all QR codes associated with this session's codes
-        if (session.code && session.code.length > 0) {
-          const codeValues = session.code.map((c) => c.value);
-          await QRCodeData.deleteMany({ code: { $in: codeValues } });
+        const applauseQuestions = await Applause.find({ sessionId: id });
+        for (const q of applauseQuestions) {
+          await cascadeDelete("applauseQuestion", q._id);
         }
 
         await Session.deleteOne({ _id: id });
@@ -122,6 +121,27 @@ async function cascadeDelete(type, id) {
         await VoteQuestion.deleteOne({ _id: id });
       } catch (err) {
         console.error(`Error deleting vote question ${id}:`, err);
+      }
+      break;
+
+    case "applauseQuestion":
+      try {
+        const question = await Applause.findById(id);
+        if (!question) return;
+
+        deleteFileIfExists(question.logo);
+        deleteFileIfExists(question.questionImage);
+        deleteFileIfExists(question.questionLogo);
+
+        if (question.options && question.options.length > 0) {
+          question.options.forEach((option) =>
+            deleteFileIfExists(option.image)
+          );
+        }
+
+        await Applause.deleteOne({ _id: id });
+      } catch (err) {
+        console.error(`Error deleting applause question ${id}:`, err);
       }
       break;
   }

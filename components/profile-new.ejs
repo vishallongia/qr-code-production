@@ -11,23 +11,23 @@
 
 <body>
     <div class="container-custom-profile">
-        <h1>My Profile</h1>
+        <h1 data-translate="my_profile">My Profile</h1>
 
 
         <form class="form-container" id="profileForm" method="POST" onsubmit="return handleUpdateDetailsProfile(event)">
             <div class="form-fields">
                 <div class="form-group">
-                    <label for="fullName">Full Name</label>
+                    <label for="fullName" data-translate="full_name">Full Name</label>
                     <input type="text" id="fullName" name="fullName" value="<%= user.fullName %>" disabled required />
                 </div>
 
                 <div class="form-group">
-                    <label for="email">Email Address</label>
+                    <label for="email" data-translate="email_address">Email Address</label>
                     <input type="email" id="email" name="email" value="<%= user.email %>" disabled required />
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <label for="password" data-translate="password">Password</label>
                     <div class="password-field">
                         <input type="password" id="password" name="password" value="<%= user.userPasswordKey %>"
                             disabled required style="border: none; outline: none; flex-grow: 1;">
@@ -38,8 +38,8 @@
 
             <!-- Buttons -->
             <div>
-                <button type="button" id="editBtn">Edit Profile</button>
-                <button type="submit" id="updateProfileBtn" style="display: none;">Update</button>
+                <button type="button" id="editBtn" data-translate="edit_profile">Edit Profile</button>
+                <button type="submit" id="updateProfileBtn" style="display: none;" data-translate="update">Update</button>
             </div>
         </form>
     </div>

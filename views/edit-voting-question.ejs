@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Edit Voting Question</title>
+    <title>Edit Voting Event</title>
     <link rel="stylesheet" href="/css/add-quiz-question.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
@@ -22,17 +22,17 @@
         <% } else { %>
             <div class="quiz-container">
                 <nav class="breadcrumbs">
-                    <a href="/tvstation/channels">Shows</a>
+                    <a href="/tvstation/channels">Projects</a>
                     <span>&rsaquo;</span>
-                    <a href="/tvstation/channels/<%= channel._id %>/sessions">Session Manager</a>
+                    <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                     <span>&rsaquo;</span>
-                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Apps</a>
+                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Events</a>
                     <span>&rsaquo;</span>
                     <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting">Voting</a>
                     <span>&rsaquo;</span>
-                    <span class="active">Edit Voting Question</span>
+                    <span class="active">Edit Voting Event</span>
                 </nav>
-                <h2>Edit Voting Question</h2>
+                <h2>Voting Event</h2>
                 <form id="edit-question-form" enctype="multipart/form-data">
                     <input type="hidden" name="channelId" value="<%= channel._id %>" />
                     <input type="hidden" name="questionId" value="<%= question._id %>" />
@@ -40,27 +40,34 @@
                     <input type="hidden" id="clearedImagesInput" name="clearedImages" />
                     <input type="hidden" id="clearedOptions" name="clearedOptions" value="">
 
+                    <div class="quiz-question-actions">
+                        <button type="button" class="quiz-btn-collapse"
+                            onclick="window.open('/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting-play', '_blank')">
+                            Open Voting
+                        </button>
+                    </div>
+
 
 
                     <div class="quiz-form-group">
-                        <label>Logo Title <span style="color: red;">*</span></label>
+                        <label>Logo Title</label>
                         <input type="text" name="logoTitle" value="<%= question.logoTitle %>"
-                            placeholder="Enter logo title" required />
+                            placeholder="Enter logo title" />
                     </div>
 
                     <div class="quiz-form-group">
-                        <label>Logo Description <span style="color: red;">*</span></label>
+                        <label>Logo Description </label>
                         <input type="text" name="logoDescription" value="<%= question.logoDescription %>"
-                            placeholder="Enter logo description" required />
+                            placeholder="Enter logo description" />
                     </div>
 
                     <div class="quiz-form-group">
-                        <label>Logo Link <span style="color: red;">*</span></label>
+                        <label>Logo Link </label>
                         <input type="url" name="logoLink" placeholder="https://example.com"
-                            value="<%= question.logoLink %>" required />
+                            value="<%= question.logoLink %>" />
                     </div>
                     <div class="quiz-form-group">
-                        <label>Logo Image <span style="color: red;">*</span></label>
+                        <label>Logo Image</label>
                         <label class="quiz-file-label">
                             <span class="quiz-file-label-text">
                                 <%= question.logo ? question.logo.split('/').pop() : 'Choose File' %>
@@ -102,9 +109,7 @@
                     </div>
 
                     <div class="quiz-option-wrapper">
-                        <div class="quiz-option-controls">
-                            <button type="button" id="btn-add-option" class="quiz-btn-add-option">+ Add Option</button>
-                        </div>
+
                         <div id="option-blocks" class="quiz-option-blocks quiz-options-grid">
                             <% question.options.forEach((opt, index)=> {
                                 // Generate a stable unique ID for each option
@@ -113,6 +118,10 @@
                                 <div class="quiz-option-block" data-option-id="<%= optionId %>">
                                     <label>Option <%= index + 1 %></label>
                                     <input type="text" name="optionTexts[]" value="<%= opt.text %>" required />
+
+                                    <input type="text" name="optionDescriptions[]" value="<%= opt.description || '' %>"
+                                        placeholder="Enter option description (optional)" />
+
 
                                     <label class="quiz-file-label">
                                         <span class="quiz-file-label-text">
@@ -131,6 +140,10 @@
                                                 <button type="button" class="quiz-option-delete-btn">✕</button>
                                 </div>
                                 <% }); %>
+                        </div>
+
+                        <div class="quiz-option-controls">
+                            <button type="button" id="btn-add-option" class="quiz-btn-add-option">+ Add Option</button>
                         </div>
 
                     </div>
@@ -231,7 +244,7 @@
                         </div>
 
                     </div>
-                    <button type="submit" class="quiz-btn-submit">Update Question</button>
+                    <button type="submit" class="quiz-btn-submit">Update voting Event</button>
                 </form>
             </div>
             <% } %>
@@ -354,6 +367,9 @@
         block.innerHTML = `
 <label>Option ${index + 1}</label>
 <input type="text" name="optionTexts[]" value="${text}" required />
+<input type="text" name="optionDescriptions[]" value="" 
+       placeholder="Enter option description (optional)" />
+
 <label class="quiz-file-label">
     <span class="quiz-file-label-text">${imageUrl ? imageUrl.split('/').pop() : "Choose Image"}</span>
     <input type="file" name="optionsImages" class="quiz-hidden-file option-image-input" accept="image/*" />
@@ -415,6 +431,7 @@
         optionBlocks.forEach(block => {
             const optionId = block.dataset.optionId;
             const textInput = block.querySelector('input[type="text"]');
+            const descInput = block.querySelector('input[name="optionDescriptions[]"]');
             const fileInput = block.querySelector("input[type='file']");
             const img = block.querySelector("img.preview-img");
 
@@ -431,6 +448,7 @@
             optionsArray.push({
                 _id: optionId,   // Use this as _id so backend knows which option
                 text: textInput.value.trim(),
+                description: descInput?.value.trim() || "",
                 imageName
             });
         });

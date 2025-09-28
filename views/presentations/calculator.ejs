@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Magic TV Revenue Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+  <link rel="apple-touch-icon" href="/app-icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --purple-light: #caa5ff;
+      --blue-light: #a3e3ff;
+      --highlight-bg: #f2eaff;
+      --highlight-border: #a270ff;
+      --white: #fff;
+      --light-bg: #fdfcff;
+      --grey: #eee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: var(--light-bg);
+      color: #222;
+    }
+    header {
+      background: linear-gradient(120deg, var(--purple-light), var(--blue-light));
+      text-align: center;
+      padding: 2.5rem 1rem;
+    }
+    header h1 { font-size: 2rem; margin: 0; color: #fff; }
+    main { max-width: 1200px; margin: 2rem auto; padding: 1rem; }
+    .table-wrapper {
+      overflow-x: auto;
+      background: var(--white);
+      border-radius: 1rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    th, td { padding: 1rem; border: 1px solid #ddd; text-align: center; }
+    th { background: var(--highlight-border); color: white; font-weight: 600; }
+    tfoot { background: var(--highlight-bg); font-weight: bold; }
+    input[type="number"] {
+      width: 110px; padding: 8px; border-radius: 8px; border: 1px solid #ccc;
+      font-family: 'Poppins', sans-serif; text-align: right;
+    }
+    .output { font-weight: bold; }
+    .muted { color:#666; font-weight: 500; }
+    .predict-row td { background: #fff7ff; border-top: 2px solid var(--highlight-border); }
+    .predict-label { text-align: right; padding-right: .75rem; }
+    .readonly-input {
+      background: #f9f9f9;
+      border: 1px solid #e6e6e6;
+      padding: 8px;
+      border-radius: 8px;
+      text-align: right;
+      width: 110px;
+      display: inline-block;
+    }
+    @media (max-width: 600px) {
+      input[type="number"] { width: 90px; }
+      header h1 { font-size: 1.5rem; }
+      th, td { padding: 0.6rem; font-size: 0.85rem; }
+      .readonly-input { width: 90px; }
+    }
+    /* Password popup */
+    #password-popup {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      backdrop-filter: blur(8px); background: rgba(255,255,255,0.6);
+      z-index: 9999; display: flex; align-items: center; justify-content: center;
+    }
+    .popup-content {
+      background: var(--white); border: 2px solid var(--highlight-border);
+      padding: 2rem; border-radius: 1rem; text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.08); max-width: 330px; width: 100%;
+    }
+    .popup-content h2 { margin-bottom: 1rem; color: var(--highlight-border); }
+    .popup-content input {
+      width: 100%; padding: .75rem; margin-bottom: 1rem; border-radius: 8px;
+      border: 1px solid #ccc; font-family: 'Poppins', sans-serif;
+    }
+    .popup-content button {
+      background: var(--highlight-border); color: white; border: none;
+      padding: .75rem 1.2rem; border-radius: 8px; cursor: pointer;
+      font-family: 'Poppins', sans-serif; font-weight: 600;
+    }
+    .popup-content button:hover { background: #915eff; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Magic TV Revenue Calculator</h1>
+  </header>
+
+  <main>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Format</th>
+            <th>Monthly Users</th>
+            <th>Conversion Rate (%)</th>
+            <th>Entry Fee (€)</th>
+            <th>Broadcaster Share (%)</th>
+            <th>Conv. Users/Month</th>
+            <th>Conv. Users/Year</th>
+            <th>Monthly Gross Revenue (€)</th>
+            <th>Monthly Broadcaster Earnings (€)</th>
+            <th>Yearly Broadcaster Earnings (€)</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+
+        <tfoot>
+          <tr>
+            <td colspan="5">TOTAL</td>
+            <td id="totalConvMonth" class="output"></td>
+            <td id="totalConvYear" class="output"></td>
+            <td id="totalGrossMonth" class="output"></td>
+            <td id="totalBroadMonth" class="output"></td>
+            <td id="totalBroadYear" class="output"></td>
+          </tr>
+
+          <!-- Predictor Row (only Monthly Users editable; results auto) -->
+          <tr class="predict-row">
+            <td class="predict-label"><span class="muted">PREDICT TOTAL VIEWER</span></td>
+            <td><input type="number" id="predUsers" value="10000000" /></td>
+            <td colspan="2"></td>
+            <td></td>
+            <td colspan="2"></td>
+            <td></td>
+            <td class="output" id="predBroadMonth"></td>
+            <td class="output" id="predBroadYear"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </main>
+
+  <!-- Password popup -->
+  <div id="password-popup">
+    <div class="popup-content">
+      <h2>Magic TV Revenue Model</h2>
+      <input type="password" id="password-input" placeholder="Enter Password..." />
+      <button onclick="checkPassword()">Unlock</button>
+      <p id="error-msg" style="color: red; display: none; margin-top: 10px;">Incorrect password</p>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------
+    // Initial data (from sheet)
+    // -------------------------
+    // Note: MC Plans users will be calculated as the sum of the first 5 apps' Monthly Users.
+    const apps = [
+      { name: "Magic Quiz",     users: 600000,  rate: 2.00, fee: 0.5,  share: 60, isMC: false },
+      { name: "Magic Votes",    users: 5000000, rate: 2.00, fee: 0.5,  share: 60, isMC: false },
+      { name: "Magic Shopping", users: 400000,  rate: 2.00, fee: 1.0,  share: 60, isMC: false },
+      { name: "Magic Brands",   users: 300000,  rate: 2.00, fee: 1.0,  share: 60, isMC: false },
+      { name: "Magic Stories",  users: 800000,  rate: 2.00, fee: 0.25, share: 60, isMC: false },
+      // MC Plans: users calculated (sum of the above 5), but rate/fee/share editable.
+      { name: "MC Plans (All)", users: 0, rate: 2.00, fee: 29.9, share: 40, isMC: true },
+    ];
+
+    const euroFormat = new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const intFormat = new Intl.NumberFormat('en-US');
+
+    // helper: compute MC Plans users as sum of first 5 apps
+    function computeMCUsers() {
+      return apps
+        .filter(a => !a.isMC)
+        .reduce((s, a) => s + (parseFloat(a.users) || 0), 0);
+    }
+
+    // main per-row calculate (returns numbers, not formatted)
+    function calculateRow({ users, rate, fee, share }) {
+      const r = (rate || 0) / 100;
+      const convMonth = (users || 0) * r;
+      const convYear = convMonth * 12;
+      const grossMonth = convMonth * (fee || 0);
+      const broadMonth = grossMonth * ((share || 0) / 100);
+      const broadYear = broadMonth * 12;
+      return { convMonth, convYear, grossMonth, broadMonth, broadYear };
+    }
+
+    // Render table rows
+    function renderTable() {
+      const tbody = document.getElementById("table-body");
+      tbody.innerHTML = "";
+
+      apps.forEach((app, i) => {
+        const tr = document.createElement("tr");
+
+        // If this is MC Plans, show users as readonly (calculated).
+        const usersCell = app.isMC
+          ? `<td><span id="mc-users-display" class="readonly-input">${intFormat.format(computeMCUsers())}</span></td>`
+          : `<td><input type="number" value="${app.users}" data-index="${i}" data-key="users" /></td>`;
+
+        // always allow editing of rate/fee/share (per your request). For non-MC these are inputs too.
+        const rateCell = `<td><input type="number" step="0.01" value="${app.rate}" data-index="${i}" data-key="rate" /></td>`;
+        const feeCell = `<td><input type="number" step="0.01" value="${app.fee}" data-index="${i}" data-key="fee" /></td>`;
+        const shareCell = `<td><input type="number" step="0.01" value="${app.share}" data-index="${i}" data-key="share" /></td>`;
+
+        tr.innerHTML = `
+          <td>${app.name}</td>
+          ${usersCell}
+          ${rateCell}
+          ${feeCell}
+          ${shareCell}
+          <td class="output" id="convMonth-${i}"></td>
+          <td class="output" id="convYear-${i}"></td>
+          <td class="output" id="grossMonth-${i}"></td>
+          <td class="output" id="broadMonth-${i}"></td>
+          <td class="output" id="broadYear-${i}"></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Add listeners to all editable inputs in tbody (users, rate, fee, share)
+      document.querySelectorAll('tbody input').forEach(inp => {
+        inp.addEventListener('input', (e) => {
+          const index = +e.target.dataset.index;
+          const key = e.target.dataset.key;
+          // update apps data for editable fields
+          if (key) {
+            apps[index][key] = parseFloat(e.target.value) || 0;
+          }
+          // If any non-MC users changed, MC users must update (display + re-calc)
+          updateOutputs();
+        });
+      });
+
+      // predictor input listener
+      document.getElementById("predUsers").addEventListener("input", updatePredictor);
+
+      // initial calculation
+      updateOutputs();
+      updatePredictor();
+    }
+
+    // update all outputs (rows + totals), and update predictor at end
+    function updateOutputs() {
+      // calculate MC users first from other apps
+      const mcUsers = computeMCUsers();
+      const mcIndex = apps.findIndex(a => a.isMC);
+      if (mcIndex !== -1) {
+        apps[mcIndex].users = mcUsers;
+      }
+
+      // update MC users display element if present
+      const mcDisplay = document.getElementById('mc-users-display');
+      if (mcDisplay) mcDisplay.textContent = intFormat.format(mcUsers);
+
+      // accumulate totals
+      let totals = { convMonth: 0, convYear: 0, grossMonth: 0, broadMonth: 0, broadYear: 0 };
+
+      apps.forEach((app, i) => {
+        const res = calculateRow(app);
+        // write per-row outputs
+        const convMEl = document.getElementById(`convMonth-${i}`);
+        const convYEl = document.getElementById(`convYear-${i}`);
+        const grossEl = document.getElementById(`grossMonth-${i}`);
+        const broadEl = document.getElementById(`broadMonth-${i}`);
+        const broadYEl = document.getElementById(`broadYear-${i}`);
+
+        if (convMEl) convMEl.innerText = intFormat.format(res.convMonth);
+        if (convYEl) convYEl.innerText = intFormat.format(res.convYear);
+        if (grossEl) grossEl.innerText = "€" + euroFormat.format(res.grossMonth);
+        if (broadEl) broadEl.innerText = "€" + euroFormat.format(res.broadMonth);
+        if (broadYEl) broadYEl.innerText = "€" + euroFormat.format(res.broadYear);
+
+        totals.convMonth += res.convMonth;
+        totals.convYear += res.convYear;
+        totals.grossMonth += res.grossMonth;
+        totals.broadMonth += res.broadMonth;
+        totals.broadYear += res.broadYear;
+      });
+
+      // write totals to footer
+      document.getElementById("totalConvMonth").innerText = intFormat.format(totals.convMonth);
+      document.getElementById("totalConvYear").innerText = intFormat.format(totals.convYear);
+      document.getElementById("totalGrossMonth").innerText = "€" + euroFormat.format(totals.grossMonth);
+      document.getElementById("totalBroadMonth").innerText = "€" + euroFormat.format(totals.broadMonth);
+      document.getElementById("totalBroadYear").innerText = "€" + euroFormat.format(totals.broadYear);
+
+      // store last totals for predictor calculation
+      window.__lastTotals = totals;
+      window.__lastMCUsers = mcUsers;
+
+      // call predictor update so it always uses fresh totals & MC users
+      updatePredictor();
+    }
+
+    // predictor logic: MonthlyBroad = PredUsers * (TotalBroad / MCUsers)
+    // matches Excel formula: =B11*(I10/B9) with I10=Total Broad, B9=MCPlansUsers
+    function updatePredictor() {
+      const predUsers = parseFloat(document.getElementById('predUsers').value) || 0;
+      const totals = window.__lastTotals || { broadMonth: 0 };
+      const mcUsers = window.__lastMCUsers || 0;
+
+      let monthlyBroad = 0;
+      if (mcUsers > 0) {
+        monthlyBroad = predUsers * (totals.broadMonth / mcUsers);
+      } else {
+        monthlyBroad = 0;
+      }
+      let yearlyBroad = monthlyBroad * 12;
+
+      monthlyBroad = monthlyBroad.toFixed(0);
+      yearlyBroad = yearlyBroad.toFixed(0);
+
+
+      document.getElementById('predBroadMonth').innerText = "€" + euroFormat.format(monthlyBroad);
+      document.getElementById('predBroadYear').innerText = "€" + euroFormat.format(yearlyBroad);
+    }
+
+    function checkPassword() {
+      const correct = "magic"; // change as needed
+      const input = document.getElementById("password-input").value.trim();
+      const error = document.getElementById("error-msg");
+      if (input === correct) {
+        document.getElementById("password-popup").style.display = "none";
+        document.body.style.overflow = "auto";
+      } else {
+        error.style.display = "block";
+      }
+    }
+
+    // Run on load
+    window.addEventListener("DOMContentLoaded", () => {
+      // set initial MC users from the other apps (so display shows correct number)
+      apps[apps.findIndex(a => a.isMC)].users = computeMCUsers();
+      document.getElementById("password-popup").style.display = "flex";
+      document.body.style.overflow = "hidden";
+      renderTable();
+    });
+  </script>
+</body>
+</html>

@@ -7,7 +7,7 @@ const sendExpiryEmailForPayments = async () => {
     const now = new Date();
 
     const sender = {
-      email: "textildruckschweiz.com@gmail.com",
+      email: "arnoldschmidt@magic-code.net",
       name: "Magic Code - Plan Update",
     };
 
@@ -42,7 +42,7 @@ const sendExpiryEmailForPayments = async () => {
             ? (now - new Date(lastSent)) / (1000 * 60 * 60)
             : Infinity;
 
-          if (hoursSinceLastSent < 24) {
+          if (hoursSinceLastSent < 168) {
             continue;
           }
 
@@ -232,7 +232,7 @@ module.exports = sendExpiryEmailForPayments;
 //       `;
 
 //       const sender = {
-//         email: "textildruckschweiz.com@gmail.com",
+//         email: "arnoldschmidt@magic-code.net",
 //         name: "Magic Code - Plan Update",
 //       };
 

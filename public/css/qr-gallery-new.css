@@ -79,8 +79,6 @@
     max-width: 120px;
 }
 
-
-
 .card {
     overflow: hidden;
     /* ensure ribbon overflow is clipped neatly */
@@ -89,7 +87,7 @@
 
 .btn {
     margin: 20px auto;
-    padding: 10px 30px;
+    padding: 8px 14px;
     border: none;
     background-color: rgba(26, 1, 97, 1);
     color: white;
@@ -148,6 +146,149 @@ canvas {
     box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
 }
 
+.filter-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.filter-bar input,
+.filter-bar select,
+.multi-dropdown button {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    font-family: 'Poppins', sans-serif;
+    background: white;
+}
+
+.filter-bar input {
+    width: 40%;
+}
+
+.multi-dropdown {
+    position: relative;
+    min-width: 180px;
+}
+
+.multi-dropdown button {
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.multi-dropdown .dropdown-content {
+    display: none;
+    position: absolute;
+    top: 110%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: var(--shadow-1);
+    padding: 8px;
+    z-index: 100;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.multi-dropdown.open .dropdown-content {
+    display: block;
+}
+
+.multi-dropdown .dropdown-content label {
+    display: flex;
+    align-items: center;
+    /* ✅ checkbox stays vertically aligned with first line */
+    gap: 6px;
+    /* space between checkbox & text */
+    font-size: 13px;
+    padding: 4px 0;
+    cursor: pointer;
+    line-height: 1.4;
+    /* readability */
+    word-break: break-word;
+    /* ✅ breaks long tag text instead of overflowing */
+    white-space: normal;
+    /* ✅ allow wrapping on small screens */
+}
+
+.multi-dropdown .dropdown-content input[type="checkbox"] {
+    flex-shrink: 0;
+    /* checkbox never shrinks */
+    margin: 0;
+    /* remove weird offset */
+    align-self: flex-start;
+    /* ✅ keeps checkbox aligned with text block */
+}
+
+
+.multi-dropdown .dropdown-content input {
+    margin-right: 8px;
+}
+
+.multi-dropdown .dropdown-content input[type="text"] {
+    min-width: 110px
+}
+
+/* Create New Tag Section */
+.create-tag-section {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+    /* space below filter bar */
+    flex-wrap: wrap;
+}
+
+.create-tag-section input {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.create-tag-section button {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    background-color: rgba(26, 1, 97, 1);
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.create-tag-section button:hover {
+    background-color: rgb(45, 18, 117);
+}
+
+.create-tag-inline {
+    display: flex;
+    align-items: center;
+    padding: 6px;
+    border-top: 1px solid #eee;
+    margin-top: 6px;
+}
+
+.create-tag-inline input {
+    flex: 1;
+    padding: 5px;
+    font-size: 13px;
+    max-width: 110px;
+}
+
+.create-tag-inline button {
+    margin-left: 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
 
 
 @media (max-width: 1024px) {
@@ -159,6 +300,10 @@ canvas {
 @media (max-width: 768px) {
     .grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .filter-bar input {
+        width: 100%;
     }
 
     .card {
@@ -223,4 +368,98 @@ canvas {
     .container-qr-custom {
         padding: 10px;
     }
+}
+
+
+
+
+/*Filters and create tag responsive css */
+
+/* --- Breakpoints --- */
+
+/* Tablets */
+@media (max-width: 1024px) {
+
+    .filter-bar input,
+    .filter-bar select,
+    .multi-dropdown {
+        flex: 1 1 45%;
+    }
+
+    .filter-buttons {
+        margin-top: 6px;
+    }
+
+    .create-tag-section input {
+        flex: 1 1 60%;
+    }
+}
+
+
+
+/* Small Mobile (480px) */
+@media (max-width: 480px) {
+    .filter-bar {
+        gap: 8px;
+    }
+
+    .filter-buttons {
+        gap: 4px;
+    }
+
+    .create-tag-section {
+        gap: 4px;
+    }
+
+    #filter-search-btn,
+    #filter-clear-btn {
+        width: 100%;
+    }
+
+}
+
+@media (max-width: 768px) {
+    .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Row 1: search input + buttons */
+    #searchInput {
+        flex: 1 1 65%;
+        /* take ~70% width */
+        order: 1;
+        min-width: 0;
+    }
+
+    #filter-search-btn {
+        order: 2;
+        flex: 1 1 10%;
+        /* button gets small share */
+        max-width: 80px;
+    }
+
+    #filter-clear-btn {
+        order: 3;
+        flex: 1 1 10%;
+        max-width: 80px;
+    }
+
+    /* Row 2: sort + tags */
+    #sortSelect {
+        flex: 1 1 40%;
+        order: 4;
+    }
+
+    .multi-dropdown {
+        flex: 1 1 40%;
+        order: 5;
+        min-width: 120px;
+    }
+
+    .multi-dropdown .dropdown-content input[type="text"] {
+        min-width: 100px
+    }
+
 }

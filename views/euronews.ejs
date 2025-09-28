@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Euronews x Magic TV – Broadcast Smarter. Connect Deeper. Monetize More.</title>
+
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZNB2G4J8G"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-0ZNB2G4J8G');
+    </script>
+
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/euronews_favicon.png">
+    <link rel="apple-touch-icon" href="\images\euronews_favicon.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+            color: #333;
+        }
+
+        header {
+            /* background-color: #003366; */
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.8em;
+        }
+
+        header p {
+            font-size: 1.3em;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        section {
+            padding: 40px 20px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #003366;
+        }
+
+        h3 {
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ccc;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        .cta {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .cta a {
+            display: inline-block;
+            padding: 15px 25px;
+            margin: 10px;
+            background-color: #003366;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        /* footer {
+            background-color: #eee;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+            color: #666;
+            border-top: 1px solid #ccc;
+        } */
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: #222;
+            color: #eee;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        .section img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .quote {
+            font-style: italic;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background-color: #eef2f7;
+            border-left: 4px solid #003366;
+
+            /* background-color: #fef6f0; */
+            /* border-left: 5px solid #ff7f00; */
+            padding: 20px;
+            margin: 40px auto;
+            font-size: 1.1em;
+            max-width: 800px;
+            border-radius: 5px;
+        }
+
+        .section {
+            max-width: 900px;
+            margin: auto;
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 3rem;
+        }
+
+        .section h2 {
+            color: #003366;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .section p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        li {
+            list-style: disc;
+            padding: 0;
+            margin: 15px auto;
+            text-align: left;
+            max-width: 800px;
+            font-size: 1.1rem;
+        }
+
+        header {
+            padding: 0;
+            text-align: center;
+        }
+
+        header img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+
+        }
+
+
+        img {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .fullscreen-overlay.show {
+            display: flex;
+        }
+
+        .fullscreen-overlay img {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            color: #333;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 10000;
+            background: #fff;
+            padding: 0;
+            border-radius: 50%;
+            /* box-shadow: 0 0px 0px rgba(0, 0, 0, 0.2); */
+            width: 40px;
+            height: 40px;
+            text-align: center;
+        }
+
+        .close-btn:hover {
+            color: red;
+        }
+
+        .gallery {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-auto-rows: 200px;
+      gap: 10px;
+    }
+
+    .gallery img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Layout pattern for 20 images */
+    .gallery div:nth-child(1)  { grid-column: span 6; }
+    .gallery div:nth-child(2),
+    .gallery div:nth-child(3)  { grid-column: span 3; }
+    .gallery div:nth-child(4)  { grid-column: span 2; }
+    .gallery div:nth-child(5)  { grid-column: span 4; }
+    .gallery div:nth-child(6),
+    .gallery div:nth-child(7),
+    .gallery div:nth-child(8)  { grid-column: span 2; }
+    .gallery div:nth-child(9)  { grid-column: span 6; }
+    .gallery div:nth-child(10),
+    .gallery div:nth-child(11) { grid-column: span 3; }
+    .gallery div:nth-child(12) { grid-column: span 6; }
+    .gallery div:nth-child(13) { grid-column: span 4; }
+    .gallery div:nth-child(14),
+    .gallery div:nth-child(15),
+    .gallery div:nth-child(16) { grid-column: span 2; }
+    .gallery div:nth-child(17) { grid-column: span 6; }
+    .gallery div:nth-child(18),
+    .gallery div:nth-child(19),
+    .gallery div:nth-child(20) { grid-column: span 2; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 150px; }
+      .gallery div { grid-column: span 1 !important; }
+    }
+    @media (max-width: 600px) {
+      .gallery { grid-template-columns: 1fr; grid-auto-rows: 200px; }
+      .gallery div { grid-column: span 1 !important; }
+    }
+
+        
+    </style>
+</head>
+
+<body>
+
+    <!-- <header>
+        <h1>Euronews x Magic TV</h1>
+        <p>Broadcast Smarter. Connect Deeper. Monetize More.</p>
+    </header> -->
+
+    <header>
+        <img src="\images\euronews.png" alt="Magic Code Romania Header" />
+    </header>
+
+    <div class="section">
+        <h2>The Rise of the Interactive Viewer</h2>
+        <p>
+            Audiences today no longer want to simply watch television — they want to <strong>engage, reflect, and
+                participate</strong>.
+        </p>
+        <p>
+            Euronews has long recognized this shift. Your mission goes beyond information:
+            You aim to <strong>involve viewers more deeply in the content</strong>, to foster understanding, dialogue,
+            and civic awareness across Europe.
+        </p>
+        <p>
+            But true interaction requires more than social media comments or website links.
+            It requires a <strong>seamless, secure, and meaningful bridge</strong> between the broadcast and the
+            viewer’s personal device.
+        </p>
+        <p>
+            That bridge is now available — through the <strong>Magic Code</strong>.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>The Challenge: Generic QR Codes Are Not Built for Broadcasting</h2>
+        <p>
+            Many broadcasters use <strong>generic QR codes</strong> — simple internet links repurposed for TV.
+        </p>
+        <p>
+            But these codes were never designed for live television. They are:
+        </p>
+        <ul>
+            <li><strong>Unintelligent</strong>: No context, no adaptation to language or region</li>
+            <li><strong>Unsecure</strong>: Often lead to phishing, tracking, or malware (as widely reported in media,
+                including by Euronews)</li>
+            <li><strong>Unreliable</strong>: Fail on screen due to motion, resolution, or compression</li>
+            <li><strong>Unbranded</strong>: Look like external ads, not part of the program</li>
+            <li><strong>Unengaging</strong>: Viewers hesitate to scan, fearing data loss or unwanted redirects</li>
+        </ul>
+        <p>
+            These are not tools of engagement — they are <strong>barriers to trust</strong>.
+        </p>
+        <p class="quote">
+            As Euronews has reported, not all QR codes are safe.
+            And in a world of digital uncertainty, the source of interactivity matters.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>The Solution: The Magic Code – Broadcasting-Grade Interactivity</h2>
+        <p>
+            The <strong>Magic Code</strong> is not another internet code.
+            It is a <strong>proprietary visual signal designed specifically for television</strong> — secure,
+            intelligent, and fully integrated into the broadcast experience.
+        </p>
+        <h3>What the Magic Code Is:</h3>
+        <ul>
+            <li>A <strong>camera-readable visual key</strong> that works on any smartphone — no app, no login</li>
+            <li><strong>Privacy-first</strong>: No tracking, no data collection, no third-party access</li>
+            <li><strong>TV-optimized</strong>: Functions flawlessly on moving screens, low resolutions, and compressed
+                streams</li>
+            <li><strong>Multilingual-aware</strong>: Delivers content in the viewer’s language automatically</li>
+            <li><strong>Branded and secure</strong>: Recognizable as a trusted Euronews element — not a random link</li>
+            <li><strong>Editorially controlled</strong>: You decide the content, timing, and purpose</li>
+        </ul>
+        <p class="quote">
+            The Magic Code is not a shortcut to the web — it is a direct extension of your broadcast.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>The Magic Code: A Digital Tool. A Physical Product. A Lifestyle Companion.</h2>
+        <p>
+            What sets the Magic Code apart is that it exists not only <strong>on screen</strong>, but also <strong>in
+                life</strong>.
+        </p>
+        <p>
+            The Magic Code is also available as a <strong>physical product</strong>: the <strong>Magic Sticker</strong>
+            — a durable, adhesive tag that users place on their personal devices, documents, or belongings.
+        </p>
+        <p>
+            This dual nature — <strong>digital and physical</strong> — makes it unique.
+        </p>
+
+        <h3>The Magic Sticker: A Safety & Lifestyle Product</h3>
+        <ul>
+            <li><strong>Emergency Access</strong>: Stores critical medical, contact, or identity data — accessible via
+                scan, no app needed</li>
+            <li><strong>Digital Business Card</strong>: Share contact details instantly, securely, without Bluetooth or
+                NFC</li>
+            <li><strong>Smart Home & Car</strong>: One-tap access to Wi-Fi, manuals, or parking payment</li>
+            <li><strong>Child & Elder Safety</strong>: Parents or caregivers can scan to access emergency contacts</li>
+            <li><strong>Travel & Mobility</strong>: Store passport info, hotel bookings, or transport tickets</li>
+            <li><strong>Sustainability</strong>: Reusable, recyclable, no battery, no electronics</li>
+        </ul>
+        <p class="quote">
+            The Magic Sticker turns everyday objects into smart, secure, interactive touchpoints.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Why This Matters for Euronews</h2>
+        <p>
+            The Magic Code is not just a tool for <strong>broadcast interaction</strong> — it is already a <strong>part
+                of people’s daily lives</strong>.
+        </p>
+        <p>
+            When viewers see the Magic Code on your screen, they don’t see a foreign symbol.
+            They see <strong>something familiar, trusted, and useful</strong> — because they may already have a Magic
+            Sticker on their phone, wallet, or car.
+        </p>
+        <div class="highlight">
+            <p>
+                <strong>This creates a powerful synergy:</strong><br>
+                • <strong>On screen</strong>: The Magic Code deepens engagement with your content<br>
+                • <strong>In life</strong>: The Magic Sticker provides real-world utility and safety
+            </p>
+        </div>
+        <p class="quote">
+            The same code. Two roles. One trusted system.
+        </p>
+        <p>
+            This means higher scan rates, deeper trust, and seamless interaction — because the Magic Code is not
+            introduced as a novelty, but recognized as a <strong>valuable part of modern life</strong>.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Euronews’ Commitment: Deepening Viewer Involvement</h2>
+        <p>
+            Euronews does not just inform — it <strong>invites participation</strong>.
+        </p>
+        <p>
+            You believe in:
+        </p>
+        <ul>
+            <li><strong>Active citizenship</strong>, not passive consumption</li>
+            <li><strong>Multilingual dialogue</strong>, not monologue</li>
+            <li><strong>Contextual depth</strong>, not headlines alone</li>
+            <li><strong>Trust</strong>, not convenience at the cost of safety</li>
+        </ul>
+        <p>
+            The Magic Code aligns perfectly with this vision.
+        </p>
+        <p class="quote">
+            It enables deeper involvement — not through distraction, but through meaningful extension of the broadcast.
+        </p>
+        <p>
+            When a viewer scans the Magic Code, they are not leaving your content.
+            They are <strong>going deeper into it</strong> — with a tool they already know, trust, and use.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Use Cases: Interaction with Purpose</h2>
+        <p>
+            Magic TV offers <strong>modular, editorially rich formats</strong> that empower your audience to engage — on
+            their terms, in their language, at their pace.
+        </p>
+
+        <h3>Magic Vote – Real-Time Public Voice</h3>
+        <p>
+            Pose a European question: <em>“Should the EU regulate AI in hiring?”</em>
+        </p>
+        <p>
+            Viewers scan → vote anonymously → results shown live or post-broadcast
+            <strong>Multilingual, region-specific, editorially framed</strong>
+            Ideal for: Debates, elections, EU policy discussions
+        </p>
+
+        <h3>Magic Quiz – Active Understanding</h3>
+        <p>
+            Knowledge checks on complex topics: <em>“What percentage of EU energy is renewable?”</em>
+        </p>
+        <p>
+            Instant feedback, educational reinforcement, optional rewards
+            Ideal for: Documentaries, explanatory journalism, youth programming
+        </p>
+
+        <h3>Magic Moments – Context on Demand</h3>
+        <p>
+            At key moments: <em>“Learn more: The science behind the heatwave”</em>
+        </p>
+        <p>
+            Scan → access to fact checks, extended interviews, EU sources
+            <strong>No disruption — only depth</strong>
+        </p>
+
+        <h3>Magic Brands – Value-Driven Sponsorship</h3>
+        <p>
+            Sponsors offer real value: free trials, lead forms, sustainability campaigns
+        </p>
+        <p>
+            All interactions are <strong>transparent, opt-in, and privacy-compliant</strong>
+            Enables <strong>sustainable funding</strong> without compromising editorial space
+        </p>
+
+        <h3>Magic Shopping (optional)</h3>
+        <p>
+            Direct access to books, documentaries, or cultural content
+            No third-party platforms — seamless, secure, brand-aligned
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Why Euronews? The Strategic Fit</h2>
+        <table>
+            <tr>
+                <th>Euronews Strength</th>
+                <th>Magic TV Integration</th>
+            </tr>
+            <tr>
+                <td><strong>12+ Languages</strong></td>
+                <td>Magic Code delivers language-specific content automatically</td>
+            </tr>
+            <tr>
+                <td><strong>Pan-European Reach</strong></td>
+                <td>One system, scalable across all markets</td>
+            </tr>
+            <tr>
+                <td><strong>Editorial Neutrality</strong></td>
+                <td>Full control — no third-party data or influence</td>
+            </tr>
+            <tr>
+                <td><strong>TV + Digital Presence</strong></td>
+                <td>Works across live, on-demand, web, and social</td>
+            </tr>
+            <tr>
+                <td><strong>Commitment to Engagement</strong></td>
+                <td>Magic Code enables deeper, safer, more meaningful involvement</td>
+            </tr>
+        </table>
+        <p class="quote">
+            This is not just technology — it is a natural evolution of your mission.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Implementation: Simple. Fast. Seamless.</h2>
+        <table>
+            <tr>
+                <th>Phase</th>
+                <th>Timeline</th>
+                <th>Details</th>
+            </tr>
+            <tr>
+                <td>Phase 1</td>
+                <td>Month 1</td>
+                <td>Launch in <strong>2 language versions</strong> (e.g., English & French) with Magic Vote and Magic
+                    Moments</td>
+            </tr>
+            <tr>
+                <td>Phase 2</td>
+                <td>Month 2</td>
+                <td>Add Magic Quiz and Magic Brands</td>
+            </tr>
+            <tr>
+                <td>Phase 3</td>
+                <td>Months 3–6</td>
+                <td>Scale to 8–12 languages based on engagement</td>
+            </tr>
+            <tr>
+                <td>Phase 4</td>
+                <td>From Month 6</td>
+                <td>Co-develop signature formats, e.g., <em>“Euronews Interactive”</em></td>
+            </tr>
+        </table>
+        <h3>What Euronews Provides:</h3>
+        <ul>
+            <li>No technical integration</li>
+            <li>No additional staff or training</li>
+            <li>No financial investment</li>
+        </ul>
+        <h3>What Magic TV Provides:</h3>
+        <ul>
+            <li>Full infrastructure, hosting, and analytics</li>
+            <li>Localization into all 12+ languages</li>
+            <li>Design adaptation to Euronews brand identity</li>
+            <li>Ongoing support and reporting</li>
+        </ul>
+        <p class="quote">
+            Euronews retains full editorial control at all times.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Conclusion: A New Chapter in European Broadcasting</h2>
+        <p>
+            The Magic Code is not a gadget.
+            It is a <strong>strategic tool for deeper engagement</strong>, built for broadcasters who care about
+            <strong>trust, clarity, and public value</strong>.
+        </p>
+        <p>
+            For Euronews, it represents:
+        </p>
+        <ul>
+            <li>A <strong>natural extension</strong> of your commitment to viewer involvement</li>
+            <li>A <strong>secure, intelligent alternative</strong> to generic internet codes</li>
+            <li>A <strong>platform for innovation</strong> that connects broadcast content to real-life utility</li>
+        </ul>
+        <p>
+            And because the Magic Code exists both <strong>on screen and in life</strong>, it creates a
+            <strong>continuous loop of trust and interaction</strong> — where television doesn’t end at the screen, but
+            continues in the viewer’s world.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Our Invitation to Euronews</h2>
+        <p>We invite you to partner with Magic TV in launching a new era of <strong>interactive, trustworthy, and deeply
+                engaging television</strong>.</p>
+        <p>No sales. No risk. No disruption.
+            Just a shared vision: to make European audiences not just viewers — but <strong>participants</strong>,
+            equipped with a tool that serves them <strong>on air and off</strong>.</p>
+
+        <p>Image Galery for visual and strategical Implementations Examples (Please click the images and scan the Magic
+            Codes)</p>
+
+        <div class="gallery">
+            <div><img src="\images\APP CHANNEL ID MID.png" alt=""></div>
+            <div><img src="\images\APP CHANNEL ID UP LEFT.png" alt=""></div>
+            <div><img src="\images\APP PROGRAM UP LEFT.png" alt=""></div>
+            <div><img src="\images\APP PROGRAM MID LEFT.png" alt=""></div>
+            <div><img src="\images\APP CHANNEL ID MID.png" alt=""></div>
+            <div><img src="\images\VOTING MID LEFT.png" alt=""></div>
+            <div><img src="\images\VOTING PROGRAM UP LEFT.png" alt=""></div>
+            <div><img src="\images\QUIZ PROGRAM MID LEFT.png" alt=""></div>
+            <div><img src="\images\QUIZ PROGRAM UP LEFT.png" alt=""></div>
+            <div><img src="\images\BRANDS MIDDDLE.png" alt=""></div>
+            <div><img src="\images\BRANDS UP LEFT.png" alt=""></div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p><strong>Arnold Schmidt – Founder of the Magic Code and Magic TV</strong></p>
+        <p>arnoldschmidt.com@gmail.com | +41 76 328 6283</p>
+        <p>Interactive Television. Built for Broadcasters.</p>
+        <p style="margin-top: 15px; font-size: 0.9em;">
+            Interactive television.<br>
+            Secure. Recognizable. Meaningful.<br>
+            And in life: Safe. Practical. Always ready.
+        </p>
+    </footer>
+
+
+
+    <!-- Fullscreen Overlay -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="close-btn" id="closeBtn">×</div>
+        <img id="fullscreenImg" src="" alt="Fullscreen View" />
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const allImages = document.querySelectorAll("img");
+        const overlay = document.getElementById("fullscreenOverlay");
+        const fullscreenImg = document.getElementById("fullscreenImg");
+        const closeBtn = document.getElementById("closeBtn");
+
+        let startX = 0, startY = 0, moved = false;
+
+        allImages.forEach(img => {
+            img.addEventListener("mousedown", (e) => {
+                startX = e.clientX;
+                startY = e.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("mousemove", (e) => {
+                if (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("mouseup", (e) => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+
+            // For touch devices
+            img.addEventListener("touchstart", (e) => {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("touchmove", (e) => {
+                const touch = e.touches[0];
+                if (Math.abs(touch.clientX - startX) > 5 || Math.abs(touch.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("touchend", () => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+        });
+
+        closeBtn.addEventListener("click", () => {
+            overlay.classList.remove("show");
+            fullscreenImg.src = "";
+        });
+
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+    </script>
+
+</body>
+
+</html>

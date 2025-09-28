@@ -109,20 +109,22 @@ if (!urlParams.has("magiccode")) {
 
     try {
       const result = await generateQRCode(formData); // Call the function to generate the QR code
-      // form.reset(); // Reset the form after successful submission
-      // document.getElementById("qrCodePrintData").value = JSON.stringify(
-      //   Object.fromEntries(
-      //     Object.entries(result.qrCode).filter(([_, value]) => value !== null)
-      //   )
-      // );
-      showToast(result.message, "success"); // Show success message
 
       setTimeout(() => {
-        window.location.href = `/dashboard?magiccode=${result.qrCode.id}`;
-      }, 1000); // Optional delay to let the toast show up
-      // document.getElementById("PrintMyQR").style.visibility = "visible"; // Makes it visible again
-      // document.getElementById("generateqrsection").style.display = "none"; // Makes it visible again
-      // document.getElementById("showandupdateqr").style.display = "block"; // Makes it visible again
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get("sessionId");
+        const channelId = params.get("channelId");
+        const type = params.get("type"); // quiz or voting
+
+        if (sessionId && channelId && type) {
+          // Construct final URL
+          window.location.href = `/authenticateqr?channelId=${channelId}&sessionId=${sessionId}&type=${type}&linked=true`;
+        } else {
+          // Fallback if query params missing
+          showToast(result.message, "success"); // Show success message
+          window.location.href = `/dashboard?magiccode=${result.qrCode.id}`;
+        }
+      }, 1000);
 
       // window.location.reload();
     } catch (error) {
@@ -155,13 +157,7 @@ async function generateQRCode(formData) {
       error.redirectUrl = result.redirectUrl || null; // preserve redirect URL
       throw error;
     } else {
-      // document.getElementById("qr-code").style.display = "block"; // Show the element
       submitBtnGenerate.disabled = false;
-      // submitBtnGenerate.style.display = "none";
-      // submitBtnUpdate.style.display = "flex";
-      // downloadQrButton.style.display = "flex";
-      toggleLoaderVisibility(false);
-      // generatedSection.style.display = "block";
     }
 
     return result; // Return the result for further handling
@@ -178,12 +174,6 @@ async function generateQRCode(formData) {
 submitBtnUpdate.addEventListener("click", async (event) => {
   event.preventDefault(); // Prevent default form submission
 
-  // const qrName = document.getElementById("qr-name-update").value;
-  // const backgroundColor = document.getElementById("bg-color-update").value;
-  // const dotStyle = document.getElementById("dot-style-update").value;
-  // const cornerStyle = document.getElementById("corner-style-update").value;
-  // const applyGradient = document.getElementById("gradient-update").value;
-  // const qrDotColor = document.getElementById("qr-dot-color-update").value;
   document.getElementById("bg-color").value = "#ffffff";
   const activeBtn = document.querySelector(".content-type-button.active");
 

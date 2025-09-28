@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Session Management</title>
+    <title>Episode Management</title>
     <link rel="stylesheet" href="/css/channel-quiz.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 </head>
@@ -20,13 +20,13 @@
                 <span id="close-popup-session" style="font-size: 25px; cursor: pointer;">&times;</span>
             </div>
 
-            <h2 style="text-align: center; margin-bottom: 20px;" id="add-session-headerText">Create New Session</h2>
+            <h2 style="text-align: center; margin-bottom: 20px;" id="add-session-headerText">Create New Episode</h2>
 
             <form id="add-session-form" enctype="multipart/form-data">
                 <input type="hidden" name="removeLogo" id="remove-logo-flag" value="false">
                 <!-- Session Name -->
                 <div class="form-group" style="margin-bottom: 20px;">
-                    <input type="text" id="session-name" name="name" class="number-input" placeholder="Session Name"
+                    <input type="text" id="session-name" name="name" class="number-input" placeholder="Episode Name"
                         required>
                 </div>
 
@@ -39,7 +39,7 @@
                 <!-- Description -->
                 <div class="form-group" style="margin-bottom: 20px;">
                     <textarea id="session-description" name="description" class="number-input"
-                        placeholder="Session Description" rows="3" style="resize: vertical;"></textarea>
+                        placeholder="Episode Description" rows="3" style="resize: vertical;"></textarea>
                 </div>
 
                 <!-- Link -->
@@ -75,16 +75,16 @@
 
                 <!-- Submit Button -->
                 <div class="form-group" style="text-align: center;">
-                    <button type="submit" class="btn" id="submit-add-session">Create Session</button>
+                    <button type="submit" class="btn" id="submit-add-session">Create Episode</button>
                 </div>
             </form>
         </div>
     </div>
     <!-- Breadcrumbs -->
     <nav class="breadcrumbs">
-        <a href="/tvstation/channels">Shows</a>
+        <a href="/tvstation/channels">Projects</a>
         <span>&rsaquo;</span>
-        <span class="active">Session Manager</span>
+        <span class="active">Episodes</span>
     </nav>
 
     <div class="quiz-admin-container">
@@ -95,10 +95,13 @@
             <% } else { %>
 
                 <div class="quiz-admin-header">
-                    <h1>Session Manager</h1>
+                    <h1>
+                        <%= channel && channel.channelName ? channel.channelName + ' ' : '' %>
+                            <span>&rsaquo;</span>&nbsp;Episodes
+                    </h1>
                     <div class="quiz-admin-controls">
                         <button class="btn" id="create-session-btn">
-                            + Create New Session
+                            + Create New Episode
                         </button>
                     </div>
                 </div>
@@ -111,7 +114,7 @@
                                     <!-- Logo -->
                                     <div class="session-logo-wrapper">
                                         <% const hasLogo=s.logo; %>
-                                            <% const imageSrc=hasLogo ? s.logo : '/uploads/no-image.png' ; %>
+                                            <% const imageSrc=hasLogo ? s.logo : '/images/no-image.png' ; %>
 
                                                 <% if (s.link && hasLogo) { %>
                                                     <a href="<%= s.link %>" target="_blank">
@@ -150,17 +153,31 @@
                                         data-name="<%= s.name %>" data-logo-title="<%= s.logoTitle %>"
                                         data-description="<%= s.description %>" data-link="<%= s.link %>"
                                         data-logo-url="<%= s.logo || '' %>">
-                                        Edit
+                                        Edit Episode
                                     </button>
-                                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= s._id %>">
-                                        <button class="view-btn">View</button>
-                                    </a>
-                                    <button class="delete-btn delete" data-session-id="<%= s._id %>">Delete</button>
+                                    <!-- <a href="/tvstation/channels/<%= channel._id %>/session/<%= s._id %>">
+                                        <button class="view-btn">Edit Formats</button>
+                                    </a> -->
+                                    <button class="delete-btn delete" data-session-id="<%= s._id %>">Delete
+                                        Episode</button>
+                                </div>
+
+                                <div style="margin-top: 10px;">
+
+                                    <button class="btn" style="font-size: 14px;"
+                                        onclick="location.href='/tvstation/channels/<%= channel._id %>/session/<%= s._id %>/quiz'">Quiz</button>
+
+                                    <button class="btn" style="font-size: 14px;"
+                                        onclick="location.href='/tvstation/channels/<%= channel._id %>/session/<%= s._id %>/voting'">Voting</button>
+
+                                    <button class="btn" style="font-size: 14px;"
+                                        onclick="location.href='/tvstation/applause/channels/<%= channel._id %>/session/<%= s._id %>/applause'">Applause</button>
+
                                 </div>
                             </div>
                             <% }) %>
                                 <% } else { %>
-                                    <p style="padding: 1rem;">No sessions available.</p>
+                                    <p style="padding: 1rem;">No Episodes available.</p>
                                     <% } %>
                 </div>
 

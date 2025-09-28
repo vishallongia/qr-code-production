@@ -6,8 +6,8 @@
     --bg-color: #f8f9fa;
     --card-bg: #ffffff;
     --input-border-color: rgba(0, 0, 0, 0.2);
-    --toggle-bg: #4db6ac;
-    --toggle-hover-bg: #26a69a;
+    --toggle-bg: #18024b;
+    --toggle-hover-bg: rgba(26, 1, 97, 0.9);;
     --box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 

@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Magic Applause</title>
+    <link rel="stylesheet" href="/css/user-quiz.css" />
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+    <style>
+        #applauseAmount {
+            padding: 10px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 2px solid;
+            width: 100px;
+
+        }
+
+        .applause-options {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .applause-options label {
+            cursor: pointer;
+            border: 2px solid #ccc;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            user-select: none;
+            font-weight: 600;
+            background: #fff;
+            color: #333;
+        }
+
+        /* hide default radio */
+        .applause-options input {
+            display: none;
+        }
+
+        /* highlight whole label when radio inside it is checked */
+        .applause-options label:has(input:checked) {
+            background: #0173f0;
+            color: #fff;
+            border-color: #0173f0;
+        }
+
+        /* mobile: 3 columns, 2 rows */
+        @media (max-width: 768px) {
+            .applause-options {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.5rem;
+            }
+
+            .applause-options label {
+                width: 50%;
+            }
+        }
+
+        .share-btn {
+            width: 30px;
+            height: auto;
+            margin-left: 6px;
+            padding-top: 0px;
+        }
+
+        .uq-logo-title {
+            margin: 0;
+        }
+
+        .uq-logo-text {
+            margin: 0;
+        }
+
+        .uq-options {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1rem;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body class="user-quiz-page">
+
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Result Popup -->
+    <!-- Applause Confirmation Popup -->
+    <div class="coin-popup-overlay" id="applauseConfirmPopup" style="display: none;">
+        <div class="coin-popup">
+            <div class="coin-popup-inner">
+                <p id="applauseConfirmText" style="font-size: 1.5rem; font-weight: bold;"></p>
+                <div class="coin-popup-buttons">
+                    <button id="applauseOkBtn" onclick="closeApplauseConfirmPopup()">OK</button>
+                    <button id="topUpBtn" style="display:none;" onclick="window.location.href='/magic-coin-wallet'">
+                        <span data-translate="TopUpWallet">Top Up Wallet</span>
+                    </button>
+                    <button onclick="ShareApplause()" data-translate="share">Share</button>
+                    <button onclick="closeApplauseConfirmPopup()" id="BackBtn" style="display: none;"><span
+                            data-translate="back">Back</span> </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Applause Popup -->
+    <div class="coin-popup-overlay" id="applausePopup" style="display: none;">
+        <div class="coin-popup">
+            <div class="coin-popup-inner" style="overflow-y: visible;">
+                <p id="applauseText" style="font-size: 1.5rem; font-weight: bold;"></p>
+
+                <div style="margin: 15px 0;">
+
+                    <div class="applause-options">
+                        <label>
+                            <input type="radio" name="applause" value="10">
+                            10
+                        </label>
+                        <label>
+                            <input type="radio" name="applause" value="50">
+                            50
+                        </label>
+                        <label>
+                            <input type="radio" name="applause" value="100">
+                            100
+                        </label>
+                        <label>
+                            <input type="radio" name="applause" value="500">
+                            500
+                        </label>
+                        <label>
+                            <input type="radio" name="applause" value="1000">
+                            1.000
+                        </label>
+                        <label>
+                            <input type="radio" name="applause" value="10000">
+                            10.000
+                        </label>
+                    </div>
+
+
+                </div>
+
+                <div class="coin-popup-buttons">
+
+                    <input type="number" id="applauseAmount" min="1" />
+                    <button onclick="submitApplause()">OK</button>
+                    <button onclick="ShareApplause()" data-translate="share">Share</button>
+                    <button onclick="closeApplausePopup()"><span data-translate="back">Back</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" name="sessionId" value="<%= sessionId %>">
+    <div class="uq-header">
+        <div class="uq-logo">
+            <span onclick="window.location.href='/'">Magic Applause</span>
+            <span>
+                <img src="\images\copy.png" alt="" id="copy_btn" class="share-btn" onclick="share()">
+            </span>
+        </div>
+        <div class="uq-coins" id="walletCoins" onclick="window.location.href='/magic-coin-wallet'">
+            🪙 Magic Coins: <%= availableCoins || 0 %>
+        </div>
+
+    </div>
+    </div>
+
+    <div class="language-selector-container">
+        <select id="languageSwitcher" class="language-selector-select">
+            <option value="en">English</option>
+            <option value="de">Deutsch (German)</option>
+            <option value="hu">Hungarian</option>
+            <option value="ro">Romanian</option>
+        </select>
+    </div>
+
+    <div class="uq-container">
+        <% if (currentQuestion) { %>
+            <form action="/submit-answer" method="POST">
+                <input type="hidden" name="channelId" value="<%= channel._id %>">
+                <input type="hidden" name="questionId" value="<%= currentQuestion._id %>">
+                <input type="hidden" name="index" value="<%= index %>">
+
+                <div class="uq-question-header">
+                    <% if (currentQuestion.logoTitle) { %>
+                        <h4 class="uq-logo-title" style="font-size: 1.4rem; font-weight: 600;">
+                            <%= currentQuestion.logoTitle %>
+                        </h4>
+                        <% } %>
+                            <% if (currentQuestion.logo) { %>
+                                <% if (currentQuestion.logoLink) { %>
+                                    <a href="<%= currentQuestion.logoLink %>" target="_blank">
+                                        <img class="uq-question-logo" src="<%= currentQuestion.logo %>" alt="Logo" />
+                                    </a>
+                                    <% } else { %>
+                                        <img class="uq-question-logo" src="<%= currentQuestion.logo %>" alt="Logo" />
+                                        <% } %>
+
+                                            <% if (currentQuestion.logoTitle || currentQuestion.logoDescription) { %>
+                                                <div class="uq-logo-text" style="    width: 100%; text-align: center;">
+
+                                                    <% if (currentQuestion.logoDescription) { %>
+                                                        <p class="uq-logo-text"
+                                                            style="font-size: 1.2rem; font-weight: 500;">
+                                                            <%= currentQuestion.logoDescription %>
+                                                        </p>
+                                                        <% } %>
+                                                </div>
+                                                <% } %>
+                                                    <% } %>
+                </div>
+
+
+                <!-- Question Header -->
+                <div class="uq-question-header">
+                    <% if (currentQuestion.questionLogo) { %>
+                        <% if (currentQuestion.questionImageLink) { %>
+                            <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
+                                <img class="uq-question-logo" src="<%= currentQuestion.questionLogo %>"
+                                    alt="Question Logo" />
+                            </a>
+                            <% } else { %>
+                                <img class="uq-question-logo" src="<%= currentQuestion.questionLogo %>"
+                                    alt="Question Logo" />
+                                <% } %>
+                                    <% } %>
+                </div>
+
+
+                <!-- Question Text -->
+                <!-- <div class="uq-question-number">Question <%= index + 1 %> of <%= total %>
+                </div> -->
+
+
+                <!-- Move Question Image BELOW the text -->
+                <% if (currentQuestion.questionImage) { %>
+
+                    <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500;margin-bottom: 0.8rem;">
+                        <%= currentQuestion.question %>
+                    </div>
+
+
+                    <div class="uq-question-image-wrapper">
+                        <% if (currentQuestion.questionImageLink) { %>
+                            <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
+                                <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"
+                                    alt="Question Image" />
+                            </a>
+                            <% } else { %>
+                                <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"
+                                    alt="Question Image" />
+                                <% } %>
+                    </div>
+                    <% } %>
+
+                        <div style="text-align: center;margin-bottom: 1.5rem;">
+                            <span style="font-weight: normal;">
+                                <%= currentQuestion.questionDescription %>
+                            </span>
+                        </div>
+                        <!-- Options -->
+                        <!-- Only on the page where you want a slider -->
+                        <div class="">
+                            <div class="uq-options">
+                                <% currentQuestion.options.forEach((opt, i)=> { %>
+                                    <div class="uq-option">
+                                        <label for="opt<%= i %>">
+                                            <input type="radio" name="selectedOptionIndex" id="opt<%= i %>"
+                                                value="<%= i %>">
+                                            <div class="uq-option-text-wrapper" style="font-size:1rem;font-weight:600;">
+
+                                                
+                                                <div class="coin-popup-buttons" style="margin-top: 0; margin-bottom: 7px;">
+                                                    <button data-translate="share" type="button"
+                                                        onclick="TriggerPopup(<%= i %>)">Share</button>
+
+                                                </div>
+
+                                                <div style="margin-bottom: 0.5rem;width: 258px;">
+                                                    <span data-translate="youwanttoapplaud">If you want to
+                                                        applaud</span>
+                                                    <%= opt.text %><span data-translate="commaOnApplause">,</span>
+                                                        <span data-translate="clickontheimage">click on the image. You
+                                                            can
+                                                            express your appreciation with Magic Coins.</span>
+
+                                                </div>
+
+
+                                                <span class="uq-option-text" style="display: none;">
+                                                    <%= opt.text %>
+                                                </span>
+                                            </div>
+                                            <% if (opt.image) { %>
+                                                <img class="uq-option-image-large" src="<%= opt.image %>"
+                                                    alt="Option Image" />
+                                                <% } %>
+                                                    <span style="font-weight: normal;">
+                                                        <%= opt.description %>
+                                                    </span>
+                                                    <!-- ✅ Hidden field to store default coin amount -->
+                                                    <input type="hidden" id="optCoin<%= i %>"
+                                                        value="<%= opt.magicCoinDeducted %>">
+                                        </label>
+                                    </div>
+                                    <% }) %>
+                            </div>
+                        </div>
+
+
+                        <!-- Navigation -->
+                        <% const prevIndex=index> 0 ? index - 1 : 0; %>
+                            <% const nextIndex=index + 1 < total ? index + 1 : index; %>
+
+                                <!-- <div class="uq-navigation">
+                                    <button type="button" onclick="window.location.href='?index=<%= prevIndex %>'" <% if
+                                        (index <=0) { %> disabled <% } %>>Back</button>
+                                    <button type="button" onclick="window.location.href='?index=<%= nextIndex %>'" <% if
+                                        (index + 1>= total) { %> disabled <% } %>>Next</button>
+                                </div> -->
+            </form>
+            <% } else { %>
+                <p>
+                    <%= error || "No question found or Magic Applause ended." %>
+                </p>
+                <% } %>
+    </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+<script>
+    let selectedApplauseOptionIndex = null;
+    let index = selectedApplauseOptionIndex;
+    const applausePopup = document.getElementById("applausePopup");
+
+    const applauseOptions = document.querySelectorAll('input[name="selectedOptionIndex"]');
+
+    applauseOptions.forEach((opt) => {
+        opt.addEventListener("change", (e) => {
+            selectedApplauseOptionIndex = parseInt(e.target.value);
+            openApplausePopup();
+        });
+    });
+
+    function openApplausePopup() {
+        index = selectedApplauseOptionIndex;
+        const selectedRadio = document.querySelector('input[name="selectedOptionIndex"]:checked');
+        if (!selectedRadio) return;
+
+        const label = document.querySelector(`label[for="${selectedRadio.id}"]`);
+        const optionTextSpan = label.closest('.uq-option').querySelector('.uq-option-text');
+        const optionTitle = optionTextSpan ? optionTextSpan.innerText.trim() : "(option)";
+
+        const applauseTextEl = document.getElementById("applauseText");
+        applauseTextEl.innerHTML = `<span data-translate="helloMagicPersonYouAreWelcomeToShowYourAppreciationTo">Hello Magic Person, you are welcome to show your appreciation to</span> "${optionTitle}"
+        <span data-translate="howMuchApplauseDoYouWantToGive">How much applause do you want to give? Select the magic coin amount you wish, or type in any amount</span>.`;
+
+        applauseTextEl.innerHTML = `
+        <img src="/images/MCN LOGO.png" alt="Applause" style="all: unset;width: 70%;vertical-align: middle;">`
+
+        // Fetch default value from DB (simulate here, replace with actual API if needed)
+        // ✅ Get default coin amount from hidden input
+        const optionIndex = selectedRadio.value;
+        const defaultCoinAmount = document.getElementById(`optCoin${optionIndex}`).value || 0;
+
+        document.getElementById("applauseAmount").value = defaultCoinAmount;
+
+        applausePopup.style.display = "flex";
+    }
+
+    function closeApplausePopup() {
+        applausePopup.style.display = "none";
+        selectedApplauseOptionIndex = null;
+
+        const selected = document.querySelector('input[name="selectedOptionIndex"]:checked');
+        if (selected) selected.checked = false;
+
+        // Also reset applause amount field
+        const applauseInput = document.getElementById("applauseAmount");
+        if (applauseInput) applauseInput.value = "";
+    }
+
+    function submitApplause() {
+        const selectedRadio = document.querySelector('input[name="selectedOptionIndex"]:checked');
+        if (!selectedRadio) return;
+
+        const optionIndex = parseInt(selectedRadio.value);
+        const label = document.querySelector(`label[for="${selectedRadio.id}"]`);
+        const optionTextSpan = label.closest('.uq-option').querySelector('.uq-option-text');
+        const optionTitle = optionTextSpan ? optionTextSpan.innerText.trim() : "(option)";
+
+        const applauseAmount = parseInt(document.getElementById("applauseAmount").value) || 0;
+
+        const questionId = document.querySelector('input[name="questionId"]').value;
+        const channelId = document.querySelector('input[name="channelId"]').value;
+        const sessionId = document.querySelector('input[name="sessionId"]').value;
+
+        const payload = {
+            questionId,
+            channelId,
+            sessionId,
+            selectedOptionIndex: optionIndex,
+            magicCoinDeducted: applauseAmount,
+            deductCoin: applauseAmount > 0, // ✅ only true if > 0
+        };
+
+        // Show loader
+        document.getElementById("loader").style.display = "flex";
+
+        fetch("/tvstation/applause/applause-response", { // your backend API route
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success || data.notEnoughCoins || applauseAmount === 0) {
+                    localStorage.setItem(`applause_response_${questionId}_${sessionId}`, "answered");
+                    closeApplausePopup();
+                    showApplauseConfirmation(optionTitle, data, applauseAmount);
+                } else {
+                    showToast(data.message || "Failed to send applause", "error");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast("Something went wrong", "error");
+            })
+            .finally(() => {
+                document.getElementById("loader").style.display = "none";
+            });
+    }
+
+
+
+    const applauseConfirmPopup = document.getElementById("applauseConfirmPopup");
+
+    function showApplauseConfirmation(optionTitle, data, applauseAmount) {
+        const walletCoinsEl = document.getElementById("walletCoins");
+        const textEl = document.getElementById("applauseConfirmText");
+        const topUpBtn = document.getElementById("topUpBtn");
+        const okBtn = document.getElementById("applauseOkBtn");
+
+        if (applauseAmount === 0) {
+            // ✅ New case: no coins used
+            textEl.innerHTML = `<span data-translate="youAppreciated">You appreciated</span> "${optionTitle}" <span data-translate="butDidntUseAnyMagicCoins">but didn’t use any Magic Coins</span>.`;
+            topUpBtn.style.display = "none";
+            okBtn.style.display = "inline-block";
+        }
+
+        else if (data.notEnoughCoins) {
+            // Show top-up button and message
+            topUpBtn.style.display = "inline-block";
+            document.getElementById("BackBtn").style.display = "inline-block";
+            okBtn.style.display = "none"; // hide OK since action failed
+            textEl.innerHTML = `❌ <span data-translate="YouDoNotHaveEnoughMagicCoins">You do not have enough coins</span>.<br>
+            <span data-translate="YouHave">You have </span> "${data.availableCoins}" <span data-translate="MagicCoinsButAreRequired">Magic Coins, but are required</span>  "${data.requiredCoins}"".`;
+        } else {
+            // Deduction successful → update wallet coins and show OK
+            if (walletCoinsEl && data.availableCoins !== undefined) {
+                walletCoinsEl.textContent = `🪙 Magic Coins: ${data.availableCoins}`;
+            }
+
+            textEl.innerHTML = `<span data-translate="thankYouYouShowedYourAppreciationTo">Thank you. You showed your appreciation to</span> "${optionTitle}". "${optionTitle}" <span data-translate="willBeNotifiedAboutYourApplause">will be notified about your applause</span>.`;
+
+            topUpBtn.style.display = "none"; // hide top-up
+            okBtn.style.display = "inline-block"; // show OK
+        }
+
+        applauseConfirmPopup.style.display = "flex";
+    }
+
+
+    function closeApplauseConfirmPopup() {
+        applauseConfirmPopup.style.display = "none";
+    }
+
+
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const questionId = document.querySelector('input[name="questionId"]').value;
+        const channelId = document.querySelector('input[name="channelId"]').value;
+        const sessionId = document.querySelector('input[name="sessionId"]').value;
+
+        const responseKey = `applause_response_${questionId}_${sessionId}`;
+        const landKey = `applause_land_${questionId}_${sessionId}`;
+
+        // ✅ Reset answer state here, before first visit/session checks
+        if (localStorage.getItem(responseKey) === "answered") {
+            localStorage.setItem(responseKey, "never");
+            console.log("Reset answered → now marked as never for this load.");
+        }
+
+        // First visit: mark response state if not present
+        if (!localStorage.getItem(responseKey)) {
+            localStorage.setItem(responseKey, "never"); // never answered
+        }
+
+        // Mark session land to differentiate first load vs reload
+        if (!sessionStorage.getItem(landKey)) {
+            sessionStorage.setItem(landKey, "visited");
+            // console.log("Valid first land → no Beacon will fire now.");
+        } else {
+            // console.log("Intentional reload detected.");
+        }
+
+        // Fire Beacon only on unload if unanswered AND it’s not the first land
+        window.addEventListener("beforeunload", () => {
+            if (
+                localStorage.getItem(responseKey) === "never" && // not answered
+                sessionStorage.getItem(landKey) === "visited"    // means reload/close
+            ) {
+                const payload = JSON.stringify({ questionId, channelId, sessionId, type: "applause" });
+
+                if (navigator.sendBeacon) {
+                    const blob = new Blob([payload], { type: "application/json" });
+                    navigator.sendBeacon("/tvstation/quiz-viewed", blob);
+                    // console.log("Beacon sent on unload (user didn’t answer).");
+                } else {
+                    fetch("/tvstation/quiz-viewed", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: payload
+                    })
+                        .then(() => console.log("Fallback Beacon sent on unload."))
+                        .catch(err => console.error("Error recording viewed-only response:", err));
+                }
+            }
+        });
+    });
+</script>
+
+
+<script>
+    const langSelector = document.querySelector('.language-selector-select');
+    const selectedLang = document.querySelector('.selected-lang');
+    const dropdownItems = document.querySelectorAll('.language-dropdown li');
+
+    langSelector.addEventListener('click', () => {
+        langSelector.classList.toggle('active');
+    });
+
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const lang = e.target.getAttribute('data-lang');
+            selectedLang.textContent = lang;
+            langSelector.classList.remove('active');
+        });
+    });
+
+    // Optional: Click outside to close dropdown
+    document.addEventListener('click', (e) => {
+        if (!langSelector.contains(e.target)) {
+            langSelector.classList.remove('active');
+        }
+    });
+
+
+</script>
+
+<script>
+
+    ShareApplause = () => {
+        console.log(index);
+        if (selectedApplauseOptionIndex) {
+
+            index = selectedApplauseOptionIndex;
+        }
+        // const selectedRadio = document.querySelector('input[name="selectedOptionIndex"]:checked');
+        let link = window.location.href
+
+        if (index !== null) {
+            const url = new URL(window.location.href);
+            url.searchParams.set("option", index);
+            link = url
+        } else {
+            link = window.location.href
+        }
+
+        if (navigator.share) {
+            const pageTitle = document.title;
+            const pageUrl = link;
+
+            navigator.share({
+                title: pageTitle,
+                url: pageUrl
+            })
+                .then(() => console.log('Page shared successfully'))
+                .catch((err) => console.error('Share failed:', err));
+        } else {
+            alert('Sharing not supported on this browser.');
+        }
+    };
+
+
+    const params = new URLSearchParams(window.location.search);
+
+
+    if (params.get("option")) {
+        const option = params.get("option");
+        document.querySelectorAll(`input[name="selectedOptionIndex"]`)[option].click()
+    }
+
+    function adjustOptionsLayout(container) {
+        if (container.scrollWidth > container.clientWidth) {
+            container.style.justifyContent = "flex-start"; // scroll mode
+        } else {
+            container.style.justifyContent = "center";     // fit mode
+        }
+    }
+
+
+
+    window.addEventListener("load", function () {
+        const uqOptions = document.querySelector(".uq-options");
+        adjustOptionsLayout(uqOptions);
+        window.addEventListener("resize", () => adjustOptionsLayout(uqOptions));
+
+        document.querySelectorAll('input[name="applause"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                document.getElementById("applauseAmount").value = this.value;
+            });
+        });
+    });
+
+    function share() {
+
+
+
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            document.getElementById("copy_btn").src = "/assets/img/copied.png";
+            // alert('Link copied to clipboard: ' + window.location.href);
+        }).catch(err => {
+            console.error('Could not copy text: ', err);
+        });
+
+        setTimeout(() => {
+            document.getElementById("copy_btn").src = "/images/copied.png";
+        }, 500);
+
+        const shareData = {
+            title: 'Magic Comments',
+            text: 'Check out this amazing Magic Comments platform!',
+            url: window.location.href
+        };
+
+        if (navigator.share) {
+            navigator.share(shareData)
+                .then(() => console.log('Content shared successfully'))
+                .catch((error) => console.error('Error sharing content:', error));
+        } else {
+            // Fallback for browsers that do not support the Web Share API
+            alert('Sharing is not supported in this browser. Please copy the URL manually: ' + window.location.href);
+        }
+    }
+
+
+    function TriggerPopup(i) {
+        const radio = document.getElementById(`opt${i}`);
+        if (radio) {
+            // Check the radio button
+            radio.checked = true;
+
+            // Trigger the change event manually
+            radio.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+
+        // Your popup logic (if any) goes here
+        console.log("Applause popup opened for option:", i);
+    }
+
+
+</script>
+<script src="\js\translationsForMiniApps.js"></script>
+
+</html>

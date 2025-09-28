@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Magic Code Cards</title>
+    <title  data-translate="my_magic_stickers" >Magic Code Cards</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="/css/qr-gallery-new.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
@@ -21,15 +21,28 @@
 
 <body>
     <div class="container-qr-custom">
-        <span style="font-family: Poppins; font-weight: 600; font-size: 20px; line-height: 20px;">My Magic
+        <span  data-translate="my_magic_stickers" style="font-family: Poppins; font-weight: 600; font-size: 20px; line-height: 20px;">My Magic
             Stickers</span>
 
         <p class="subtext">
-            This is your inactive Magic Code as a Sticker in all available colors. You can order these here online, or
-            pick them up at an affiliate store near you. <br> After you receive your physical Magic Sticker and you hold it
-            in your hand, you will be able to activate it by holding your mobile phone camera at it.
-            <br> Then it will become
-            your personal Magic Code, and it will belong to you <b>FOREVER.</b> 
+
+            <div data-translate="my_magic_stickers_p1">
+                This is your inactive Magic Code as a Sticker in all available colors. You can order these here online, or
+                pick them up at an affiliate store near you. 
+
+            </div>
+            
+            <br> 
+            
+            <div data-translate="my_magic_stickers_p2">After you receive your physical Magic Sticker and you hold it
+            in your hand, you will be able to activate it by holding your mobile phone camera at it.</div>
+            
+            
+            <br> 
+            
+            <div data-translate="my_magic_stickers_p3">Then it will become
+            your personal Magic Code, and it will belong to you <b>FOREVER.</b> </div>
+            
         </p>
 
         <div class="grid" id="showcolorsqrcode">
@@ -213,6 +226,34 @@
 
         showQrCodes(qrCodes);
     </script>
+
+
+<script>
+  const langSelector = document.querySelector('.language-selector');
+  const selectedLang = document.querySelector('.selected-lang');
+  const dropdownItems = document.querySelectorAll('.language-dropdown li');
+
+  langSelector.addEventListener('click', () => {
+    langSelector.classList.toggle('active');
+  });
+
+  dropdownItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      const lang = e.target.getAttribute('data-lang');
+      selectedLang.textContent = lang;
+      langSelector.classList.remove('active');
+    });
+  });
+
+  // Optional: Click outside to close dropdown
+  document.addEventListener('click', (e) => {
+    if (!langSelector.contains(e.target)) {
+      langSelector.classList.remove('active');
+    }
+  });
+</script>
+<script src="/js/translations.js"></script>
+
 </body>
 
 </html>

@@ -10,8 +10,8 @@
     --border-radius: 10px;
     --box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
     --text-color: #333333;
-    --link-color: #4db6ac;
-    --link-hover-color: #26a69a;
+    --link-color: #18024b;
+    --link-hover-color: rgba(26, 1, 97, 0.9);;
 }
 
 * {

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seven.One Studios & Magic TV</title>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZNB2G4J8G"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-0ZNB2G4J8G');
+    </script>
+
+    <link rel="icon" type="image/png" sizes="192x192" href="\images\SEVEN ONE HEADER.png">
+    <link rel="apple-touch-icon" href="\images\SEVEN ONE HEADER.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            /* background-color: white; */
+            text-align: center;
+            /* padding: 40px; */
+            margin-bottom: 20px;
+            /* border-bottom: 4px solid #0073e6; */
+        }
+
+        header h1 {
+            font-size: 2.8em;
+            margin: 0;
+        }
+
+        header p {
+            font-size: 1.2em;
+            color: #555;
+        }
+
+        header img {
+            width: 100%;
+            max-width: 1500px;
+            height: auto;
+        }
+
+        img {
+            width: 100%;
+            max-width: 1500px;
+            height: auto;
+        }
+
+        section {
+            padding: 40px;
+            max-width: 900px;
+            margin: auto;
+            background-color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            font-size: 1.1em;
+
+        }
+
+        section p {
+            line-height: 1.4rem;
+        }
+
+        li {
+            list-style: disc;
+            padding: 0;
+            margin: 15px auto;
+            text-align: left;
+            max-width: 800px;
+            font-size: 1.1rem;
+        }
+
+        h2 {
+            color: #d1001c;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: #333;
+            color: #fff;
+            margin-top: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: #222;
+            color: #eee;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        img {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .fullscreen-overlay.show {
+            display: flex;
+        }
+
+        .fullscreen-overlay img {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            color: #333;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 10000;
+            background: #fff;
+            padding: 0;
+            border-radius: 50%;
+            /* box-shadow: 0 0px 0px rgba(0, 0, 0, 0.2); */
+            width: 40px;
+            height: 40px;
+            text-align: center;
+        }
+
+        .close-btn:hover {
+            color: red;
+        }
+
+        section img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .highlight {
+            background-color: #ffe3e7;
+            border-left: 5px solid #d1001c;
+            padding: 20px;
+            margin: 40px auto;
+            font-size: 1.1em;
+            max-width: 800px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-highlight {
+            background-color: #d1001c;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn-highlight:hover {
+            background-color: #a80016;
+            transform: translateY(-2px);
+        }
+
+        .btn-highlight:active {
+            background-color: #870013;
+            transform: translateY(0);
+        }
+
+        .ImagesInList img {
+            margin-top: 1.4rem;
+            margin-bottom: 2rem;
+
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <img src="\images\SEVEN ONE HEADER.png" alt="">
+    </header>
+
+    <section style="margin-top: 1.5rem;">
+        <h2>Magic TV – Synergy of Screens</h2>
+        <p>Magic TV verwandelt passive Zuschauer in aktive Teilnehmer – im perfekten Moment. Das sind die Magic Moments,
+            die zu mehr Reichweite, mehr Umsatz, mehr Käuferinteresse führen – mit interaktiven Magic Formaten im
+            internationalen Formatvertrieb.</p>
+    </section>
+
+    <section>
+        <h2>1. Ausgangslage</h2>
+        <p>Seven.One Studios ist als Distributor von Premium-TV-Formaten international etabliert. Käufer erwarten heute
+            nicht nur ein kreatives Format, sondern auch Lösungen, wie sie Zuschauer enger binden und direkt
+            monetarisieren können – insbesondere bei Live-, Event- und Showformaten.</p>
+        <p>Der Trend geht klar in Richtung:</p>
+        <ul>
+            <li>Second-Screen-Integration</li>
+            <li>Live-Interaktion</li>
+            <li>Direkte Monetarisierung über Voting, Gewinnspiele, Shopping, Inhalte</li>
+        </ul>
+        <p><strong>Magic TV</strong> ist dafür die sofort einsetzbare Komplettlösung – kein theoretisches Konzept,
+            sondern ein marktreifes, erprobtes Interaktionssystem, das als optischer Trigger in jede Sendung
+            eingeblendet werden kann.</p>
+    </section>
+
+    <section>
+        <h2>2. Das Angebot: Magic TV + Magic Formate</h2>
+        <p>Magic TV ist ein universelles Interaktions-Plugin, das als integrierte Revenue-Engine kostenlos mit dem
+            Verkauf von TV-Formaten kombiniert werden kann.</p>
+        <p><strong>Magic Formate - Suggestive Upsellings:</strong></p>
+        <ul>
+            <li>Magic Quiz – Interaktive Gewinnspiele mit direkter Monetarisierung</li>
+            <img src="\images\SevenOne QUIZ.png" alt="">
+
+            <li>Magic Vote – Zuschauer entscheiden und bezahlen für ihre Stimme</li>
+            <img src="\images\SevenOne Voting.png" alt="">
+
+            <li>Magic Brands – Markenintegration in Werbepausen</li>
+            <img src="\images\SevenOne BRANDS.png" alt="">
+
+            <li>Magic Shopping – Shopping-Erlebnis direkt aus dem Sofa</li>
+            <img src="\images\SevenOne SHOPPING.png" alt="">
+
+            <li>Magic Moments – Micropayment-basierte, exklusive Inhalte</li>
+            <img src="\images\SevenOne MOMENTS.png" alt="">
+
+        </ul>
+        <p>Modular einsetzbar in Live-Shows, Wettbewerben, Gameshows, Sportevents, Musikformaten und Reality-TV.</p>
+    </section>
+
+    <section>
+        <h2>3. Die Vorteile für Seven.One Studios</h2>
+
+
+        <p style='margin:0cm;font-size:16px;font-family:"Aptos",sans-serif;'><strong>a) Mehrwert im
+                Formatvertrieb</strong></p>
+        <ul style="margin-left: 26px;">
+            <li>K&auml;uferl&auml;nder erhalten <strong>nicht nur ein TV-Format</strong>, sondern auch <strong>ein
+                    fertiges, monetarisierbares Interaktionssystem</strong>.</li>
+            <li>Dadurch steigt die <strong>Abschlussquote</strong> &ndash; insbesondere in M&auml;rkten, die bereits
+                Second-Screen-Aktivierungen einsetzen.</li>
+            <li><strong>Affiliate Partner Model - Kein Investment</strong> und <strong>keine technischen
+                    Risiken</strong> f&uuml;r TV Sender &ndash; schnelle Umsetzung ohne Eingriff in bestehende
+                Infrastruktur.</li>
+        </ul>
+        <p style='margin:0cm;font-size:16px;font-family:"Aptos",sans-serif;'><strong>&nbsp;</strong></p>
+        <p style='margin:0cm;font-size:16px;font-family:"Aptos",sans-serif;'><strong>b) Neue Umsatzquelle</strong></p>
+        <ul style="margin-left: 26px;">
+            <li>Lizenzgeb&uuml;hren f&uuml;r die Bereitstellung der Magic Formate.</li>
+            <li><strong>Laufende Umsatzbeteiligung</strong> an Interaktionen (z. B. kostenpflichtige Votes,
+                Gewinnspiele, Shopping-Integrationen).</li>
+            <li>M&ouml;glichkeit, <strong>Add-on-Preise</strong> f&uuml;r das &bdquo;Interaktionspaket&ldquo; im
+                Formatvertrieb anzusetzen.</li>
+        </ul>
+        <p style='margin:0cm;font-size:16px;font-family:"Aptos",sans-serif;'><strong>&nbsp;</strong></p>
+        <p style='margin:0cm;font-size:16px;font-family:"Aptos",sans-serif;'><strong>c) H&ouml;here Attraktivit&auml;t
+                f&uuml;r Sender</strong></p>
+        <ul style="margin-left: 26px;">
+            <li>Sender sparen <strong>Zeit und Entwicklungskosten</strong>, weil sie ein fertiges, getestetes System
+                bekommen.</li>
+            <li>Sofort einsatzbereit bei Erstausstrahlung.</li>
+        </ul>
+        <p style='margin:0cm;font-size:16px;font-family:"Aptos",sans-serif;'><strong>&nbsp;</strong></p>
+        <p style='margin:0cm;font-size:16px;font-family:"Aptos",sans-serif;'><strong>d) Wettbewerbsvorteil</strong></p>
+        <ul style="margin-left: 26px;">
+            <li>Andere Distributoren liefern nur das Format &ndash; Seven.One Studios liefert <strong>Format +
+                    Engagement-Tool</strong>.</li>
+            <li>Das steigert die <strong>Wahrnehmung als innovativer Premiumanbieter</strong>.</li>
+        </ul>
+        <p style='margin:0cm;font-size:16px;font-family:"Aptos",sans-serif;'><strong>&nbsp;</strong></p>
+        <p style='margin:0cm;font-size:16px;font-family:"Aptos",sans-serif;'><strong>e) Keine Kannibalisierung</strong>
+        </p>
+        <div
+            style='margin-top:0cm;margin-right:0cm;margin-bottom:8.0pt;margin-left:0cm;line-height:115%;font-size:16px;font-family:"Aptos",sans-serif;'>
+            <ul style="margin-bottom:0cm;margin-left: 26px;">
+                <li
+                    style='margin-top:0cm;margin-right:0cm;margin-bottom:8.0pt;margin-left:0cm;line-height:115%;font-size:16px;font-family:"Aptos",sans-serif;'>
+                    Magic TV ist <strong>kein Ersatz</strong> f&uuml;r bestehende Apps oder SMS-Votings.</li>
+            </ul>
+        </div>
+
+
+        <h3>Beispiel JOYN:</h3>
+        <p>Ein fremder QR-Code aus dem Internet? Sieht unseriös aus? Fühlt sich evtl. auch riskant an?</p>
+
+        <img src="\images\SevenOne SAT1 SBS1.png" alt="">
+
+        <p>Der Magic Code hingegen: Teil der Sendung. Teil der Marke. Teil des Vertrauens.
+            Weil er nicht beliebig ist, sondern eine Marke.
+        </p>
+
+        <img src="\images\SevenOne SAT1 SBS2.png" alt="">
+
+        <p>Ergebnis: Mehr Scans. Höhere Interaktion. Bessere Wirkung.
+            <br>
+            Der Magic Code - eine Marke mit Verpflichtung. Ein klares Signal von Vertrauen, nicht nur für die Zuschauer,
+            sondern auch in der Medienbranche.
+        </p>
+    </section>
+
+    <section>
+        <h2>4. Märkte mit hohem Wettbewerb um Live-Interaktion</h2>
+        <p>In vielen Märkten ist Live-Interaktion bereits ein entscheidendes Verkaufsargument für Formate – die Sender
+            wollen hier jede mögliche Optimierung nutzen:</p>
+
+        <ul style="margin-left: 26px;">
+            <li><strong>UK &amp; Irland</strong> &rarr; ITV (<em>Love Island</em>, <em>Britain&rsquo;s Got Talent</em>),
+                BBC (<em>Strictly Come Dancing</em>), Sky Sports</li>
+            <li><strong>Frankreich</strong> &rarr; TF1 (<em>The Voice</em>, <em>Koh-Lanta</em>), France
+                T&eacute;l&eacute;visions</li>
+            <li><strong>Spanien</strong> &rarr; Antena 3 (<em>La Voz</em>), RTVE (<em>Eurovisi&oacute;n</em>)</li>
+            <li><strong>Italien</strong>&rarr; RAI (<em>Sanremo Festival</em>), Mediaset (<em>Grande Fratello</em>)</li>
+            <li><strong>Skandinavien</strong> &rarr; NRK, SVT, TV2 (hohe Second-Screen-Nutzung)</li>
+            <li><strong>USA</strong> &rarr; NBC (<em>The Voice</em>), ABC (<em>American Idol</em>), FOX (<em>The Masked
+                    Singer</em>)</li>
+            <li><strong>Australien</strong> &rarr; Seven Network, Nine Network, Network 10 (Reality &amp; Sport mit
+                Live-Voting)</li>
+        </ul>
+
+        <p >In all diesen M&auml;rkten k&auml;mpfen
+            Sender um die <strong>h&ouml;chste Interaktionsrate</strong>, da diese unmittelbar
+            <strong>Werbeums&auml;tze, Sponsoring und In-App-K&auml;ufe</strong> steigert. <strong>Deutschland</strong>
+            befindet sich im Aufw&auml;rts-Trend.
+        </p>
+
+
+    </section>
+
+    <section>
+        <h2>5. Strategischer Nutzen für Seven.One Studios</h2>
+        <ul style="margin-left: 26px;">
+            <li><strong>Upselling-Potenzial</strong> bei bestehenden Kunden</li>
+            <li><strong>Differenzierung</strong> im hart umk&auml;mpften internationalen Formatmarkt</li>
+            <li><strong>Langfristige Umsatzbeteiligung</strong> auch nach dem Formatverkauf</li>
+            <li>Positionierung als <strong>Innovationsf&uuml;hrer im Formatvertrieb</strong></li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>6. Umsetzung</h2>
+        <ul style="margin-left: 26px;">
+            <li>Integration von Magic TV in das <strong>Vertriebsportfolio</strong> von Seven.One Studios</li>
+            <li>Option, Magic Formate in <strong>Pitch-Pr&auml;sentationen</strong> und <strong>Formatkatalogen</strong>
+                zu zeigen</li>
+            <li>Gemeinsame <strong>White-Label- oder Co-Branding-Optionen</strong> f&uuml;r K&auml;uferl&auml;nder</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Fazit</h2>
+        <p>Durch die Kombination aus Formatvertrieb und Magic TV schafft
+                Seven.One Studios ein <strong>Premium-Angebot</strong>, das K&auml;uferl&auml;ndern <strong>h&ouml;chste
+                    Interaktionsraten, sofortige Monetarisierung und technologische Einfachheit</strong> bietet &ndash;
+                und sich damit klar von Wettbewerbern abhebt.</p>
+    </section>
+
+    <footer>
+        <p>
+            Arnold Schmidt<br>
+            Gründer von Magic TV & Magic Code<br>
+            📧 arnoldschmidt.com@gmail.com<br>
+            📞 +41 76 328 6283<br>
+            &copy; 2025 Arnold Schmidt
+        </p>
+    </footer>
+
+    <!-- Fullscreen Overlay -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="close-btn" id="closeBtn">×</div>
+        <img id="fullscreenImg" src="" alt="Fullscreen View" />
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const allImages = document.querySelectorAll("img");
+        const overlay = document.getElementById("fullscreenOverlay");
+        const fullscreenImg = document.getElementById("fullscreenImg");
+        const closeBtn = document.getElementById("closeBtn");
+
+        let startX = 0, startY = 0, moved = false;
+
+        allImages.forEach(img => {
+            img.addEventListener("mousedown", (e) => {
+                startX = e.clientX;
+                startY = e.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("mousemove", (e) => {
+                if (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("mouseup", (e) => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+
+            // For touch devices
+            img.addEventListener("touchstart", (e) => {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("touchmove", (e) => {
+                const touch = e.touches[0];
+                if (Math.abs(touch.clientX - startX) > 5 || Math.abs(touch.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("touchend", () => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+        });
+
+        closeBtn.addEventListener("click", () => {
+            overlay.classList.remove("show");
+            fullscreenImg.src = "";
+        });
+
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+    </script>
+
+</body>
+
+</html>

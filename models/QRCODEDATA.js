@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const generateCode = require("../utils/codeGenerator");
 
-
-
 const qrCodeSchema = new mongoose.Schema(
   {
     qrName: {
@@ -90,6 +88,11 @@ const qrCodeSchema = new mongoose.Schema(
       ref: "Coupon", // Assuming you are referencing the Coupon model
       default: null, // Optional and defaults to empty
     },
+    tags: {
+      type: [String],
+      default: [],
+      set: (tags) => [...new Set(tags.map((tag) => tag.trim().toLowerCase()))], // remove duplicates and trim
+    },
   },
   { timestamps: true }
 );
@@ -117,5 +120,6 @@ qrCodeSchema.pre("validate", async function (next) {
   next();
 });
 
-const QRCodeData = mongoose.models.QRCodeData || mongoose.model("QRCodeData", qrCodeSchema);
+const QRCodeData =
+  mongoose.models.QRCodeData || mongoose.model("QRCodeData", qrCodeSchema);
 module.exports = QRCodeData;

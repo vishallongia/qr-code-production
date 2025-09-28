@@ -86,6 +86,7 @@ h2 {
     display: flex;
     gap: 10px;
     margin-top: 10px;
+    justify-content: end;
 }
 
 .quiz-form-group {
@@ -328,6 +329,15 @@ select:focus {
 
 /* Mobile */
 @media (max-width: 768px) {
+
+    /* Reward mode buttons stack or wrap */
+    .reward-mode-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        /* center align */
+    }
+
     .quiz-container {
         padding: 15px;
     }
@@ -355,7 +365,7 @@ select:focus {
     }
 
     .quiz-file-label {
-        width: 100%;
+        width: max-content;
         text-align: center;
     }
 }

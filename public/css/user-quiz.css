@@ -49,13 +49,13 @@
 .uq-coins {
     font-size: 1rem;
     /* Adjusted from first CSS */
-    background-color: var(--uq-secondary);
+    background-color: #18024b;
     /* Using new secondary color */
     padding: 5px 12px;
     border-radius: var(--uq-radius);
     font-weight: 600;
     /* Adjusted from first CSS */
-    color: var(--uq-text-dark);
+    color: white;
     cursor: pointer;
     /* Changed text color for contrast */
 }
@@ -92,7 +92,7 @@
     max-width: 260px;
     object-fit: cover;
     border-radius: var(--uq-radius);
-    box-shadow: var(--uq-shadow);
+    /* box-shadow: var(--uq-shadow); */
 }
 
 .uq-question-number {
@@ -113,6 +113,36 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
     margin-bottom: 30px;
+}
+
+
+/* Slider page override */
+.slider-page .uq-options {
+    display: flex;
+    /* horizontal row */
+    overflow-x: auto;
+    /* scrollable */
+    gap: 1rem;
+    scroll-snap-type: x mandatory;
+    /* optional smooth snap */
+    margin-bottom: 30px;
+}
+
+.slider-page .uq-options>* {
+    flex: 0 0 auto;
+    /* prevent shrinking */
+    scroll-snap-align: start;
+    /* optional snap alignment */
+}
+
+/* Optional: style the scrollbar */
+.slider-page .uq-options::-webkit-scrollbar {
+    height: 8px;
+}
+
+.slider-page .uq-options::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
 }
 
 .uq-option input[type="radio"] {
@@ -152,6 +182,7 @@
     /* Using contain to better fit images */
     border-radius: var(--uq-radius);
     margin-bottom: 0.8rem;
+    max-height: 180px;
 }
 
 .uq-option-text-wrapper {
@@ -211,7 +242,7 @@
     display: none;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
+    z-index: 101;
     animation: fadeIn 0.3s ease;
 }
 
@@ -552,5 +583,8 @@
 
     .coin-popup {
         padding: 1rem;
+        max-width: 350px;
     }
+
+
 }

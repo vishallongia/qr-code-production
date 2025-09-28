@@ -15,11 +15,11 @@
 <body style="padding: 0px;">
 
     <nav class="breadcrumbs">
-        <a href="/tvstation/channels">Shows</a>
+        <a href="/tvstation/channels">Projects</a>
         <span>&rsaquo;</span>
-        <a href="/tvstation/channels/<%= channelId %>/sessions">Session Manager</a>
+        <a href="/tvstation/channels/<%= channelId %>/sessions">Episodes</a>
         <span>&rsaquo;</span>
-        <a href="/tvstation/channels/<%= channelId %>/session/<%= sessionId %>">Apps</a>
+        <a href="/tvstation/channels/<%= channelId %>/session/<%= sessionId %>">Events</a>
         <span>&rsaquo;</span>
         <a href="/tvstation/channels/<%= channelId %>/session/<%= sessionId %>/quiz">Quiz</a>
         <span>&rsaquo;</span>
@@ -41,9 +41,16 @@
                             <%- include('../components/404') %>
                                 <% } else if (quizResponses && quizResponses.length> 0) { %>
 
-                                    <p><strong>Total Responses:</strong>
-                                        <%= totalResponsesWithoutPagination %>
-                                    </p>
+                                    <div style="display: flex; justify-content: space-between;">
+
+                                        <p><strong>Total Responses:</strong>
+                                            <%= totalResponsesExcludingNoResponse %>
+                                        </p>
+
+                                        <p><strong>Total Scans:</strong>
+                                            <%= qrScanCount %>
+                                        </p>
+                                    </div>
 
                                     <div class="list-wrapper">
                                         <div class="list-header">
@@ -74,18 +81,22 @@
                                                     <span>
                                                         <%= resp.userEmail %>
                                                     </span>
-                                                    <span>Option <%= resp.selectedOptionIndex + 1 %></span>
+                                                    <span>
+                                                        <%= resp.isNoResposneGiven ? "N/A" : `Option
+                                                            ${resp.selectedOptionIndex + 1}` %>
+                                                    </span>
                                                     <span
-                                                        class="<%= resp.isCorrect ? 'status-sticker success' : 'status-sticker error' %>">
-                                                        <%= resp.isCorrect ? "Yes" : "No" %>
+                                                        class="<%= resp.isNoResposneGiven ? '' : (resp.isCorrect ? 'status-sticker success' : 'status-sticker error') %>">
+                                                        <%= resp.isNoResposneGiven ? "N/A" : (resp.isCorrect ? "Yes"
+                                                            : "No" ) %>
                                                     </span>
                                                     <span>
-                                                        <%= resp.jackpotCoinDeducted ? (resp.jackpotCoinDeducted || 1)
-                                                            : "No" %>
+                                                        <%= resp.isNoResposneGiven ? "N/A" : (resp.jackpotCoinDeducted
+                                                            || "No" ) %>
                                                     </span>
                                                     <span>
-                                                        <%= resp.digitalCoinDeducted ? (resp.digitalCoinDeducted || 1)
-                                                            : "No" %>
+                                                        <%= resp.isNoResposneGiven ? "N/A" : (resp.digitalCoinDeducted
+                                                            || "No" ) %>
                                                     </span>
                                                     <span>
                                                         <%= formattedDate %>
@@ -128,6 +139,16 @@
                                     </div>
 
                                     <% } else { %>
+                                        <div style="display: flex; justify-content: space-between;">
+
+                                            <p><strong>Total Responses:</strong>
+                                                <%= totalResponsesExcludingNoResponse %>
+                                            </p>
+
+                                            <p><strong>Total Scans:</strong>
+                                                <%= qrScanCount %>
+                                            </p>
+                                        </div>
                                         <p class="no-data-message">No quiz responses yet.</p>
                                         <% } %>
                     </div>

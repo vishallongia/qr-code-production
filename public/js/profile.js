@@ -6,17 +6,19 @@ const togglePassword = document.getElementById("togglePassword");
 const passwordInput = document.getElementById("password");
 
 editBtn.addEventListener("click", () => {
-  // let lang = document.getElementById("languageSwitcher").value
-  let lang = "en";
+  let lang = document.getElementById("languageSwitcher").value
+  // let lang = "en";
 
   let isEditing = false;
 
   if (lang == "en") {
     isEditing = editBtn.textContent === "Edit Profile";
   } else if (lang == "de") {
-    isEditing = editBtn.textContent === "Mein Profil bearbeiten";
+    isEditing = editBtn.textContent === "Profil bearbeiten";
   } else if (lang == "hu") {
     isEditing = editBtn.textContent === "Profil szerkesztése";
+  } else if (lang == "ro") {
+    isEditing = editBtn.textContent === "Editează profil";
   }
 
   inputs.forEach((input) => (input.disabled = !isEditing));
@@ -24,9 +26,11 @@ editBtn.addEventListener("click", () => {
   if (lang == "en") {
     editBtn.textContent = isEditing ? "Cancel" : "Edit Profile";
   } else if (lang == "de") {
-    editBtn.textContent = isEditing ? "Unterbrechen" : "Mein Profil bearbeiten";
+    editBtn.textContent = isEditing ? "Abbrechen" : "Profil bearbeiten";
   } else if (lang == "hu") {
-    editBtn.textContent = isEditing ? "Mégse" : "Profil szerkesztése";
+    editBtn.textContent = isEditing ? "Frissítés" : "Profil szerkesztése";
+  } else if (lang == "ro") {
+    editBtn.textContent = isEditing ? "Anulare" : "Editează profil";
   }
 
   updateProfileBtn.style.display = isEditing ? "block" : "none";

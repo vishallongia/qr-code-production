@@ -82,10 +82,10 @@ body {
     background-color: var(--blue);
     color: white;
     font-family: inherit;
-    font-size: 16px;
-    padding: 10px 20px;
+    font-size: 14px;
+    padding: 10px 16px;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: background 0.3s ease;
 }
@@ -193,6 +193,11 @@ body {
 .wand {
     position: absolute;
     width: 268px;
+}
+
+#backtomymagiccode {
+    margin-top: 10px;
+    margin-left: 10px;
 }
 
 .save-btn {
@@ -490,6 +495,14 @@ canvas {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.color-option.disabled {
+    opacity: 0.4;
+    /* faded look */
+    pointer-events: none;
+    /* can't be clicked */
+    cursor: not-allowed;
 }
 
 .color-option {
@@ -804,6 +817,12 @@ textarea {
         width: 100%;
         /* full width on small screens */
     }
+
+    #backtomymagiccode {
+        margin-left: 0px;
+        width: fit-content;
+    }
+    
 }
 
 /* Phones */
