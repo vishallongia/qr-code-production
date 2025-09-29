@@ -306,39 +306,62 @@ async function handleSubscription(
   subscriptionId,
   transactionId
 ) {
-  // 🔹 First, check if Payment exists
-  if (!payment) {
-    // This happens for a renewal: webhook comes with a new transactionId
-    // Find the original subscription Payment
+  // 🔹 1️⃣ Fetch the original subscription Payment if needed
+  if (!payment && subscriptionId) {
     const originalPayment = await Payment.findOne({ subscriptionId }).sort({
       createdAt: 1,
     });
+
     if (!originalPayment) {
       return console.warn(
         `Original subscription payment not found for ${subscriptionId}`
       );
     }
 
-    payment = new Payment({
-      user_id: originalPayment.user_id,
-      plan_id: originalPayment.plan_id,
-      planRef: originalPayment.planRef,
-      type: originalPayment.type,
-      paymentMethod: originalPayment.paymentMethod,
-      coupon: originalPayment.coupon,
-      isCouponUsed: originalPayment.isCouponUsed,
-      originalAmount: originalPayment.originalAmount,
-      discountAmount: originalPayment.discountAmount,
-      commissionAmount: originalPayment.commissionAmount,
-      amount: parseFloat(resource.amount?.value ?? originalPayment.amount ?? 0),
-      currency: resource.amount?.currency_code ?? originalPayment.currency,
-      transactionId: transactionId || null,
-      subscriptionId, // Same subscription ID
-      paymentStatus: "pending",
-      paymentDate: new Date(),
-      paymentDetails: resource,
-    });
-    console.log(`Created new subscription payment: ${payment._id}`);
+    if (!originalPayment.transactionId) {
+      // First payment: just update the existing record
+      payment = originalPayment;
+      console.log(`Updating first subscription payment: ${payment._id}`);
+    } else {
+      // 🔹 NEW: Check if this transaction already exists
+      const existing = await Payment.findOne({ transactionId: resource.id });
+      if (existing) {
+        console.log(
+          `Payment already exists for transaction ${resource.id}, skipping creation`
+        );
+        return; // skip processing, no duplicate
+      }
+
+      // Renewal: create a new Payment record
+      payment = new Payment({
+        user_id: originalPayment.user_id,
+        plan_id: originalPayment.plan_id,
+        planRef: originalPayment.planRef,
+        type: originalPayment.type,
+        paymentMethod: originalPayment.paymentMethod,
+        coupon: originalPayment.coupon,
+        isCouponUsed: originalPayment.isCouponUsed,
+        originalAmount: originalPayment.originalAmount,
+        discountAmount: originalPayment.discountAmount,
+        commissionAmount: originalPayment.commissionAmount,
+        amount: parseFloat(
+          resource.amount?.value ?? originalPayment.amount ?? 0
+        ),
+        currency: resource.amount?.currency_code ?? originalPayment.currency,
+        transactionId: transactionId || null,
+        subscriptionId,
+        paymentStatus: "pending",
+        paymentDate: new Date(),
+        paymentDetails: resource,
+      });
+      console.log(`Created new subscription payment: ${payment._id}`);
+    }
+  }
+
+  if (!payment) {
+    return console.warn(
+      `Payment not found and no subscriptionId provided. Ignoring webhook.`
+    );
   }
 
   switch (eventType) {
