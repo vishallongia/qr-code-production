@@ -76,8 +76,8 @@ async function ensurePaypalPlan(plan, currency, token) {
         billing_cycles: [
           {
             frequency: {
-              interval_unit: "MINUTE", // sandbox-only unit
-              interval_count: 1, // every 1 minute
+              interval_unit: plan.interval.toUpperCase(),
+              interval_count: plan.intervalCount,
             },
             tenure_type: "REGULAR",
             sequence: 1,
