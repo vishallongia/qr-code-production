@@ -316,9 +316,9 @@
                         .then(response => {
                             delete window.paypalMetaTokens[data.subscriptionID];
                             if (response.status === 'ACTIVE' || response.status === 'APPROVED') {
-                                if (response.transactionId) {
+                                if (response.subscriptionId) {
                                     if (couponInput) couponInput.value = "";
-                                    window.location.href = `/successpayment?session_id=${response.transactionId}`;
+                                    window.location.href = `/successpayment?session_id=${response.subscriptionId}`;
                                 } else {
                                     alert("Transaction ID not found.");
                                 }
