@@ -205,7 +205,7 @@ router.post(
       // 1️⃣ Get PayPal access token
       const { data: authData } = await axios({
         method: "post",
-        url: "https://api-m.paypal.com/v1/oauth2/token",
+        url: "https://api-m.sandbox.paypal.com/v1/oauth2/token",
         auth: {
           username: process.env.PAYPAL_CLIENT_ID,
           password: process.env.PAYPAL_CLIENT_SECRET,
@@ -221,7 +221,7 @@ router.post(
 
       // 2️⃣ Verify webhook signature
       const { data: verification } = await axios.post(
-        "https://api-m.paypal.com/v1/notifications/verify-webhook-signature",
+        "https://api-m..sandbox.paypal.com/v1/notifications/verify-webhook-signature",
         {
           transmission_id: transmissionId,
           transmission_time: timestamp,
