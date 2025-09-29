@@ -223,6 +223,8 @@ router.post(
       );
       const accessToken = authData.access_token;
 
+      const eventBody = JSON.parse(rawBody);
+
       // 2️⃣ Verify webhook signature
       const { data: verification } = await axios.post(
         "https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature",
@@ -233,7 +235,7 @@ router.post(
           auth_algo: authAlgo,
           transmission_sig: transmissionSig,
           webhook_id: webhookId,
-          webhook_event: JSON.parse(rawBody),
+          webhook_event: eventBody, // reuse parsed object
         },
         {
           headers: {
@@ -247,12 +249,8 @@ router.post(
         return res.status(400).send("Invalid webhook signature.");
       }
 
-      const eventBody = JSON.parse(rawBody);
       const eventType = eventBody.event_type;
       const resource = eventBody.resource;
-
-      console.log("Event Type:", eventType);
-      console.log("Resource:", resource);
 
       // Ignore subscription events we don't care about
       if (ignoredSubscriptionEvents.includes(eventType)) {
@@ -265,11 +263,11 @@ router.post(
 
       if (resource.billing_agreement_id) {
         subscriptionId = resource.billing_agreement_id;
-        transactionId = subscriptionId; // use subscription ID as main key
+        transactionId = resource.id; // use subscription ID as main key
       }
 
-      console.log("Determined transactionId:", transactionId);
-      console.log("Determined subscriptionId:", subscriptionId);
+      console.log("Transaction ID:", transactionId);
+      console.log("Subscription ID:", subscriptionId || "N/A");
 
       // 🔹 Try to fetch payment
       let payment = await Payment.findOne({
@@ -278,7 +276,6 @@ router.post(
 
       // Call appropriate handler
       if (subscriptionId || (payment && payment.type === "subscription")) {
-        console.log("Calling handleSubscription...");
         await handleSubscription(
           payment,
           eventType,
@@ -287,7 +284,6 @@ router.post(
           transactionId
         );
       } else if (payment) {
-        console.log("Calling handleOneTimePayment...");
         await handleOneTimePayment(payment, resource, eventType);
       } else {
         console.warn(
@@ -310,9 +306,18 @@ async function handleSubscription(
   subscriptionId,
   transactionId
 ) {
-  // Create new payment if it doesn't exist (renewal)
+  // 🔹 First, check if Payment exists
   if (!payment) {
-    const originalPayment = await Payment.findOne({ subscriptionId });
+    // This happens for a renewal: webhook comes with a new transactionId
+    // Find the original subscription Payment
+    const originalPayment = await Payment.findOne({ subscriptionId }).sort({
+      createdAt: 1,
+    });
+    if (!originalPayment) {
+      return console.warn(
+        `Original subscription payment not found for ${subscriptionId}`
+      );
+    }
 
     payment = new Payment({
       user_id: originalPayment.user_id,
@@ -320,27 +325,27 @@ async function handleSubscription(
       planRef: originalPayment.planRef,
       type: originalPayment.type,
       paymentMethod: originalPayment.paymentMethod,
+      coupon: originalPayment.coupon,
+      isCouponUsed: originalPayment.isCouponUsed,
+      originalAmount: originalPayment.originalAmount,
+      discountAmount: originalPayment.discountAmount,
+      commissionAmount: originalPayment.commissionAmount,
       amount: parseFloat(resource.amount?.value ?? originalPayment.amount ?? 0),
-      currency:
-        resource.amount?.currency_code ?? originalPayment.currency ?? "CHF",
-      transactionId,
+      currency: resource.amount?.currency_code ?? originalPayment.currency,
+      transactionId: transactionId || null,
+      subscriptionId, // Same subscription ID
       paymentStatus: "pending",
       paymentDate: new Date(),
       paymentDetails: resource,
     });
-    await payment.save();
-    console.log(`Created subscription renewal: ${transactionId}`);
+    console.log(`Created new subscription payment: ${payment._id}`);
   }
 
-  const user = await User.findById(payment.user_id);
-  if (!user) return;
-
-  // Unified switch for status
   switch (eventType) {
     case "PAYMENT.SALE.COMPLETED":
+      payment.transactionId = resource.id; // ✅ Always update with PayPal's real
       payment.paymentStatus = "completed";
       payment.isActive = true;
-      console.log(`Subscription payment completed for user ${user._id}`);
       break;
     case "PAYMENT.SALE.DENIED":
       payment.paymentStatus = "failed";
@@ -357,8 +362,10 @@ async function handleSubscription(
       console.log(`Unhandled subscription event: ${eventType}`);
   }
 
+  // 🔹 Final save only once
   payment.paymentDetails = resource;
   await payment.save();
+  console.log(`Payment processed: ${payment._id} [${payment.paymentStatus}]`);
 }
 
 // ------------------ One-time payment handler (event-based) ------------------

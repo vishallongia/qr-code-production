@@ -232,42 +232,57 @@ router.post(
 );
 
 router.get("/successpayment", async (req, res) => {
+  const sessionId = req.query.session_id;
+  const type = req.query.type || "subscription";
+
   try {
-    const session = req.query.session_id;
-    const type = req.query.type || "subscription"; // default to subscription
-    const payment = await Payment.findOne({ transactionId: session });
+    // Find payment by transactionId OR subscriptionId (latest if multiple)
+    let payment = await Payment.findOne({
+      $or: [
+        { transactionId: sessionId },
+        ...(type === "subscription" ? [{ subscriptionId: sessionId }] : []),
+      ],
+    }).sort({ createdAt: -1 });
 
     res.render("paymentsuccess", {
       paymentStatus: payment?.paymentStatus || "pending",
-      transactionId: session, // This is the crucial addition
-      amount: payment?.amount,
-      type, // send type to frontend
-      errorMessage: null, // no error
+      transactionId: sessionId,
+      amount: payment?.amount || 0,
+      type,
+      errorMessage: null,
     });
   } catch (error) {
-    console.error("Error fetching session:", error);
+    console.error("Error fetching payment:", error);
     res.render("paymentsuccess", {
       paymentStatus: "failed",
       amount: 0,
-      type: req.query.type || "subscription",
+      type,
       errorMessage:
         "There was an error retrieving your payment. Please wait while we confirm the status.",
     });
   }
 });
 
-// A new, dedicated API endpoint for polling
+// Polling endpoint for payment status
 router.get("/payment/status/:sessionId", async (req, res) => {
+  const sessionId = req.params.sessionId;
+
   try {
-    const sessionId = req.params.sessionId;
-    const payment = await Payment.findOne({ transactionId: sessionId });
+    // Find payment by transactionId OR subscriptionId (latest if multiple)
+    const payment = await Payment.findOne({
+      $or: [{ transactionId: sessionId }, { subscriptionId: sessionId }],
+    }).sort({ createdAt: -1 });
 
     if (payment) {
-      // Send a lightweight JSON response
-      res.status(200).json({ status: payment.paymentStatus });
-    } else {
-      res.status(404).json({ status: "not_found" });
+      return res.status(200).json({
+        status: payment.paymentStatus,
+        transactionId: payment.transactionId || null,
+        subscriptionId: payment.subscriptionId || null,
+        amount: payment.amount || 0,
+      });
     }
+
+    res.status(404).json({ status: "not_found" });
   } catch (error) {
     console.error("Error fetching payment status:", error);
     res.status(500).json({ status: "error" });
@@ -493,8 +508,8 @@ router.post(
         paymentStatus: "pending",
         amount: Number(amount),
         currency,
-        transactionId: subscriptionData.id,
-        paymentDetails: subscriptionData,
+        subscriptionId: subscriptionData.id,
+        transactionId: null, // will be updated via webhook later
         vatRate,
         vatAmount,
         ...(!isMagicPlan && {

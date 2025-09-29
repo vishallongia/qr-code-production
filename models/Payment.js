@@ -40,9 +40,9 @@ const paymentSchema = new mongoose.Schema({
     default: "CHF", // Default currency is USD
   },
   transactionId: {
-    type: String, // Transaction ID from payment gateway (Stripe/PayPal)
-    required: [true, "Transaction ID is required"],
+    type: String,
     unique: true,
+    sparse: true, // allows multiple nulls
   },
   paymentDate: {
     type: Date,
