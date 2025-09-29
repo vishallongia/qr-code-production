@@ -221,7 +221,7 @@ router.post(
 
       // 2️⃣ Verify webhook signature
       const { data: verification } = await axios.post(
-        "https://api-m..sandbox.paypal.com/v1/notifications/verify-webhook-signature",
+        "https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature",
         {
           transmission_id: transmissionId,
           transmission_time: timestamp,
