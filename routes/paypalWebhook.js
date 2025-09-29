@@ -251,28 +251,43 @@ router.post(
       const eventType = eventBody.event_type;
       const resource = eventBody.resource;
 
+      console.log("Event Type:", eventType);
+      console.log("Resource:", resource);
+
       // Ignore subscription events we don't care about
       if (ignoredSubscriptionEvents.includes(eventType)) {
         console.log(`Ignoring PayPal webhook event: ${eventType}`);
         return res.sendStatus(200); // acknowledge the webhook
       }
-      const transactionId = resource.id;
-      const billingAgreementId = resource.billing_agreement_id;
+      // 🔹 Determine identifier
+      let transactionId = resource.id; // default for one-time payments
+      let subscriptionId = null;
 
-      // 🔹 Try to fetch payment efficiently
+      if (resource.billing_agreement_id) {
+        subscriptionId = resource.billing_agreement_id;
+        transactionId = subscriptionId; // use subscription ID as main key
+      }
+
+      console.log("Determined transactionId:", transactionId);
+      console.log("Determined subscriptionId:", subscriptionId);
+
+      // 🔹 Try to fetch payment
       let payment = await Payment.findOne({
-        $or: [{ transactionId }, { subscriptionId: billingAgreementId }],
+        transactionId,
       });
-      // Decide which handler to call
-      if (billingAgreementId || (payment && payment.type === "subscription")) {
+
+      // Call appropriate handler
+      if (subscriptionId || (payment && payment.type === "subscription")) {
+        console.log("Calling handleSubscription...");
         await handleSubscription(
           payment,
           eventType,
           resource,
-          billingAgreementId,
+          subscriptionId,
           transactionId
         );
       } else if (payment) {
+        console.log("Calling handleOneTimePayment...");
         await handleOneTimePayment(payment, resource, eventType);
       } else {
         console.warn(
@@ -298,8 +313,6 @@ async function handleSubscription(
   // Create new payment if it doesn't exist (renewal)
   if (!payment) {
     const originalPayment = await Payment.findOne({ subscriptionId });
-    if (!originalPayment)
-      return console.warn(`Subscription ${subscriptionId} not found`);
 
     payment = new Payment({
       user_id: originalPayment.user_id,
@@ -311,7 +324,6 @@ async function handleSubscription(
       currency:
         resource.amount?.currency_code ?? originalPayment.currency ?? "CHF",
       transactionId,
-      subscriptionId,
       paymentStatus: "pending",
       paymentDate: new Date(),
       paymentDetails: resource,
@@ -360,9 +372,8 @@ async function handleOneTimePayment(payment, resource, eventType) {
     return;
   }
 
-  // Unified event-based switch
   switch (eventType) {
-    case "PAYMENT.SALE.COMPLETED":
+    case "PAYMENT.CAPTURE.COMPLETED":
       payment.paymentStatus = "completed";
       if (!payment.coinsAdded) {
         user.walletCoins = (user.walletCoins || 0) + plan.coinsOffered;
@@ -373,11 +384,11 @@ async function handleOneTimePayment(payment, resource, eventType) {
       }
       break;
 
-    case "PAYMENT.SALE.DENIED":
+    case "PAYMENT.CAPTURE.DENIED":
       payment.paymentStatus = "failed";
       break;
 
-    case "PAYMENT.SALE.PENDING":
+    case "PAYMENT.CAPTURE.PENDING":
       payment.paymentStatus = "pending";
       break;
 

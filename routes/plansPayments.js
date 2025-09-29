@@ -747,7 +747,6 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
       amount,
       currency: captureDetails.amount.currency_code,
       transactionId: captureDetails.id,
-      subscriptionId: captureData.billing_agreement_id || null, // add this field
       paymentDetails: captureData,
       ...(!isMagicPlan && {
         coupon: couponCode,
