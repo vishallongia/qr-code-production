@@ -173,6 +173,10 @@ require("dotenv").config();
 // module.exports = router;
 
 // Use raw body parser ONLY for this route (needed for signature verification)
+const ignoredSubscriptionEvents = [
+  "BILLING.SUBSCRIPTION.CREATED",
+  "BILLING.SUBSCRIPTION.ACTIVATED",
+];
 router.post(
   "/paypal/webhook",
   bodyParser.raw({ type: "application/json" }),
@@ -245,6 +249,12 @@ router.post(
 
       const eventBody = JSON.parse(rawBody);
       const eventType = eventBody.event_type;
+
+      // Ignore subscription events we don't care about
+      if (ignoredSubscriptionEvents.includes(eventType)) {
+        console.log(`Ignoring PayPal webhook event: ${eventType}`);
+        return res.sendStatus(200); // acknowledge the webhook
+      }
 
       console.log(
         "Received PayPal webhook:",
@@ -363,12 +373,7 @@ async function handleSubscription(payment, eventType, eventBody) {
 
   const user = await User.findById(payment.user_id);
   if (!user) return console.warn(`User with ID ${payment.user_id} not found`);
-
-  if (
-    ["BILLING.SUBSCRIPTION.ACTIVATED", "PAYMENT.SALE.COMPLETED"].includes(
-      eventType
-    )
-  ) {
+  if (eventType === "PAYMENT.SALE.COMPLETED") {
     payment.paymentStatus = "completed";
     console.log(`Subscription payment successful for user ${user._id}`);
   } else if (eventType === "PAYMENT.SALE.DENIED") {
