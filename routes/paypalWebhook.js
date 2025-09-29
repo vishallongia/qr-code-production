@@ -249,37 +249,34 @@ router.post(
 
       const eventBody = JSON.parse(rawBody);
       const eventType = eventBody.event_type;
+      const resource = eventBody.resource;
 
       // Ignore subscription events we don't care about
       if (ignoredSubscriptionEvents.includes(eventType)) {
         console.log(`Ignoring PayPal webhook event: ${eventType}`);
         return res.sendStatus(200); // acknowledge the webhook
       }
+      const transactionId = resource.id;
+      const billingAgreementId = resource.billing_agreement_id;
 
-      console.log(
-        "Received PayPal webhook:",
-        eventBody.event_type,
-        eventBody.resource
-      );
-
-      const transactionId = eventBody.resource.id;
-      let payment = await Payment.findOne({ transactionId });
-
-      // Check if this is a subscription payment or renewal
-      const billingAgreementId = eventBody.resource.billing_agreement_id;
-      const isSubscription = Boolean(
-        billingAgreementId ||
-          (payment &&
-            payment.planRef === "Plan" &&
-            payment.type === "subscription")
-      );
-      if (isSubscription) {
-        await handleSubscription(payment, eventType, eventBody);
+      // 🔹 Try to fetch payment efficiently
+      let payment = await Payment.findOne({
+        $or: [{ transactionId }, { subscriptionId: billingAgreementId }],
+      });
+      // Decide which handler to call
+      if (billingAgreementId || (payment && payment.type === "subscription")) {
+        await handleSubscription(
+          payment,
+          eventType,
+          resource,
+          billingAgreementId,
+          transactionId
+        );
       } else if (payment) {
-        await handleOneTimePayment(payment, eventType, eventBody);
+        await handleOneTimePayment(payment, resource, eventType);
       } else {
         console.warn(
-          `Payment not found and not a subscription renewal for transaction ${transactionId}`
+          `Payment not found for transaction ${transactionId}, ignoring.`
         );
       }
       res.sendStatus(200);
@@ -290,111 +287,105 @@ router.post(
   }
 );
 
-/**
- * Handles one-time MagicCoinPlan payments
- */
-async function handleOneTimePayment(payment, eventType, eventBody) {
-  const capture = eventBody.resource;
-  const status = capture.status.toLowerCase();
-  const amount = parseFloat(capture.amount.value);
-  const currency = capture.amount.currency_code;
+// ------------------ Subscription handler ------------------
+async function handleSubscription(
+  payment,
+  eventType,
+  resource,
+  subscriptionId,
+  transactionId
+) {
+  // Create new payment if it doesn't exist (renewal)
+  if (!payment) {
+    const originalPayment = await Payment.findOne({ subscriptionId });
+    if (!originalPayment)
+      return console.warn(`Subscription ${subscriptionId} not found`);
 
-  // Update payment status, amount, currency
-  payment.paymentStatus = status;
-  payment.amount = amount;
-  payment.currency = currency;
-
-  const plan = await MagicCoinPlan.findById(payment.plan_id);
-  if (!plan)
-    return console.warn(`Coin plan with ID ${payment.plan_id} not found`);
-
-  const user = await User.findById(payment.user_id);
-  if (!user) return console.warn(`User with ID ${payment.user_id} not found`);
-
-  if (status === "completed") {
-    user.walletCoins = (user.walletCoins || 0) + plan.coinsOffered;
-    await user.save();
-    payment.totalCoins = user.walletCoins;
-    console.log(
-      `Added ${plan.coinsOffered} coins to user ${user._id}. Total: ${user.walletCoins}`
-    );
+    payment = new Payment({
+      user_id: originalPayment.user_id,
+      plan_id: originalPayment.plan_id,
+      planRef: originalPayment.planRef,
+      type: originalPayment.type,
+      paymentMethod: originalPayment.paymentMethod,
+      amount: parseFloat(resource.amount?.value ?? originalPayment.amount ?? 0),
+      currency:
+        resource.amount?.currency_code ?? originalPayment.currency ?? "CHF",
+      transactionId,
+      subscriptionId,
+      paymentStatus: "pending",
+      paymentDate: new Date(),
+      paymentDetails: resource,
+    });
+    await payment.save();
+    console.log(`Created subscription renewal: ${transactionId}`);
   }
 
+  const user = await User.findById(payment.user_id);
+  if (!user) return;
+
+  // Unified switch for status
+  switch (eventType) {
+    case "PAYMENT.SALE.COMPLETED":
+      payment.paymentStatus = "completed";
+      payment.isActive = true;
+      console.log(`Subscription payment completed for user ${user._id}`);
+      break;
+    case "PAYMENT.SALE.DENIED":
+      payment.paymentStatus = "failed";
+      break;
+    case "PAYMENT.SALE.PENDING":
+      payment.paymentStatus = "pending";
+      break;
+    case "BILLING.SUBSCRIPTION.CANCELLED":
+    case "BILLING.SUBSCRIPTION.EXPIRED":
+      payment.paymentStatus = "cancelled";
+      payment.isActive = false;
+      break;
+    default:
+      console.log(`Unhandled subscription event: ${eventType}`);
+  }
+
+  payment.paymentDetails = resource;
   await payment.save();
 }
 
-/**
- * Handles subscription payments
- */
-async function handleSubscription(payment, eventType, eventBody) {
-  // 🔹 If payment doesn't exist, it might be a renewal
-  if (!payment) {
-    const originalSubId =
-      eventBody.resource.billing_agreement_id || eventBody.resource.id;
-    if (originalSubId) {
-      const originalPayment = await Payment.findOne({
-        transactionId: originalSubId,
-      });
-      if (originalPayment) {
-        // Create new Payment for renewal
-        try {
-          payment = new Payment({
-            user_id: originalPayment.user_id,
-            plan_id: originalPayment.plan_id,
-            planRef: originalPayment.planRef,
-            type: originalPayment.type,
-            paymentMethod: originalPayment.paymentMethod,
-            amount: parseFloat(
-              eventBody.resource.amount?.value ?? originalPayment.amount ?? 0
-            ),
-            currency:
-              eventBody.resource.amount?.currency_code ??
-              originalPayment.currency ??
-              "CHF",
-            transactionId: eventBody.resource.id,
-            paymentStatus: "pending",
-            paymentDate: new Date(),
-            paymentDetails: eventBody.resource,
-          });
-          await payment.save();
-          console.log(
-            `Created new Payment record for subscription renewal: ${payment.transactionId}`
-          );
-        } catch (err) {
-          console.error("Error creating renewal subscription payment:", err);
-          return;
-        }
-      }
-    }
-  }
-
-  if (!payment)
-    return console.warn("Payment not found, cannot process subscription.");
+// ------------------ One-time payment handler (event-based) ------------------
+async function handleOneTimePayment(payment, resource, eventType) {
+  if (!payment) return;
 
   const user = await User.findById(payment.user_id);
-  if (!user) return console.warn(`User with ID ${payment.user_id} not found`);
-  if (eventType === "PAYMENT.SALE.COMPLETED") {
-    payment.paymentStatus = "completed";
-    console.log(`Subscription payment successful for user ${user._id}`);
-  } else if (eventType === "PAYMENT.SALE.DENIED") {
-    payment.paymentStatus = "failed";
-    console.log(`Subscription payment declined for ${payment._id}`);
-  } else if (eventType === "PAYMENT.SALE.PENDING") {
-    payment.paymentStatus = "pending";
-    console.log(`Subscription payment pending for ${payment._id}`);
-  } else if (
-    eventType === "BILLING.SUBSCRIPTION.CANCELLED" ||
-    eventType === "BILLING.SUBSCRIPTION.EXPIRED"
-  ) {
-    payment.isActive = false;
-    payment.paymentStatus = "cancelled";
-    console.log(`Subscription cancelled/expired for user ${user._id}`);
-  } else {
-    console.log(
-      `Unhandled subscription event type: ${eventType} for transaction ${payment.transactionId}`
-    );
+  const plan = await MagicCoinPlan.findById(payment.plan_id);
+  if (!user || !plan) {
+    console.warn(`User or plan not found for payment ${payment.transactionId}`);
+    return;
   }
 
+  // Unified event-based switch
+  switch (eventType) {
+    case "PAYMENT.SALE.COMPLETED":
+      payment.paymentStatus = "completed";
+      if (!payment.coinsAdded) {
+        user.walletCoins = (user.walletCoins || 0) + plan.coinsOffered;
+        payment.totalCoins = user.walletCoins;
+        payment.coinsAdded = true;
+        await user.save();
+        console.log(`Added ${plan.coinsOffered} coins to user ${user._id}`);
+      }
+      break;
+
+    case "PAYMENT.SALE.DENIED":
+      payment.paymentStatus = "failed";
+      break;
+
+    case "PAYMENT.SALE.PENDING":
+      payment.paymentStatus = "pending";
+      break;
+
+    default:
+      console.log(`Unhandled one-time payment event: ${eventType}`);
+  }
+
+  payment.paymentDetails = resource;
   await payment.save();
 }
 

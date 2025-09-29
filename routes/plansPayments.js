@@ -700,8 +700,6 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
     const decryptedPlanId = decryptPassword(planId);
     // Dynamically select model
     const planModel = isMagicPlan ? MagicCoinPlan : Plan;
-    const planRefName = isMagicPlan ? "MagicCoinPlan" : "Plan";
-
     const plan = await planModel.findById(decryptedPlanId);
     if (!plan) {
       return res.status(404).json({ error: "Plan not found" });
@@ -749,6 +747,7 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
       amount,
       currency: captureDetails.amount.currency_code,
       transactionId: captureDetails.id,
+      subscriptionId: captureData.billing_agreement_id || null, // add this field
       paymentDetails: captureData,
       ...(!isMagicPlan && {
         coupon: couponCode,

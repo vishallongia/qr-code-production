@@ -28,7 +28,7 @@ const paymentSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ["pending", "completed", "failed", "refunded","cancelled"], // Payment status
+    enum: ["pending", "completed", "failed", "refunded", "cancelled"], // Payment status
     default: "pending",
   },
   amount: {
@@ -92,6 +92,11 @@ const paymentSchema = new mongoose.Schema({
   vatRate: {
     type: Number,
     default: 0, // percentage, e.g., 19 for 19%
+  },
+  subscriptionId: {
+    type: String, // PayPal subscription/billing_agreement_id
+    index: true, // faster lookups
+    default: null,
   },
 });
 
