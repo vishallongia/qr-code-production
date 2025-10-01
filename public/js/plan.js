@@ -95,6 +95,7 @@ document
       });
 
       const result = await response.json();
+      console.log(result.data);
 
       if (response.ok) {
         // Show success message with animation
@@ -124,7 +125,7 @@ document
           couponButton.style.display = "none";
         }
         if (planPrice) {
-          planPrice.innerHTML = `${result.data.discountedPrice} <span>CHF</span>`;
+          planPrice.innerHTML = `${result.data.discountedPrice} <span>${result.data.currency}</span>`;
         }
         showToast(result.message, "success");
         if (result.reload) {

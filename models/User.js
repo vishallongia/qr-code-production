@@ -11,6 +11,19 @@ const tvStationRulesSchema = new mongoose.Schema(
   { _id: false } // don’t create _id for nested object
 );
 
+// Preferences Schema (for user settings)
+const userPreferencesSchema = new mongoose.Schema(
+  {
+    currency: {
+      type: String,
+      enum: ["EUR", "CHF", "RON", "HUF"], // extend when adding new currencies
+      default: "",
+    },
+    // Later we can add language, timezone, theme, etc.
+  },
+  { _id: false }
+);
+
 // Create a new schema for users
 const userSchema = new mongoose.Schema(
   {
@@ -112,6 +125,12 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
       set: (tags) => [...new Set(tags.map((tag) => tag.trim().toLowerCase()))], // remove duplicates and trim
+    },
+
+    // ✅ New Preferences block
+    userPreferences: {
+      type: userPreferencesSchema,
+      default: {},
     },
   },
   {

@@ -2449,8 +2449,6 @@ router.get("/magiccode", authMiddleware, async (req, res) => {
     else if (sortBy === "alphaAsc") sortOption = { qrName: 1 }; // A → Z
     else if (sortBy === "alphaDesc") sortOption = { qrName: -1 }; // Z → A
 
-  
-
     // Fetch QR codes with query and sort
     const qrCodes = await QRCodeData.find(query).sort(sortOption);
 
@@ -5975,6 +5973,66 @@ router.post("/unlink-tags-from-qr", authMiddleware, async (req, res) => {
     });
   } catch (error) {
     console.error("Error unlinking tags from QR:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+      success: false,
+    });
+  }
+});
+
+// Set user currency (one-time operation)
+router.post("/set-currency", authMiddleware, async (req, res) => {
+  try {
+    let { currency } = req.body;
+    // Allowed currencies
+    const ALLOWED_CURRENCIES = ["EUR", "CHF", "RON", "HUF"];
+
+    if (!currency) {
+      return res.status(400).json({
+        message: "Currency is required",
+        success: false,
+      });
+    }
+
+    // Convert input to uppercase to make the check case-insensitive
+    currency = currency.toUpperCase();
+
+    if (!ALLOWED_CURRENCIES.includes(currency)) {
+      return res.status(400).json({
+        message: "Invalid currency selected",
+        success: false,
+      });
+    }
+
+    // ✅ Check if user already has a currency set
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
+      });
+    }
+
+    if (user.userPreferences?.currency) {
+      return res.status(400).json({
+        message: "Currency has already been selected and cannot be changed",
+        success: false,
+      });
+    }
+
+    // ✅ Set the currency
+    user.userPreferences = user.userPreferences || {};
+    user.userPreferences.currency = currency;
+    await user.save();
+
+    return res.status(200).json({
+      message: "Currency set successfully",
+      success: true,
+      currency: user.userPreferences.currency,
+    });
+  } catch (error) {
+    console.error("Error setting user currency:", error);
     return res.status(500).json({
       message: "Internal server error",
       success: false,

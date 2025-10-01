@@ -63,29 +63,32 @@
 
                     // Set classes and text based on status
                     if (tx.paymentStatus === 'completed') {
+                    amountClass = 'balance-added';
                     typeText = 'GAINED';
                     typeBadgeClass = 'badge-added';
                     coinSymbol = '+';
                     }
 
                     else if (tx.paymentStatus === 'deducted') {
+                    amountClass = 'balance-deducted';
                     typeText = 'USED';
                     typeBadgeClass = 'badge-deducted';
                     coinSymbol = '-';
                     }
                     else if (tx.paymentStatus === 'denied' || tx.paymentStatus === 'failed') {
+                    amountClass = 'negative';
                     typeText = 'Failed';
                     typeBadgeClass = 'badge-failed';
                     }
 
                     else {
+                    amountClass = '';
                     typeText = 'Pending';
                     typeBadgeClass = 'badge-pending';
                     }
                     %>
                     <div class="transaction-item">
-                        <span
-                            class="transaction-balance <%= typeText === 'Added' ? 'balance-added' : 'balance-deducted' %>">
+                        <span class="transaction-balance <%= amountClass %>">
                             <%= coinSymbol %>
                                 <%= tx.coinsOffered %>
                                     <span class="coin-badge">🪙</span>
@@ -123,7 +126,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
 <script
-    src="https://www.paypal.com/sdk/js?client-id=AeUlyT2WmljAHqGaXytGewyz61xmfAJ4woW1wA_2TwjcaqbbjJTkPHy47FsEJhcH68BGlm9-AdDfmbrU&currency=CHF"></script>
+    src="https://www.paypal.com/sdk/js?client-id=AeUlyT2WmljAHqGaXytGewyz61xmfAJ4woW1wA_2TwjcaqbbjJTkPHy47FsEJhcH68BGlm9-AdDfmbrU&currency=<%= currency %>"></script>
 <!-- <script src="/js/plan.js"></script> -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -209,7 +212,7 @@
                                     alert("Transaction ID not found.");
                                 }
                             } else {
-                                showToast(response.error, "error");
+                                showToast(response.message, "error");
                                 setTimeout(() => {
                                     window.location.href = `/cancel`;
                                 }, 1000); // 1000 milliseconds = 1 second delay
@@ -315,6 +318,66 @@
 
 </script>
 
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const popup = document.getElementById("theme-popup-select-currency");
+
+
+        // Use EJS to pass the flag from backend
+        const needsCurrencySelection = <%= needsCurrencySelection ? 'true' : 'false' %>;
+
+        if (needsCurrencySelection) {
+            popup.style.display = "flex";
+        }
+
+        const popupBtn = document.getElementById("popup-ok-btn-select-currency");
+        popupBtn.addEventListener("click", async function (e) {
+            e.preventDefault();
+
+            const currencySelect = document.getElementById("currency-value");
+            const selectedCurrency = currencySelect.value;
+
+            // ✅ Frontend mandatory check
+            if (!selectedCurrency) {
+                return showToast("Please select a currency!", "error");
+            }
+
+            // Show loader
+            document.getElementById("loader").style.display = "flex";
+
+            try {
+                const res = await fetch("/set-currency", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ currency: selectedCurrency })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    return showToast(data.message || "Failed to set currency", "error");
+                }
+
+                // ✅ Success
+                showToast(data.message || "Currency set successfully", "success");
+
+                // Hide popup
+                popup.style.display = "none";
+
+                // 🔄 Reload page after 1 second
+                setTimeout(() => location.reload(), 1000);
+
+            } catch (err) {
+                console.error("Error setting currency:", err);
+                showToast("Internal error. Please try again.", "error");
+            } finally {
+                // Hide loader regardless of success or failure
+                document.getElementById("loader").style.display = "none";
+            }
+        });
+    });
+</script>
 
 
 

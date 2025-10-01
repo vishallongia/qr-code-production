@@ -30,14 +30,9 @@ async function getAccessToken() {
 }
 
 // Updated ensurePaypalPlan to accept an optional token
-async function ensurePaypalPlan(plan, currency, token) {
+async function ensurePaypalPlan(plan, currency, token, finalPrice) {
   try {
     if (!token) token = await getAccessToken();
-
-    console.log(
-      `Ensuring PayPal plan for "${plan.name}" in currency: ${currency}`
-    );
-
     // Create product if not exists
     if (!plan.gatewayProductId) {
       console.log("Creating PayPal product...");
@@ -61,12 +56,13 @@ async function ensurePaypalPlan(plan, currency, token) {
       await plan.save();
     }
 
+    // Create new plan if missing
+    const priceObj = plan.prices.find((p) => p.currency === currency);
+
     // Check existing plan
     let paypalPlanId = plan.gatewayPlanIds?.get(currency);
     if (paypalPlanId) return paypalPlanId;
 
-    // Create new plan if missing
-    const priceObj = plan.prices.find((p) => p.currency === currency);
     const { data: planData } = await axios.post(
       `${PAYPAL_BASE}/v1/billing/plans`,
       {
@@ -84,7 +80,7 @@ async function ensurePaypalPlan(plan, currency, token) {
             total_cycles: 0,
             pricing_scheme: {
               fixed_price: {
-                value: priceObj.amount.toString(),
+                value: finalPrice.toString(),
                 currency_code: currency,
               },
             },

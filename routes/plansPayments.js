@@ -62,13 +62,19 @@ router.get("/plans", authMiddleware, async (req, res) => {
         validTill: validUntilVip,
       },
       isTvStation: req.user.isTvStation,
+      userPreferences: req.user.userPreferences,
     };
-    // Render the 'plans' EJS page and pass the encrypted plans data to it
+
+    const needsCurrencySelection =
+      !req.user.userPreferences ||
+      !req.user.userPreferences.currency ||
+      req.user.userPreferences.currency.trim() === "";
 
     res.render("dashboardnew", {
       plans: encryptedPlans,
       user: userSubscription,
       activeSection: "plans",
+      needsCurrencySelection, // 👈 pass flag to frontend
     });
   } catch (error) {
     console.error("Error fetching plans:", error);
@@ -300,7 +306,8 @@ router.post("/paypal/create-subscription", authMiddleware, async (req, res) => {
 
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
-    const currency = req.user?.currency || "EUR"; // default
+    // Use user's selected currency, fallback to EUR
+    const currency = req.user?.userPreferences?.currency || "EUR";
     const priceObj =
       plan.prices.find((p) => p.currency === currency) ||
       plan.prices.find((p) => p.currency === "EUR");
@@ -383,13 +390,20 @@ router.post("/paypal/create-subscription", authMiddleware, async (req, res) => {
     }
 
     const token = await getAccessToken();
-    const paypalPlanId = await ensurePaypalPlan(plan, currency, token);
+    const paypalPlanId = await ensurePaypalPlan(
+      plan,
+      currency,
+      token,
+      finalPrice
+    );
     const subscription = await createSubscription(
       paypalPlanId,
       req.user,
       `${process.env.FRONTEND_URL}/successpayment`,
       `${process.env.FRONTEND_URL}/cancel`,
-      token
+      token,
+      finalPrice,
+      currency
     );
 
     const metaToken = jwt.sign(
@@ -478,6 +492,7 @@ router.post(
       const amount =
         subscriptionData.billing_info?.last_payment?.amount?.value || 0;
       const currency =
+        req.user.userPreferences?.currency ||
         subscriptionData.billing_info?.last_payment?.amount?.currency_code ||
         "EUR";
 
@@ -532,7 +547,9 @@ router.post(
       });
     } catch (err) {
       console.error("PayPal Capture Subscription Error:", err.message);
-      res.status(500).json({ error: "Capture subscription failed" });
+      res
+        .status(500)
+        .json({ error: "Capture subscription failed", message: err.message });
     }
   }
 );
@@ -552,6 +569,19 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
 
     if (!plan) {
       return res.status(404).json({ error: "Plan not found" });
+    }
+
+    // ✅ Currency check based on user's stored preference (no fallback)
+    const userCurrency = req.user?.userPreferences?.currency;
+
+    if (!userCurrency || plan.currency !== userCurrency) {
+      return res.status(400).json({
+        message: `Currency mismatch. Plan currency is ${
+          plan.currency
+        }, but your account currency is ${userCurrency || "not set"}.`,
+        type: "error",
+        data: null,
+      });
     }
 
     let finalPrice = plan.price;
@@ -597,12 +627,6 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
       } else {
         isCouponUsed = true;
 
-        // ⚠️ Affiliate-Funded Discount Logic
-        // - commissionAmount is based on plan price
-        // - discountAmount is a percentage of commissionAmount
-        // - finalPrice = plan price - discountAmount
-        // - commissionAmount is adjusted after discount
-
         if (coupon.commissionPercent) {
           // Step 1: Calculate full commission from plan price
           commissionAmount = (coupon.commissionPercent / 100) * plan.price;
@@ -612,18 +636,7 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
 
           // Step 3: Final price user pays
           finalPrice = parseFloat((plan.price - discountAmount).toFixed(2));
-
-          // Step 4: Commission after deducting discount
-          // commissionAmount = parseFloat(
-          //   (fullCommission - discountAmount).toFixed(2)
-          // );
-
-          // if (discountAmount > commissionAmount) {
-          //   return res.status(400).json({
-          //     message: "Discount exceeds affiliate commission. Not allowed.",
-          //     type: "error",
-          //   });
-          // }
+          console.log(finalPriceUpdated);
         } else {
           // Fallback: if no commissionPercent, calculate discount normally
           discountAmount = (coupon.discountPercent / 100) * plan.price;
@@ -664,6 +677,9 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
       });
     }
 
+    const vatRate = plan.vatRate || 0;
+    const vatAmount = parseFloat(((finalPrice * vatRate) / 100).toFixed(2));
+
     // Paid order creation with PayPal
     const request =
       new (require("@paypal/checkout-server-sdk").orders.OrdersCreateRequest)();
@@ -674,7 +690,17 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
         {
           amount: {
             currency_code: plan.currency,
-            value: finalPrice.toFixed(2),
+            value: (finalPrice + vatAmount).toFixed(2), // total = subtotal + tax
+            breakdown: {
+              item_total: {
+                value: finalPrice.toFixed(2),
+                currency_code: plan.currency,
+              },
+              tax_total: {
+                value: vatAmount.toFixed(2),
+                currency_code: plan.currency,
+              },
+            },
           },
           custom_id: req.user._id.toString(),
           description: plan.name,
@@ -692,9 +718,11 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
         couponCode: couponCode || null,
         coupon_id: coupon?._id || null,
         isCouponUsed,
+        vatRate,
+        vatAmount,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "15m" }
     );
 
     // Attach extra data in metadata if needed for capture phase
@@ -738,6 +766,8 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
       couponCode = null,
       coupon_id = null,
       isCouponUsed = false,
+      vatRate = 0,
+      vatAmount = 0,
     } = metaData;
 
     const request =
@@ -760,6 +790,8 @@ router.post("/paypal/capture-order", authMiddleware, async (req, res) => {
       paymentMethod: "paypal",
       paymentStatus: "pending",
       amount,
+      vatRate,
+      vatAmount,
       currency: captureDetails.amount.currency_code,
       transactionId: captureDetails.id,
       paymentDetails: captureData,
@@ -922,6 +954,7 @@ router.post("/validate-coupon", authMiddleware, async (req, res) => {
         originalPrice: plan.price,
         discountedPrice,
         affiliateId: coupon.assignedToAffiliate || null,
+        currency: req.user?.userPreferences?.currency || "CHF", // ✅ fallback to USD if missing
       },
     });
   } catch (error) {
@@ -940,8 +973,13 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
     const limit = parseInt(req.query.limit) || 5; // default 5
     const skip = parseInt(req.query.skip) || 0; // default 0
 
+    const userCurrency = req.user?.userPreferences?.currency?.trim() || "CHF"; // fallback to CHF
+
     // 1️⃣ Fetch all active MagicCoinPlans
-    const plans = await MagicCoinPlan.find({ active: true }).sort({ price: 1 });
+    const plans = await MagicCoinPlan.find({
+      active: true,
+      currency: userCurrency,
+    }).sort({ price: 1 });
     const encryptedPlans = plans.map((plan) => ({
       ...plan.toObject(),
       encryptedId: encryptPassword(plan._id.toString()),
@@ -1062,6 +1100,11 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
       });
     }
 
+    const needsCurrencySelection =
+      !req.user.userPreferences ||
+      !req.user.userPreferences.currency ||
+      req.user.userPreferences.currency.trim() === "";
+
     res.render("dashboardnew", {
       plans: encryptedPlans,
       user: req.user,
@@ -1069,6 +1112,8 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
       totalMagicCoins: req.user.walletCoins || 0,
       transactionHistory,
       hasMore: totalTransactions > skip + limit,
+      needsCurrencySelection,
+      currency: userCurrency, // ✅ send currency to EJS as well
     });
   } catch (error) {
     console.error("Error fetching magic coin wallet:", error);

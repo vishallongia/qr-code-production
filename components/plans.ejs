@@ -11,6 +11,7 @@
 </head>
 
 <body>
+
     <div class="container" style="margin-top: 10px;">
         <!-- <h1>Choose Your Subscription</h1> -->
 
@@ -29,9 +30,10 @@
         <% if (!user?.subscription?.isVip) { %>
             <div class="tab-content active" id="plans-tab-content">
                 <div class="plans">
-                    <% plans.filter(plan=> plan.recurring).forEach(plan => {
+                    <% const userCurrency=user?.userPreferences?.currency || "EUR" ; plans.filter(plan=>
+                        plan.recurring).forEach(plan => {
                         const sanitizedId = plan.encryptedId.replace(/[^a-zA-Z0-9-_]/g, "");
-                        const eurPriceObj = plan.prices.find(p => p.currency === "EUR"); // default to EUR
+                        const eurPriceObj = plan.prices.find(p => p.currency === userCurrency); // default to EUR
                         const displayPrice = eurPriceObj ? eurPriceObj.amount : plan.prices[0].amount;
                         const displayCurrency = eurPriceObj ? eurPriceObj.currency : plan.prices[0].currency;
                         %>
@@ -57,7 +59,7 @@
                                     id="coupon-code-<%= sanitizedId %>" />
                             </div>
                             <button id="add-coupon-button-<%= plan.encryptedId %>" class="subscribe-btn add-coupon-btn"
-                                data-plan-id="<%= plan.encryptedId %>" style="margin-bottom: 10px;">
+                                data-plan-id="<%= plan.encryptedId %>" style="margin-bottom: 10px; display: none;">
                                 Add Coupon
                             </button>
                             <div id="coupon-success-message-<%= plan.encryptedId %>" style="display: none;"
@@ -160,107 +162,6 @@
 <script
     src="https://www.paypal.com/sdk/js?client-id=AeUlyT2WmljAHqGaXytGewyz61xmfAJ4woW1wA_2TwjcaqbbjJTkPHy47FsEJhcH68BGlm9-AdDfmbrU&vault=true&intent=subscription""></script>
 <script src=" /js/plan.js"></script>
-<!-- <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const containers = document.querySelectorAll(".paypal-button-container");
-        // Initialize the global object to store meta tokens if not already present
-        window.paypalMetaTokens = window.paypalMetaTokens || {};
-
-
-        containers.forEach(container => {
-            const planId = container.dataset.planId;
-            const sanitizedId = container.id.replace("paypal-button-container-", "");
-            // Get the related coupon input field using the plan ID
-            const couponInput = document.querySelector(`#coupon-code-${sanitizedId}`);
-
-            paypal.Buttons({
-                createOrder: function () {
-                    const couponCode = couponInput ? couponInput.value.trim() : "";
-                    return fetch("/paypal/create-order", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ planId, couponCode })
-                    })
-                        .then(async res => {
-                            if (!res.ok) {
-                                const errorData = await res.json();
-                                throw new Error(errorData.message || "Failed to create order");
-                            }
-                            return res.json();
-                        })
-                        .then(data => {
-                            // Check if a success message exists
-                            if (data.message) {
-                                // Show success message
-                                showToast(data.message, "success");
-                                if (couponInput) couponInput.value = ""; // Clear the coupon input
-                                // Reload the page after 3 seconds (to allow time for the toast to show)
-                                setTimeout(() => {
-                                    location.reload(); // Reload the page
-                                }, 2000); // 3000 ms (3 seconds) delay before reload
-
-                            }
-                            // Store metaToken indexed by order ID for later use in capture
-                            if (data.id && data.metaToken) {
-                                window.paypalMetaTokens[data.id] = data.metaToken;
-                            }
-                            return data.id;
-                        })
-                        .catch(err => {
-                            console.error("Create Order Error:", err);
-                            showToast(err.message || "An error occurred while creating the order", "error");
-                            if (couponInput) couponInput.value = ""; // Clear the coupon input
-                            throw err; // rethrow so PayPal knows it failed
-                        });
-                },
-                onApprove: function (data) {
-                    const metaToken = window.paypalMetaTokens[data.orderID];
-                    return fetch("/paypal/capture-order", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            orderID: data.orderID,
-                            planId,
-                            metaToken,
-                        })
-                    })
-                        .then(res => res.json())
-                        .then(response => {
-                            // Clear the metaToken no matter what
-                            delete window.paypalMetaTokens[data.orderID];
-                            if (response.status === 'COMPLETED') {
-                                if (response.transactionId) {
-                                    if (couponInput) couponInput.value = ""; // Clear the coupon input
-                                    // ✅ Redirect to success page with transaction ID
-                                    window.location.href = `/successpayment?session_id=${response.transactionId}`;
-                                } else {
-                                    alert("Transaction ID not found.");
-                                }
-                            } else {
-                                showToast(response.message, "error");
-                                setTimeout(() => {
-                                    window.location.href = `/cancel`;
-                                }, 1000); // 1000 milliseconds = 1 second delay
-                            }
-                        });
-                },
-                onError: function (err) {
-                    // Also clear in case of error to avoid memory leaks
-                    delete window.paypalMetaTokens[data.orderID];
-                    console.log(err)
-                    console.error("PayPal Button Error:", err.message);
-                    // showToast("An error occurred during the transaction.", "error");
-                }
-            }).render(container);
-        });
-    });
-</script> -->
-
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const containers = document.querySelectorAll(".paypal-button-container");
@@ -388,5 +289,66 @@
         });
     });
 </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const popup = document.getElementById("theme-popup-select-currency");
+
+
+        // Use EJS to pass the flag from backend
+        const needsCurrencySelection = <%= needsCurrencySelection ? 'true' : 'false' %>;
+
+        if (needsCurrencySelection) {
+            popup.style.display = "flex";
+        }
+
+        const popupBtn = document.getElementById("popup-ok-btn-select-currency");
+        popupBtn.addEventListener("click", async function (e) {
+            e.preventDefault();
+
+            const currencySelect = document.getElementById("currency-value");
+            const selectedCurrency = currencySelect.value;
+
+            // ✅ Frontend mandatory check
+            if (!selectedCurrency) {
+                return showToast("Please select a currency!", "error");
+            }
+
+            // Show loader
+            document.getElementById("loader").style.display = "flex";
+
+            try {
+                const res = await fetch("/set-currency", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ currency: selectedCurrency })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    return showToast(data.message || "Failed to set currency", "error");
+                }
+
+                // ✅ Success
+                showToast(data.message || "Currency set successfully", "success");
+
+                // Hide popup
+                popup.style.display = "none";
+
+                // 🔄 Reload page after 1 second
+                setTimeout(() => location.reload(), 1000);
+
+            } catch (err) {
+                console.error("Error setting currency:", err);
+                showToast("Internal error. Please try again.", "error");
+            } finally {
+                // Hide loader regardless of success or failure
+                document.getElementById("loader").style.display = "none";
+            }
+        });
+    });
+</script>
+
 
 </html>
