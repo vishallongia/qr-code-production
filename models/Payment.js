@@ -116,10 +116,6 @@ paymentSchema.pre("save", async function (next) {
       })
       .sort({ validUntil: -1 });
 
-    console.log(
-      latestPayment.validUntil.toString(),
-      "previous payment valid until"
-    );
     const now = new Date();
     const baseDate =
       latestPayment && latestPayment.validUntil > now
@@ -131,6 +127,13 @@ paymentSchema.pre("save", async function (next) {
       baseDate.getTime() + plan.durationInDays * 24 * 60 * 60 * 1000
     );
   }
+  // ✅ Readable console log
+  console.log(
+    `Previous validUntil: ${
+      latestPayment ? latestPayment.validUntil.toLocaleString() : "N/A"
+    }`
+  );
+  console.log(`New validUntil: ${this.validUntil.toLocaleString()}`);
   next();
 });
 
