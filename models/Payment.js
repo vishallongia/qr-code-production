@@ -111,6 +111,7 @@ paymentSchema.pre("save", async function (next) {
       .findOne({
         user_id: this.user_id,
         paymentStatus: "completed",
+        subscriptionId: this.subscriptionId, // 🔹 only same subscription
         _id: { $ne: this._id }, // 🔹 exclude current doc
       })
       .sort({ validUntil: -1 });
@@ -126,10 +127,9 @@ paymentSchema.pre("save", async function (next) {
       baseDate.getTime() + plan.durationInDays * 24 * 60 * 60 * 1000
     );
     // ✅ Readable console log
+    console.log(latestPayment, "payment finded");
     console.log(
-      `Previous validUntil: ${
-        latestPayment ? latestPayment.validUntil.toLocaleString() : "N/A"
-      }`
+      `Previous validUntil: ${baseDate ? baseDate.toLocaleString() : "N/A"}`
     );
     console.log(`New validUntil: ${this.validUntil.toLocaleString()}`);
   }
