@@ -126,14 +126,15 @@ paymentSchema.pre("save", async function (next) {
     this.validUntil = new Date(
       baseDate.getTime() + plan.durationInDays * 24 * 60 * 60 * 1000
     );
+    // ✅ Readable console log
+    console.log(
+      `Previous validUntil: ${
+        latestPayment ? latestPayment.validUntil.toLocaleString() : "N/A"
+      }`
+    );
+    console.log(`New validUntil: ${this.validUntil.toLocaleString()}`);
   }
-  // ✅ Readable console log
-  console.log(
-    `Previous validUntil: ${
-      latestPayment ? latestPayment.validUntil.toLocaleString() : "N/A"
-    }`
-  );
-  console.log(`New validUntil: ${this.validUntil.toLocaleString()}`);
+
   next();
 });
 
