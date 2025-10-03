@@ -166,7 +166,7 @@ async function handleSubscription(
         );
         return; // skip processing, no duplicate
       }
-
+      console.log(originalPayment, "how");
       // Renewal: create a new Payment record
       payment = new Payment({
         user_id: originalPayment.user_id,
