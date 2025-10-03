@@ -188,6 +188,8 @@ async function handleSubscription(
         paymentStatus: "pending",
         paymentDate: new Date(),
         paymentDetails: resource,
+        vatAmount: originalPayment.vatAmount || 0,
+        vatRate: originalPayment.vatRate || 0,
       });
       console.log(`Created new subscription payment: ${payment._id}`);
     }

@@ -23,6 +23,18 @@ const jwt = require("jsonwebtoken");
 // Route to render subscription plans with encrypted IDs
 router.get("/plans", authMiddleware, async (req, res) => {
   try {
+    const allowedCurrencies = ["EUR", "CHF", "HUF"];
+    const queryCurrency = req.query.currency;
+
+    // Determine active currency
+    let activeCurrency = req.user?.userPreferences?.currency || null;
+
+    if (!activeCurrency) {
+      // Use query string currency if valid
+      activeCurrency = allowedCurrencies.includes(queryCurrency)
+        ? queryCurrency
+        : "EUR";
+    }
     // Fetch all active plans from the database
     const plans = await Plan.find({ active: true }).sort({ durationInDays: 1 });
 
@@ -75,6 +87,7 @@ router.get("/plans", authMiddleware, async (req, res) => {
       user: userSubscription,
       activeSection: "plans",
       needsCurrencySelection, // 👈 pass flag to frontend
+      activeCurrency,
     });
   } catch (error) {
     console.error("Error fetching plans:", error);
@@ -297,7 +310,12 @@ router.get("/payment/status/:sessionId", async (req, res) => {
 
 router.post("/paypal/create-subscription", authMiddleware, async (req, res) => {
   try {
-    const { planId, couponCode, isMagicPlan = false } = req.body;
+    const {
+      planId,
+      couponCode,
+      isMagicPlan = false,
+      currency: selectedCurrency,
+    } = req.body;
     const decryptedPlanId = decryptPassword(planId);
 
     let plan = isMagicPlan
@@ -306,17 +324,31 @@ router.post("/paypal/create-subscription", authMiddleware, async (req, res) => {
 
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
-    // Use user's selected currency, fallback to EUR
-    const currency = req.user?.userPreferences?.currency || "EUR";
-    const priceObj =
-      plan.prices.find((p) => p.currency === currency) ||
-      plan.prices.find((p) => p.currency === "EUR");
+    // Validate the selected currency
+    const availableCurrencies = plan.prices.map((p) => p.currency);
+    if (!selectedCurrency || !availableCurrencies.includes(selectedCurrency)) {
+      return res.status(400).json({
+        error: `Invalid currency selected. Available currencies: ${availableCurrencies.join(
+          ", "
+        )}`,
+      });
+    }
+    // Save user currency preference if not already set
+    req.user.userPreferences = req.user.userPreferences || {};
+    if (!req.user.userPreferences.currency) {
+      req.user.userPreferences.currency = selectedCurrency;
+      await req.user.save();
+    }
 
-    if (!priceObj)
+    const currency = req.user.userPreferences.currency;
+
+    // Get the price object for the selected currency
+    const priceObj = plan.prices.find((p) => p.currency === currency);
+    if (!priceObj) {
       return res
         .status(400)
         .json({ error: `Price not found for currency: ${currency}` });
-
+    }
     let finalPrice = priceObj.amount;
     let isCouponUsed = false;
     let discountAmount = 0;
