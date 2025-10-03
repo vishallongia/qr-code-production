@@ -116,6 +116,10 @@ paymentSchema.pre("save", async function (next) {
       })
       .sort({ validUntil: -1 });
 
+    console.log(
+      latestPayment.validUntil.toString(),
+      "previous payment valid until"
+    );
     const now = new Date();
     const baseDate =
       latestPayment && latestPayment.validUntil > now
