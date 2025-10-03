@@ -116,11 +116,9 @@ paymentSchema.pre("save", async function (next) {
       })
       .sort({ validUntil: -1 });
 
-    const now = new Date();
-    const baseDate =
-      latestPayment && latestPayment.validUntil > now
-        ? latestPayment.validUntil
-        : now;
+    const baseDate = latestPayment
+      ? latestPayment.validUntil // always chain from last validUntil
+      : new Date(); // only if no previous payment at all
 
     // Add plan duration
     this.validUntil = new Date(
