@@ -162,7 +162,7 @@
      backdrop-filter: blur(var(--container-backdrop-blur));
      border-radius: var(--border-radius);
      box-shadow: var(--box-shadow);
-     padding: 2rem 3rem;
+     padding: 1.8rem 2.8rem;
      text-align: center;
      font-family: var(--font-family);
  }

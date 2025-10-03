@@ -589,7 +589,7 @@ router.post(
 // Route to create PayPal order
 router.post("/paypal/create-order", authMiddleware, async (req, res) => {
   try {
-    const { planId, couponCode, isMagicPlan = false } = req.body;
+    const { planId, couponCode, isMagicPlan = false, currency } = req.body;
     const decryptedPlanId = decryptPassword(planId);
     let plan;
 
@@ -603,16 +603,40 @@ router.post("/paypal/create-order", authMiddleware, async (req, res) => {
       return res.status(404).json({ error: "Plan not found" });
     }
 
-    // ✅ Currency check based on user's stored preference (no fallback)
-    const userCurrency = req.user?.userPreferences?.currency;
+    const allowedCurrencies = ["EUR", "CHF", "HUF"];
+    let userCurrency = req.user?.userPreferences?.currency || null;
 
-    if (!userCurrency || plan.currency !== userCurrency) {
+    // 1️⃣ Validate incoming currency
+    if (!allowedCurrencies.includes(currency)) {
       return res.status(400).json({
-        message: `Currency mismatch. Plan currency is ${
-          plan.currency
-        }, but your account currency is ${userCurrency || "not set"}.`,
+        message: `Invalid currency "${currency}". Allowed: ${allowedCurrencies.join(
+          ", "
+        )}.`,
         type: "error",
-        data: null,
+      });
+    }
+
+    // 2️⃣ If user already has a currency, check match
+    if (userCurrency && userCurrency !== currency) {
+      return res.status(400).json({
+        message: `Currency mismatch. Your account currency is ${userCurrency}, but you sent ${currency}.`,
+        type: "error",
+      });
+    }
+
+    // 3️⃣ If user has no currency, set it to incoming currency
+    if (!userCurrency) {
+      userCurrency = currency;
+      await User.findByIdAndUpdate(req.user._id, {
+        "userPreferences.currency": currency,
+      });
+    }
+
+    // 4️⃣ Make sure plan matches user currency
+    if (plan.currency !== userCurrency) {
+      return res.status(400).json({
+        message: `Plan currency is ${plan.currency}, but your account currency is ${userCurrency}.`,
+        type: "error",
       });
     }
 
@@ -1005,12 +1029,25 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
     const limit = parseInt(req.query.limit) || 5; // default 5
     const skip = parseInt(req.query.skip) || 0; // default 0
 
+    const allowedCurrencies = ["EUR", "CHF", "HUF"];
+    const queryCurrency = req.query.currency;
+
+    // Determine active currency
+    let activeCurrency = req.user?.userPreferences?.currency || null;
+
+    if (!activeCurrency) {
+      // Use query string currency if valid
+      activeCurrency = allowedCurrencies.includes(queryCurrency)
+        ? queryCurrency
+        : "EUR";
+    }
+
     const userCurrency = req.user?.userPreferences?.currency?.trim() || "CHF"; // fallback to CHF
 
     // 1️⃣ Fetch all active MagicCoinPlans
     const plans = await MagicCoinPlan.find({
       active: true,
-      currency: userCurrency,
+      currency: activeCurrency,
     }).sort({ price: 1 });
     const encryptedPlans = plans.map((plan) => ({
       ...plan.toObject(),
@@ -1146,6 +1183,7 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
       hasMore: totalTransactions > skip + limit,
       needsCurrencySelection,
       currency: userCurrency, // ✅ send currency to EJS as well
+      activeCurrency,
     });
   } catch (error) {
     console.error("Error fetching magic coin wallet:", error);

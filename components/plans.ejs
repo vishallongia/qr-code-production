@@ -17,7 +17,7 @@
         <% if (needsCurrencySelection) { %>
              <div style="display:flex; justify-content: end;">
         <select id="currencySwitcherApp" class="language-selector-select active"
-            style="width: 100%; max-width: 280px;">
+            style="width: 100%; max-width: 280px; margin: 10px 0px;">
             <option value="EUR" <%= activeCurrency === 'EUR' ? 'selected' : '' %>>EUR</option>
             <option value="CHF" <%= activeCurrency === 'CHF' ? 'selected' : '' %>>CHF</option>
             <option value="HUF" <%= activeCurrency === 'HUF' ? 'selected' : '' %>>HUF</option>

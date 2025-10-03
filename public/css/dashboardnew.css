@@ -822,7 +822,7 @@ textarea {
         margin-left: 0px;
         width: fit-content;
     }
-    
+
 }
 
 /* Phones */
@@ -853,6 +853,10 @@ textarea {
 
     .company-name-text {
         display: none;
+    }
+
+    #currencySwitcherApp {
+        max-width: 120px !important;
     }
 }
 

@@ -12,34 +12,54 @@
 
 <body>
     <div class="container" style="margin-top: 10px;">
-        <div class="container-custom-wallet">
-            <span class="label">Total Coins</span>
-            <div class="wallet-balance" id="walletBalance">
-                <%= totalMagicCoins %> Magic Coins
+        <% if (needsCurrencySelection) { %>
+            <div style="display:flex; justify-content: end; margin: 10px 0px;">
+                <select id="currencySwitcherApp" class="language-selector-select active"
+                    style="width: 100%; max-width: 280px;">
+                    <option value="EUR" <%=activeCurrency==='EUR' ? 'selected' : '' %>>EUR</option>
+                    <option value="CHF" <%=activeCurrency==='CHF' ? 'selected' : '' %>>CHF</option>
+                    <option value="HUF" <%=activeCurrency==='HUF' ? 'selected' : '' %>>HUF</option>
+                </select>
             </div>
-        </div>
-
-        <div class="plans">
-            <% plans.forEach(plan=> {
-                const sanitizedId = plan.encryptedId.replace(/[^a-zA-Z0-9-_]/g, ""); // Remove special
-                %>
-
-                <div class="plan-card">
-                    <div class="plan-price" id="plan-price-<%= sanitizedId %>">
-                        <%= plan.price %>
-                            <%= plan.currency || "CHF" %>
-                    </div>
-
-                    <div class="plan-coins">
-                        <%= plan.coinsOffered %> Magic Coins
-                    </div>
-                    <div id="paypal-button-container-<%= sanitizedId %>" class="paypal-button-container"
-                        style="margin-top: 20px;" data-plan-id="<%= plan.encryptedId %>">
-
+            <% } %>
+                <div class="container-custom-wallet">
+                    <span class="label">Total Coins</span>
+                    <div class="wallet-balance" id="walletBalance">
+                        <%= totalMagicCoins %> Magic Coins
                     </div>
                 </div>
-                <% }) %>
-        </div>
+
+                <div class="plans">
+                    <% plans.forEach(plan=> {
+                        const sanitizedId = plan.encryptedId.replace(/[^a-zA-Z0-9-_]/g, ""); // Remove special
+                        %>
+
+                        <div class="plan-card">
+                            <div class="plan-price" id="plan-price-<%= sanitizedId %>">
+                                <%= plan.price %>
+                                    <%= plan.currency || "CHF" %>
+                            </div>
+
+                            <div class="plan-coins">
+                                <%= plan.coinsOffered %> Magic Coins
+                            </div>
+                            <% if (needsCurrencySelection) { %>
+                                <button id="lock-curreny-button-<%= plan.encryptedId %>"
+                                    class="lock-curreny-button subscribe-btn  btn"
+                                    data-plan-id="<%= plan.encryptedId %>"
+                                    style="margin-bottom: 10px; background-color: #1a0161; color:#FFFF;"
+                                    onClick="showCurrencyPopup('<%= plan.encryptedId %>')">
+                                    Proceed to pay
+                                </button>
+                                <% } %>
+                                    <div id="paypal-button-container-<%= sanitizedId %>" class="paypal-button-container"
+                                        style="margin-top: 20px; <%= needsCurrencySelection ? 'display:none;' : 'display:block;' %>"
+                                        data-plan-id="<%= plan.encryptedId %>">
+
+                                    </div>
+                        </div>
+                        <% }) %>
+                </div>
     </div>
 
     <div class="transaction-bar" style="margin-top: 40px;">
@@ -140,6 +160,9 @@
             const sanitizedId = container.id.replace("paypal-button-container-", "");
             // Get the related coupon input field using the plan ID
             const couponInput = document.querySelector(`#coupon-code-${sanitizedId}`);
+            // Grab selected currency from the dropdown
+            const currencySelect = document.getElementById("currencySwitcherApp");
+            const selectedCurrency = currencySelect ? currencySelect.value : '<%= activeCurrency %>'; // fallback to server value
 
             paypal.Buttons({
                 createOrder: function () {
@@ -148,7 +171,7 @@
                         headers: {
                             "Content-Type": "application/json"
                         },
-                        body: JSON.stringify({ planId, isMagicPlan: true })
+                        body: JSON.stringify({ planId, isMagicPlan: true, currency: selectedCurrency })
                     })
                         .then(async res => {
                             if (!res.ok) {
@@ -320,63 +343,80 @@
 
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("currencySwitcherApp").addEventListener("change", function () {
+        const url = new URL(window.location);
+        url.searchParams.set("currency", this.value);
+        window.location = url;
+    });
+    function showCurrencyPopup(planId) {
         const popup = document.getElementById("theme-popup-select-currency");
+        const okBtn = document.getElementById("popup-ok-btn-select-currency");
+        const cancelBtn = document.getElementById("popup-cancel-btn-select-currency");
+        const currencySelect = document.getElementById("currencySwitcherApp"); // the select
+        const loader = document.getElementById("loader");
 
+        popup.style.display = "flex";
 
-        // Use EJS to pass the flag from backend
-        const needsCurrencySelection = <%= needsCurrencySelection ? 'true' : 'false' %>;
+        const cleanup = () => {
+            popup.style.display = "none";
+            okBtn.onclick = null;
+            cancelBtn.onclick = null;
+        };
 
-        if (needsCurrencySelection) {
-            popup.style.display = "flex";
-        }
-
-        const popupBtn = document.getElementById("popup-ok-btn-select-currency");
-        popupBtn.addEventListener("click", async function (e) {
+        okBtn.onclick = async (e) => {
             e.preventDefault();
 
-            const currencySelect = document.getElementById("currency-value");
             const selectedCurrency = currencySelect.value;
 
-            // ✅ Frontend mandatory check
+            // Frontend mandatory check
             if (!selectedCurrency) {
                 return showToast("Please select a currency!", "error");
             }
 
-            // Show loader
-            document.getElementById("loader").style.display = "flex";
+            loader.style.display = "flex"; // show loader
 
             try {
+                // 1️⃣ Call backend to set currency
                 const res = await fetch("/set-currency", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ currency: selectedCurrency })
                 });
-
                 const data = await res.json();
 
                 if (!res.ok) {
                     return showToast(data.message || "Failed to set currency", "error");
                 }
 
-                // ✅ Success
                 showToast(data.message || "Currency set successfully", "success");
 
-                // Hide popup
-                popup.style.display = "none";
+                // 2️⃣ Continue with your logic: show PayPal buttons
+                const allPaypalContainers = document.querySelectorAll(".paypal-button-container");
+                allPaypalContainers.forEach(container => container.style.display = "block");
 
-                // 🔄 Reload page after 1 second
-                setTimeout(() => location.reload(), 1000);
+                const allLockCurrencyButtons = document.querySelectorAll(".lock-curreny-button");
+                allLockCurrencyButtons.forEach(btn => btn.style.display = "none");
+
+                currencySelect.style.display = "none";
+
+                // Optional: call your renderPayPalButtons(planId) if needed
+                // renderPayPalButtons(planId);
+
+                cleanup(); // hide popup
 
             } catch (err) {
                 console.error("Error setting currency:", err);
                 showToast("Internal error. Please try again.", "error");
             } finally {
-                // Hide loader regardless of success or failure
-                document.getElementById("loader").style.display = "none";
+                loader.style.display = "none"; // hide loader
             }
-        });
-    });
+        };
+
+        cancelBtn.onclick = (e) => {
+            e.preventDefault();
+            cleanup();
+        };
+    }
 </script>
 
 
