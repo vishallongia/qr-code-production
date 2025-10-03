@@ -111,7 +111,6 @@ paymentSchema.pre("save", async function (next) {
       .findOne({
         user_id: this.user_id,
         paymentStatus: "completed",
-        isActive: true,
         _id: { $ne: this._id }, // 🔹 exclude current doc
       })
       .sort({ validUntil: -1 });
