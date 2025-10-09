@@ -111,6 +111,12 @@ const voteQuestionSchema = new mongoose.Schema(
       type: String,
       default: null, // External or internal session link
     },
+    // ✅ New Commission Field
+    commissionPercent: {
+      type: Number,
+      default: 70, // default commission percentage
+      min: 0,
+    },
     linkedQRCode: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "QRCodeData", // Reference to the QRCodeData model

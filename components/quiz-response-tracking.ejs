@@ -82,20 +82,20 @@
                                                         <%= resp.userEmail %>
                                                     </span>
                                                     <span>
-                                                        <%= resp.isNoResposneGiven ? "N/A" : `Option
+                                                        <%= resp.isNoResponseGiven ? "N/A" : `Option
                                                             ${resp.selectedOptionIndex + 1}` %>
                                                     </span>
                                                     <span
-                                                        class="<%= resp.isNoResposneGiven ? '' : (resp.isCorrect ? 'status-sticker success' : 'status-sticker error') %>">
-                                                        <%= resp.isNoResposneGiven ? "N/A" : (resp.isCorrect ? "Yes"
+                                                        class="<%= resp.isNoResponseGiven ? '' : (resp.isCorrect ? 'status-sticker success' : 'status-sticker error') %>">
+                                                        <%= resp.isNoResponseGiven ? "N/A" : (resp.isCorrect ? "Yes"
                                                             : "No" ) %>
                                                     </span>
                                                     <span>
-                                                        <%= resp.isNoResposneGiven ? "N/A" : (resp.jackpotCoinDeducted
+                                                        <%= resp.isNoResponseGiven ? "N/A" : (resp.jackpotCoinDeducted
                                                             || "No" ) %>
                                                     </span>
                                                     <span>
-                                                        <%= resp.isNoResposneGiven ? "N/A" : (resp.digitalCoinDeducted
+                                                        <%= resp.isNoResponseGiven ? "N/A" : (resp.digitalCoinDeducted
                                                             || "No" ) %>
                                                     </span>
                                                     <span>

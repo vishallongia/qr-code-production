@@ -88,6 +88,7 @@ router.get("/plans", authMiddleware, async (req, res) => {
       activeSection: "plans",
       needsCurrencySelection, // 👈 pass flag to frontend
       activeCurrency,
+      paypalClientId: process.env.PAYPAL_CLIENT_ID, // ✅ just this line
     });
   } catch (error) {
     console.error("Error fetching plans:", error);
@@ -316,8 +317,8 @@ router.post("/paypal/create-subscription", authMiddleware, async (req, res) => {
       isMagicPlan = false,
       currency: selectedCurrency,
     } = req.body;
-    const decryptedPlanId = decryptPassword(planId);
 
+    const decryptedPlanId = decryptPassword(planId);
     let plan = isMagicPlan
       ? await MagicCoinPlan.findById(decryptedPlanId)
       : await Plan.findById(decryptedPlanId);
@@ -453,7 +454,7 @@ router.post("/paypal/create-subscription", authMiddleware, async (req, res) => {
 
     res.json({ id: subscription.id, metaToken });
   } catch (err) {
-    console.error("PayPal Create Order Error:", err.message);
+    console.error("PayPal Create Order Error:", err);
     res.status(500).json({ error: "Unable to create PayPal order" });
   }
 });
@@ -502,7 +503,7 @@ router.post(
       // ✅ Fetch subscription details from PayPal
       const token = await getAccessToken();
       const response = await fetch(
-        `https://api-m.sandbox.paypal.com/v1/billing/subscriptions/${subscriptionID}`,
+        `${process.env.PAYPAL_API_BASE}/v1/billing/subscriptions/${subscriptionID}`,
         {
           method: "GET",
           headers: {
@@ -1137,11 +1138,27 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
         },
       },
 
+      {
+        $unionWith: {
+          coll: "magiccoincommissions",
+          pipeline: [
+            { $match: { beneficiaryUserId: req.user._id } },
+            {
+              $project: {
+                _id: 0,
+                paymentStatus: "$status",      // use field directly
+                coinsOffered: "$commissionAmount",
+                totalCoins: "$totalCoins",
+                createdAt: "$createdAt",
+              },
+            },
+          ],
+        },
+      },
       // Sort by date descending
       { $sort: { createdAt: -1 } },
     ];
 
-    // --- Execute the main aggregation with pagination ---
     const transactionHistory = await Payment.aggregate([
       ...pipeline,
       { $skip: skip },
@@ -1184,6 +1201,7 @@ router.get("/magic-coin-wallet", authMiddleware, async (req, res) => {
       needsCurrencySelection,
       currency: userCurrency, // ✅ send currency to EJS as well
       activeCurrency,
+      paypalClientId: process.env.PAYPAL_CLIENT_ID, // ✅ just this line
     });
   } catch (error) {
     console.error("Error fetching magic coin wallet:", error);

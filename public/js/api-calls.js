@@ -109,7 +109,8 @@ async function handleLogin(event) {
       if (
         currentUrl.includes("voting-play") ||
         currentUrl.includes("quiz-play") ||
-        currentUrl.includes("applause-play")
+        currentUrl.includes("applause-play") ||
+        currentUrl.includes("magicscreen-play")
       ) {
         window.location.href = currentUrl;
         return;

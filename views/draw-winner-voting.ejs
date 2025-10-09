@@ -88,7 +88,7 @@
                                 <ul class="user-list" id="jackpotList">
                                     <% jackpotParticipants.forEach((p, index)=> { %>
                                         <li class="user-item jackpot-item" data-id="<%= p.userId %>"
-                                            data-resposne-id="<%= p._id %>">
+                                            data-response-id="<%= p._id %>">
                                             <span>
                                                 <%= index + 1 %>
                                             </span>
@@ -139,7 +139,7 @@
                                         <ul class="user-list" id="digitalList">
                                             <% digitalRewardParticipants.forEach((p, index)=> { %>
                                                 <li class="user-item digital-item" data-id="<%= p.userId %>"
-                                                    data-resposne-id="<%= p._id %>">
+                                                    data-response-id="<%= p._id %>">
                                                     <span>
                                                         <%= index + 1 %>
                                                     </span>
@@ -201,7 +201,7 @@
                             userId: li.dataset.id,
                             user: li.children[1].textContent,
                             email: li.children[2].textContent,
-                            responseId: li.dataset.resposneId, // 👈 Add this
+                            responseId: li.dataset.responseId, // 👈 Add this
                             coins: li.children[3].textContent
                         }));
                     }

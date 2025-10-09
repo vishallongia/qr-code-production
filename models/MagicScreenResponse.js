@@ -1,8 +1,6 @@
-// models/QuizQuestionResponse.js
-
 const mongoose = require("mongoose");
 
-const quizQuestionResponseSchema = new mongoose.Schema(
+const magicScreenResponseSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -11,7 +9,7 @@ const quizQuestionResponseSchema = new mongoose.Schema(
     },
     questionId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "QuizQuestion", // Adjust to your actual model name
+      ref: "MagicScreen", // Reference to the MagicScreen model
       required: true,
     },
     channelId: {
@@ -23,39 +21,17 @@ const quizQuestionResponseSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    isCorrect: {
-      type: Boolean,
-      required: true,
-    },
     isActive: {
       type: Boolean,
       default: true,
     },
-
-    deductCoin: {
-      type: Boolean,
-      default: false,
+    selectedLink: {
+      type: String, // New field to store the link of the selected option
+      default: null,
     },
-    jackpotCoinDeducted: {
-      type: Number,
-      default: 0,
-    },
-    digitalCoinDeducted: {
-      type: Number,
-      default: 0,
-    },
-
     sessionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Session",
-    },
-    isJackpotWinnerDeclared: {
-      type: Boolean,
-      default: false,
-    },
-    isDigitalWinnerDeclared: {
-      type: Boolean,
-      default: false,
     },
     isNoResponseGiven: {
       type: Boolean,
@@ -68,6 +44,6 @@ const quizQuestionResponseSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model(
-  "QuizQuestionResponse",
-  quizQuestionResponseSchema
+  "MagicScreenResponse",
+  magicScreenResponseSchema
 );

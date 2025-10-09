@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const PAYPAL_BASE = "https://api-m.sandbox.paypal.com"; // sandbox, change to live in prod
+const PAYPAL_BASE = process.env.PAYPAL_API_BASE; // e.g., sandbox or production
 
 // Get OAuth access token
 async function getAccessToken() {
@@ -124,35 +124,43 @@ async function ensurePaypalPlan(plan, currency, token, finalPrice) {
 
 // Updated createSubscription to accept token
 async function createSubscription(planId, user, returnUrl, cancelUrl, token) {
-  if (!token) token = await getAccessToken();
+  try {
+    if (!token) token = await getAccessToken();
 
-  const { data } = await axios.post(
-    `${PAYPAL_BASE}/v1/billing/subscriptions`,
-    {
-      plan_id: planId,
-      subscriber: {
-        name: {
-          given_name: user.firstName || user.fullName.split(" ")[0],
-          surname: user.lastName || user.fullName.split(" ")[1] || "",
+    const { data } = await axios.post(
+      `${PAYPAL_BASE}/v1/billing/subscriptions`,
+      {
+        plan_id: planId,
+        subscriber: {
+          name: {
+            given_name: user.firstName || user.fullName.split(" ")[0],
+            surname: user.lastName || user.fullName.split(" ")[1] || "",
+          },
+          email_address: user.email,
         },
-        email_address: user.email,
+        application_context: {
+          brand_name: "Your App Name",
+          user_action: "SUBSCRIBE_NOW",
+          return_url: returnUrl,
+          cancel_url: cancelUrl,
+        },
       },
-      application_context: {
-        brand_name: "Your App Name",
-        user_action: "SUBSCRIBE_NOW",
-        return_url: returnUrl,
-        cancel_url: cancelUrl,
-      },
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-  return data;
+    return data;
+  } catch (error) {
+    console.error(
+      "❌ PayPal createSubscription error:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to create PayPal subscription");
+  }
 }
 
 module.exports = { getAccessToken, ensurePaypalPlan, createSubscription };

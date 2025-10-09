@@ -114,7 +114,8 @@
                                                     <%= user.userPasswordKey %>
                                                 </span>
                                                 <span style="display: flex; flex-flow: column; gap: 5px;">
-                                                    <button class="view-qr-btn">
+                                                    <button class="view-qr-btn"
+                                                        onclick="window.open('/admindashboard/tvstation/magic-coin-commission/<%= user._id %>', '_blank')">
                                                         View
                                                     </button>
                                                 </span>

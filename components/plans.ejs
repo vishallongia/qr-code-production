@@ -15,170 +15,36 @@
     <div class="container" style="margin-top: 10px;">
         <!-- <h1>Choose Your Subscription</h1> -->
         <% if (needsCurrencySelection) { %>
-             <div style="display:flex; justify-content: end;">
-        <select id="currencySwitcherApp" class="language-selector-select active"
-            style="width: 100%; max-width: 280px; margin: 10px 0px;">
-            <option value="EUR" <%= activeCurrency === 'EUR' ? 'selected' : '' %>>EUR</option>
-            <option value="CHF" <%= activeCurrency === 'CHF' ? 'selected' : '' %>>CHF</option>
-            <option value="HUF" <%= activeCurrency === 'HUF' ? 'selected' : '' %>>HUF</option>
-        </select>
-    </div>
-                <% } %>
-
-            <div class="tabs">
-                <% if (user?.subscription?.isVip) { %>
-                    <div class="tab active" id="current-subscription-tab"
-                        style="display: flex; align-items: center; gap: 5px;"><img class="logo" alt="Logo"
-                            src="/Vip.png">VIP
-                        Subscription</div>
-                    <% } else { %>
-                        <div class="tab active" id="plans-tab" data-translate="subscription_plans">Subscription Plans
-                        </div>
-                        <div class="tab" id="current-subscription-tab" data-translate="current_subscription"
-                            style="display: none;">Current
-                            Subscription</div>
-                        <% } %>
+            <div style="display:flex; justify-content: end;">
+                <select id="currencySwitcherApp" class="language-selector-select active"
+                    style="width: 100%; max-width: 280px; margin: 10px 0px;">
+                    <option value="EUR" <%=activeCurrency==='EUR' ? 'selected' : '' %>>EUR</option>
+                    <option value="CHF" <%=activeCurrency==='CHF' ? 'selected' : '' %>>CHF</option>
+                    <option value="HUF" <%=activeCurrency==='HUF' ? 'selected' : '' %>>HUF</option>
+                </select>
             </div>
-            <% if (!user?.subscription?.isVip) { %>
-                <div class="tab-content active" id="plans-tab-content">
-                    <div class="plans">
-                        <% const userCurrency=user?.userPreferences?.currency || activeCurrency || "EUR" ; plans.filter(plan=>
-                            plan.recurring).forEach(plan => {
-                            const sanitizedId = plan.encryptedId.replace(/[^a-zA-Z0-9-_]/g, "");
-                            const eurPriceObj = plan.prices.find(p => p.currency === userCurrency); // default to EUR
-                            const displayPrice = eurPriceObj ? eurPriceObj.amount : plan.prices[0].amount;
-                            const displayCurrency = eurPriceObj ? eurPriceObj.currency : plan.prices[0].currency;
-                            %>
-                            <div class="plan-card">
-                                <div class="plan-duration">
-                                    <%= plan.publicName %>
-                                </div>
-                                <div class="plan-price" id="plan-price-<%= sanitizedId %>">
-                                    <%= displayPrice %>
-                                        <%= displayCurrency %>
-                                </div>
-                                <ul class="features">
-                                    <% plan.features.forEach(feature=> { %>
-                                        <li>
-                                            <%= feature %>
-                                        </li>
-                                        <% }); %>
-                                </ul>
+            <% } %>
 
-                                <!-- ✅ Coupon Code Input -->
-                                <div class="coupon-section" style="margin-bottom: 10px; display: none;">
-                                    <input type="text" class="coupon-input" placeholder="Enter coupon code"
-                                        id="coupon-code-<%= sanitizedId %>" />
-                                </div>
-                                <!-- <button id="add-coupon-button-<%= plan.encryptedId %>" class="subscribe-btn add-coupon-btn"
-                                data-plan-id="<%= plan.encryptedId %>" style="margin-bottom: 10px; display: none;">
-                                Add Coupon
-                            </button> -->
-                                <% if (needsCurrencySelection) { %>
-                                    <button id="lock-curreny-button-<%= plan.encryptedId %>"
-                                        class="lock-curreny-button subscribe-btn" data-plan-id="<%= plan.encryptedId %>"
-                                        style="margin-bottom: 10px;"
-                                        onClick="showCurrencyPopup('<%= plan.encryptedId %>')">
-                                        Proceed to pay
-                                    </button>
-                                    <% } %>
-                                        <div id="coupon-success-message-<%= plan.encryptedId %>" style="display: none;"
-                                            class="coupon-success-message">
-                                            Coupon Added
-                                        </div>
-
-                                        <div>
-                                            <!-- ✅ Pay with Credit Card Button -->
-                                            <!-- <button id="checkout-button-<%= plan.encryptedId %>" class="checkout-btn subscribe-btn"
-                                    style="margin-bottom: 10px;">
-                                    Pay with Credit Card
-                                </button> -->
-
-                                            <!-- ✅ PayPal Button Container -->
-                                            <div id="paypal-button-container-<%= sanitizedId %>"
-                                                class="paypal-button-container"
-                                                style="margin-top: 20px; <%= needsCurrencySelection ? 'display:none;' : 'display:block;' %>"
-                                                data-plan-id="<%= plan.encryptedId %>">
-                                            </div>
-                                        </div>
-                            </div>
-                            <% }); %>
-                    </div>
-                    <div style="display: flex; justify-content: center; margin-top: 20px;">
-                        <div class="tab" id="current-subscription-tab" data-translate="current_subscription">Current
-                            Subscription</div>
-                    </div>
-                    <div class="tab-content <%= user?.subscription?.isVip ? 'active' : '' %>"
-                        id="current-subscription-tab-content">
-                        <% if (user?.subscription?.isVip) { %>
-                            <div class="subscription-card">
-                                <div class="status-badge active">VIP Subscription</div>
-                                <div class="subscription-details">
-                                    <p><i class="fas fa-user"></i> <strong>Name :&nbsp;</strong>
-                                        <%= user.name %>
-                                    </p>
-                                    <p><i class="fas fa-envelope"></i> <strong>Email :&nbsp;</strong>
-                                        <%= user.email %>
-                                    </p>
-                                    <p><i class="fas fa-calendar-alt"></i> <strong>Valid Until&nbsp;:&nbsp;</strong>
-                                        <% if (user.subscription.validTill) { const vipDate=new
-                                            Date(user.subscription.validTill); const
-                                            dd=String(vipDate.getDate()).padStart(2, '0' ); const
-                                            mm=String(vipDate.getMonth() + 1).padStart(2, '0' ); const
-                                            yy=vipDate.getFullYear(); %>
-                                            <%= `${dd}-${mm}-${yy}` %>
-                                                <% } else { %>
-                                                    N/A
-                                                    <% } %>
-                                    </p>
-                                </div>
-                            </div>
-                            <% } else { %>
-                                <div class="subscription-card">
-                                    <% if (!user.validUntil || new Date(user.validUntil) < new Date()) { %>
-                                        <div class="status-badge expired">No Active Subscription</div>
-                                        <p class="no-subscription-message">Subscribe now to enjoy premium features.</p>
-                                        <% } else { %>
-                                            <div class="status-badge active" data-translate="active_subscription">Active
-                                                Subscription</div>
-                                            <div class="subscription-details">
-                                                <p><i class="fas fa-user"></i> <strong> <span
-                                                            data-translate="full_name">Name</span> :&nbsp;</strong>
-                                                    <%= user.name %>
-                                                </p>
-                                                <p><i class="fas fa-envelope"></i> <strong> <span
-                                                            data-translate="email_address">Email</span> :&nbsp;</strong>
-                                                    <%= user.email %>
-                                                </p>
-                                                <p><i class="fas fa-calendar-alt"></i> <strong><span
-                                                            data-translate="valid_until">Valid
-                                                            Until</span>&nbsp;:&nbsp;</strong>
-                                                    <% if (user.validUntil) { const date=new Date(user.validUntil);
-                                                        const dd=String(date.getDate()).padStart(2, '0' ); const
-                                                        mm=String(date.getMonth() + 1).padStart(2, '0' ); const
-                                                        yy=date.getFullYear(); %>
-                                                        <%= `${dd}-${mm}-${yy}` %>
-                                                            <% } else { %>
-                                                                N/A
-                                                                <% } %>
-                                                </p>
-                                                <p><i class="fas fa-clock"></i> <strong>Time
-                                                        Remaining&nbsp;:&nbsp;</strong>
-                                                    <span id="time-remaining"
-                                                        data-translate="time_remaining">Loading...</span>
-                                                </p>
-                                            </div>
-                                            <% } %>
-                                </div>
-                                <% } %>
-                    </div>
-
-                </div>
-                <% } %>
-
-                    <!-- <div class="tab-content <%= user?.subscription?.isVip ? 'active' : '' %>"
-                    id="current-subscription-tab-content">
+                <div class="tabs">
                     <% if (user?.subscription?.isVip) { %>
+                        <div class="tab active" id="current-subscription-tab"
+                            style="display: flex; align-items: center; gap: 5px;"><img class="logo" alt="Logo"
+                                src="/Vip.png">VIP
+                            Subscription</div>
+                        <% } else { %>
+                            <div class="tab active" id="plans-tab" data-translate="subscription_plans">Subscription
+                                Plans
+                            </div>
+                            <div class="tab" id="current-subscription-tab" data-translate="current_subscription"
+                                style="display: none;">Current
+                                Subscription</div>
+                            <% } %>
+                </div>
+
+
+                <!-- 🔹 If user is VIP -->
+                <% if (user?.subscription?.isVip) { %>
+                    <div class="tab-content active" id="current-subscription-tab-content">
                         <div class="subscription-card">
                             <div class="status-badge active">VIP Subscription</div>
                             <div class="subscription-details">
@@ -195,14 +61,64 @@
                                         mm=String(vipDate.getMonth() + 1).padStart(2, '0' ); const
                                         yy=vipDate.getFullYear(); %>
                                         <%= `${dd}-${mm}-${yy}` %>
-                                            <% } else { %>
-                                                N/A
-                                                <% } %>
+                                            <% } else { %> N/A <% } %>
                                 </p>
                             </div>
                         </div>
-                        <% } else { %>
-                            <div class="subscription-card">
+                    </div>
+
+                    <% } else { %>
+                        <!-- 🔹 Non-VIP User: show Plans + Normal Subscription Card -->
+                        <div class="tab-content active" id="plans-tab-content">
+                            <div class="plans">
+                                <% const userCurrency=user?.userPreferences?.currency || activeCurrency || "EUR" ; %>
+                                    <% plans.filter(p=> p.recurring).forEach(plan => {
+                                        const sanitizedId = plan.encryptedId.replace(/[^a-zA-Z0-9-_]/g, "");
+                                        const priceObj = plan.prices.find(p => p.currency === userCurrency) ||
+                                        plan.prices[0];
+                                        %>
+                                        <div class="plan-card">
+                                            <div class="plan-duration">
+                                                <%= plan.publicName %>
+                                            </div>
+                                            <div class="plan-price" id="plan-price-<%= sanitizedId %>">
+                                                <%= priceObj.amount %>
+                                                    <%= priceObj.currency %>
+                                            </div>
+
+                                            <ul class="features">
+                                                <% plan.features.forEach(feature=> { %>
+                                                    <li>
+                                                        <%= feature %>
+                                                    </li>
+                                                    <% }); %>
+                                            </ul>
+
+                                            <% if (needsCurrencySelection) { %>
+                                                <button id="lock-curreny-button-<%= plan.encryptedId %>"
+                                                    class="lock-curreny-button subscribe-btn"
+                                                    onClick="showCurrencyPopup('<%= plan.encryptedId %>')">
+                                                    Proceed to pay
+                                                </button>
+                                                <% } %>
+
+                                                    <div id="paypal-button-container-<%= sanitizedId %>"
+                                                        class="paypal-button-container"
+                                                        style="margin-top: 20px; <%= needsCurrencySelection ? 'display:none;' : 'display:block;' %>"
+                                                        data-plan-id="<%= plan.encryptedId %>">
+                                                    </div>
+                                        </div>
+                                        <% }); %>
+                            </div>
+
+                            <!-- 🔹 Non-VIP Subscription Card -->
+                            <div style="display: flex; justify-content: center; margin-top: 20px;">
+                                <div class="tab" id="show-current-subscription-btn"
+                                    data-translate="current_subscription">
+                                    Current
+                                    Subscription</div>
+                            </div>
+                            <div class="subscription-card" style="display: none;">
                                 <% if (!user.validUntil || new Date(user.validUntil) < new Date()) { %>
                                     <div class="status-badge expired">No Active Subscription</div>
                                     <p class="no-subscription-message">Subscribe now to enjoy premium features.</p>
@@ -210,35 +126,27 @@
                                         <div class="status-badge active" data-translate="active_subscription">Active
                                             Subscription</div>
                                         <div class="subscription-details">
-                                            <p><i class="fas fa-user"></i> <strong> <span
-                                                        data-translate="full_name">Name</span> :&nbsp;</strong>
+                                            <p><i class="fas fa-user"></i> <strong>Name:&nbsp;</strong>
                                                 <%= user.name %>
                                             </p>
-                                            <p><i class="fas fa-envelope"></i> <strong> <span
-                                                        data-translate="email_address">Email</span> :&nbsp;</strong>
+                                            <p><i class="fas fa-envelope"></i> <strong>Email:&nbsp;</strong>
                                                 <%= user.email %>
                                             </p>
-                                            <p><i class="fas fa-calendar-alt"></i> <strong><span
-                                                        data-translate="valid_until">Valid
-                                                        Until</span>&nbsp;:&nbsp;</strong>
-                                                <% if (user.validUntil) { const date=new Date(user.validUntil); const
+                                            <p><i class="fas fa-calendar-alt"></i> <strong>Valid Until:&nbsp;</strong>
+                                                <% const date=new Date(user.validUntil); const
                                                     dd=String(date.getDate()).padStart(2, '0' ); const
                                                     mm=String(date.getMonth() + 1).padStart(2, '0' ); const
                                                     yy=date.getFullYear(); %>
                                                     <%= `${dd}-${mm}-${yy}` %>
-                                                        <% } else { %>
-                                                            N/A
-                                                            <% } %>
                                             </p>
-                                            <p><i class="fas fa-clock"></i> <strong>Time Remaining&nbsp;:&nbsp;</strong>
-                                                <span id="time-remaining"
-                                                    data-translate="time_remaining">Loading...</span>
+                                            <p><i class="fas fa-clock"></i> <strong>Time Remaining:&nbsp;</strong>
+                                                <span id="time-remaining">Loading...</span>
                                             </p>
                                         </div>
                                         <% } %>
                             </div>
-                            <% } %>
-                </div> -->
+                        </div>
+                        <% } %>
     </div>
 
 
@@ -249,8 +157,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
 <script src="https://js.stripe.com/v3/"></script>
-<script
-    src="https://www.paypal.com/sdk/js?client-id=AeUlyT2WmljAHqGaXytGewyz61xmfAJ4woW1wA_2TwjcaqbbjJTkPHy47FsEJhcH68BGlm9-AdDfmbrU&vault=true&intent=subscription""></script>
+<script src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&vault=true&intent=subscription"></script>
 <script src=" /js/plan.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -260,6 +167,7 @@
         window.paypalMetaTokens = window.paypalMetaTokens || {};
 
         containers.forEach(container => {
+            console.log(container)
             const planId = container.dataset.planId;
             const sanitizedId = container.id.replace("paypal-button-container-", "");
             const couponInput = document.querySelector(`#coupon-code-${sanitizedId}`);
@@ -267,7 +175,7 @@
             paypal.Buttons({
                 createSubscription: function () {  // ⚡ For recurring subscriptions
                     const couponCode = couponInput ? couponInput.value.trim() : "";
-                        // Grab selected currency from the dropdown
+                    // Grab selected currency from the dropdown
                     const currencySelect = document.getElementById("currencySwitcherApp");
                     const selectedCurrency = currencySelect ? currencySelect.value : '<%= activeCurrency %>'; // fallback to server value
                     return fetch("/paypal/create-subscription", {  // endpoint for recurring
@@ -366,122 +274,18 @@
     }
 
     setInterval(updateTimeRemaining, 1000);
+    const currentSubBtn = document.querySelector("#show-current-subscription-btn");
+    const subCard = document.querySelector(".subscription-card");
 
-
-
-
-    const tabs = document.querySelectorAll(".tab");
-    const contents = document.querySelectorAll(".tab-content");
-
-    tabs.forEach((tab) => {
-        tab.addEventListener("click", () => {
-            if (tab.id === "current-subscription-tab") {
-                // Remove active only from other child tabs (not parent)
-                tabs.forEach((t) => {
-                    if (t.id !== "plans-tab") t.classList.remove("active");
-                });
-
-                // Remove active only from other child contents (not parent)
-                contents.forEach((c) => {
-                    if (c.id !== "plans-tab-content") c.classList.remove("active");
-                });
-
-                // Add active to current subscription tab + content
-                tab.classList.add("active");
-                const target = document.getElementById(tab.id + "-content");
-                if (target) {
-                    target.classList.add("active");
-
-                    // ✅ Smooth scroll to the shown portion
-                    target.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"   // or "nearest" if you want less scrolling
-                    });
-                }
+    if (currentSubBtn && subCard) {
+        currentSubBtn.addEventListener("click", function () {
+            if (subCard.style.display === "none" || subCard.style.display === "") {
+                subCard.style.display = "block";
+                subCard.scrollIntoView({ behavior: "smooth", block: "start" });
             }
         });
-    });
-
-
-
-
-    // Tab toggle
-    // const tabs = document.querySelectorAll(".tab");
-    // const contents = document.querySelectorAll(".tab-content");
-
-    // tabs.forEach((tab) => {
-    //     tab.addEventListener("click", () => {
-    //         tabs.forEach((t) => t.classList.remove("active"));
-    //         contents.forEach((c) => c.classList.remove("active"));
-    //         tab.classList.add("active");
-
-    //         const target = document.getElementById(tab.id + "-content");
-    //         if (target) target.classList.add("active");
-    //     });
-    // });
+    }
 </script>
-
-<!-- <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const popup = document.getElementById("theme-popup-select-currency");
-
-
-        // Use EJS to pass the flag from backend
-        const needsCurrencySelection = <%= needsCurrencySelection ? 'true' : 'false' %>;
-
-        if (needsCurrencySelection) {
-            popup.style.display = "flex";
-        }
-
-        const popupBtn = document.getElementById("popup-ok-btn-select-currency");
-        popupBtn.addEventListener("click", async function (e) {
-            e.preventDefault();
-
-            const currencySelect = document.getElementById("currency-value");
-            const selectedCurrency = currencySelect.value;
-
-            // ✅ Frontend mandatory check
-            if (!selectedCurrency) {
-                return showToast("Please select a currency!", "error");
-            }
-
-            // Show loader
-            document.getElementById("loader").style.display = "flex";
-
-            try {
-                const res = await fetch("/set-currency", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ currency: selectedCurrency })
-                });
-
-                const data = await res.json();
-
-                if (!res.ok) {
-                    return showToast(data.message || "Failed to set currency", "error");
-                }
-
-                // ✅ Success
-                showToast(data.message || "Currency set successfully", "success");
-
-                // Hide popup
-                popup.style.display = "none";
-
-                // 🔄 Reload page after 1 second
-                setTimeout(() => location.reload(), 1000);
-
-            } catch (err) {
-                console.error("Error setting currency:", err);
-                showToast("Internal error. Please try again.", "error");
-            } finally {
-                // Hide loader regardless of success or failure
-                document.getElementById("loader").style.display = "none";
-            }
-        });
-    });
-</script> -->
-
-
 <script>
     document.getElementById("currencySwitcherApp").addEventListener("change", function () {
         const url = new URL(window.location);
@@ -492,8 +296,10 @@
         const popup = document.getElementById("theme-popup-select-currency");
         const okBtn = document.getElementById("popup-ok-btn-select-currency");
         const cancelBtn = document.getElementById("popup-cancel-btn-select-currency");
-        const currencySwitcher = document.getElementById("currencySwitcherApp");
-
+        const currencySelect = document.getElementById("currencySwitcherApp"); // the select
+        const currencyValue = document.getElementById("currency-value"); // the select
+        const loader = document.getElementById("loader");
+        currencyValue.value = currencySelect.value
         popup.style.display = "flex";
 
         const cleanup = () => {
@@ -502,26 +308,49 @@
             cancelBtn.onclick = null;
         };
 
-        okBtn.onclick = (e) => {
+        okBtn.onclick = async (e) => {
             e.preventDefault();
-            cleanup();
-            // ✅ Continue your logic here, e.g., show PayPal button for this plan
-            // Select all PayPal button containers
-            const allPaypalContainers = document.querySelectorAll(".paypal-button-container");
 
-            // Show all containers
-            allPaypalContainers.forEach(container => {
-                container.style.display = "block";
-            });
+            const selectedCurrency = currencyValue.value;
 
-            const allLockCurrencyButton = document.querySelectorAll(".lock-curreny-button");
-            allLockCurrencyButton.forEach(container => {
-                container.style.display = "none";
-            });
-            currencySwitcher.style.display="none";
+            // Frontend mandatory check
+            if (!selectedCurrency) {
+                return showToast("Please select a currency!", "error");
+            }
 
-            // Render PayPal buttons here if needed
-            // renderPayPalButtons(planId);
+            loader.style.display = "flex"; // show loader
+
+            try {
+                // 1️⃣ Call backend to set currency
+                const res = await fetch("/set-currency", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ currency: selectedCurrency })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    return showToast(data.message || "Failed to set currency", "error");
+                }
+
+                showToast(data.message || "Currency set successfully", "success");
+
+                // 🔁 Reload page after 1 second
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+
+
+                currencySelect.style.display = "none";
+
+                cleanup(); // hide popup
+
+            } catch (err) {
+                console.error("Error setting currency:", err);
+                showToast("Internal error. Please try again.", "error");
+            } finally {
+                loader.style.display = "none"; // hide loader
+            }
         };
 
         cancelBtn.onclick = (e) => {

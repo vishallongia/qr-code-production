@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 require("dotenv").config();
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
@@ -10,6 +11,10 @@ const {
 } = require("../public/js/cryptoUtils");
 const WinnerRequest = require("../models/WinnerRequest"); // your Mongoose model
 const SendEmail = require("../Messages/SendEmail");
+const QuizQuestion = require("../models/QuizQuestion");
+const VoteQuestion = require("../models/VoteQuestion");
+const Applause = require("../models/Applause");
+const Channel = require("../models/Channel");
 
 // Set user as TV Station
 router.post("/make-tvstation", async (req, res) => {
@@ -440,6 +445,165 @@ router.post("/approve-to-draw-winner/:userId", async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Failed to update user approval" });
+  }
+});
+
+router.get("/magic-coin-commission/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // 1️⃣ Validate User ID
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).render("magic-coin-commission/update", {
+        message: "Invalid User ID",
+        type: "error",
+        user: null,
+        channels: [],
+        quizQuestions: [],
+        voteQuestions: [],
+        applauseQuestions: [],
+      });
+    }
+
+    // 2️⃣ Find User
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).render("magic-coin-commission/update", {
+        message: "User not found",
+        type: "error",
+        user: null,
+        channels: [],
+        quizQuestions: [],
+        voteQuestions: [],
+        applauseQuestions: [],
+      });
+    }
+
+    // 3️⃣ Ensure user is a TV Station
+    if (!user.isTvStation) {
+      return res.status(403).render("magic-coin-commission/update", {
+        message: "Access denied — User is not a TV Station",
+        type: "error",
+        user,
+        channels: [],
+        quizQuestions: [],
+        voteQuestions: [],
+        applauseQuestions: [],
+      });
+    }
+
+    // 4️⃣ Get all channels for this user
+    const channels = await Channel.find({ createdBy: user._id }).select(
+      "_id channelName"
+    );
+    const channelIds = channels.map((ch) => ch._id);
+
+    // 5️⃣ Fetch all questions linked to these channels
+    const [quizQuestions, voteQuestions, applauseQuestions] = await Promise.all(
+      [
+        QuizQuestion.find({ channelId: { $in: channelIds } })
+          .select("question channelId commissionPercent")
+          .populate("channelId", "channelName"),
+        VoteQuestion.find({ channelId: { $in: channelIds } })
+          .select("question channelId commissionPercent")
+          .populate("channelId", "channelName"),
+        Applause.find({ channelId: { $in: channelIds } })
+          .select("question channelId commissionPercent")
+          .populate("channelId", "channelName"),
+      ]
+    );
+
+    // 6️⃣ Render the update page
+    res.render("magic-coin-commission/update", {
+      user,
+      channels,
+      quizQuestions,
+      voteQuestions,
+      applauseQuestions,
+      message: null,
+      type: "success",
+    });
+  } catch (error) {
+    console.error("Error loading magic coin commission update page:", error);
+    res.status(500).render("magic-coin-commission/update", {
+      message: "Server error while loading page",
+      type: "error",
+      user: null,
+      channels: [],
+      quizQuestions: [],
+      voteQuestions: [],
+      applauseQuestions: [],
+    });
+  }
+});
+
+router.post("/update-magic-coin-commission", async (req, res) => {
+  try {
+    const { userId, commissions } = req.body;
+
+    // Validate User
+    if (!mongoose.Types.ObjectId.isValid(userId))
+      return res.status(400).json({ message: "Invalid User ID" });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user.isTvStation)
+      return res
+        .status(403)
+        .json({ message: "Access denied — User is not a TV Station" });
+
+    // Validate commissions
+    if (!commissions || typeof commissions !== "object")
+      return res.status(400).json({ message: "Invalid commissions data" });
+
+    const validatePercent = (v) => typeof v === "number" && v >= 0 && v <= 100;
+
+    for (const [key, value] of Object.entries(commissions)) {
+      if (value !== undefined && !validatePercent(value)) {
+        return res.status(400).json({
+          message: `Invalid commission value for ${key}. Must be 0–100.`,
+        });
+      }
+    }
+
+    // Get all channels once
+    const channelIds = await Channel.distinct("_id", { createdBy: user._id });
+    if (!channelIds.length)
+      return res
+        .status(404)
+        .json({ message: "No channels found for this user" });
+
+    // Dynamic model mapping
+    const modelMap = {
+      quiz: QuizQuestion,
+      vote: VoteQuestion,
+      applause: Applause,
+    };
+
+    // Build update promises dynamically
+    const updates = Object.entries(commissions)
+      .filter(([key, val]) => modelMap[key] && val !== undefined)
+      .map(([key, val]) =>
+        modelMap[key].updateMany(
+          { channelId: { $in: channelIds } },
+          { $set: { commissionPercent: val } }
+        )
+      );
+
+    // Execute all at once
+    if (updates.length > 0) await Promise.all(updates);
+
+    res.json({
+      success: true,
+      message: "Magic coin commissions updated successfully",
+      updated: commissions,
+    });
+  } catch (err) {
+    console.error("Commission update error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating commissions",
+    });
   }
 });
 

@@ -111,6 +111,12 @@ const quizQuestionSchema = new mongoose.Schema(
       type: String,
       default: null, // External or internal session link
     },
+    // ✅ New Commission Field
+    commissionPercent: {
+      type: Number,
+      default: 70, // default commission percentage
+      min: 0,
+    },
     // ✅ New field: Linked with Magic Code (QR)
     linkedQRCode: {
       type: mongoose.Schema.Types.ObjectId,

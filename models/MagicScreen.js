@@ -11,24 +11,16 @@ const optionSchema = new mongoose.Schema({
     default: null,
   },
   description: {
-    type: String, // URL or path to the option image
+    type: String,
     default: null,
   },
-  magicCoinDeducted: {
-    type: Number,
-    required: true,
-    min: 0,
-    default: 0,
-  },
-  // ✅ New Commission Field
-  commissionPercent: {
-    type: Number,
-    default: 70, // default commission percentage
-    min: 0,
+  link: {
+    type: String, // store the URL
+    default: null,
   },
 });
 
-const applauseSchema = new mongoose.Schema(
+const magicScreenSchema = new mongoose.Schema(
   {
     channelId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -39,56 +31,62 @@ const applauseSchema = new mongoose.Schema(
     sessionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Session",
-      // required: true,
+      // optional
     },
+
     question: {
       type: String,
-      required: true,
       trim: true,
     },
 
     questionDescription: {
-      // ✅ Added field
       type: String,
-      default: "", // Optional
+      default: "",
       trim: true,
     },
+
     options: {
       type: [optionSchema],
       validate: {
         validator: (val) => val.length >= 1,
-        message: "At least 1 options are required.",
+        message: "At least 1 option is required.",
       },
     },
 
     questionImage: {
-      type: String, // Optional image URL or path
+      type: String,
       default: null,
     },
+
     questionImageLink: {
-      type: String, // Optional clickable link for the image
+      type: String,
       default: null,
     },
+
     logo: {
       type: String,
-      default: null, // Path or URL to main session logo
+      default: null,
     },
+
     logoTitle: {
       type: String,
-      default: "", // Optional title shown near/under the logo
+      default: "",
     },
+
     logoDescription: {
       type: String,
-      default: "", // Session description
+      default: "",
     },
+
     logoLink: {
       type: String,
-      default: null, // External or internal session link
+      default: null,
     },
+
     linkedQRCode: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "QRCodeData", // Reference to the QRCodeData model
-      default: null, // Optional
+      ref: "QRCodeData",
+      default: null,
     },
   },
   {
@@ -96,4 +94,4 @@ const applauseSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Applause", applauseSchema);
+module.exports = mongoose.model("MagicScreen", magicScreenSchema);

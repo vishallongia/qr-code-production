@@ -9,16 +9,15 @@ const {
 } = require("../middleware/multerQuizUploader");
 const Channel = require("../models/Channel");
 const User = require("../models/User");
-const ApplauseResponse = require("../models/ApplauseResponse");
+const MagicScreenResponse = require("../models/MagicScreenResponse");
 const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
 const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
-const MagicCoinCommission = require("../models/MagicCoinCommission");
 const Session = require("../models/Session"); // adjust path if needed
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
-const Applause = require("../models/Applause");
+const MagicScreen = require("../models/MagicScreen");
 
 router.get(
-  "/channels/:channelId/session/:sessionId/applause",
+  "/channels/:channelId/session/:sessionId/magicscreen",
   async (req, res) => {
     const { channelId, sessionId } = req.params;
 
@@ -30,7 +29,7 @@ router.get(
       return res.render("dashboardnew", {
         channel: null,
         error: "Invalid Channel or Session ID",
-        activeSection: "applause",
+        activeSection: "magicscreen",
         user: req.user,
         sessionId: null,
         channelId: null,
@@ -46,7 +45,7 @@ router.get(
         return res.render("dashboardnew", {
           channel: null,
           error: "Channel or session not found",
-          activeSection: "applause",
+          activeSection: "magicscreen",
           user: req.user,
           sessionId: null,
           channelId: null,
@@ -57,9 +56,9 @@ router.get(
       // Check ownership
       if (!channel.createdBy.equals(req.user._id)) {
         return res.render("dashboardnew", {
-          channel: channel,
+          channel,
           error: "Access denied",
-          activeSection: "applause",
+          activeSection: "magicscreen",
           user: req.user,
           sessionId: null,
           channelId: null,
@@ -70,7 +69,7 @@ router.get(
       const skip = parseInt(req.query.skip) || 0;
       const limit = parseInt(req.query.limit) || 5;
 
-      const quizQuestions = await Applause.find({
+      const magicScreens = await MagicScreen.find({
         channelId,
         sessionId,
       })
@@ -79,29 +78,32 @@ router.get(
         .limit(limit)
         .lean();
 
-      const total = await Applause.countDocuments({ channelId, sessionId });
-      const hasMore = skip + quizQuestions.length < total;
+      const total = await MagicScreen.countDocuments({ channelId, sessionId });
+      const hasMore = skip + magicScreens.length < total;
 
+      // Handle AJAX / JSON request
       if (req.xhr || req.headers.accept.includes("json")) {
-        return res.json({ type: "success", data: quizQuestions, hasMore });
+        return res.json({ type: "success", data: magicScreens, hasMore });
       }
+
+      // Render dashboard view
       return res.render("dashboardnew", {
         channel,
         error: null,
-        activeSection: "applause",
+        activeSection: "magicscreen",
         user: req.user,
-        quizQuestions,
+        quizQuestions: magicScreens,
         hasMore,
         sessionId,
         channelId,
         session,
       });
     } catch (err) {
-      console.error("Error fetching quiz for session:", err);
+      console.error("Error fetching magic screen for session:", err);
       return res.render("dashboardnew", {
         channel: null,
         error: "Server error. Please try again later.",
-        activeSection: "applause",
+        activeSection: "magicscreen",
         user: req.user,
         quizQuestions: null,
         hasMore: false,
@@ -111,7 +113,7 @@ router.get(
 );
 
 router.get(
-  "/channels/:channelId/session/:sessionId/addapplausequestion",
+  "/channels/:channelId/session/:sessionId/addmagicscreenquestion",
   async (req, res) => {
     const { channelId, sessionId } = req.params;
 
@@ -119,7 +121,7 @@ router.get(
       !mongoose.Types.ObjectId.isValid(channelId) ||
       !mongoose.Types.ObjectId.isValid(sessionId)
     ) {
-      return res.render("applause/add-question", {
+      return res.render("magicscreen/add-question", {
         channel: null,
         session: null,
         error: "Invalid Channel or Session ID",
@@ -132,7 +134,7 @@ router.get(
       const session = await Session.findById(sessionId);
 
       if (!channel || !session) {
-        return res.render("applause/add-question", {
+        return res.render("magicscreen/add-question", {
           channel: null,
           session: null,
           error: "Channel or Session not found",
@@ -140,9 +142,9 @@ router.get(
         });
       }
 
-      // Check if user owns the channel
+      // ✅ Verify ownership
       if (!channel.createdBy.equals(req.user._id)) {
-        return res.render("applause/add-question", {
+        return res.render("magicscreen/add-question", {
           channel: null,
           session: null,
           error: "Access denied",
@@ -150,9 +152,9 @@ router.get(
         });
       }
 
-      // Optional: check if session belongs to the channel
+      // ✅ Ensure session belongs to this channel
       if (!session.channelId.equals(channel._id)) {
-        return res.render("applause/add-question", {
+        return res.render("magicscreen/add-question", {
           channel: null,
           session: null,
           error: "Session does not belong to this channel",
@@ -160,11 +162,11 @@ router.get(
         });
       }
 
-      // ✅ Check if a question already exists for the session
-      const existingQuestion = await Applause.findOne({ sessionId });
+      // ✅ Only one question allowed per session
+      const existingQuestion = await MagicScreen.findOne({ sessionId });
 
       if (existingQuestion) {
-        return res.render("applause/add-question", {
+        return res.render("magicscreen/add-question", {
           channel,
           session,
           error: "Only one question is allowed per session.",
@@ -173,7 +175,8 @@ router.get(
         });
       }
 
-      return res.render("applause/add-question", {
+      // ✅ Render add question page
+      return res.render("magicscreen/add-question", {
         channel,
         session,
         error: null,
@@ -182,10 +185,10 @@ router.get(
       });
     } catch (err) {
       console.error(
-        "Error in GET /channels/:channelId/session/:sessionId/addapplausequestion:",
+        "Error in GET /channels/:channelId/session/:sessionId/addmagicscreenquestion:",
         err
       );
-      return res.render("applause/add-question", {
+      return res.render("magicscreen/add-question", {
         channel: null,
         session: null,
         error: "Server error, please try again later.",
@@ -196,7 +199,7 @@ router.get(
 );
 
 router.post(
-  "/applause-question/create",
+  "/magicscreen-question/create",
   upload.fields([
     { name: "questionImage", maxCount: 1 },
     { name: "logo", maxCount: 1 },
@@ -229,7 +232,7 @@ router.post(
       }
 
       // ✅ Validate required fields
-      if (!channelId || !sessionId || !question || !options) {
+      if (!channelId || !sessionId || !options) {
         cleanupUploadedFiles(req.files);
         return res.status(400).json({
           message: "Missing required fields.",
@@ -256,7 +259,7 @@ router.post(
         });
       }
 
-      // ✅ Validate & parse options
+      // ✅ Parse options
       let parsedOptions;
       try {
         parsedOptions = JSON.parse(options);
@@ -271,7 +274,7 @@ router.post(
       if (!Array.isArray(parsedOptions) || parsedOptions.length < 1) {
         cleanupUploadedFiles(req.files);
         return res.status(400).json({
-          message: "At least 1 applause product are required.",
+          message: "At least 1 option is required.",
           type: "error",
         });
       }
@@ -285,6 +288,7 @@ router.post(
           text: opt.text?.trim(),
           description: opt.description?.trim() || "",
           image: imageFile ? `/questions-image/${imageFile.filename}` : null,
+          link: opt.link?.trim() || null, // ✅ new link field
           magicCoinDeducted: Math.max(0, parseInt(opt.magicCoinDeducted) || 0),
         };
       });
@@ -293,8 +297,8 @@ router.post(
       const questionImagePath = req.files["questionImage"]?.[0]?.filename;
       const logoPath = req.files["logo"]?.[0]?.filename;
 
-      // ✅ Create and save Applause question
-      const applauseData = new Applause({
+      // ✅ Create and save Magic Screen question
+      const magicScreenData = new MagicScreen({
         channelId,
         sessionId,
         question: question.trim(),
@@ -307,21 +311,21 @@ router.post(
         logoTitle: logoTitle?.trim() || "",
         logoDescription: logoDescription?.trim() || "",
         logoLink: logoLink?.trim() || null,
-        questionDescription: questionDescription.trim(),
+        questionDescription: questionDescription?.trim(),
       });
 
-      await applauseData.save();
+      await magicScreenData.save();
 
       return res.status(201).json({
-        message: "Applause question saved successfully.",
+        message: "Magic Screen question saved successfully.",
         type: "success",
-        data: applauseData,
+        data: magicScreenData,
       });
     } catch (err) {
-      console.error("Error saving applause question:", err);
+      console.error("Error saving Magic Screen question:", err);
       cleanupUploadedFiles(req.files);
       return res.status(500).json({
-        message: "Failed to save applause question.",
+        message: "Failed to save Magic Screen question.",
         type: "error",
       });
     }
@@ -339,7 +343,7 @@ router.get(
       !mongoose.Types.ObjectId.isValid(questionId) ||
       !mongoose.Types.ObjectId.isValid(sessionId)
     ) {
-      return res.render("applause/edit-question", {
+      return res.render("magicscreen/edit-question", {
         error: "Invalid Channel ID, Question ID, or Session ID",
         channel: null,
         question: null,
@@ -351,7 +355,7 @@ router.get(
       const channel = await Channel.findById(channelId);
 
       if (!channel) {
-        return res.render("applause/edit-question", {
+        return res.render("magicscreen/edit-question", {
           error: "Channel not found",
           channel: null,
           question: null,
@@ -360,7 +364,7 @@ router.get(
       }
 
       if (!channel.createdBy.equals(req.user._id)) {
-        return res.render("applause/edit-question", {
+        return res.render("magicscreen/edit-question", {
           error: "Access denied",
           channel: null,
           question: null,
@@ -368,21 +372,21 @@ router.get(
         });
       }
 
-      const question = await Applause.findOne({
+      const question = await MagicScreen.findOne({
         _id: questionId,
         channelId,
       }).lean();
 
       if (!question) {
-        return res.render("applause/edit-question", {
-          error: "Applause question not found",
+        return res.render("magicscreen/edit-question", {
+          error: "Magic Screen question not found",
           channel,
           question: null,
           user: req.user,
         });
       }
 
-      return res.render("applause/edit-question", {
+      return res.render("magicscreen/edit-question", {
         error: null,
         channel,
         question,
@@ -390,8 +394,8 @@ router.get(
         sessionId,
       });
     } catch (err) {
-      console.error("Error fetching applause question for edit:", err);
-      return res.render("applause/edit-question", {
+      console.error("Error fetching magic screen question for edit:", err);
+      return res.render("magicscreen/edit-question", {
         error: "Server error. Try again later.",
         channel: null,
         question: null,
@@ -402,7 +406,7 @@ router.get(
 );
 
 router.post(
-  "/applause-question/update",
+  "/magicscreen-question/update",
   upload.fields([
     { name: "questionImage", maxCount: 1 },
     { name: "questionLogo", maxCount: 1 },
@@ -426,6 +430,7 @@ router.post(
         questionDescription,
       } = req.body;
 
+      // ✅ Validate IDs
       if (
         !mongoose.Types.ObjectId.isValid(channelId) ||
         !mongoose.Types.ObjectId.isValid(sessionId)
@@ -434,14 +439,16 @@ router.post(
         return res.status(400).json({ message: "Invalid IDs", type: "error" });
       }
 
-      const applause = await Applause.findById(questionId);
-      if (!applause) {
+      // ✅ Find Magic Screen question
+      const magicScreen = await MagicScreen.findById(questionId);
+      if (!magicScreen) {
         cleanupUploadedFiles(req.files);
         return res
           .status(404)
-          .json({ message: "Applause question not found", type: "error" });
+          .json({ message: "Magic Screen question not found", type: "error" });
       }
 
+      // ✅ Validate channel/session ownership
       const channel = await Channel.findById(channelId);
       const session = await Session.findById(sessionId);
       if (!channel || !session) {
@@ -458,13 +465,15 @@ router.post(
           .json({ message: "Access denied", type: "error" });
       }
 
-      if (!question || !options) {
+      // ✅ Validate main fields
+      if (!options) {
         cleanupUploadedFiles(req.files);
         return res
           .status(400)
           .json({ message: "Missing required fields", type: "error" });
       }
 
+      // ✅ Parse options JSON
       let parsedOptions;
       try {
         parsedOptions = JSON.parse(options);
@@ -482,7 +491,7 @@ router.post(
           .json({ message: "At least 2 options required", type: "error" });
       }
 
-      // Cleared images
+      // ✅ Handle cleared images array
       let cleared = [];
       if (clearedImages) {
         if (Array.isArray(clearedImages)) {
@@ -496,26 +505,27 @@ router.post(
 
       const handleImageUpdate = (field, uploadedFile) => {
         if (cleared.includes(field)) {
-          deleteFileIfExists(applause[field]);
+          deleteFileIfExists(magicScreen[field]);
           return null;
         } else if (uploadedFile) {
-          deleteFileIfExists(applause[field]);
+          deleteFileIfExists(magicScreen[field]);
           return `/questions-image/${uploadedFile.filename}`;
         }
-        return applause[field];
+        return magicScreen[field];
       };
 
-      applause.logo = handleImageUpdate("logo", req.files["logo"]?.[0]);
-      applause.questionImage = handleImageUpdate(
+      // ✅ Update main images
+      magicScreen.logo = handleImageUpdate("logo", req.files["logo"]?.[0]);
+      magicScreen.questionImage = handleImageUpdate(
         "questionImage",
         req.files["questionImage"]?.[0]
       );
-      applause.questionLogo = handleImageUpdate(
+      magicScreen.questionLogo = handleImageUpdate(
         "questionLogo",
         req.files["questionLogo"]?.[0]
       );
 
-      // Option files mapping
+      // ✅ Map uploaded option files to their option IDs
       const files = req.files["optionsImages"] || [];
       const optionIdsRaw = req.body.optionIds || [];
       const optionIds = Array.isArray(optionIdsRaw)
@@ -527,20 +537,21 @@ router.post(
         if (id) fileByOptionId.set(id, file);
       });
 
-      // Remove cleared options
+      // ✅ Remove cleared options (with their images)
       if (clearedOptions) {
         const fullyClearedOptionIds = clearedOptions.split(",");
         fullyClearedOptionIds.forEach((id) => {
-          const existingOpt = applause.options.find(
+          const existingOpt = magicScreen.options.find(
             (o) => o._id.toString() === id
           );
           if (existingOpt) deleteFileIfExists(existingOpt.image);
         });
-        applause.options = applause.options.filter(
+        magicScreen.options = magicScreen.options.filter(
           (o) => !fullyClearedOptionIds.includes(o._id.toString())
         );
       }
 
+      // ✅ Build updated options
       const formattedOptions = parsedOptions.map((opt) => {
         let optId =
           opt._id && mongoose.Types.ObjectId.isValid(opt._id)
@@ -549,7 +560,7 @@ router.post(
 
         let oldImage = null;
         if (opt._id) {
-          const found = applause.options.find(
+          const found = magicScreen.options.find(
             (o) => o._id.toString() === opt._id.toString()
           );
           oldImage = found ? found.image : null;
@@ -573,41 +584,45 @@ router.post(
           _id: optId,
           text: opt.text?.trim() || "",
           description: opt.description?.trim() || "",
+          link: opt.link?.trim() || "", // ✅ link field added
           magicCoinDeducted: parseInt(opt.magicCoinDeducted) || 0,
           image: newImage,
         };
       });
 
-      applause.channelId = channelId;
-      applause.sessionId = sessionId;
-      applause.question = question.trim();
-      applause.options = formattedOptions;
-      applause.logoTitle = logoTitle?.trim() || null;
-      applause.logoDescription = logoDescription?.trim() || null;
-      applause.logoLink = logoLink?.trim() || null;
-      applause.questionImageLink = questionImageLink?.trim() || null;
-      applause.questionDescription = questionDescription?.trim() || null;
+      // ✅ Save all updates
+      magicScreen.channelId = channelId;
+      magicScreen.sessionId = sessionId;
+      magicScreen.question = question.trim();
+      magicScreen.options = formattedOptions;
+      magicScreen.logoTitle = logoTitle?.trim() || null;
+      magicScreen.logoDescription = logoDescription?.trim() || null;
+      magicScreen.logoLink = logoLink?.trim() || null;
+      magicScreen.questionImageLink = questionImageLink?.trim() || null;
+      magicScreen.questionDescription = questionDescription?.trim() || null;
 
-      await applause.save();
+      await magicScreen.save();
 
       return res.status(200).json({
-        message: "Applause question updated successfully.",
+        message: "Magic Screen question updated successfully.",
         type: "success",
-        data: applause,
+        data: magicScreen,
       });
     } catch (err) {
-      console.error("Error updating applause question:", err);
+      console.error("Error updating Magic Screen question:", err);
       cleanupUploadedFiles(req.files);
-      return res
-        .status(500)
-        .json({ message: "Failed to update applause question", type: "error" });
+      return res.status(500).json({
+        message: "Failed to update Magic Screen question",
+        type: "error",
+      });
     }
   }
 );
 
-router.delete("/applause-question/:id", async (req, res) => {
+// DELETE Magic Screen event (same structure as applause delete)
+router.delete("/:id", async (req, res) => {
   try {
-    const questionId = req.params.id;
+    const questionId = req.params.id; // ✅ same naming as your applause route
     const { channelId } = req.body;
     const userId = req.user?._id;
 
@@ -618,6 +633,7 @@ router.delete("/applause-question/:id", async (req, res) => {
       });
     }
 
+    // Validate ownership of the channel
     const channel = await Channel.findOne({
       _id: channelId,
       createdBy: userId,
@@ -630,18 +646,23 @@ router.delete("/applause-question/:id", async (req, res) => {
       });
     }
 
-    const applause = await Applause.findOne({ _id: questionId, channelId });
-    if (!applause) {
+    // Validate magic screen event
+    const magicScreen = await MagicScreen.findOne({
+      _id: questionId,
+      channelId,
+    });
+    if (!magicScreen) {
       return res.status(404).json({
-        message: "Applause question not found",
+        message: "Magic Screen event not found",
         type: "error",
       });
     }
 
-    await cascadeDelete("applauseQuestion", questionId);
+    // Perform cascading deletion
+    await cascadeDelete("magicScreen", questionId);
 
     return res.status(200).json({
-      message: "Applause question deleted successfully",
+      message: "Magic Screen event deleted successfully",
       type: "success",
     });
   } catch (err) {
@@ -654,7 +675,7 @@ router.delete("/applause-question/:id", async (req, res) => {
 });
 
 router.get(
-  "/channels/:channelId/session/:sessionId/applause-play",
+  "/channels/:channelId/session/:sessionId/magicscreen-play",
   async (req, res) => {
     const { channelId, sessionId } = req.params;
 
@@ -664,7 +685,7 @@ router.get(
         !mongoose.Types.ObjectId.isValid(channelId) ||
         !mongoose.Types.ObjectId.isValid(sessionId)
       ) {
-        return res.render("applause/user-applause", {
+        return res.render("magicscreen/user-magic-screen", {
           channel: null,
           error: "Invalid Channel ID or Session ID",
           user: req.user,
@@ -679,7 +700,7 @@ router.get(
       const session = await Session.findById(sessionId);
 
       if (!channel) {
-        return res.render("applause/user-applause", {
+        return res.render("magicscreen/user-magic-screen", {
           channel: null,
           error: "Channel not found",
           user: req.user,
@@ -691,7 +712,7 @@ router.get(
       }
 
       if (!session) {
-        return res.render("applause/user-applause", {
+        return res.render("magicscreen/user-magic-screen", {
           channel: null,
           error: "Session not found",
           user: req.user,
@@ -703,9 +724,9 @@ router.get(
       }
 
       if (!channel.isRunning) {
-        return res.render("applause/user-applause", {
+        return res.render("magicscreen/user-magic-screen", {
           channel: null,
-          error: "Applause session is not currently running",
+          error: "Magic Screen session is not currently running",
           user: req.user,
           currentQuestion: null,
           index: 0,
@@ -717,15 +738,15 @@ router.get(
       const index =
         req.query.index !== undefined ? parseInt(req.query.index) : 0;
 
-      // ✅ Fetch Applause questions instead of QuizQuestions
-      const applauseQuestions = await Applause.find({ sessionId })
+      // ✅ Fetch MagicScreen questions instead of Applause
+      const magicScreens = await MagicScreen.find({ sessionId })
         .sort({ createdAt: 1 })
         .skip(index)
         .limit(1)
         .lean();
 
-      const total = await Applause.countDocuments({ sessionId });
-      const currentQuestion = applauseQuestions[0] || null;
+      const total = await MagicScreen.countDocuments({ sessionId });
+      const currentQuestion = magicScreens[0] || null;
       const hasNext = index + 1 < total;
 
       const availableCoins = req.user?.walletCoins || 0;
@@ -744,7 +765,7 @@ router.get(
       }
 
       // ✅ Render EJS page
-      return res.render("applause/user-applause", {
+      return res.render("magicscreen/user-magic-screen", {
         channel,
         error: null,
         user: req.user,
@@ -755,8 +776,8 @@ router.get(
         sessionId,
       });
     } catch (err) {
-      console.error("Error loading applause question:", err);
-      return res.render("applause/user-applause", {
+      console.error("Error loading magic screen question:", err);
+      return res.render("magicscreen/user-magic-screen", {
         channel: null,
         error: "Server error. Please try again later.",
         user: req.user,
@@ -769,17 +790,14 @@ router.get(
   }
 );
 
-router.post("/applause-response", async (req, res) => {
+router.post("/magic-screen-response", async (req, res) => {
   const {
     questionId,
     channelId,
     sessionId,
     selectedOptionIndex,
-    deductCoin = false,
-    magicCoinDeducted = 0, // ✅ matches schema
-    appType = "Applause", // ✅ for commission tracking
+    selectedLink,
   } = req.body;
-
   const userId = req.user?._id;
 
   if (!questionId || !channelId || selectedOptionIndex === undefined) {
@@ -789,120 +807,31 @@ router.post("/applause-response", async (req, res) => {
     });
   }
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const question = await Applause.findById(questionId).session(session);
+    const question = await MagicScreen.findById(questionId);
     if (!question) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(404).json({
         success: false,
-        message: "Question not found",
+        message: "Magic screen question not found",
       });
     }
 
-    // 🪙 Deduct user coins
-    const user = req?.user;
-    if (!user) throw new Error("User not found");
-
-    if (deductCoin && magicCoinDeducted > 0) {
-      if ((user.walletCoins || 0) < magicCoinDeducted) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(200).json({
-          success: false,
-          notEnoughCoins: true,
-          availableCoins: user.walletCoins || 0,
-          requiredCoins: magicCoinDeducted,
-          correctOptionIndex: question.correctAnswerIndex,
-        });
-      }
-    }
-
-    // 💾 Save applause response
-    const response = await ApplauseResponse.create(
-      [
-        {
-          userId,
-          questionId,
-          channelId,
-          sessionId,
-          selectedOptionIndex,
-          deductCoin,
-          magicCoinDeducted: deductCoin ? magicCoinDeducted : 0,
-        },
-      ],
-      { session }
-    );
-
-    // 💸 Commission logic (same pattern as quiz-response)
-    if (deductCoin && magicCoinDeducted > 0) {
-      const channel = await Channel.findById(channelId).session(session);
-      if (channel) {
-        const beneficiaryUserId = channel.createdBy;
-        const commissionPercent = question.commissionPercent ?? 70;
-        const commissionAmount = Math.floor(
-          (magicCoinDeducted * commissionPercent) / 100
-        );
-
-        let totalCoinsAfterCommission;
-
-        if (String(beneficiaryUserId) === String(userId)) {
-          // ✅ Same user: combine deduction + commission in one update
-          user.walletCoins -= magicCoinDeducted;
-          user.walletCoins += commissionAmount; // just add commission after deduction
-          await user.save({ session });
-          totalCoinsAfterCommission = user.walletCoins || 0;
-        } else {
-          // ✅ Different users: give commission to channel owner
-          user.walletCoins -= magicCoinDeducted;
-          await user.save({ session });
-          const updatedBeneficiary = await User.findByIdAndUpdate(
-            beneficiaryUserId,
-            { $inc: { walletCoins: commissionAmount } },
-            { new: true, session }
-          );
-          totalCoinsAfterCommission = updatedBeneficiary?.walletCoins || 0;
-        }
-
-        // 💾 Record commission
-        await MagicCoinCommission.create(
-          [
-            {
-              channelId: channel._id,
-              sessionId,
-              questionId,
-              userId,
-              coinsUsed: magicCoinDeducted,
-              commissionPercent,
-              commissionAmount,
-              beneficiaryUserId,
-              appType,
-              status: "completed",
-              totalCoins: totalCoinsAfterCommission,
-            },
-          ],
-          { session }
-        );
-      }
-    }
-
-    // ✅ Commit all operations
-    await session.commitTransaction();
-    session.endSession();
+    // Save MagicScreen response
+    const response = await MagicScreenResponse.create({
+      userId,
+      questionId,
+      channelId,
+      sessionId,
+      selectedOptionIndex,
+      selectedLink: selectedLink || null, // save the clicked link
+    });
 
     return res.status(200).json({
       success: true,
-      correctOptionIndex: question.correctAnswerIndex,
-      availableCoins: user.walletCoins || 0,
-      responseId: response[0]._id,
+      responseId: response._id,
     });
   } catch (err) {
-    console.error("Error saving applause response:", err);
-    await session.abortTransaction();
-    session.endSession();
+    console.error("Error saving magic screen response:", err);
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -910,86 +839,8 @@ router.post("/applause-response", async (req, res) => {
   }
 });
 
-// router.post("/applause-response", async (req, res) => {
-//   const {
-//     questionId,
-//     channelId,
-//     sessionId,
-//     selectedOptionIndex,
-//     deductCoin = false,
-//     magicCoinDeducted = 0, // ✅ matches schema
-//   } = req.body;
-
-//   const userId = req.user?._id;
-
-//   if (!questionId || !channelId || selectedOptionIndex === undefined) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "Missing required fields",
-//     });
-//   }
-
-//   try {
-//     const question = await Applause.findById(questionId);
-//     if (!question) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Question not found",
-//       });
-//     }
-
-//     // If deductCoin true → check wallet and deduct coins
-//     let updateResult;
-//     if (deductCoin && magicCoinDeducted > 0) {
-//       const user = await User.findById(userId);
-
-//       if ((user.walletCoins || 0) < magicCoinDeducted) {
-//         return res.status(200).json({
-//           success: false,
-//           notEnoughCoins: true,
-//           availableCoins: user.walletCoins || 0,
-//           requiredCoins: magicCoinDeducted,
-//           correctOptionIndex: question.correctAnswerIndex, // ✅ still useful for frontend
-//         });
-//       }
-
-//       updateResult = await User.findByIdAndUpdate(
-//         userId,
-//         { $inc: { walletCoins: -magicCoinDeducted } },
-//         { new: true }
-//       );
-//     } else {
-//       updateResult = await User.findById(userId);
-//     }
-
-//     // Save applause response
-//     const response = await ApplauseResponse.create({
-//       userId,
-//       questionId,
-//       channelId,
-//       sessionId,
-//       selectedOptionIndex,
-//       deductCoin,
-//       magicCoinDeducted: deductCoin ? magicCoinDeducted : 0,
-//     });
-
-//     return res.status(200).json({
-//       success: true,
-//       correctOptionIndex: question.correctAnswerIndex, // ✅ helpful for feedback
-//       availableCoins: updateResult.walletCoins || 0,
-//       responseId: response._id,
-//     });
-//   } catch (err) {
-//     console.error("Error saving applause response:", err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Server error",
-//     });
-//   }
-// });
-
 router.get(
-  "/channel/:channelId/session/:sessionId/applause-response-tracker",
+  "/channel/:channelId/session/:sessionId/magicscreen-response-tracker",
   async (req, res) => {
     const currentPage = parseInt(req.query.page) || 1;
     const recordsPerPage = parseInt(process.env.USER_PER_PAGE) || 10;
@@ -1000,15 +851,16 @@ router.get(
     const channel = await Channel.findById(channelId);
     if (!channel || !channel.createdBy.equals(req.user._id)) {
       return res.render("dashboardnew", {
-        applauseResponses: [],
+        magicScreenResponses: [],
         totalResponsesWithoutPagination: 0,
         currentPage: 1,
         totalPages: 0,
-        activeSection: "applause-response-tracker",
+        activeSection: "magicscreen-response-tracker",
         user: req.user,
         error: "Access denied",
         sessionId,
         channelId,
+        qrScanCount: 0,
       });
     }
 
@@ -1016,40 +868,41 @@ router.get(
     const session = await Session.findOne({ _id: sessionId, channelId });
     if (!session) {
       return res.render("dashboardnew", {
-        applauseResponses: [],
+        magicScreenResponses: [],
         totalResponsesWithoutPagination: 0,
         currentPage: 1,
         totalPages: 0,
-        activeSection: "applause-response-tracker",
+        activeSection: "magicscreen-response-tracker",
         user: req.user,
         error: "Session not found",
         sessionId,
         channelId,
+        qrScanCount: 0,
       });
     }
 
     // 3️⃣ Count QR scans if linked
     let qrScanCount = 0;
-    const applauseQuestion = await Applause.findOne(
+    const magicScreenQuestion = await MagicScreen.findOne(
       { sessionId },
       "linkedQRCode"
     ).lean();
 
-    const applauseQrId = applauseQuestion?.linkedQRCode || null;
+    const magicScreenQrId = magicScreenQuestion?.linkedQRCode || null;
 
-    if (applauseQrId) {
-      const qrDoc = await QRCodeData.findById(applauseQrId);
+    if (magicScreenQrId) {
+      const qrDoc = await QRCodeData.findById(magicScreenQrId);
       if (qrDoc) {
         qrScanCount = await QRScanLog.countDocuments({ qrCodeId: qrDoc._id });
       }
     }
 
     try {
-      const result = await ApplauseResponse.aggregate([
-        // Lookup applause question
+      const result = await MagicScreenResponse.aggregate([
+        // Lookup magic screen question
         {
           $lookup: {
-            from: "applauses",
+            from: "magicscreens",
             localField: "questionId",
             foreignField: "_id",
             as: "question",
@@ -1090,7 +943,7 @@ router.get(
           $project: {
             questionText: "$question.question",
             selectedOptionIndex: 1,
-            coinsDeducted: "$magicCoinDeducted",
+            selectedLink: 1, // ✅ include selected link
             createdAt: 1,
             userName: "$user.fullName",
             userEmail: "$user.email",
@@ -1114,34 +967,35 @@ router.get(
         },
       ]);
 
-      const applauseResponses = result[0].data;
+      const magicScreenResponses = result[0].data;
       const totalResponses = result[0].totalCount[0]?.total || 0;
       const totalPages = Math.ceil(totalResponses / recordsPerPage);
       const totalResponsesExcludingNoResponse =
         result[0].totalCountExcludingNoResponse[0]?.total || 0;
 
       res.render("dashboardnew", {
-        applauseResponses,
+        magicScreenResponses,
         totalResponsesWithoutPagination: totalResponses,
-        totalResponsesExcludingNoResponse, // ✅ added
-        qrScanCount,
+        totalResponsesExcludingNoResponse,
+        qrScanCount, // ✅ include QR scan count
         currentPage,
         totalPages,
         error: null,
-        activeSection: "applause-response-tracker",
+        activeSection: "magicscreen-response-tracker",
         user: req.user,
         sessionId,
         channelId,
       });
     } catch (error) {
-      console.error("Error fetching applause responses:", error);
+      console.error("Error fetching magic screen responses:", error);
       res.status(500).render("dashboardnew", {
-        applauseResponses: [],
+        magicScreenResponses: [],
         totalResponsesWithoutPagination: 0,
+        qrScanCount: 0,
         error: "Server Error",
         currentPage: 1,
         totalPages: 0,
-        activeSection: "applause-response-tracker",
+        activeSection: "magicscreen-response-tracker",
         user: req.user,
         sessionId,
         channelId,

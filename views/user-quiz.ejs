@@ -348,55 +348,49 @@
         if (selected) selected.checked = false;
     }
 
-    function confirmAnswer() {
+    async function confirmAnswer() {
         const questionId = document.querySelector('input[name="questionId"]').value;
         const channelId = document.querySelector('input[name="channelId"]').value;
-        const sessionId = document.querySelector('input[name="sessionId"]').value; // added
+        const sessionId = document.querySelector('input[name="sessionId"]').value;
 
-        // const deductCoin = deductCoinSwitch.checked;
-
-        // Check which toggles are ON
         const deductJackpotCoin = document.getElementById("deductJackpotCoinSwitch")?.checked || false;
         const deductDigitalCoin = document.getElementById("deductDigitalCoinSwitch")?.checked || false;
 
         const loader = document.getElementById("loader");
         loader.style.display = "flex"; // show loader
 
-        fetch("/tvstation/quiz-response", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                questionId,
-                channelId,
-                selectedOptionIndex,
-                deductCoin: deductJackpotCoin || deductDigitalCoin, // overall deduction
-                jackpotCoinDeducted: deductJackpotCoin,
-                digitalCoinDeducted: deductDigitalCoin,
-                sessionId
-            }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success || data.notEnoughCoins) {
-                    // Show result popup instead of reloading
-                    showResultPopup(data);
-                    localStorage.setItem(`quiz_response_${questionId}_${sessionId}`, "answered");
-                } else {
-                    showToast(data.message || "Failed to save response", "error");
-                }
-            })
-            .catch((err) => {
-                console.error(err);
-                showToast("Something went wrong", "error");
-            })
-            .finally(() => {
-                closeCoinPopup();
-                loader.style.display = "none"; // hide loader after fetch is done
+        try {
+            // Directly call quiz response API
+            const response = await fetch("/tvstation/quiz-response", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    questionId,
+                    channelId,
+                    selectedOptionIndex,
+                    deductCoin: deductJackpotCoin || deductDigitalCoin,
+                    jackpotCoinDeducted: deductJackpotCoin,
+                    digitalCoinDeducted: deductDigitalCoin,
+                    sessionId
+                })
             });
-    }
 
+            const data = await response.json();
+
+            if (data.success || data.notEnoughCoins) {
+                showResultPopup(data);
+                localStorage.setItem(`quiz_response_${questionId}_${sessionId}`, "answered");
+            } else {
+                showToast(data.message || "Failed to save response", "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast(err.message || "Something went wrong", "error");
+        } finally {
+            loader.style.display = "none";
+            closeCoinPopup();
+        }
+    }
 
     function showResultPopup(data) {
         document.getElementById("top-up-wallet").style.display = "none";
@@ -590,6 +584,6 @@
         }
     });
 </script>
-<script src="\js\translationsForMiniApps.js"></script>
+<!-- <script src="\js\translationsForMiniApps.js"></script> -->
 
 </html>

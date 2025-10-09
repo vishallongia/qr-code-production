@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Apps Magic Coin Commission</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+    <link rel="apple-touch-icon" href="/app-icon-192.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        .form-container {
+            background: var(--container-bg);
+            backdrop-filter: blur(var(--container-backdrop-blur));
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            width: 100%;
+            max-width: 400px;
+            color: var(--text-color);
+        }
+
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--input-border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--input-focus-border-color);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--submit-btn-bg);
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--submit-btn-hover-bg);
+        }
+
+        .aff-signup {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .form-error {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            background-color: #fdecea;
+            border: 1px solid #f5c2c7;
+            color: #d93025;
+            border-radius: 6px;
+            font-weight: 600;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        p {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            background-color: var(--container-bg);
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            user-select: none;
+            max-width: max-content;
+            margin-bottom: 1.5rem;
+            transition: box-shadow 0.3s ease;
+            cursor: default;
+        }
+
+        .affiliate-badge {
+            display: inline-block;
+            background-color: var(--submit-btn-bg);
+            color: white;
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 1rem;
+            font-weight: 700;
+            user-select: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            cursor: default;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        }
+
+        .affiliate-badge:hover {
+            background-color: var(--submit-btn-hover-bg);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../../components/navbar') %>
+
+        <div class="aff-signup">
+            <div class="form-container">
+                <% if (type==='error' ) { %>
+                    <!-- Show error message only -->
+                    <div class="form-error">
+                        <%= message %>
+                    </div>
+                    <% } else if (user && user._id) { %>
+                        <!-- Show commission form -->
+                        <h2>Update Apps Magic Coin Commissions</h2>
+
+                        <p>User: <span class="affiliate-badge">
+                                <%= user.fullName || user.username || 'N/A' %>
+                            </span></p>
+
+                        <form id="updateCommissionForm">
+                            <div class="form-group">
+                                <label for="quizCommission">Quiz Commission (%)</label>
+                                <input type="number" id="quizCommission" name="quiz" min="0" max="100"
+                                    value="<%= quizQuestions.length ? quizQuestions[0].commissionPercent : 0 %>"
+                                    required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="voteCommission">Voting Commission (%)</label>
+                                <input type="number" id="voteCommission" name="vote" min="0" max="100"
+                                    value="<%= voteQuestions.length ? voteQuestions[0].commissionPercent : 0 %>"
+                                    required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="applauseCommission">Applause Commission (%)</label>
+                                <input type="number" id="applauseCommission" name="applause" min="0" max="100"
+                                    value="<%= applauseQuestions.length ? applauseQuestions[0].commissionPercent : 0 %>"
+                                    required>
+                            </div>
+
+                            <button type="submit" class="submit-btn">Update Commissions</button>
+                        </form>
+                        <% } else { %>
+                            <!-- Fallback if user object is missing -->
+                            <div class="form-error">Error: User not found or invalid.</div>
+                            <% } %>
+            </div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+        <script src="/js/toastify-setup.js"></script>
+        <script>
+            const form = document.getElementById('updateCommissionForm');
+            const loader = document.querySelector('.fullscreen-loader');
+
+            form?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const userId = "<%= user?._id %>" || null;
+                const quiz = Number(document.getElementById('quizCommission').value);
+                const vote = Number(document.getElementById('voteCommission').value);
+                const applause = Number(document.getElementById('applauseCommission').value);
+
+
+                try {
+                    loader.style.display = 'flex';
+                    const res = await fetch('/admindashboard/tvstation/update-magic-coin-commission', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId,
+                            commissions: { quiz, vote, applause }
+                        })
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        showToast("Commissions updated successfully", "success");
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000); // 1 second delay before reload
+                    } else {
+                        showToast(data.message || "Failed to update commissions", "error");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("Server error", "error");
+                }
+                finally {
+                    // Hide loader
+                    loader.style.display = 'none';
+                }
+            });
+        </script>
+</body>
+
+</html>

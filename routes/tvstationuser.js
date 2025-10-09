@@ -10,12 +10,15 @@ const {
 const QuizQuestion = require("../models/QuizQuestion");
 const VoteQuestion = require("../models/VoteQuestion");
 const Applause = require("../models/Applause");
+const MagicScreen = require("../models/MagicScreen");
 const Channel = require("../models/Channel");
 const WinnerRequest = require("../models/WinnerRequest"); // adjust path
 const User = require("../models/User");
 const QuizQuestionResponse = require("../models/QuizQuestionResponse");
 const VoteQuestionResponse = require("../models/VoteQuestionResponse");
-const ApplauseResponse = require("../models/ApplauseResposne");
+const ApplauseResponse = require("../models/ApplauseResponse");
+const MagicScreenResponse = require("../models/MagicScreenResponse");
+const MagicCoinCommission = require("../models/MagicCoinCommission");
 const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
 const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
 const Session = require("../models/Session"); // adjust path if needed
@@ -23,7 +26,6 @@ const BASE_URL = process.env.FRONTEND_URL; // update if needed
 const { addUploadPath } = require("../utils/selectUploadDestination");
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
 const SendEmail = require("../Messages/SendEmail");
-const { session } = require("passport");
 
 // GET /channels - paginated list
 router.get("/channels", async (req, res) => {
@@ -1438,8 +1440,9 @@ router.post("/quiz-response", async (req, res) => {
     sessionId,
     selectedOptionIndex,
     deductCoin = false,
-    jackpotCoinDeducted = false, // flags to decide snapshot
+    jackpotCoinDeducted = false,
     digitalCoinDeducted = false,
+    appType = "Quiz",
   } = req.body;
 
   const userId = req.user?._id;
@@ -1450,32 +1453,32 @@ router.post("/quiz-response", async (req, res) => {
       .json({ success: false, message: "Missing required fields" });
   }
 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const question = await QuizQuestion.findById(questionId);
-    if (!question) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Question not found" });
-    }
+    const question = await QuizQuestion.findById(questionId).session(session);
+    if (!question) throw new Error("Question not found");
 
     const isCorrect =
       question.correctAnswerIndex === Number(selectedOptionIndex);
 
-    // Determine snapshot values
     const jackpotSnapshot =
       deductCoin && jackpotCoinDeducted ? question.jackpotCoinDeducted || 0 : 0;
     const digitalSnapshot =
       deductCoin && digitalCoinDeducted ? question.digitalCoinDeducted || 0 : 0;
 
-    // Total sum of both
     const totalSnapshot = jackpotSnapshot + digitalSnapshot;
-
-    // If totalSnapshot is 0, override deductCoin to false
     const actualDeductCoin = totalSnapshot > 0 ? deductCoin : false;
-    let updateResult;
+
+    // 🪙 Deduct user coins
+    const user = req.user;
+    if (!user) throw new Error("User not found");
+
     if (actualDeductCoin) {
-      const user = await User.findById(userId);
       if ((user.walletCoins || 0) < totalSnapshot) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(200).json({
           success: false,
           notEnoughCoins: true,
@@ -1484,29 +1487,82 @@ router.post("/quiz-response", async (req, res) => {
           correctOptionIndex: question.correctAnswerIndex,
         });
       }
-
-      updateResult = await User.findByIdAndUpdate(
-        userId,
-        { $inc: { walletCoins: -totalSnapshot } },
-        { new: true }
-      );
-    } else {
-      // No deduction, just get current wallet coins
-      updateResult = await User.findById(userId);
     }
 
-    // Create quiz response with coin snapshot and correct deductCoin
-    const response = await QuizQuestionResponse.create({
-      userId,
-      questionId,
-      channelId,
-      selectedOptionIndex,
-      isCorrect,
-      deductCoin: actualDeductCoin,
-      jackpotCoinDeducted: jackpotSnapshot,
-      digitalCoinDeducted: digitalSnapshot,
-      sessionId,
-    });
+    // 🧾 Record quiz response
+    await QuizQuestionResponse.create(
+      [
+        {
+          userId,
+          questionId,
+          channelId,
+          selectedOptionIndex,
+          isCorrect,
+          deductCoin: actualDeductCoin,
+          jackpotCoinDeducted: jackpotSnapshot,
+          digitalCoinDeducted: digitalSnapshot,
+          sessionId,
+        },
+      ],
+      { session }
+    );
+
+    // 💸 Commission logic
+    if (actualDeductCoin && totalSnapshot > 0) {
+      const channel = await Channel.findById(question.channelId).session(
+        session
+      );
+      if (channel) {
+        const beneficiaryUserId = channel.createdBy;
+        const commissionPercent = question.commissionPercent ?? 70;
+        const commissionAmount = Math.floor(
+          (totalSnapshot * commissionPercent) / 100
+        );
+
+        let totalCoinsAfterCommission;
+
+        if (String(beneficiaryUserId) === String(userId)) {
+          // ✅ Same user: combine deduction + commission in one update
+          user.walletCoins -= totalSnapshot;
+          user.walletCoins += commissionAmount; // just add commission after deduction
+          await user.save({ session });
+          totalCoinsAfterCommission = user.walletCoins || 0;
+        } else {
+          // ✅ Different users: save both separately
+          user.walletCoins -= totalSnapshot;
+          await user.save({ session });
+          const updatedBeneficiary = await User.findByIdAndUpdate(
+            beneficiaryUserId,
+            { $inc: { walletCoins: commissionAmount } },
+            { new: true, session }
+          );
+          totalCoinsAfterCommission = updatedBeneficiary?.walletCoins || 0;
+        }
+
+        await MagicCoinCommission.create(
+          [
+            {
+              channelId: channel._id,
+              sessionId,
+              questionId,
+              userId,
+              coinsUsed: totalSnapshot,
+              commissionPercent,
+              commissionAmount,
+              beneficiaryUserId,
+              appType,
+              status: "completed",
+              totalCoins: totalCoinsAfterCommission,
+            },
+          ],
+          { session }
+        );
+      }
+    }
+
+    // ✅ Commit all DB operations
+    await session.commitTransaction();
+    session.endSession();
 
     return res.status(200).json({
       success: true,
@@ -1514,7 +1570,7 @@ router.post("/quiz-response", async (req, res) => {
       correctOptionIndex: question.correctAnswerIndex,
       jackpotCoinDeducted: jackpotSnapshot > 0,
       digitalCoinDeducted: digitalSnapshot > 0,
-      availableCoins: updateResult.walletCoins || 0, // ✅ include coins here
+      availableCoins: user.walletCoins || 0,
       jackpotReward: {
         name: question.jackpotRewardName,
         image: question.jackpotRewardImage,
@@ -1529,7 +1585,9 @@ router.post("/quiz-response", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Error saving quiz response:", err);
+    console.error("Transaction failed:", err);
+    await session.abortTransaction();
+    session.endSession();
     return res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1583,8 +1641,8 @@ router.get(
             channelId: channel._id,
             sessionId: session._id,
             $or: [
-              { isNoResposneGiven: false },
-              { isNoResposneGiven: { $exists: false } },
+              { isNoResponseGiven: false },
+              { isNoResponseGiven: { $exists: false } },
             ],
           },
         },
@@ -1670,8 +1728,8 @@ router.get(
             channelId: channel._id,
             sessionId: session._id,
             $or: [
-              { isNoResposneGiven: false },
-              { isNoResposneGiven: { $exists: false } },
+              { isNoResponseGiven: false },
+              { isNoResponseGiven: { $exists: false } },
             ],
           },
         },
@@ -2218,7 +2276,7 @@ router.get(
             deductCoin: 1,
             jackpotCoinDeducted: 1,
             digitalCoinDeducted: 1,
-            isNoResposneGiven: 1,
+            isNoResponseGiven: 1,
             coinsDeducted: {
               $cond: [
                 { $eq: ["$deductCoin", true] },
@@ -2237,7 +2295,7 @@ router.get(
             data: [{ $skip: skip }, { $limit: recordsPerPage }],
             totalCount: [{ $count: "total" }],
             totalCountExcludingNoResponse: [
-              { $match: { isNoResposneGiven: { $ne: true } } },
+              { $match: { isNoResponseGiven: { $ne: true } } },
               { $count: "total" },
             ],
           },
@@ -2294,7 +2352,14 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
 
     if (
       !type ||
-      !["quiz", "voting", "shopping", "brand", "applause"].includes(type)
+      ![
+        "quiz",
+        "voting",
+        "shopping",
+        "brand",
+        "applause",
+        "magicscreen",
+      ].includes(type)
     ) {
       return res
         .status(400)
@@ -2333,6 +2398,8 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
         break;
       case "applause":
         questionModel = Applause;
+      case "magicscreen":
+        questionModel = MagicScreen;
         break;
     }
 
@@ -2354,6 +2421,10 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
           ? `${BASE_URL}/tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=${encodeURIComponent(
               lang
             )}`
+          : type === "magicscreen"
+          ? `${BASE_URL}/tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play/?lang=${encodeURIComponent(
+              lang
+            )}`
           : `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=${encodeURIComponent(
               lang
             )}`;
@@ -2368,6 +2439,10 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
     let qrUrl;
     if (type === "applause") {
       qrUrl = `${BASE_URL}/tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=${encodeURIComponent(
+        lang
+      )}`;
+    } else if (type === "magicscreen") {
+      qrUrl = `${BASE_URL}/tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play/?lang=${encodeURIComponent(
         lang
       )}`;
     } else {
@@ -2401,7 +2476,16 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
     const { sessionId, type } = req.params;
 
     // ✅ Validate type
-    if (!["quiz", "voting", "shopping", "brand", "applause"].includes(type)) {
+    if (
+      ![
+        "quiz",
+        "voting",
+        "shopping",
+        "brand",
+        "applause",
+        "magicscreen",
+      ].includes(type)
+    ) {
       return res.status(400).json({
         success: false,
         message: "Invalid app type",
@@ -2454,11 +2538,24 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
       qr = applauseQuestion?.linkedQRCode || null;
     }
 
+    if (type === "magicscreen") {
+      const magicscreenQuestion = await MagicScreen.findOne(
+        { sessionId },
+        "linkedQRCode"
+      )
+        .populate("linkedQRCode")
+        .lean();
+
+      qr = magicscreenQuestion?.linkedQRCode || null;
+    }
+
     // ⚠️ Later: add for shopping, brand
 
     const defaultUrl =
       type === "applause"
         ? `${BASE_URL}/tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=en`
+        : type === "magicscreen"
+        ? `${BASE_URL}/tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play/?lang=en`
         : `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=en`;
 
     if (!qr) {
@@ -2789,8 +2886,8 @@ router.get(
             $match: {
               questionId: q._id,
               $or: [
-                { isNoResposneGiven: { $exists: false } },
-                { isNoResposneGiven: false },
+                { isNoResponseGiven: { $exists: false } },
+                { isNoResponseGiven: false },
               ],
             },
           },
@@ -3679,7 +3776,7 @@ router.get(
                 0,
               ],
             },
-            isNoResposneGiven: 1,
+            isNoResponseGiven: 1,
             createdAt: 1,
             userName: "$user.fullName",
             userEmail: "$user.email",
@@ -3691,7 +3788,7 @@ router.get(
             data: [{ $skip: skip }, { $limit: recordsPerPage }],
             totalCount: [{ $count: "total" }],
             totalCountExcludingNoResponse: [
-              { $match: { isNoResposneGiven: { $ne: true } } },
+              { $match: { isNoResponseGiven: { $ne: true } } },
               { $count: "total" },
             ],
           },
@@ -3816,8 +3913,8 @@ router.get(
             $match: {
               questionId: currentQuestion._id,
               $or: [
-                { isNoResposneGiven: { $exists: false } },
-                { isNoResposneGiven: false },
+                { isNoResponseGiven: { $exists: false } },
+                { isNoResponseGiven: false },
               ],
             },
           },
@@ -3876,7 +3973,6 @@ router.get(
     }
   }
 );
-
 router.post("/voting-response", async (req, res) => {
   const {
     questionId,
@@ -3884,8 +3980,9 @@ router.post("/voting-response", async (req, res) => {
     sessionId,
     selectedOptionIndex,
     deductCoin = false,
-    jackpotCoinDeducted = false, // flags to decide snapshot
+    jackpotCoinDeducted = false,
     digitalCoinDeducted = false,
+    appType = "Vote",
   } = req.body;
 
   const userId = req.user?._id;
@@ -3896,60 +3993,110 @@ router.post("/voting-response", async (req, res) => {
       .json({ success: false, message: "Missing required fields" });
   }
 
-  try {
-    const question = await VoteQuestion.findById(questionId);
-    if (!question) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Question not found" });
-    }
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    // Determine snapshot values
+  try {
+    const question = await VoteQuestion.findById(questionId).session(session);
+    if (!question) throw new Error("Question not found");
+
+    // Snapshot values
     const jackpotSnapshot =
       deductCoin && jackpotCoinDeducted ? question.jackpotCoinDeducted || 0 : 0;
     const digitalSnapshot =
       deductCoin && digitalCoinDeducted ? question.digitalCoinDeducted || 0 : 0;
 
-    // Total sum of both
     const totalSnapshot = jackpotSnapshot + digitalSnapshot;
-
-    // If totalSnapshot is 0, override deductCoin to false
     const actualDeductCoin = totalSnapshot > 0 ? deductCoin : false;
-    let updateResult;
-    if (actualDeductCoin) {
-      const user = await User.findById(userId);
-      if ((user.walletCoins || 0) < totalSnapshot) {
-        return res.status(200).json({
-          success: false,
-          notEnoughCoins: true,
-          availableCoins: user.walletCoins || 0,
-          requiredCoins: totalSnapshot,
-        });
-      }
 
-      updateResult = await User.findByIdAndUpdate(
-        userId,
-        { $inc: { walletCoins: -totalSnapshot } },
-        { new: true }
-      );
-    } else {
-      // No deduction, just get current wallet coins
-      updateResult = await User.findById(userId);
+    // Deduct coins if needed
+    const user = await User.findById(userId).session(session);
+    if (!user) throw new Error("User not found");
+
+    if (actualDeductCoin && (user.walletCoins || 0) < totalSnapshot) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(200).json({
+        success: false,
+        notEnoughCoins: true,
+        availableCoins: user.walletCoins || 0,
+        requiredCoins: totalSnapshot,
+      });
     }
 
-    // Create quiz response with coin snapshot and correct deductCoin
-    const response = await VoteQuestionResponse.create({
-      userId,
-      questionId,
-      channelId,
-      selectedOptionIndex,
-      deductCoin: actualDeductCoin,
-      jackpotCoinDeducted: jackpotSnapshot,
-      digitalCoinDeducted: digitalSnapshot,
-      sessionId,
-    });
+    // Save vote response
+    await VoteQuestionResponse.create(
+      [
+        {
+          userId,
+          questionId,
+          channelId,
+          selectedOptionIndex,
+          deductCoin: actualDeductCoin,
+          jackpotCoinDeducted: jackpotSnapshot,
+          digitalCoinDeducted: digitalSnapshot,
+          sessionId,
+        },
+      ],
+      { session }
+    );
 
-    // ✅ Optimized aggregation to get vote counts
+    // ----- Commission logic -----
+    if (actualDeductCoin && totalSnapshot > 0) {
+      const channel = await Channel.findById(channelId).session(session);
+      if (channel) {
+        const beneficiaryUserId = channel.createdBy;
+        const commissionPercent = question.commissionPercent ?? 70;
+        const commissionAmount = Math.floor(
+          (totalSnapshot * commissionPercent) / 100
+        );
+
+        let totalCoinsAfterCommission;
+
+        if (String(beneficiaryUserId) === String(userId)) {
+          // Same user: deduct & add commission in one step
+          user.walletCoins -= totalSnapshot;
+          user.walletCoins += commissionAmount;
+          await user.save({ session });
+          totalCoinsAfterCommission = user.walletCoins || 0;
+        } else {
+          // Different users: deduct & give commission separately
+          user.walletCoins -= totalSnapshot;
+          await user.save({ session });
+          const updatedBeneficiary = await User.findByIdAndUpdate(
+            beneficiaryUserId,
+            { $inc: { walletCoins: commissionAmount } },
+            { new: true, session }
+          );
+          totalCoinsAfterCommission = updatedBeneficiary?.walletCoins || 0;
+        }
+
+        await MagicCoinCommission.create(
+          [
+            {
+              channelId,
+              sessionId,
+              questionId,
+              userId,
+              coinsUsed: totalSnapshot,
+              commissionPercent,
+              commissionAmount,
+              beneficiaryUserId,
+              appType,
+              status: "completed",
+              totalCoins: totalCoinsAfterCommission,
+            },
+          ],
+          { session }
+        );
+      }
+    }
+    // -----------------------------
+
+    await session.commitTransaction();
+    session.endSession();
+
+    // Get vote stats
     const stats = await VoteQuestionResponse.aggregate([
       { $match: { questionId: question._id } },
       {
@@ -3960,7 +4107,6 @@ router.post("/voting-response", async (req, res) => {
       },
     ]);
 
-    // Build results for all options
     const totalVotes = stats.reduce((acc, s) => acc + s.votes, 0) || 1;
     const voteResults = question.options.map((_, idx) => {
       const found = stats.find((s) => s._id === idx);
@@ -3977,26 +4123,137 @@ router.post("/voting-response", async (req, res) => {
       voteResults,
       jackpotCoinDeducted: jackpotSnapshot > 0,
       digitalCoinDeducted: digitalSnapshot > 0,
-      availableCoins: updateResult.walletCoins || 0, // ✅ include coins here
-      jackpotReward: {
-        name: question.jackpotRewardName,
-        image: question.jackpotRewardImage,
-        description: question.jackpotRewardDescription,
-        link: question.jackpotRewardLink,
-      },
-      digitalReward: {
-        name: question.digitalRewardName,
-        image: question.digitalRewardImage,
-        description: question.digitalRewardDescription,
-        link: question.digitalRewardLink,
-      },
+      availableCoins: user.walletCoins || 0,
       selectedOptionIndex,
     });
   } catch (err) {
-    console.error("Error saving quiz response:", err);
+    console.error("Voting transaction failed:", err);
+    await session.abortTransaction();
+    session.endSession();
     return res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+// router.post("/voting-response", async (req, res) => {
+//   const {
+//     questionId,
+//     channelId,
+//     sessionId,
+//     selectedOptionIndex,
+//     deductCoin = false,
+//     jackpotCoinDeducted = false, // flags to decide snapshot
+//     digitalCoinDeducted = false,
+//   } = req.body;
+
+//   const userId = req.user?._id;
+
+//   if (!questionId || !channelId || selectedOptionIndex === undefined) {
+//     return res
+//       .status(400)
+//       .json({ success: false, message: "Missing required fields" });
+//   }
+
+//   try {
+//     const question = await VoteQuestion.findById(questionId);
+//     if (!question) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Question not found" });
+//     }
+
+//     // Determine snapshot values
+//     const jackpotSnapshot =
+//       deductCoin && jackpotCoinDeducted ? question.jackpotCoinDeducted || 0 : 0;
+//     const digitalSnapshot =
+//       deductCoin && digitalCoinDeducted ? question.digitalCoinDeducted || 0 : 0;
+
+//     // Total sum of both
+//     const totalSnapshot = jackpotSnapshot + digitalSnapshot;
+
+//     // If totalSnapshot is 0, override deductCoin to false
+//     const actualDeductCoin = totalSnapshot > 0 ? deductCoin : false;
+//     let updateResult;
+//     if (actualDeductCoin) {
+//       const user = await User.findById(userId);
+//       if ((user.walletCoins || 0) < totalSnapshot) {
+//         return res.status(200).json({
+//           success: false,
+//           notEnoughCoins: true,
+//           availableCoins: user.walletCoins || 0,
+//           requiredCoins: totalSnapshot,
+//         });
+//       }
+
+//       updateResult = await User.findByIdAndUpdate(
+//         userId,
+//         { $inc: { walletCoins: -totalSnapshot } },
+//         { new: true }
+//       );
+//     } else {
+//       // No deduction, just get current wallet coins
+//       updateResult = await User.findById(userId);
+//     }
+
+//     // Create quiz response with coin snapshot and correct deductCoin
+//     const response = await VoteQuestionResponse.create({
+//       userId,
+//       questionId,
+//       channelId,
+//       selectedOptionIndex,
+//       deductCoin: actualDeductCoin,
+//       jackpotCoinDeducted: jackpotSnapshot,
+//       digitalCoinDeducted: digitalSnapshot,
+//       sessionId,
+//     });
+
+//     // ✅ Optimized aggregation to get vote counts
+//     const stats = await VoteQuestionResponse.aggregate([
+//       { $match: { questionId: question._id } },
+//       {
+//         $group: {
+//           _id: "$selectedOptionIndex",
+//           votes: { $sum: 1 },
+//         },
+//       },
+//     ]);
+
+//     // Build results for all options
+//     const totalVotes = stats.reduce((acc, s) => acc + s.votes, 0) || 1;
+//     const voteResults = question.options.map((_, idx) => {
+//       const found = stats.find((s) => s._id === idx);
+//       const count = found ? found.votes : 0;
+//       return {
+//         optionIndex: idx,
+//         votes: count,
+//         percentage: ((count / totalVotes) * 100).toFixed(1),
+//       };
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       voteResults,
+//       jackpotCoinDeducted: jackpotSnapshot > 0,
+//       digitalCoinDeducted: digitalSnapshot > 0,
+//       availableCoins: updateResult.walletCoins || 0, // ✅ include coins here
+//       jackpotReward: {
+//         name: question.jackpotRewardName,
+//         image: question.jackpotRewardImage,
+//         description: question.jackpotRewardDescription,
+//         link: question.jackpotRewardLink,
+//       },
+//       digitalReward: {
+//         name: question.digitalRewardName,
+//         image: question.digitalRewardImage,
+//         description: question.digitalRewardDescription,
+//         link: question.digitalRewardLink,
+//       },
+//       selectedOptionIndex,
+//     });
+//   } catch (err) {
+//     console.error("Error saving quiz response:", err);
+//     return res.status(500).json({ success: false, message: "Server error" });
+//   }
+// });
 
 // Draw Winner Route for Voting
 router.get(
@@ -4047,8 +4304,8 @@ router.get(
             channelId: channel._id,
             sessionId: session._id,
             $or: [
-              { isNoResposneGiven: false },
-              { isNoResposneGiven: { $exists: false } },
+              { isNoResponseGiven: false },
+              { isNoResponseGiven: { $exists: false } },
             ],
           },
         },
@@ -4133,8 +4390,8 @@ router.get(
             channelId: channel._id,
             sessionId: session._id,
             $or: [
-              { isNoResposneGiven: false },
-              { isNoResposneGiven: { $exists: false } },
+              { isNoResponseGiven: false },
+              { isNoResponseGiven: { $exists: false } },
             ],
           },
         },
@@ -4571,7 +4828,7 @@ router.post("/quiz-viewed", async (req, res) => {
   const userId = req.user?._id;
 
   // Validate type first
-  if (!type || !["quiz", "voting", "applause"].includes(type)) {
+  if (!type || !["quiz", "voting", "applause", "magicscreen"].includes(type)) {
     return res.status(400).json({
       success: false,
       message: "Invalid type. Must be 'quiz', 'voting' or 'applause'.",
@@ -4596,7 +4853,7 @@ router.post("/quiz-viewed", async (req, res) => {
         deductCoin: false,
         jackpotCoinDeducted: 0,
         digitalCoinDeducted: 0,
-        isNoResposneGiven: true,
+        isNoResponseGiven: true,
       });
     } else if (type === "voting") {
       await VoteQuestionResponse.create({
@@ -4608,7 +4865,7 @@ router.post("/quiz-viewed", async (req, res) => {
         deductCoin: false,
         jackpotCoinDeducted: 0,
         digitalCoinDeducted: 0,
-        isNoResposneGiven: true,
+        isNoResponseGiven: true,
       });
     } else if (type === "applause") {
       await ApplauseResponse.create({
@@ -4619,7 +4876,17 @@ router.post("/quiz-viewed", async (req, res) => {
         selectedOptionIndex: 0,
         deductCoin: false,
         magicCoinDeducted: 0,
-        isNoResposneGiven: true,
+        isNoResponseGiven: true,
+      });
+    } else if (type === "magicscreen") {
+      await MagicScreenResponse.create({
+        userId,
+        questionId,
+        channelId,
+        sessionId,
+        selectedOptionIndex: 0,
+        selectedLink: null, // Not answered
+        isNoResponseGiven: true,
       });
     }
 
@@ -4658,11 +4925,14 @@ router.post("/link-magic-code", async (req, res) => {
         ? VoteQuestion
         : type === "applause"
         ? Applause
+        : type === "magicscreen"
+        ? MagicScreen
         : null;
 
     if (!Model) {
       return res.status(400).json({
-        message: "Invalid type. Must be 'quiz' or 'voting' or 'applause'.",
+        message:
+          "Invalid type. Must be 'quiz' or 'voting' or 'applause' or 'magicscreen'.",
         type: "error",
       });
     }
@@ -4723,6 +4993,10 @@ router.post("/link-magic-code", async (req, res) => {
         { linkedQRCode: qrCode._id },
         { $unset: { linkedQRCode: "" } }
       ),
+      MagicScreen.updateMany(
+        { linkedQRCode: qrCode._id },
+        { $unset: { linkedQRCode: "" } }
+      ),
     ]);
 
     // 5️⃣ Link QR code to this question
@@ -4730,6 +5004,8 @@ router.post("/link-magic-code", async (req, res) => {
 
     if (type === "applause") {
       playUrl = `${process.env.FRONTEND_URL}/tvstation/applause/channels/${question.channelId._id}/session/${sessionId}/applause-play/?lang=en`;
+    } else if (type === "magicscreen") {
+      playUrl = `${process.env.FRONTEND_URL}/tvstation/magicscreen/channels/${question.channelId._id}/session/${sessionId}/magicscreen-play/?lang=en`;
     } else {
       playUrl = `${process.env.FRONTEND_URL}/tvstation/channels/${question.channelId._id}/session/${sessionId}/${type}-play/?lang=en`;
     }
@@ -4753,6 +5029,8 @@ router.post("/link-magic-code", async (req, res) => {
       link:
         type === "applause"
           ? `${process.env.FRONTEND_URL}/tvstation/applause/channels/${question.channelId._id}/session/${sessionId}/applause`
+          : type === "magicscreen"
+          ? `${process.env.FRONTEND_URL}/tvstation/magicscreen/channels/${question.channelId._id}/session/${sessionId}/magicscreen`
           : `${process.env.FRONTEND_URL}/tvstation/channels/${question.channelId._id}/session/${sessionId}/${type}`,
     });
   } catch (err) {
@@ -4789,6 +5067,8 @@ router.post("/unlink-magic-code", async (req, res) => {
         ? VoteQuestion
         : type === "applause"
         ? Applause
+        : type === "magicscreen"
+        ? MagicScreen
         : null;
 
     if (!Model) {
@@ -4856,6 +5136,85 @@ router.post("/unlink-magic-code", async (req, res) => {
     return res
       .status(500)
       .json({ message: "Internal server error", type: "error" });
+  }
+});
+
+router.get("/:sessionId/apps", async (req, res) => {
+  const { sessionId } = req.params;
+  const userId = req.user?._id;
+
+  if (!sessionId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Session ID is required" });
+  }
+
+  try {
+    // 1️⃣ Fetch the session
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Session not found" });
+    }
+
+    // 2️⃣ Fetch the channel for this session
+    const channel = await Channel.findById(session.channelId);
+    if (!channel || channel.createdBy.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized for this session",
+      });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}/tvstation/channels/${
+      channel._id
+    }/session/${session._id}`;
+
+    // 3️⃣ Fetch one record from each model for this session
+    const quizQuestion = await QuizQuestion.findOne({ sessionId })
+      .sort({ createdAt: 1 })
+      .select("question questionImage");
+    const voteQuestion = await VoteQuestion.findOne({ sessionId })
+      .sort({ createdAt: 1 })
+      .select("question questionImage");
+    const applauseQuestion = await Applause.findOne({ sessionId })
+      .sort({ createdAt: 1 })
+      .select("question questionImage");
+
+    // 4️⃣ Attach respective links
+    const data = {
+      quizQuestion: quizQuestion
+        ? {
+            name: "Quiz",
+            ...quizQuestion.toObject(),
+            link: `${baseUrl}/quiz-play/`,
+          }
+        : null,
+      voteQuestion: voteQuestion
+        ? {
+            name: "Vote",
+            ...voteQuestion.toObject(),
+            link: `${baseUrl}/voting-play/`,
+          }
+        : null,
+      applauseQuestion: applauseQuestion
+        ? {
+            name: "Applause",
+            ...applauseQuestion.toObject(),
+            link: `${req.protocol}://${req.get(
+              "host"
+            )}/tvstation/applause/channels/${channel._id}/session/${
+              session._id
+            }/applause-play/`,
+          }
+        : null,
+    };
+
+    return res.status(200).json({ success: true, data });
+  } catch (err) {
+    console.error("Error fetching session apps:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 });
 

@@ -16,7 +16,7 @@ const userPreferencesSchema = new mongoose.Schema(
   {
     currency: {
       type: String,
-      enum: ["EUR", "CHF", "RON", "HUF"], // extend when adding new currencies
+      enum: ["", "EUR", "CHF", "RON", "HUF"], // extend when adding new currencies
       default: "",
     },
     // Later we can add language, timezone, theme, etc.

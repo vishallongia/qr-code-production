@@ -4,10 +4,10 @@ const bodyParser = require("body-parser");
 const Payment = require("../models/Payment");
 const User = require("../models/User");
 const MagicCoinPlan = require("../models/MagicCoinPlan");
-const { client } = require("../config/paypal");
 const axios = require("axios");
 require("dotenv").config();
 
+const PAYPAL_API_BASE = process.env.PAYPAL_API_BASE;
 const ignoredSubscriptionEvents = [
   "BILLING.SUBSCRIPTION.CREATED",
   "BILLING.SUBSCRIPTION.ACTIVATED",
@@ -44,7 +44,7 @@ router.post(
       // 1️⃣ Get PayPal access token
       const { data: authData } = await axios({
         method: "post",
-        url: "https://api-m.sandbox.paypal.com/v1/oauth2/token",
+        url: `${PAYPAL_API_BASE}/v1/oauth2/token`,
         auth: {
           username: process.env.PAYPAL_CLIENT_ID,
           password: process.env.PAYPAL_CLIENT_SECRET,
@@ -62,7 +62,7 @@ router.post(
 
       // 2️⃣ Verify webhook signature
       const { data: verification } = await axios.post(
-        "https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature",
+        `${PAYPAL_API_BASE}/v1/notifications/verify-webhook-signature`,
         {
           transmission_id: transmissionId,
           transmission_time: timestamp,

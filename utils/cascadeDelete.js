@@ -5,6 +5,9 @@ const QuizQuestionResponse = require("../models/QuizQuestionResponse");
 const VoteQuestion = require("../models/VoteQuestion");
 const VoteQuestionResponse = require("../models/VoteQuestionResponse");
 const Applause = require("../models/Applause");
+const ApplauseResponse = require("../models/ApplauseResponse");
+const MagicScreen = require("../models/MagicScreen");
+const MagicScreenResponse = require("../models/MagicScreenResponse");
 const { deleteFileIfExists } = require("../middleware/multerQuizUploader");
 async function cascadeDelete(type, id) {
   switch (type) {
@@ -51,6 +54,11 @@ async function cascadeDelete(type, id) {
         const applauseQuestions = await Applause.find({ sessionId: id });
         for (const q of applauseQuestions) {
           await cascadeDelete("applauseQuestion", q._id);
+        }
+
+        const magicScreens = await MagicScreen.find({ sessionId: id });
+        for (const m of magicScreens) {
+          await cascadeDelete("magicScreen", m._id);
         }
 
         await Session.deleteOne({ _id: id });
@@ -133,6 +141,16 @@ async function cascadeDelete(type, id) {
         deleteFileIfExists(question.questionImage);
         deleteFileIfExists(question.questionLogo);
 
+        // Delete all responses
+        try {
+          await ApplauseResponse.deleteMany({ questionId: id });
+        } catch (respErr) {
+          console.error(
+            `Failed to delete responses for applause ${id}:`,
+            respErr
+          );
+        }
+
         if (question.options && question.options.length > 0) {
           question.options.forEach((option) =>
             deleteFileIfExists(option.image)
@@ -142,6 +160,37 @@ async function cascadeDelete(type, id) {
         await Applause.deleteOne({ _id: id });
       } catch (err) {
         console.error(`Error deleting applause question ${id}:`, err);
+      }
+      break;
+
+    case "magicScreen":
+      try {
+        const question = await MagicScreen.findById(id);
+        if (!question) return;
+
+        deleteFileIfExists(question.logo);
+        deleteFileIfExists(question.questionImage);
+        deleteFileIfExists(question.questionLogo);
+
+        if (question.options?.length) {
+          question.options.forEach((option) =>
+            deleteFileIfExists(option.image)
+          );
+        }
+
+        // Delete all responses
+        try {
+          await MagicScreenResponse.deleteMany({ questionId: id });
+        } catch (respErr) {
+          console.error(
+            `Failed to delete responses for magic screen ${id}:`,
+            respErr
+          );
+        }
+
+        await MagicScreen.deleteOne({ _id: id });
+      } catch (err) {
+        console.error(`Error deleting magic screen ${id}:`, err);
       }
       break;
   }

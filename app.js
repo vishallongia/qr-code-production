@@ -8,6 +8,7 @@ const affiliateUserRouter = require("./routes/affiliate");
 const tvStationAdminRouter = require("./routes/tvstationadmin");
 const tvStationUserRouter = require("./routes/tvstationuser");
 const tvStationApplauseApp = require("./routes/tvstationapplauseapp");
+const tvStationMagicScreenApp = require("./routes/tvstationmagicscreenapp");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -77,9 +78,9 @@ app.use("/", indexRouter);
 app.use("/", plansPaymentsRouter); // Handles both plans and payments
 app.use("/admindashboard/affiliate", authMiddleware, affiliateUserRouter);
 app.use("/admindashboard/tvstation", authMiddleware, tvStationAdminRouter);
-app.use("/tvstation", authMiddleware, tvStationUserRouter);// It contains mixed code of voting and quiz
+app.use("/tvstation", authMiddleware, tvStationUserRouter); // It contains mixed code of voting and quiz
 app.use("/tvstation/applause", authMiddleware, tvStationApplauseApp); // For third app applause
-
+app.use("/tvstation/magicscreen", authMiddleware, tvStationMagicScreenApp); // For third app applause
 
 // Run every 5 minutes
 cron.schedule("*/5 * * * *", () => {

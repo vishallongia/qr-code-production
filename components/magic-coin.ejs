@@ -146,7 +146,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
 <script
-    src="https://www.paypal.com/sdk/js?client-id=AeUlyT2WmljAHqGaXytGewyz61xmfAJ4woW1wA_2TwjcaqbbjJTkPHy47FsEJhcH68BGlm9-AdDfmbrU&currency=<%= currency %>"></script>
+    src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=<%= currency %>"></script>
 <!-- <script src="/js/plan.js"></script> -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -353,7 +353,9 @@
         const okBtn = document.getElementById("popup-ok-btn-select-currency");
         const cancelBtn = document.getElementById("popup-cancel-btn-select-currency");
         const currencySelect = document.getElementById("currencySwitcherApp"); // the select
+        const currencyValue = document.getElementById("currency-value"); // the select
         const loader = document.getElementById("loader");
+        currencyValue.value = currencySelect.value
 
         popup.style.display = "flex";
 
@@ -366,7 +368,7 @@
         okBtn.onclick = async (e) => {
             e.preventDefault();
 
-            const selectedCurrency = currencySelect.value;
+            const selectedCurrency = currencyValue.value;
 
             // Frontend mandatory check
             if (!selectedCurrency) {
@@ -390,17 +392,13 @@
 
                 showToast(data.message || "Currency set successfully", "success");
 
-                // 2️⃣ Continue with your logic: show PayPal buttons
-                const allPaypalContainers = document.querySelectorAll(".paypal-button-container");
-                allPaypalContainers.forEach(container => container.style.display = "block");
+                // 🔁 Reload page after 1 second
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
 
-                const allLockCurrencyButtons = document.querySelectorAll(".lock-curreny-button");
-                allLockCurrencyButtons.forEach(btn => btn.style.display = "none");
 
                 currencySelect.style.display = "none";
-
-                // Optional: call your renderPayPalButtons(planId) if needed
-                // renderPayPalButtons(planId);
 
                 cleanup(); // hide popup
 

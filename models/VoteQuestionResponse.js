@@ -52,7 +52,7 @@ const voteQuestionResponseSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    isNoResposneGiven: {
+    isNoResponseGiven: {
       type: Boolean,
       default: false,
     },

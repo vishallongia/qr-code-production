@@ -2,7 +2,7 @@
 
 const mongoose = require("mongoose");
 
-const quizQuestionResponseSchema = new mongoose.Schema(
+const applauseResponseSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -11,7 +11,7 @@ const quizQuestionResponseSchema = new mongoose.Schema(
     },
     questionId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "QuizQuestion", // Adjust to your actual model name
+      ref: "Applause", // Adjust to your actual model name
       required: true,
     },
     channelId: {
@@ -23,39 +23,21 @@ const quizQuestionResponseSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    isCorrect: {
-      type: Boolean,
-      required: true,
-    },
     isActive: {
       type: Boolean,
       default: true,
     },
-
     deductCoin: {
       type: Boolean,
       default: false,
     },
-    jackpotCoinDeducted: {
+    magicCoinDeducted: {
       type: Number,
       default: 0,
     },
-    digitalCoinDeducted: {
-      type: Number,
-      default: 0,
-    },
-
     sessionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Session",
-    },
-    isJackpotWinnerDeclared: {
-      type: Boolean,
-      default: false,
-    },
-    isDigitalWinnerDeclared: {
-      type: Boolean,
-      default: false,
     },
     isNoResponseGiven: {
       type: Boolean,
@@ -67,7 +49,4 @@ const quizQuestionResponseSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model(
-  "QuizQuestionResponse",
-  quizQuestionResponseSchema
-);
+module.exports = mongoose.model("ApplauseResponse", applauseResponseSchema);

@@ -21,9 +21,9 @@
         <span>&rsaquo;</span>
         <a href="/tvstation/channels/<%= channelId %>/session/<%= sessionId %>">Events</a>
         <span>&rsaquo;</span>
-        <a href="/tvstation/applause/channels/<%= channelId %>/session/<%= sessionId %>/applause">Applause</a>
+        <a href="/tvstation/magicscreen/channels/<%= channelId %>/session/<%= sessionId %>/magicscreen">Magic Screen</a>
         <span>&rsaquo;</span>
-        <span class="active">Applause Responses</span>
+        <span class="active">Magic Screen Responses</span>
     </nav>
 
     <% if (error) { %>
@@ -39,7 +39,7 @@
 
                         <% if (invalidPage && totalPages> 0) { %>
                             <%- include('../components/404') %>
-                                <% } else if (applauseResponses && applauseResponses.length> 0) { %>
+                                <% } else if (magicScreenResponses && magicScreenResponses.length> 0) { %>
 
                                     <div style="display: flex; justify-content: space-between;">
 
@@ -58,12 +58,12 @@
                                             <span>User</span>
                                             <span>Email</span>
                                             <span>Answer</span>
-                                            <span>Magic Coins Deducted</span>
+                                            <span>Link</span>
                                             <span>Time</span>
                                         </div>
 
                                         <ul class="user-list">
-                                            <% applauseResponses.forEach(resp=> {
+                                            <% magicScreenResponses.forEach(resp=> {
                                                 const formattedDate = new Date(resp.createdAt).toLocaleString("en-GB", {
                                                 day: '2-digit', month: '2-digit', year: 'numeric',
                                                 hour: '2-digit', minute: '2-digit'
@@ -84,8 +84,16 @@
                                                             ${resp.selectedOptionIndex + 1}` %>
                                                     </span>
                                                     <span>
-                                                        <%= resp.isNoResponseGiven ? "N/A" : (resp.coinsDeducted || "No"
-                                                            ) %>
+                                                        <% if (resp.selectedLink) { %>
+                                                            <a href="<%= resp.selectedLink %>" style="display: flow;"
+                                                                target="_blank">
+                                                                <%= resp.selectedLink.length> 30 ?
+                                                                    resp.selectedLink.substring(0, 30) + "..." :
+                                                                    resp.selectedLink %>
+                                                            </a>
+                                                            <% } else { %>
+                                                                N/A
+                                                                <% } %>
                                                     </span>
                                                     <span>
                                                         <%= formattedDate %>
