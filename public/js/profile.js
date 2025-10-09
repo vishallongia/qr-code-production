@@ -6,7 +6,7 @@ const togglePassword = document.getElementById("togglePassword");
 const passwordInput = document.getElementById("password");
 
 editBtn.addEventListener("click", () => {
-  let lang = document.getElementById("languageSwitcher").value
+  let lang = document.getElementById("languageSwitcher").value;
   // let lang = "en";
 
   let isEditing = false;
@@ -106,3 +106,44 @@ async function updateDetailsProfile(data) {
     throw error; // Propagate error for handling in the calling function
   }
 }
+
+// === Handle Affiliate / TV Station Requests ===
+async function makeUserRequest(type) {
+  try {
+    const res = await fetch("/tvstation/user/request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ type }),
+    });
+
+    const data = await res.json();
+    showToast(data.message, data.type);
+
+    // If success, optionally disable the button to prevent duplicate requests
+    if (data.type === "success") {
+      if (type === "affiliate") {
+        document.getElementById("makeAffiliateRequestBtn").disabled = true;
+      } else if (type === "tvstation") {
+        document.getElementById("makeTvStationRequestBtn").disabled = true;
+      }
+    }
+  } catch (err) {
+    console.error("Error sending user request:", err);
+    showToast("Something went wrong. Please try again.", "error");
+  }
+}
+
+// Attach click listeners to buttons
+document
+  .getElementById("makeAffiliateRequestBtn")
+  ?.addEventListener("click", () => {
+    makeUserRequest("affiliate");
+  });
+
+document
+  .getElementById("makeTvStationRequestBtn")
+  ?.addEventListener("click", () => {
+    makeUserRequest("tvstation");
+  });

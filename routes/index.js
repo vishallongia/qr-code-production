@@ -11,6 +11,7 @@ const {
   checkSubscriptionMiddleware,
 } = require("../middleware/checkSubscriptionStatus"); // Import the middleware
 const { checkQrLimit } = require("../middleware/checkQrLimit"); // Import the middleware
+const UserRequest = require("../models/UserRequest"); // your schema
 const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necessary
 const Payment = require("../models/Payment");
 const QRCodeHistory = require("../models/QRCodeHistory"); // Adjust path as per your folder structure
@@ -2181,9 +2182,8 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
 // My Profile Route
 router.get("/myprofile", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user._id;
-    // Fetch user details
-    const user = await User.findById(userId).select("-password"); // Exclude password
+    const user = req.user; // already available from authMiddleware
+
     if (!user) {
       return res.status(404).json({ message: "User not found", type: "error" });
     }
@@ -6037,6 +6037,229 @@ router.post("/set-currency", authMiddleware, async (req, res) => {
       message: "Internal server error",
       success: false,
     });
+  }
+});
+
+// GET /admindashboard/user-requests
+router.get("/admindashboard/user-requests", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 6;
+    const page = parseInt(req.query.page) || 1;
+    const selectedType = req.query.type; // affiliate or tvstation
+
+    // Validate type
+    if (!["affiliate", "tvstation"].includes(selectedType)) {
+      // Render the same page with an error message
+      return res.render("user-requests/requests", {
+        pendingRequests: [],
+        historyRequests: [],
+        limit,
+        totalCounts: { pending: 0, history: 0 },
+        selectedType: null,
+        errorMessage: "Invalid request type",
+      });
+    }
+
+    // Filters
+    const queryMap = {
+      pending: {
+        type: selectedType,
+        isApprovedByAdmin: false,
+        isCancelledByUser: false,
+        isDeclined: false,
+      },
+      history: {
+        type: selectedType,
+        $or: [
+          { isApprovedByAdmin: true },
+          { isCancelledByUser: true },
+          { isDeclined: true },
+        ],
+      },
+    };
+
+    // Helper to fetch requests with user info
+    const fetchRequests = async (filter, skip = 0, limit = 6) => {
+      const [requests, totalCount] = await Promise.all([
+        UserRequest.aggregate([
+          { $match: filter },
+          { $sort: { createdAt: -1 } },
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $lookup: {
+              from: "users",
+              localField: "userId",
+              foreignField: "_id",
+              as: "user",
+            },
+          },
+          { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+          {
+            $project: {
+              type: 1,
+              isApprovedByAdmin: 1,
+              isCancelledByUser: 1,
+              isDeclined: 1,
+              createdAt: 1,
+              userName: "$user.fullName",
+              userEmail: "$user.email",
+              status: {
+                $switch: {
+                  branches: [
+                    { case: { $eq: ["$isDeclined", true] }, then: "Declined" },
+                    {
+                      case: { $eq: ["$isCancelledByUser", true] },
+                      then: "Cancelled by User",
+                    },
+                    {
+                      case: { $eq: ["$isApprovedByAdmin", true] },
+                      then: "Approved by Admin",
+                    },
+                  ],
+                  default: "Pending",
+                },
+              },
+            },
+          },
+        ]),
+        UserRequest.countDocuments(filter),
+      ]);
+
+      return { requests, totalCount };
+    };
+
+    // XHR / AJAX requests
+    if (req.xhr || req.query.loadMore) {
+      const tabType = req.query.tab || "pending";
+      if (!queryMap[tabType])
+        return res.status(400).json({ message: "Invalid tab type" });
+
+      const skip = (page - 1) * limit;
+      const data = await fetchRequests(queryMap[tabType], skip, limit);
+
+      return res.json({
+        requests: data.requests,
+        totalCount: data.totalCount,
+        currentPage: page,
+        errorMessage: null,
+      });
+    }
+
+    // Initial render
+    const [pending, history] = await Promise.all([
+      fetchRequests(queryMap.pending, 0, limit),
+      fetchRequests(queryMap.history, 0, limit),
+    ]);
+
+    res.render("user-requests/requests", {
+      pendingRequests: pending.requests,
+      historyRequests: history.requests,
+      limit,
+      totalCounts: {
+        pending: pending.totalCount,
+        history: history.totalCount,
+      },
+      selectedType, // optional, useful if you want to show type in the page
+      errorMessage: null,
+    });
+  } catch (err) {
+    console.error("Error fetching user requests:", err);
+    res
+      .status(500)
+      .render("error", { message: "Failed to load user requests" });
+  }
+});
+
+// POST /admindashboard/user-requests/:id/approve
+router.post("/admindashboard/user-requests/:id/approve", async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const request = await UserRequest.findById(requestId);
+
+    if (!request) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Request not found" });
+    }
+
+    if (
+      request.isApprovedByAdmin ||
+      request.isDeclined ||
+      request.isCancelledByUser
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Request already processed" });
+    }
+
+    // Find the user first
+    const user = await User.findById(request.userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Update user based on request type
+    if (request.type === "tvstation") {
+      user.isTvStation = true;
+    } else if (request.type === "affiliate") {
+      user.role = "affiliate";
+    }
+
+    await user.save(); // first save user
+
+    // Only after user is updated, mark request as approved
+    request.isApprovedByAdmin = true;
+    await request.save();
+
+    return res.json({
+      success: true,
+      message: "Request approved successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to approve request" });
+  }
+});
+
+// POST /user-requests/:id/decline
+router.post("/admindashboard/user-requests/:id/decline", async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const request = await UserRequest.findById(requestId);
+
+    if (!request) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Request not found" });
+    }
+
+    if (
+      request.isApprovedByAdmin ||
+      request.isDeclined ||
+      request.isCancelledByUser
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Request already processed" });
+    }
+
+    request.isDeclined = true;
+    await request.save();
+
+    return res.json({
+      success: true,
+      message: "Request declined successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to decline request" });
   }
 });
 

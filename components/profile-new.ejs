@@ -39,7 +39,30 @@
             <!-- Buttons -->
             <div>
                 <button type="button" id="editBtn" data-translate="edit_profile">Edit Profile</button>
-                <button type="submit" id="updateProfileBtn" style="display: none;" data-translate="update">Update</button>
+                <button type="submit" id="updateProfileBtn" style="display: none;"
+                    data-translate="update">Update</button>
+            </div>
+            <hr class="profile-divider">
+
+            <div class="request-buttons">
+                <% if (user) { %>
+                    <% if (user.role !=='affiliate' ) { %>
+                        <button type="button" id="makeAffiliateRequestBtn" class="request-btn"
+                            style="margin-bottom: 10px;" data-translate="make_affiliate_request">
+                            Make Affiliate Request
+                        </button>
+                        <% } %>
+
+                            <% if (!user.isTvStation) { %>
+                                <button type="button" id="makeTvStationRequestBtn" class="request-btn"
+                                    data-translate="make_tvstation_request">
+                                    Make TV Station User Request
+                                </button>
+                                <% } %>
+                                    <% } else { %>
+                                        <!-- Optional: show a message if user is not logged in or object is null -->
+                                        <p>Please log in to make requests.</p>
+                                        <% } %>
             </div>
         </form>
     </div>

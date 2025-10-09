@@ -16,6 +16,7 @@ const VoteQuestion = require("../models/VoteQuestion");
 const Applause = require("../models/Applause");
 const Channel = require("../models/Channel");
 
+
 // Set user as TV Station
 router.post("/make-tvstation", async (req, res) => {
   const { userId } = req.body;
@@ -606,5 +607,7 @@ router.post("/update-magic-coin-commission", async (req, res) => {
     });
   }
 });
+
+
 
 module.exports = router;

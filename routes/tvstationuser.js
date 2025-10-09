@@ -13,6 +13,7 @@ const Applause = require("../models/Applause");
 const MagicScreen = require("../models/MagicScreen");
 const Channel = require("../models/Channel");
 const WinnerRequest = require("../models/WinnerRequest"); // adjust path
+const UserRequest = require("../models/UserRequest");
 const User = require("../models/User");
 const QuizQuestionResponse = require("../models/QuizQuestionResponse");
 const VoteQuestionResponse = require("../models/VoteQuestionResponse");
@@ -5215,6 +5216,79 @@ router.get("/:sessionId/apps", async (req, res) => {
   } catch (err) {
     console.error("Error fetching session apps:", err);
     return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
+// Create a new affiliate or tvstation request
+router.post("/user/request", async (req, res) => {
+  try {
+    const { type } = req.body;
+
+    if (!type) {
+      return res.status(400).json({
+        message: "Request type is required.",
+        type: "error",
+        data: null,
+      });
+    }
+
+    if (!["affiliate", "tvstation"].includes(type)) {
+      return res.status(400).json({
+        message: "Invalid request type.",
+        type: "error",
+        data: null,
+      });
+    }
+
+    const userId = req.user?._id;
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized. User not found.",
+        type: "error",
+        data: null,
+      });
+    }
+
+    // Check if a pending request already exists
+    const existingRequest = await UserRequest.findOne({
+      userId,
+      type,
+      isApprovedByAdmin: false,
+      isDeclined: false,
+      isCancelledByUser: false,
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({
+        message: `You already have a pending ${type} request.`,
+        type: "error",
+        data: null,
+      });
+    }
+
+    // Create new request
+    const newRequest = await UserRequest.create({
+      userId,
+      type,
+    });
+
+    return res.status(200).json({
+      message: `${type === "affiliate" ? "Affiliate" : "TV Station"} request submitted successfully.`,
+      type: "success",
+      data: {
+        requestId: newRequest._id,
+        type: newRequest.type,
+        createdAt: newRequest.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("User request creation error:", error);
+    return res.status(500).json({
+      message: "An error occurred while submitting the request.",
+      type: "error",
+      data: null,
+    });
   }
 });
 
