@@ -111,6 +111,7 @@ async function updateDetailsProfile(data) {
 }
 
 // === Handle Affiliate / TV Station Requests ===
+// === Handle Affiliate / TV Station Requests ===
 async function makeUserRequest(type) {
   try {
     document.getElementById("loader").style.display = "flex";
@@ -124,9 +125,12 @@ async function makeUserRequest(type) {
 
     const data = await res.json();
     showToast(data.message, data.type);
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
+    // Only reload if request was successful
+    if (res.ok) {
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    }
   } catch (err) {
     console.error("Error sending user request:", err);
     showToast("Something went wrong. Please try again.", "error");
