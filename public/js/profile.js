@@ -85,6 +85,7 @@ async function handleUpdateDetailsProfile(event) {
 // Function to update user details
 async function updateDetailsProfile(data) {
   try {
+    document.getElementById("loader").style.display = "flex";
     const response = await fetch(`/change-my-profile`, {
       method: "POST", // Use PUT for updating resources
       headers: {
@@ -104,12 +105,15 @@ async function updateDetailsProfile(data) {
   } catch (error) {
     console.error("Error:", error);
     throw error; // Propagate error for handling in the calling function
+  } finally {
+    document.getElementById("loader").style.display = "none";
   }
 }
 
 // === Handle Affiliate / TV Station Requests ===
 async function makeUserRequest(type) {
   try {
+    document.getElementById("loader").style.display = "flex";
     const res = await fetch("/tvstation/user/request", {
       method: "POST",
       headers: {
@@ -120,18 +124,14 @@ async function makeUserRequest(type) {
 
     const data = await res.json();
     showToast(data.message, data.type);
-
-    // If success, optionally disable the button to prevent duplicate requests
-    if (data.type === "success") {
-      if (type === "affiliate") {
-        document.getElementById("makeAffiliateRequestBtn").disabled = true;
-      } else if (type === "tvstation") {
-        document.getElementById("makeTvStationRequestBtn").disabled = true;
-      }
-    }
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
   } catch (err) {
     console.error("Error sending user request:", err);
     showToast("Something went wrong. Please try again.", "error");
+  } finally {
+    document.getElementById("loader").style.display = "none";
   }
 }
 
