@@ -106,7 +106,7 @@
   "magiccoins": "varázsérméért",
 
 
-  "thankYouYouShowedYourAppreciationTo": "Köszönjük. Kifejezted megbecsülésedet felé",
+  "thankYouYouShowedYourAppreciationTo": "Köszönjük.",
   "willBeNotifiedAboutYourApplause": "értesítést kap a tapsodról",
   "youAppreciated": "Megtapsoltad",
   "butDidntUseAnyMagicCoins": "de nem használtál fel Magic Coint",
@@ -119,10 +119,13 @@
   "YouHave": "Ennyi Varázsérméd van: ",
   "MagicCoinsButAreRequired": ". És ennyire volna most szükséged:",
   "TopUpWallet": "Pénztárca feltöltése",
-  "youwanttoapplaud": "Ha meg szeretnéd tapsolni ezt:",
-  "clickontheimage": "klikkelj a képre. Szimpátiádat varázsérmékkel tudod kifejezni.",
+  "youwanttoapplaud": "Ha ezt szeretnéd megtapsolni,",
+  "clickontheimage": "akkor klikkelj a képre.",
   "commaOnApplause":",",
-  "back":"Vissza"
+  "back":"Vissza",
+
+  "youCanExpress":"Szimpátiádat varázsérmékkel tudod kifejezni."
+
 
 
 

@@ -17,6 +17,7 @@ function showToast(message, type = "success") {
     close: true, // Show close button
     style: {
       zIndex: 1000,
+      fontSize: "16px",
     },
     onClick: function () {}, // Callback after click
   }).showToast();

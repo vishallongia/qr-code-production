@@ -605,7 +605,7 @@
                 if (!qrCode) return;
 
                 setTimeout(() => {
-                    qrCode.download({ name: "magic-code", extension: "png", width: 1600, height: 1600 });
+                    qrCode.download({ name: qrData.qrName, extension: "png", width: 1600, height: 1600 });
                 }, 500); // wait a little for QR to render
             } catch (error) {
                 console.error("Download error:", error);

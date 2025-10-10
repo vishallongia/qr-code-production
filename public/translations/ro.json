@@ -115,7 +115,9 @@
   "MagicCoinsButAreRequired": "monede, dar acum este necesară",
   "TopUpWallet": "Încarcă-ți portofelul",
   "youwanttoapplaud": "Dacă vrei să aplaudezi",
-  "clickontheimage": "dă click pe imagine. Îți poți exprima aprecierea cu Magic Coins.",
+  "clickontheimage": "dă click pe imagine. ",
   "commaOnApplause":",",
-  "back":"Retrag inapoi"
+  "back":"Retrag inapoi",
+  "youCanExpress":"Îți poți exprima aprecierea cu Magic Coins."
+
 }

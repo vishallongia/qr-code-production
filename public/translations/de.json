@@ -121,9 +121,12 @@
   "MagicCoinsButAreRequired": "Magic Coins, aber du benötigst",
   "TopUpWallet": "Wallet aufladen",
   "youwanttoapplaud": "Wenn du",
-  "clickontheimage": "applaudieren möchtest, klicke auf das Bild. Deine Anerkennung und Wertschätzung kannst du mit Magic Coins ausdrücken.",
+  "clickontheimage": "applaudieren möchtest, klicke auf das Bild. ",
   "commaOnApplause":"",
-  "back":"Zurück"
+  "back":"Zurück",
+
+  "youCanExpress":"Deine Anerkennung und Wertschätzung kannst du mit Magic Coins ausdrücken."
+
 
 
 

@@ -282,8 +282,9 @@
                                                 value="<%= i %>">
                                             <div class="uq-option-text-wrapper" style="font-size:1rem;font-weight:600;">
 
-                                                
-                                                <div class="coin-popup-buttons" style="margin-top: 0; margin-bottom: 7px;">
+
+                                                <div class="coin-popup-buttons"
+                                                    style="margin-top: 0; margin-bottom: 7px;">
                                                     <button data-translate="share" type="button"
                                                         onclick="TriggerPopup(<%= i %>)">Share</button>
 
@@ -292,15 +293,15 @@
                                                 <div style="margin-bottom: 0.5rem;width: 258px;">
                                                     <span data-translate="youwanttoapplaud">If you want to
                                                         applaud</span>
-                                                    <%= opt.text %><span data-translate="commaOnApplause">,</span>
-                                                        <span data-translate="clickontheimage">click on the image. You
-                                                            can
-                                                            express your appreciation with Magic Coins.</span>
+                                                    <!-- <span data-translate="commaOnApplause">,</span> -->
+                                                    <span data-translate="clickontheimage">click on the image. You
+                                                        can
+                                                        express your appreciation with Magic Coins.</span>
 
                                                 </div>
 
 
-                                                <span class="uq-option-text" style="display: none;">
+                                                <span class="uq-option-text">
                                                     <%= opt.text %>
                                                 </span>
                                             </div>
@@ -342,6 +343,33 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
 <script>
+    const langSelector = document.querySelector('.language-selector-select');
+    const selectedLang = document.querySelector('.selected-lang');
+    const dropdownItems = document.querySelectorAll('.language-dropdown li');
+
+    langSelector.addEventListener('click', () => {
+        langSelector.classList.toggle('active');
+    });
+
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const lang = e.target.getAttribute('data-lang');
+            selectedLang.textContent = lang;
+            langSelector.classList.remove('active');
+        });
+    });
+
+    // Optional: Click outside to close dropdown
+    document.addEventListener('click', (e) => {
+        if (!langSelector.contains(e.target)) {
+            langSelector.classList.remove('active');
+        }
+    });
+
+
+</script>
+
+<script>
     let selectedApplauseOptionIndex = null;
     let index = selectedApplauseOptionIndex;
     const applausePopup = document.getElementById("applausePopup");
@@ -365,10 +393,9 @@
         const optionTitle = optionTextSpan ? optionTextSpan.innerText.trim() : "(option)";
 
         const applauseTextEl = document.getElementById("applauseText");
-        applauseTextEl.innerHTML = `<span data-translate="helloMagicPersonYouAreWelcomeToShowYourAppreciationTo">Hello Magic Person, you are welcome to show your appreciation to</span> "${optionTitle}"
-        <span data-translate="howMuchApplauseDoYouWantToGive">How much applause do you want to give? Select the magic coin amount you wish, or type in any amount</span>.`;
 
         applauseTextEl.innerHTML = `
+        <div data-translate="youCanExpress">You can express your sympathy with Magic Coins.</div>
         <img src="/images/MCN LOGO.png" alt="Applause" style="all: unset;width: 70%;vertical-align: middle;">`
 
         // Fetch default value from DB (simulate here, replace with actual API if needed)
@@ -476,7 +503,14 @@
                 walletCoinsEl.textContent = `🪙 Magic Coins: ${data.availableCoins}`;
             }
 
-            textEl.innerHTML = `<span data-translate="thankYouYouShowedYourAppreciationTo">Thank you. You showed your appreciation to</span> "${optionTitle}". "${optionTitle}" <span data-translate="willBeNotifiedAboutYourApplause">will be notified about your applause</span>.`;
+
+            let lang = document.getElementById("languageSwitcher").value
+            if (lang === "hu") {
+                textEl.innerHTML = `Köszönjük. ${optionTitle} ertesitést kap arról, hogy megtapsoltad.`;
+            }else{
+
+                textEl.innerHTML = `<span data-translate="thankYouYouShowedYourAppreciationTo">Thank you. You showed your appreciation to</span> ${optionTitle}. ${optionTitle} <span data-translate="willBeNotifiedAboutYourApplause">will be notified about your applause</span>.`;
+            }
 
             topUpBtn.style.display = "none"; // hide top-up
             okBtn.style.display = "inline-block"; // show OK
@@ -547,32 +581,7 @@
 </script>
 
 
-<script>
-    const langSelector = document.querySelector('.language-selector-select');
-    const selectedLang = document.querySelector('.selected-lang');
-    const dropdownItems = document.querySelectorAll('.language-dropdown li');
 
-    langSelector.addEventListener('click', () => {
-        langSelector.classList.toggle('active');
-    });
-
-    dropdownItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            const lang = e.target.getAttribute('data-lang');
-            selectedLang.textContent = lang;
-            langSelector.classList.remove('active');
-        });
-    });
-
-    // Optional: Click outside to close dropdown
-    document.addEventListener('click', (e) => {
-        if (!langSelector.contains(e.target)) {
-            langSelector.classList.remove('active');
-        }
-    });
-
-
-</script>
 
 <script>
 

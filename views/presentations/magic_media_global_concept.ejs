@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Magic Media — Global Broadcaster & Residential Integration (Structured Concept)</title>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZNB2G4J8G"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-0ZNB2G4J8G');
+    </script>
+
+    <link rel="icon" type="image/png" sizes="192x192" href="\images\Magic Media logo.png">
+    <link rel="apple-touch-icon" href="\images\Magic Media logo.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+        :root {
+            --bg: #0b0c10;
+            --panel: #12141a;
+            --text: #e7edf3;
+            --muted: #a9b3bd;
+            --brand: #7c5cff;
+            --green: #19c37d;
+            --border: rgba(255, 255, 255, 0.09);
+            --card: #0f1117;
+            --accent: #ffb703;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+            background: var(--bg);
+            color: var(--text)
+        }
+
+        a {
+            color: var(--brand);
+            text-decoration: none
+        }
+
+        a:hover {
+            text-decoration: underline
+        }
+
+        .wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px
+        }
+
+        header {
+            background: radial-gradient(800px 400px at 20% -10%, rgba(124, 92, 255, .18), transparent 60%), linear-gradient(#0c0d12, #0a0b10);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .hero {
+            padding: 56px 0;
+            display: grid;
+            grid-template-columns: 1.2fr .8fr;
+            gap: 28px;
+            align-items: center
+        }
+
+        .badge {
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.02);
+            font-size: 13px
+        }
+
+        h1 {
+            font-size: 42px;
+            line-height: 1.1;
+            margin: 14px 0 10px
+        }
+
+        .lead {
+            font-size: 18px;
+            color: #cfdae3
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px
+        }
+
+        .qr {
+            display: grid;
+            place-items: center;
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            background: conic-gradient(from 90deg at 60% 40%, rgba(124, 92, 255, 0.08), rgba(25, 195, 125, 0.05), transparent);
+            min-height: 180px
+        }
+
+        .toc {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px
+        }
+
+        @media (max-width:980px) {
+            .hero {
+                grid-template-columns: 1fr
+            }
+
+            .toc {
+                grid-template-columns: 1fr
+            }
+        }
+
+        section {
+            padding: 48px 0;
+            border-bottom: 1px solid var(--border)
+        }
+
+        h2 {
+            font-size: 28px;
+            margin: 0 0 16px
+        }
+
+        h3 {
+            margin: 10px 0
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            font-size: 12px;
+            color: #cbd5df;
+            background: rgba(255, 255, 255, 0.02);
+            margin: 4px 6px 0 0
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden
+        }
+
+        th,
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            text-align: left
+        }
+
+        thead th {
+            background: #151822;
+            color: #e3e9f1;
+            font-weight: 700
+        }
+
+        tfoot td {
+            font-weight: 700
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #1a1f2b;
+            border: 1px solid var(--border);
+            font-size: 12px;
+            color: #cfd7e0
+        }
+
+        .note {
+            border-left: 3px solid var(--brand);
+            padding: 12px 14px;
+            background: rgba(124, 92, 255, 0.08);
+            border-radius: 8px;
+            margin-top: 12px;
+            color: #dfe6ee
+        }
+
+        .footer {
+            padding: 26px 0;
+            text-align: center;
+            color: #aeb8c3
+        }
+
+        .logo {
+            height: 250px;
+            width: 250px;
+        }
+
+         img {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .fullscreen-overlay.show {
+            display: flex;
+        }
+
+        .fullscreen-overlay img {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            color: #333;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 10000;
+            background: #fff;
+            padding: 0;
+            border-radius: 50%;
+            /* box-shadow: 0 0px 0px rgba(0, 0, 0, 0.2); */
+            width: 40px;
+            height: 40px;
+            text-align: center;
+        }
+
+        .close-btn:hover {
+            color: red;
+        }
+
+        .ImagesInList img {
+            margin-top: 1.4rem;
+            margin-bottom: 2rem;
+
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-auto-rows: 200px;
+            gap: 10px;
+        }
+
+        .gallery img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Layout pattern for 20 images */
+        .gallery div:nth-child(1) {
+            grid-column: span 6;
+        }
+
+        .gallery div:nth-child(2),
+        .gallery div:nth-child(3) {
+            grid-column: span 3;
+        }
+
+        .gallery div:nth-child(4) {
+            grid-column: span 2;
+        }
+
+        .gallery div:nth-child(5) {
+            grid-column: span 4;
+        }
+
+        .gallery div:nth-child(6),
+        .gallery div:nth-child(7) {
+            grid-column: span 2;
+        }
+
+        .gallery div:nth-child(7) {
+            grid-column: span 4;
+        }
+
+        .gallery div:nth-child(9) {
+            grid-column: span 6;
+        }
+
+        .gallery div:nth-child(10),
+        .gallery div:nth-child(11) {
+            grid-column: span 3;
+        }
+
+        .gallery div:nth-child(12) {
+            grid-column: span 4;
+        }
+
+        .gallery div:nth-child(13) {
+            grid-column: span 2;
+        }
+
+        .gallery div:nth-child(14),
+        .gallery div:nth-child(15),
+        .gallery div:nth-child(16) {
+            grid-column: span 2;
+        }
+
+        .gallery div:nth-child(17) {
+            grid-column: span 2;
+        }
+
+        .gallery div:nth-child(18) {
+            grid-column: span 4;
+        }
+
+        .gallery div:nth-child(19),
+        .gallery div:nth-child(20) {
+            grid-column: span 6;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+                grid-auto-rows: 150px;
+            }
+
+            .gallery div {
+                grid-column: span 1 !important;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .gallery {
+                grid-template-columns: 1fr;
+                grid-auto-rows: 200px;
+            }
+
+            .gallery div {
+                grid-column: span 1 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="wrap hero">
+            <div>
+                <div class="badge">Magic Media 2025</div>
+                <h1>Turning Passive Viewers into <span style="color:var(--green)">Active Participants</span></h1>
+                <p>Broadcast Smarter → Connect Deeper → Add New Value → Unlock Revenue → Monetize More</p>
+            </div>
+            <div class="panel">
+                <h3 style="margin:0 0 10px">The Magic Code on Magic Media. Redefining Interaction. Deepening Engagement.</h3>
+                <!-- <p class="muted" style="margin:0 0 10px">Broadcast Smarter → Connect Deeper → Add New Value → Unlock
+                    Revenue → Monetize More</p> -->
+                <div class="qr">
+                    <!-- <svg width="160" height="160" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" role="img"
+                        aria-label="Magic Code Placeholder">
+                        <rect width="180" height="180" rx="14" fill="#0f1117" stroke="rgba(255,255,255,0.1)" />
+                        <g transform="translate(15,15)">
+                            <rect width="42" height="42" fill="#7c5cff" rx="8" />
+                            <rect x="108" width="42" height="42" fill="#19c37d" rx="8" />
+                            <rect y="108" width="42" height="42" fill="#19c37d" rx="8" />
+                            <rect x="108" y="108" width="42" height="42" fill="#7c5cff" rx="8" />
+                            <rect x="54" y="54" width="72" height="72" fill="#1b2030" rx="6"
+                                stroke="rgba(255,255,255,0.06)" />
+                            <circle cx="90" cy="90" r="22" fill="#7c5cff" />
+                            <circle cx="90" cy="90" r="8" fill="#19c37d" />
+                        </g>
+                    </svg> -->
+
+                    <img src="\images\Magic Media logo.png" alt="" class="logo">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="wrap">
+
+        <!-- Table of Contents -->
+        <section id="toc">
+            <h2>Table of Contents</h2>
+            <div class="panel toc">
+                <div>
+                    <a href="#sec1">1. Introduction</a><br />
+                    <a href="#sec2">2. The Core Vision</a><br />
+                    <a href="#sec3">3. The Magic Media System</a><br />
+                    <a href="#sec4">4. The Magic Formats (Magic Media Events)</a><br />
+                    <a href="#sec5">5. Viewer Journey</a><br />
+                    <a href="#sec6">6. Micropayment System</a><br />
+                    <a href="#sec7">7. Residential Subscription Model</a>
+                </div>
+                <div>
+                    <a href="#sec8">8. Revenue Share Model</a><br />
+                    <a href="#sec9">9. Technical Integration</a><br />
+                    <a href="#sec10">10. Estimated Broadcaster Revenue</a><br />
+                    <a href="#sec11">11. Benefits for Broadcasters</a><br />
+                    <a href="#sec12">12. Global Applicability</a><br />
+                    <a href="#sec13">13. Implementation Roadmap</a><br />
+                    <a href="#sec14">14. Vision Statement</a><br>
+                    <a href="#sec15">15. Implementations</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 1 -->
+        <section id="sec1">
+            <h2>1. Introduction</h2>
+            <div class="panel">
+                <p>The <strong>Magic Code</strong> is a next-generation <strong>Auto‑ID optical signal</strong> that
+                    transforms any broadcast into an interactive experience. By embedding the Magic Code into shows,
+                    episodes, or live events, broadcasters can instantly activate <strong>viewer engagement, measurable
+                        participation, and micropayment-driven revenue</strong> — all through a simple scan.</p>
+                <p>At the same time, <strong>residential users</strong> can access the Magic ecosystem to create and
+                    manage their own Magic Codes and Magic Stickers — turning personal content and small-scale projects
+                    into interactive digital experiences.</p>
+            </div>
+        </section>
+
+        <!-- 2 -->
+        <section id="sec2">
+            <h2>2. The Core Vision</h2>
+            <div class="panel">
+                <blockquote style="margin:0;color:#dfe6ee">Magic Media connects television, audience, and commerce —
+                    turning every viewer into a participant and every moment into measurable value.</blockquote>
+                <p style="margin-top:12px">Magic Media bridges the gap between linear broadcasting and digital
+                    interaction. It empowers networks to evolve from <em>viewership metrics</em> to <em>participation
+                        metrics</em>, capturing attention and monetization at the same time.</p>
+            </div>
+        </section>
+
+        <!-- 3 -->
+        <section id="sec3">
+            <h2>3. The Magic Media System</h2>
+            <div class="panel">
+                <h3>A. Magic Media for Broadcasters</h3>
+                <p>A cloud-based platform where TV stations and content producers create and manage <strong>Magic Media
+                        Events</strong> — interactive extensions of their programming. Broadcasters can create and
+                    assign Magic Formats to any show or episode, track engagement and micropayment revenue in real time,
+                    and integrate seamlessly with existing on-air graphics and OTT platforms.</p>
+                <div class="tag">White‑label UI</div>
+                <div class="tag">API & SDK</div>
+                <div class="tag">Real‑time Analytics</div>
+                <h3 style="margin-top:18px">B. Magic Studio for Residential Users</h3>
+                <p>An intuitive self-service tool that allows individuals to generate personal <strong>Magic
+                        Codes</strong> and <strong>Magic Stickers</strong>, link them to digital media, text, or video
+                    content, and manage their <strong>Magic Wallet</strong> and Coins. Residential users do not have
+                    access to broadcaster-only Magic Formats (Vote, Quiz, Applause, etc.).</p>
+                <div class="tag">Code Generator</div>
+                <div class="tag">Wallet & Coins</div>
+                <div class="tag">Stickers</div>
+            </div>
+        </section>
+
+        <!-- 4 -->
+        <section id="sec4">
+            <h2>4. The Magic Formats (Magic Media Events)</h2>
+            <div class="panel">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Format Name</th>
+                            <th>Purpose</th>
+                            <th>Viewer Experience</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Magic Vote</strong></td>
+                            <td>Audience decision-making</td>
+                            <td>Viewers vote on outcomes, contestants, or opinions live or post-broadcast</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Magic Quiz</strong></td>
+                            <td>Knowledge engagement</td>
+                            <td>Interactive question rounds tied to show content</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Magic Moments</strong></td>
+                            <td>Emotional highlights</td>
+                            <td>Viewers react to special or dramatic moments in real time</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Magic Applause</strong></td>
+                            <td>Appreciation</td>
+                            <td>Viewers send applause or donate Magic Coins to favorite contestants or scenes</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Magic Brands</strong></td>
+                            <td>Brand integration</td>
+                            <td>Viewers interact with sponsored content or clickable brand moments</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Magic Shopping</strong></td>
+                            <td>Instant commerce</td>
+                            <td>Direct purchase of products featured in the show</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Magic Comments</strong></td>
+                            <td>Unified discussion</td>
+                            <td>Aggregates all official social media comment sections into a single stream</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Magic Screen</strong></td>
+                            <td>Central landing page</td>
+                            <td>Episode-specific hub linking all Magic Events</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Magic Portfolio</strong></td>
+                            <td>Talent/guest profiles</td>
+                            <td>Dynamic pages presenting participants, bios, media, and links</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="note"><strong>Coin Conversion:</strong> 1 Magic Coin = €0.01. Typical viewer actions:
+                    <em>Vote/Quiz 10–50 Coins</em>; <em>Applause 10–1000 Coins</em>.
+                </div>
+            </div>
+        </section>
+
+        <!-- 5 -->
+        <section id="sec5">
+            <h2>5. Viewer Journey</h2>
+            <div class="panel">
+                <ol>
+                    <li><strong>Magic Code Displayed</strong> — on-screen overlay, interstitial, or embedded graphic.
+                    </li>
+                    <li><strong>Viewer Scans</strong> — using any smartphone camera.</li>
+                    <li><strong>Instant Redirection</strong> — to the corresponding Magic Event page (vote, quiz,
+                        applause, etc.).</li>
+                    <li><strong>Participation</strong> — users interact and spend Magic Coins via Magic Wallet.</li>
+                    <li><strong>Analytics</strong> — engagement and payments tracked live in broadcaster dashboard.</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- 6 -->
+        <section id="sec6">
+            <h2>6. Micropayment System</h2>
+            <div class="panel">
+                <h3>Conversion</h3>
+                <p><strong>1 Magic Coin = €0.01 (1 cent)</strong></p>
+                <h3>Typical Viewer Actions</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Coin Range</th>
+                            <th>Value in €</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Vote or Quiz Participation</td>
+                            <td>10–50 Coins</td>
+                            <td>€0.10 – €0.50</td>
+                        </tr>
+                        <tr>
+                            <td>Applause or Donation</td>
+                            <td>10–1000 Coins</td>
+                            <td>€0.10 – €10.00</td>
+                        </tr>
+                        <tr>
+                            <td>Brand or Shopping Interaction</td>
+                            <td>Variable</td>
+                            <td>Affiliate/Cart based</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="muted">Payment methods: credit/debit cards, PayPal, Apple Pay, Google Pay, mobile carrier
+                    billing.</p>
+            </div>
+        </section>
+
+        <!-- 7 -->
+        <section id="sec7">
+            <h2>7. Residential Subscription Model</h2>
+            <div class="panel">
+                <p>Magic Media includes a direct-to-consumer subscription for private individuals — turning viewers into
+                    personal broadcasters (without access to broadcaster-only formats).</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Price</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Single Magic Code</td>
+                            <td>€0.99</td>
+                            <td>Create and link one personalized Magic Code</td>
+                        </tr>
+                        <tr>
+                            <td>Monthly Plan</td>
+                            <td>€4.99 / month</td>
+                            <td>Unlimited code generation, editable links, analytics access</td>
+                        </tr>
+                        <tr>
+                            <td>Yearly Plan</td>
+                            <td>€49.00 / year</td>
+                            <td>Full-year access with savings and bonus Coins</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="muted">Residential users can generate codes and stickers; they cannot host Magic Media Events
+                    (Vote/Quiz/Applause…)</p>
+            </div>
+        </section>
+
+        <!-- 8 -->
+        <section id="sec8">
+            <h2>8. Revenue Share Model</h2>
+            <div class="panel">
+                <h3>A. Broadcaster Formats</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Magic Format</th>
+                            <th>Broadcaster Share</th>
+                            <th>Magic Media Share</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Magic Vote</td>
+                            <td>70%</td>
+                            <td>30%</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Quiz</td>
+                            <td>70%</td>
+                            <td>30%</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Moments</td>
+                            <td>70%</td>
+                            <td>30%</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Applause</td>
+                            <td>70%</td>
+                            <td>30%</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Brands</td>
+                            <td>70%</td>
+                            <td>30%</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Shopping</td>
+                            <td>70%</td>
+                            <td>30%</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Comments</td>
+                            <td>70%</td>
+                            <td>30%</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Screen</td>
+                            <td>70%</td>
+                            <td>30%</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Portfolio</td>
+                            <td>70%</td>
+                            <td>30%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3 style="margin-top:18px">B. Residential Subscriptions</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Revenue Source</th>
+                            <th>Broadcaster Share</th>
+                            <th>Magic Media Share</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Subscription Plan Sales (Monthly/Yearly)</td>
+                            <td>40%</td>
+                            <td>60%</td>
+                        </tr>
+                        <tr>
+                            <td>Single Code Generation (€0.99)</td>
+                            <td>0%</td>
+                            <td>100%</td>
+                        </tr>
+                        <tr>
+                            <td>Stickers / Merchandise</td>
+                            <td>Variable</td>
+                            <td>Variable</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="muted" style="font-weight: bold;">Subscription attribution via broadcaster’s affiliate promo
+                    codes.</p>
+            </div>
+        </section>
+
+        <!-- 9 -->
+        <section id="sec9">
+            <h2>9. Technical Integration</h2>
+            <div class="panel">
+                <ul>
+                    <li>No app required; browser-based participation</li>
+                    <li>Compatible with all broadcast and OTT systems</li>
+                    <li>White-label ready (custom branding)</li>
+                    <li>GDPR / CCPA compliant</li>
+                    <li>API and SDK access</li>
+                    <li>Real-time dashboards for data & revenue</li>
+                </ul>
+                <p class="muted">Typical implementation time: 24–72 hours using existing on-air graphics.</p>
+            </div>
+        </section>
+
+        <!-- 10 -->
+        <section id="sec10">
+            <h2>10. Estimated Broadcaster Revenue (1,000,000 Unique Users)</h2>
+            <div class="panel">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Format / Source</th>
+                            <th>Avg. Participation</th>
+                            <th>Avg. Spend (€/User)</th>
+                            <th>Total Revenue (€)</th>
+                            <th>Broadcaster Share</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Magic Vote</td>
+                            <td>20% (200,000)</td>
+                            <td>0.30</td>
+                            <td>60,000</td>
+                            <td>42,000</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Quiz</td>
+                            <td>15% (150,000)</td>
+                            <td>0.30</td>
+                            <td>45,000</td>
+                            <td>31,500</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Moments</td>
+                            <td>10% (100,000)</td>
+                            <td>0.50</td>
+                            <td>50,000</td>
+                            <td>35,000</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Applause</td>
+                            <td>8% (80,000)</td>
+                            <td>1.50</td>
+                            <td>120,000</td>
+                            <td>84,000</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Brands</td>
+                            <td>5% (50,000)</td>
+                            <td>2.00</td>
+                            <td>100,000</td>
+                            <td>70,000</td>
+                        </tr>
+                        <tr>
+                            <td>Magic Shopping</td>
+                            <td>3% (30,000)</td>
+                            <td>5.00</td>
+                            <td>150,000</td>
+                            <td>105,000</td>
+                        </tr>
+                        <tr>
+                            <td>Residential Subscriptions</td>
+                            <td>1% (10,000)</td>
+                            <td>4.99 / month</td>
+                            <td>49,900 / month</td>
+                            <td>19,960 / month (40%)</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="5">Illustrative baseline; live events and talent shows typically increase
+                                participation &amp; ARPU.</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        <!-- 11 -->
+        <section id="sec11">
+            <h2>11. Benefits for Broadcasters</h2>
+            <div class="panel">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Advantage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>New Revenue</td>
+                            <td>Micropayments and subscription participation</td>
+                        </tr>
+                        <tr>
+                            <td>Engagement</td>
+                            <td>Active audience involvement and loyalty</td>
+                        </tr>
+                        <tr>
+                            <td>Data & Insights</td>
+                            <td>Real-time feedback on audience sentiment</td>
+                        </tr>
+                        <tr>
+                            <td>Brand Partnerships</td>
+                            <td>Native brand integration and sponsor monetization</td>
+                        </tr>
+                        <tr>
+                            <td>Scalability</td>
+                            <td>Easily replicable across shows and markets</td>
+                        </tr>
+                        <tr>
+                            <td>Social Reach</td>
+                            <td>Cross-platform activation via Magic Comments</td>
+                        </tr>
+                        <tr>
+                            <td>Ease of Use</td>
+                            <td>Instant scan-to-participate model for all demographics</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 12 -->
+        <section id="sec12">
+            <h2>12. Global Applicability</h2>
+            <div class="panel">
+                <p>Designed for worldwide deployment across national broadcasters (RTL, SRF, RAI, TV2, GMA, etc.), OTT
+                    platforms (Joyn, Hulu, YouTube Live, etc.), and event organizers. Localization covers multi-language
+                    support, regional pricing, currency adaptation, and affiliate models for regional partners.</p>
+            </div>
+        </section>
+
+        <!-- 13 -->
+        <section id="sec13">
+            <h2>13. Implementation Roadmap</h2>
+            <div class="panel">
+                <ol>
+                    <li><strong>Select pilot show or event</strong> — Week 1</li>
+                    <li><strong>Choose 2–3 Magic Formats</strong> — Week 1</li>
+                    <li><strong>Integrate Magic Code overlay</strong> — Week 2</li>
+                    <li><strong>Configure dashboard & Coins</strong> — Week 2</li>
+                    <li><strong>Launch pilot campaign</strong> — Week 3</li>
+                    <li><strong>Evaluate results & scale</strong> — Month 2–3</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- 14 -->
+        <section id="sec14">
+            <h2>14. Vision Statement</h2>
+            <div class="panel">
+                <blockquote style="margin:0;color:#e9eff6"><strong>Magic Media transforms television into
+                        participation.</strong><br />It turns emotion into data, applause into revenue, and engagement
+                    into connection. With Magic Code, every frame is alive — and every broadcaster becomes part of the
+                    next media revolution.</blockquote>
+            </div>
+        </section>
+
+        <!-- 15 -->
+        <section id="sec15">
+            <h2>15. Implementations</h2>
+        <div class="gallery">
+            <div><img src="\images\atv_hu\1 .png" alt=""></div>
+            <div><img src="\images\atv_hu\2.png" alt=""></div>
+            <div><img src="\images\atv_hu\3.png" alt=""></div>
+            <div><img src="\images\atv_hu\4.png" alt=""></div>
+            <div><img src="\images\atv_hu\5.png" alt=""></div>
+            <div><img src="\images\atv_hu\6.png" alt=""></div>
+            <div><img src="\images\atv_hu\7.png" alt=""></div>
+        </div>
+        </section>
+
+    </main>
+
+    <footer class="wrap footer">
+        Arnold Schmidt<br>
+        Founder, Magic Code & Magic Media<br>
+        📧 arnoldschmidt.com@gmail.com<br>
+        📞 +41 76 328 6283</p>
+    </footer>
+
+
+    <!-- Fullscreen Overlay -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="close-btn" id="closeBtn">×</div>
+        <img id="fullscreenImg" src="" alt="Fullscreen View" />
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const allImages = document.querySelectorAll("img");
+        const overlay = document.getElementById("fullscreenOverlay");
+        const fullscreenImg = document.getElementById("fullscreenImg");
+        const closeBtn = document.getElementById("closeBtn");
+
+        let startX = 0, startY = 0, moved = false;
+
+        allImages.forEach(img => {
+            img.addEventListener("mousedown", (e) => {
+                startX = e.clientX;
+                startY = e.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("mousemove", (e) => {
+                if (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("mouseup", (e) => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+
+            // For touch devices
+            img.addEventListener("touchstart", (e) => {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                moved = false;
+            });
+
+            img.addEventListener("touchmove", (e) => {
+                const touch = e.touches[0];
+                if (Math.abs(touch.clientX - startX) > 5 || Math.abs(touch.clientY - startY) > 5) {
+                    moved = true;
+                }
+            });
+
+            img.addEventListener("touchend", () => {
+                if (!moved) {
+                    fullscreenImg.src = img.src;
+                    overlay.classList.add("show");
+                }
+            });
+        });
+
+        closeBtn.addEventListener("click", () => {
+            overlay.classList.remove("show");
+            fullscreenImg.src = "";
+        });
+
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                overlay.classList.remove("show");
+                fullscreenImg.src = "";
+            }
+        });
+    </script>
+</body>
+
+</html>

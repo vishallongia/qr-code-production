@@ -119,10 +119,12 @@
   "YouHave": "You have",
   "MagicCoinsButAreRequired": "Magic Coins, but are required",
   "TopUpWallet": "Top Up Wallet",
-  "youwanttoapplaud": "If you want to applaud:",
-  "clickontheimage": "click on the image. You can express your sympathy with Magic Coins.",
+  "youwanttoapplaud": "If you want to applaud,",
+  "clickontheimage": "click on the image.",
   "commaOnApplause":",",
-  "back":"Back"
+  "back":"Back",
+
+  "youCanExpress":"You can express your sympathy with Magic Coins."
 
 
 

@@ -101,6 +101,33 @@ button:hover {
     margin-bottom: 16px;
 }
 
+.request-sent-label {
+    display: inline-block;
+    width: 100%;
+    padding: 0.55rem 1rem;
+    background-color: #f0f4ff;
+    /* very light blue background for info */
+    color: #1a0161;
+    /* primary theme color */
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.6;
+    border-radius: 0.75rem;
+    /* soft rounded corners */
+    text-align: center;
+    border: 1px solid rgba(26, 1, 97, 0.2);
+    box-shadow: 0 2px 6px rgba(26, 1, 97, 0.08);
+    /* subtle elevation */
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease-in-out;
+    margin-bottom: 10px;
+}
+
+.request-sent-label:hover {
+    background-color: #e2e8ff;
+    /* slightly darker on hover */
+}
+
 
 @media (max-width: 768px) {
     .container-custom-profile {
@@ -139,6 +166,7 @@ button:hover {
     .main-container {
         display: block;
     }
+
     .container-custom-profile {
         padding: 12px;
         gap: 1rem;

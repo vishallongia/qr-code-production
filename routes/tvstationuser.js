@@ -2399,6 +2399,7 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
         break;
       case "applause":
         questionModel = Applause;
+        break;
       case "magicscreen":
         questionModel = MagicScreen;
         break;
@@ -5219,7 +5220,6 @@ router.get("/:sessionId/apps", async (req, res) => {
   }
 });
 
-
 // Create a new affiliate or tvstation request
 router.post("/user/request", async (req, res) => {
   try {
@@ -5273,8 +5273,87 @@ router.post("/user/request", async (req, res) => {
       type,
     });
 
+    // Find the admin user to notify
+    const admin = await User.findOne({ role: "admin" });
+    if (admin && admin.email) {
+      const sender = {
+        email: process.env.SENDER_EMAIL,
+        name: "Magic Code - New User Request",
+      };
+
+      const subject = "New User Request Submitted";
+
+      const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>New User Request</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+          }
+          .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+            text-align: left;
+          }
+          h2 {
+            color: #1a0161;
+          }
+          p {
+            color: #333;
+            font-size: 15px;
+            line-height: 1.6;
+          }
+          .info {
+            background-color: #f3f4ff;
+            border-left: 4px solid #1a0161;
+            padding: 10px 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+          }
+          .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888;
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h2>New ${
+            type === "affiliate" ? "Affiliate" : "TV Station"
+          } Request</h2>
+          <p>Hi Admin,</p>
+          <p>A new <strong>${type}</strong> request has been submitted by the following user:</p>
+          <div class="info">
+            <p><strong>Name:</strong> ${req.user.fullName || "N/A"}</p>
+            <p><strong>Email:</strong> ${req.user.email}</p>
+            <p><strong>User ID:</strong> ${userId}</p>
+          </div>
+          <p>Please review this request in the admin dashboard.</p>
+          <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
+        </div>
+      </body>
+      </html>
+      `;
+
+       SendEmail(sender, admin.email, subject, htmlContent);
+    }
+
     return res.status(200).json({
-      message: `${type === "affiliate" ? "Affiliate" : "TV Station"} request submitted successfully.`,
+      message: `${
+        type === "affiliate" ? "Affiliate" : "TV Station"
+      } request submitted successfully.`,
       type: "success",
       data: {
         requestId: newRequest._id,

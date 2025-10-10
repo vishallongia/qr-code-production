@@ -20,12 +20,6 @@ const optionSchema = new mongoose.Schema({
     min: 0,
     default: 0,
   },
-  // ✅ New Commission Field
-  commissionPercent: {
-    type: Number,
-    default: 70, // default commission percentage
-    min: 0,
-  },
 });
 
 const applauseSchema = new mongoose.Schema(
@@ -89,6 +83,12 @@ const applauseSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "QRCodeData", // Reference to the QRCodeData model
       default: null, // Optional
+    },
+    // ✅ New Commission Field
+    commissionPercent: {
+      type: Number,
+      default: 70, // default commission percentage
+      min: 0,
     },
   },
   {

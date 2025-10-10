@@ -111,7 +111,6 @@ async function updateDetailsProfile(data) {
 }
 
 // === Handle Affiliate / TV Station Requests ===
-// === Handle Affiliate / TV Station Requests ===
 async function makeUserRequest(type) {
   try {
     document.getElementById("loader").style.display = "flex";

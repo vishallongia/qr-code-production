@@ -144,6 +144,17 @@ router.get("/atv_mao", async (req, res) => {
   }
 });
 
+router.get("/magic_media_global_concept", async (req, res) => {
+  try {
+    res.render("presentations/magic_media_global_concept"); // Send type as 'success'
+  } catch (error) {
+    res.status(500).render("login", {
+      message: "Failed to load login page",
+      type: "error", // Send type as 'error'
+    });
+  }
+});
+
 router.get("/srf_arena", async (req, res) => {
   try {
     res.render("srf_arena"); // Send type as 'success'
@@ -634,7 +645,7 @@ router.post("/assign-qr-code", async (req, res) => {
 
     // Email configuration
     const sender = {
-      email: "arnoldschmidt@magic-code.net",
+      email: process.env.SENDER_EMAIL, // from .env
       name: "Magic Code - Login Link",
     };
     if (couponCode) {
@@ -1471,7 +1482,7 @@ router.post("/reset-password", async (req, res) => {
     // await sendResetPasswordEmail(user.email, resetLink);
 
     const sender = {
-      email: "arnoldschmidt@magic-code.net",
+      email: process.env.SENDER_EMAIL, // from .env
       name: `Magic Code - Password Reset`,
     };
 
@@ -1764,7 +1775,7 @@ router.post("/usemagiclink", async (req, res) => {
     const username = email.split("@")[0];
 
     const sender = {
-      email: "arnoldschmidt@magic-code.net",
+      email: process.env.SENDER_EMAIL, // from .env
       name: "Magic Code - Login Link",
     };
 
@@ -2192,7 +2203,28 @@ router.get("/myprofile", authMiddleware, async (req, res) => {
     const decryptedPasswordKey = decryptPassword(user.userPasswordKey);
     user.userPasswordKey = decryptedPasswordKey; // Add decrypted key
 
-    res.render("dashboardnew", { user, activeSection: "profile" });
+    // Check pending requests for this user
+    const pendingRequests = await UserRequest.find({
+      userId: user._id,
+      isApprovedByAdmin: false,
+      isDeclined: false,
+      isCancelledByUser: false,
+    });
+
+    // Set flags
+    const isAffiliateRequestAlreadySent = pendingRequests.some(
+      (req) => req.type === "affiliate"
+    );
+    const isTvStationUserRequestAlreadySent = pendingRequests.some(
+      (req) => req.type === "tvstation"
+    );
+
+    res.render("dashboardnew", {
+      user,
+      activeSection: "profile",
+      isAffiliateRequestAlreadySent,
+      isTvStationUserRequestAlreadySent,
+    });
   } catch (error) {
     console.error("Error retrieving profile:", error);
     res.status(500).render("dashboardnew", {
@@ -4269,7 +4301,7 @@ router.post("/send-admin-email", authMiddleware, async (req, res) => {
     const adminEmail = process.env.ADMIN_EMAIL || "arnoldschmidt.com@gmail.com";
 
     const sender = {
-      email: "arnoldschmidt@magic-code.net",
+      email: process.env.SENDER_EMAIL, // from .env
       name: "Magic Code - Admin Notification",
     };
 
@@ -5129,7 +5161,7 @@ router.post("/api/request-stickers", (req, res) => {
   // const adminEmail = process.env.ADMIN_EMAIL || "rahul21600@gmail.com";
 
   const sender = {
-    email: "arnoldschmidt@magic-code.net",
+    email: process.env.SENDER_EMAIL, // from .env
     name: "Magic Code - Admin Notification",
   };
 
@@ -5245,7 +5277,7 @@ router.post("/api/request-affiliate", (req, res) => {
   // const adminEmail = process.env.ADMIN_EMAIL || "rahul21600@gmail.com";
 
   const sender = {
-    email: "arnoldschmidt@magic-code.net",
+    email: process.env.SENDER_EMAIL, // from .env
     name: "Magic Code - Admin Notification",
   };
 
@@ -5360,7 +5392,7 @@ router.post("/api/request-broadcaster", (req, res) => {
   // const adminEmail = process.env.ADMIN_EMAIL || "rahul21600@gmail.com";
 
   const sender = {
-    email: "arnoldschmidt@magic-code.net",
+    email: process.env.SENDER_EMAIL, // from .env
     name: "Magic Code - Admin Notification",
   };
 
@@ -6202,10 +6234,13 @@ router.post("/admindashboard/user-requests/:id/approve", async (req, res) => {
     }
 
     // Update user based on request type
+    let approvedText = "";
     if (request.type === "tvstation") {
       user.isTvStation = true;
+      approvedText = "Your TV Station user request has been approved!";
     } else if (request.type === "affiliate") {
       user.role = "affiliate";
+      approvedText = "Your Affiliate request has been approved!";
     }
 
     await user.save(); // first save user
@@ -6213,6 +6248,70 @@ router.post("/admindashboard/user-requests/:id/approve", async (req, res) => {
     // Only after user is updated, mark request as approved
     request.isApprovedByAdmin = true;
     await request.save();
+
+     const sender = {
+        email: process.env.SENDER_EMAIL,
+        name: "Magic Code - Request Approved",
+      }
+
+    // --- Prepare approval email ---
+    const contentApproval = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Approved</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    h2 {
+      color: #333;
+    }
+    p {
+      color: #555;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Request Approved</h2>
+    <p>Hi ${user.fullName},</p>
+    <p>${approvedText}</p>
+    <p>You can now log in and access your updated privileges.</p>
+    <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
+  </div>
+</body>
+</html>
+`;
+
+    // Send the approval email
+    SendEmail(
+      sender,
+      user.email,
+      "Your Request Has Been Approved!",
+      contentApproval
+    );
 
     return res.json({
       success: true,
@@ -6250,7 +6349,82 @@ router.post("/admindashboard/user-requests/:id/decline", async (req, res) => {
 
     request.isDeclined = true;
     await request.save();
+    // Find the user who made the request
+    const user = await User.findById(request.userId);
+    if (user) {
+      const sender = {
+        email: process.env.SENDER_EMAIL,
+        name: "Magic Code - Request Declined",
+      };
 
+      const subject = "Update on Your Magic Code Request";
+
+      const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Request Update</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+    h2 {
+      color: #dc3545;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #333;
+      font-size: 16px;
+      line-height: 1.6;
+      margin: 10px 0;
+    }
+    .note {
+      background-color: #fff4f4;
+      border-left: 4px solid #dc3545;
+      padding: 10px 15px;
+      margin: 20px 0;
+      border-radius: 6px;
+      color: #a33a3a;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Request Declined</h2>
+    <p>Hi ${user.fullName || "User"},</p>
+    <p>We’ve carefully reviewed your <strong>${request.type.toUpperCase()}</strong> request, but unfortunately, we’re unable to approve it at this time.</p>
+    <div class="note">
+      This decision may be due to eligibility requirements or incomplete details in your request.
+    </div>
+    <p>If you’d like to update your information or apply again in the future, you’re welcome to do so anytime.</p>
+    <p>Thank you for being a valued part of the Magic Code community.</p>
+    <p class="footer">&copy; 2025 Magic Code | All rights reserved.</p>
+  </div>
+</body>
+</html>
+`;
+
+      // Send email
+      SendEmail(sender, user.email, subject, htmlContent);
+    }
     return res.json({
       success: true,
       message: "Request declined successfully",
