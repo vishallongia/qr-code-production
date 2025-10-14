@@ -58,16 +58,7 @@ async function handleUpdateDetailsProfile(event) {
     updateProfileBtn.disabled = true;
     const result = await updateDetailsProfile(data); // Call the API function
     let msg = "Profile updated successfully";
-    // if (result.message == "Profile updated successfully") {
-    //   let lang = document.getElementById("languageSwitcher").value
-    //   if (lang == "de") {
-    //     msg = "Deine Zugangsdaten wurden erfolgreich aktualisiert"
-    //   } else if (lang == "hu") {
-    //     msg = "A belépési adataidat sikeresen módosítottad"
-    //   } else {
-    //     msg = "Profile updated successfully"
-    //   }
-    // }
+   
 
     showToast(msg, "success");
     // showToast(result.message, "success"); // Show success message

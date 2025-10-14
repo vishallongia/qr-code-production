@@ -81,7 +81,8 @@
                         <hr />
                         <div class="quiz-form-group">
                             <label>Name of Your Content</label>
-                            <input type="text" name="question" placeholder="Name of Your Content" value="Who or What do you want to receive applause for?" required />
+                            <input type="text" name="question" placeholder="Name of Your Content"
+                                value="Who or What do you want to receive applause for?" required />
                         </div>
 
                         <div class="quiz-form-group">
@@ -251,7 +252,7 @@
         const coinInput = document.createElement("input");
         coinInput.type = "number";
         coinInput.name = "magicCoinDeducted[]";
-        coinInput.min = "0";
+        coinInput.min = "10";
         coinInput.value = "";
         coinInput.required = true;
         coinInput.placeholder = "Select Your Desired Amount for Your Applause, or Your Fans their free Choice";
@@ -435,6 +436,8 @@
                 formDataObj[key] = value;
             }
         });
+
+
 
         try {
             const res = await fetch("/tvstation/applause/applause-question/create", {

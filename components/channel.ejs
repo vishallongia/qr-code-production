@@ -8,6 +8,30 @@
     <link rel="stylesheet" href="/css/sales.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+    <style>
+        .header-div {
+            display: flex;
+            align-items: center;
+            /* vertically center if needed */
+            justify-content: space-between;
+            /* h2 left, img right */
+            width: 100%;
+        }
+
+        .header-div h2 {
+            margin: 0;
+        }
+
+        .header-div img {
+            margin: 0 auto;
+            width: 100px;
+            height: auto;
+
+            /* center image if needed */
+        }
+    </style>
 </head>
 
 <body style="padding: 0">
@@ -65,7 +89,11 @@
 
 
     <div class="modern-list-container">
-        <h2> Your Projects</h2>
+
+        <div class="header-div">
+            <h2>Your Projects</h2>
+            <img src="\images\Magic Media logo bold.png" alt="App Icon">
+        </div>
         <div style="display: flex; justify-content: end;">
             <button id="add-channel-btn" class="btn primary" style="margin-bottom: 16px;">
                 + Add a New Project
@@ -102,11 +130,13 @@
                                                 <% if(channel.logo && channel.link) { %>
                                                     <a>
                                                         <img src="<%= logoUrl %>" alt="<%= channel.channelName %>"
-                                                            class="channel-logo" onclick="OpenEditFromImg('<%= channel._id %>')">
+                                                            class="channel-logo"
+                                                            onclick="OpenEditFromImg('<%= channel._id %>')">
                                                     </a>
                                                     <% } else { %>
                                                         <img src="<%= logoUrl %>" alt="<%= channel.channelName %>"
-                                                            class="channel-logo" onclick="OpenEditFromImg('<%= channel._id %>')">
+                                                            class="channel-logo"
+                                                            onclick="OpenEditFromImg('<%= channel._id %>')">
                                                         <% } %>
                                             </span>
                                             <span>
@@ -115,7 +145,8 @@
 
                                             <span>
                                                 <button class="btn go-btn"
-                                                    onclick="location.href='channels/<%= channel._id %>/sessions'">Go to Episodes</button>
+                                                    onclick="location.href='channels/<%= channel._id %>/sessions'">Go to
+                                                    Episodes</button>
                                             </span>
 
                                             <span>
@@ -127,7 +158,8 @@
                                             </span>
 
                                             <span>
-                                                <button class="btn delete-btn" data-id="<%= channel._id %>">Delete This Project</button>
+                                                <button class="btn delete-btn" data-id="<%= channel._id %>">Delete This
+                                                    Project</button>
 
                                             </span>
                                         </li>

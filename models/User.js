@@ -6,7 +6,25 @@ const tvStationRulesSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    // Add more TV station-specific flags here
+    // Media profiles for each tab
+    broadcaster: {
+      title: { type: String, default: "" },
+      description: { type: String, default: "" },
+      link: { type: String, default: "" },
+      logo: { type: String, default: "" },
+    },
+    project: {
+      title: { type: String, default: "" },
+      description: { type: String, default: "" },
+      link: { type: String, default: "" },
+      logo: { type: String, default: "" },
+    },
+    episode: {
+      title: { type: String, default: "" },
+      description: { type: String, default: "" },
+      link: { type: String, default: "" },
+      logo: { type: String, default: "" },
+    },
   },
   { _id: false } // don’t create _id for nested object
 );

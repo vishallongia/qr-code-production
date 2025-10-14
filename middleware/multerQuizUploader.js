@@ -68,4 +68,23 @@ function deleteFileIfExists(filePath) {
   }
 }
 
-module.exports = { upload, cleanupUploadedFiles, deleteFileIfExists };
+function copyFileToQuestionsImage(sourcePath) {
+  if (!sourcePath) return null;
+
+  const fileName = `copy-${Date.now()}-${path.basename(sourcePath)}`;
+  const destPath = path.join(__dirname, "../questions-image", fileName);
+
+  try {
+    fs.copyFileSync(sourcePath, destPath);
+    return `/questions-image/${fileName}`;
+  } catch (err) {
+    console.error("Error copying file:", err);
+    return null;
+  }
+}
+module.exports = {
+  upload,
+  cleanupUploadedFiles,
+  deleteFileIfExists,
+  copyFileToQuestionsImage,
+};

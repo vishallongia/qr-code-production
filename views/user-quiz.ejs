@@ -10,6 +10,19 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+    <style>
+        .uq-logo-title{
+            margin: 0;
+        }
+
+        .uq-logo-text{
+            margin: 0;
+        }
+        .uq-option-text-wrapper, .uq-option-image-large{
+            margin: 0;
+        }
+    </style>
 </head>
 
 <body class="user-quiz-page">
@@ -184,31 +197,34 @@
                 <input type="hidden" name="index" value="<%= index %>">
 
                 <div class="uq-question-header">
-                    <% if (currentQuestion.logo) { %>
-                        <% if (currentQuestion.logoLink) { %>
-                            <a href="<%= currentQuestion.logoLink %>" target="_blank">
-                                <img class="uq-question-logo" src="<%= currentQuestion.logo %>" alt="Logo" />
-                            </a>
-                            <% } else { %>
-                                <img class="uq-question-logo" src="<%= currentQuestion.logo %>" alt="Logo" />
-                                <% } %>
 
-                                    <% if (currentQuestion.logoTitle || currentQuestion.logoDescription) { %>
-                                        <div class="uq-logo-text" style="    width: 100%; text-align: center;">
-                                            <% if (currentQuestion.logoTitle) { %>
-                                                <h4 class="uq-logo-title" style="font-size: 1.4rem; font-weight: 600;">
-                                                    <%= currentQuestion.logoTitle %>
-                                                </h4>
-                                                <% } %>
+                    <% if (currentQuestion.logoTitle) { %>
+                        <h4 class="uq-logo-title" style="font-size: 1.4rem; font-weight: 600;">
+                            <%= currentQuestion.logoTitle %>
+                        </h4>
+                        <% } %>
+
+                            <% if (currentQuestion.logo) { %>
+                                <% if (currentQuestion.logoLink) { %>
+                                    <a href="<%= currentQuestion.logoLink %>" target="_blank">
+                                        <img class="uq-question-logo" src="<%= currentQuestion.logo %>" alt="Logo" />
+                                    </a>
+                                    <% } else { %>
+                                        <img class="uq-question-logo" src="<%= currentQuestion.logo %>" alt="Logo" />
+                                        <% } %>
+
+                                            <% if (currentQuestion.logoTitle || currentQuestion.logoDescription) { %>
+                                                <div class="uq-logo-text" style="    width: 100%; text-align: center;">
+
                                                     <% if (currentQuestion.logoDescription) { %>
                                                         <p class="uq-logo-text"
                                                             style="font-size: 1.2rem; font-weight: 500;">
                                                             <%= currentQuestion.logoDescription %>
                                                         </p>
                                                         <% } %>
-                                        </div>
-                                        <% } %>
-                                            <% } %>
+                                                </div>
+                                                <% } %>
+                                                    <% } %>
                 </div>
 
 
@@ -247,7 +263,7 @@
                                 <% } %>
                     </div>
                     <% } %>
-                        <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500;">
+                        <div class="uq-question-text" style="font-size: 1.4rem; font-weight: bold;">
                             <%= currentQuestion.question %>
                         </div>
                         <!-- Options -->
@@ -584,6 +600,6 @@
         }
     });
 </script>
-<!-- <script src="\js\translationsForMiniApps.js"></script> -->
+<script src="\js\translationsForMiniApps.js"></script>
 
 </html>

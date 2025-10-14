@@ -42,45 +42,44 @@
                 <button type="submit" id="updateProfileBtn" style="display: none;"
                     data-translate="update">Update</button>
             </div>
-            <% if (user && (user.role !=='affiliate' || !user.isTvStation)) { %>
+        </form>
+        <% if (!user) { %>
+            <p>Please log in to make requests.</p>
+            <% } else { %>
                 <% const showAffiliateSection=user.role !=='affiliate' ; const showTvStationSection=!user.isTvStation;
                     const showDivider=showAffiliateSection || showTvStationSection; %>
 
                     <% if (showDivider) { %>
                         <hr class="profile-divider">
-
                         <div class="request-buttons">
+
                             <% if (showAffiliateSection) { %>
                                 <% if (!isAffiliateRequestAlreadySent) { %>
-                                    <button type="button" id="makeAffiliateRequestBtn" class="request-btn"
-                                        style="margin-bottom: 10px;" data-translate="make_affiliate_request">
-                                        Make Affiliate Request
+                                    <button id="makeAffiliateRequestBtn" class="request-btn"
+                                        data-translate="make_affiliate_request" style="margin-bottom: 10px;">
+                                        Request for Affiliate Partner
                                     </button>
                                     <% } else { %>
-                                        <span class="request-sent-label">Affiliate Request Already Sent</span>
+                                        <span class="request-sent-label">Affiliate Partner Request Already Sent</span>
                                         <% } %>
                                             <% } %>
 
                                                 <% if (showTvStationSection) { %>
                                                     <% if (!isTvStationUserRequestAlreadySent) { %>
-                                                        <button type="button" id="makeTvStationRequestBtn"
-                                                            class="request-btn" data-translate="make_tvstation_request">
-                                                            Make TV Station User Request
+                                                        <button id="makeTvStationRequestBtn" class="request-btn"
+                                                            data-translate="make_tvstation_request">
+                                                            Request for Media Partner
                                                         </button>
                                                         <% } else { %>
-                                                            <span class="request-sent-label">TV Station Request Already
-                                                                Sent</span>
+                                                            <span class="request-sent-label">Media Partner Request
+                                                                Already Sent</span>
                                                             <% } %>
                                                                 <% } %>
+
                         </div>
                         <% } %>
-                            <% } else { %>
-                                <p>Please log in to make requests.</p>
-                                <% } %>
+                            <% } %>
 
-
-
-        </form>
     </div>
 
 

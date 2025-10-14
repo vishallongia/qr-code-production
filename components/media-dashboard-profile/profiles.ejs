@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logo Management</title>
+    <link rel="stylesheet" href="/css/media-dashboard-profile.css" />
+</head>
+
+<body>
+    <div class="quiz-container">
+        <h2>Media Profile Manager</h2>
+
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="broadcaster">Broadcaster</button>
+            <button class="tab-btn" data-tab="project">Project</button>
+            <button class="tab-btn" data-tab="episode">Episode</button>
+        </div>
+
+        <form id="logoForm" enctype="multipart/form-data">
+            <!-- Broadcaster -->
+            <div id="broadcaster" class="tab-content active">
+                <div class="quiz-form-group">
+                    <label>Logo Title</label>
+                    <input type="text" name="broadcaster_title" placeholder="Enter title"
+                        value="<%= profiles.broadcaster.title %>" />
+                </div>
+                <div class="quiz-form-group">
+                    <label>Logo Description</label>
+                    <textarea name="broadcaster_desc" rows="3"
+                        placeholder="Enter description"><%= profiles.broadcaster.description %></textarea>
+                </div>
+                <div class="quiz-form-group">
+                    <label>Logo Link</label>
+                    <input type="url" name="broadcaster_link" placeholder="https://example.com"
+                        value="<%= profiles.broadcaster.link %>" />
+                </div>
+                <div class="quiz-form-group">
+                    <label>Logo Image</label>
+                    <input type="file" name="broadcaster_logo" class="quiz-hidden-file" id="broadcaster_logo"
+                        accept="image/*" />
+                    <label for="broadcaster_logo" class="quiz-file-label">Choose File</label>
+
+                    <% if (profiles.broadcaster.logo) { %>
+                        <div class="image-preview-wrapper" style="display:flex;">
+                            <img src="<%= profiles.broadcaster.logo %>" alt="Logo Preview" />
+                            <button type="button" class="clear-preview-btn" data-target="broadcaster_logo">✕</button>
+                        </div>
+                        <% } %>
+                </div>
+            </div>
+
+            <!-- Project -->
+            <div id="project" class="tab-content">
+                <div class="quiz-form-group">
+                    <label>Logo Title</label>
+                    <input type="text" name="project_title" placeholder="Enter title"
+                        value="<%= profiles.project.title %>" />
+                </div>
+                <div class="quiz-form-group">
+                    <label>Logo Description</label>
+                    <textarea name="project_desc" rows="3"
+                        placeholder="Enter description"><%= profiles.project.description %></textarea>
+                </div>
+                <div class="quiz-form-group">
+                    <label>Logo Link</label>
+                    <input type="url" name="project_link" placeholder="https://example.com"
+                        value="<%= profiles.project.link %>" />
+                </div>
+                <div class="quiz-form-group">
+                    <label>Logo Image</label>
+                    <input type="file" name="project_logo" class="quiz-hidden-file" id="project_logo"
+                        accept="image/*" />
+                    <label for="project_logo" class="quiz-file-label">Choose File</label>
+
+                    <% if (profiles.project.logo) { %>
+                        <div class="image-preview-wrapper" style="display:flex;">
+                            <img src="<%= profiles.project.logo %>" alt="Logo Preview" />
+                            <button type="button" class="clear-preview-btn" data-target="project_logo">✕</button>
+                        </div>
+                        <% } %>
+                </div>
+            </div>
+
+            <!-- Episode -->
+            <div id="episode" class="tab-content">
+                <div class="quiz-form-group">
+                    <label>Logo Title</label>
+                    <input type="text" name="episode_title" placeholder="Enter title"
+                        value="<%= profiles.episode.title %>" />
+                </div>
+                <div class="quiz-form-group">
+                    <label>Logo Description</label>
+                    <textarea name="episode_desc" rows="3"
+                        placeholder="Enter description"><%= profiles.episode.description %></textarea>
+                </div>
+                <div class="quiz-form-group">
+                    <label>Logo Link</label>
+                    <input type="url" name="episode_link" placeholder="https://example.com"
+                        value="<%= profiles.episode.link %>" />
+                </div>
+                <div class="quiz-form-group">
+                    <label>Logo Image</label>
+                    <input type="file" name="episode_logo" class="quiz-hidden-file" id="episode_logo"
+                        accept="image/*" />
+                    <label for="episode_logo" class="quiz-file-label">Choose File</label>
+
+                    <% if (profiles.episode.logo) { %>
+                        <div class="image-preview-wrapper" style="display:flex;">
+                            <img src="<%= profiles.episode.logo %>" alt="Logo Preview" />
+                            <button type="button" class="clear-preview-btn" data-target="episode_logo">✕</button>
+                        </div>
+                        <% } %>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center;">
+                <button type="submit" class="quiz-btn-submit">Submit</button>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        // ======================= Tabs =======================
+        const tabs = document.querySelectorAll(".tab-btn");
+        const contents = document.querySelectorAll(".tab-content");
+        let activeTab = "broadcaster";
+
+        tabs.forEach((btn) => {
+            btn.addEventListener("click", () => {
+                tabs.forEach((b) => b.classList.remove("active"));
+                btn.classList.add("active");
+                activeTab = btn.dataset.tab;
+                contents.forEach((c) => c.classList.remove("active"));
+                document.getElementById(activeTab).classList.add("active");
+            });
+        });
+
+        // ======================= Image Preview Handler =======================
+        function setupImagePreview(fileInputId) {
+            const fileInput = document.getElementById(fileInputId);
+            if (!fileInput) return;
+
+            const parent = fileInput.parentElement;
+            const label = fileInput.nextElementSibling;
+
+            // Check if preview already exists (preloaded)
+            let wrapper = parent.querySelector(".image-preview-wrapper");
+            let previewImg, clearBtn;
+
+            if (wrapper) {
+                previewImg = wrapper.querySelector("img");
+                clearBtn = wrapper.querySelector(".clear-preview-btn");
+                // Show the filename from URL
+                const fileName = previewImg.src.split("/").pop();
+                label.textContent = fileName;
+            } else {
+                wrapper = document.createElement("div");
+                wrapper.classList.add("image-preview-wrapper");
+                wrapper.style.display = "none";
+
+                previewImg = document.createElement("img");
+                wrapper.appendChild(previewImg);
+
+                clearBtn = document.createElement("button");
+                clearBtn.type = "button";
+                clearBtn.classList.add("clear-preview-btn");
+                clearBtn.textContent = "✕";
+                wrapper.appendChild(clearBtn);
+
+                parent.appendChild(wrapper);
+            }
+
+            // Handle change event
+            fileInput.addEventListener("change", () => {
+                const file = fileInput.files[0];
+                if (file) {
+                    previewImg.src = URL.createObjectURL(file);
+                    wrapper.style.display = "flex";
+                    label.textContent = file.name;
+                    fileInput.dataset.deleted = "false"; // reset delete flag
+                }
+            });
+
+            // Clear button logic
+            clearBtn.addEventListener("click", () => {
+                fileInput.value = "";
+                wrapper.style.display = "none";
+                previewImg.src = "";
+                label.textContent = "Choose File";
+                fileInput.dataset.deleted = "true";
+            });
+        }
+
+        // Init previews
+        ["broadcaster_logo", "project_logo", "episode_logo"].forEach(setupImagePreview);
+
+
+        // ======================= API Submit =======================
+        async function handleMediaProfileSubmit(e) {
+            e.preventDefault();
+            const loader = document.getElementById("loader");
+            if (loader) loader.style.display = "flex";
+
+            try {
+                const formData = new FormData();
+                formData.append("type", activeTab);
+                formData.append("title", document.querySelector(`[name='${activeTab}_title']`).value);
+                formData.append("description", document.querySelector(`[name='${activeTab}_desc']`).value);
+                formData.append("link", document.querySelector(`[name='${activeTab}_link']`).value);
+                const logoInput = document.querySelector(`[name='${activeTab}_logo']`);
+
+                // NEW: Check for delete
+                if (logoInput.dataset.deleted === "true") {
+                    formData.append("delete_logo_type", activeTab);
+                } else if (logoInput.files[0]) {
+                    formData.append(`${activeTab}_logo`, logoInput.files[0]);
+                }
+
+                const res = await fetch("/tvstation/create-media-profile", {
+                    method: "POST",
+                    body: formData,
+                });
+                const data = await res.json();
+
+                showToast(data.message || "Operation completed", data.type || "success");
+            } catch (err) {
+                console.error(err);
+                showToast("Error submitting form", "error");
+            } finally {
+                if (loader) loader.style.display = "none";
+            }
+        }
+
+        document.getElementById("logoForm").addEventListener("submit", handleMediaProfileSubmit);
+    </script>
+
+</body>
+
+</html>

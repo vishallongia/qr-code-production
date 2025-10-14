@@ -168,7 +168,7 @@
                         <div class="quiz-form-group reward-field reward-jackpot"
                             style="<%= question.mode === 'jackpot' || question.mode === 'both' ? '' : 'display: none;' %>">
                             <label>Jackpot Coin</label>
-                            <input type="number" class="quiz-form-group" name="jackpotCoinDeducted" min="0"
+                            <input type="number" class="quiz-form-group" name="jackpotCoinDeducted" min="10"
                                 value="<%= question.jackpotCoinDeducted != null ? question.jackpotCoinDeducted : '' %>" />
 
                             <label>Jackpot Reward Name</label>
@@ -207,7 +207,7 @@
                         <div class="quiz-form-group reward-field reward-digital"
                             style="<%= question.mode === 'digital' || question.mode === 'both' ? '' : 'display: none;' %>">
                             <label>Digital Coin</label>
-                            <input type="number" class="quiz-form-group" name="digitalCoinDeducted" min="0"
+                            <input type="number" class="quiz-form-group" name="digitalCoinDeducted" min="10"
                                 value="<%= question.digitalCoinDeducted != null ? question.digitalCoinDeducted : '' %>" />
 
                             <label>Digital Reward Name</label>

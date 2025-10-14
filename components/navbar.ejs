@@ -187,9 +187,12 @@
 
                     <!-- Affiliate Options Dropdown -->
                     <div class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="affiliateDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            Affiliate Options
+                        <a class="nav-link d-flex align-items-center gap-1" href="#" id="affiliateDropdown"
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span>Affiliate Options</span>
+                            <i class="fa-solid fa-caret-down"></i>
+                            <span class="badge bg-danger rounded-pill d-none notification-badge"
+                                data-type="affiliate">0</span>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="affiliateDropdown">
                             <li><a class="dropdown-item" href="/admindashboard/affiliate/affiliate-users">
@@ -197,24 +200,43 @@
                             <li><a class="dropdown-item" href="/admindashboard/affiliate/create-affiliate-user">Create
                                     Affiliate User</a></li>
                             <li><a class="dropdown-item" href="/admindashboard/user-requests?type=affiliate">Affiliate
-                                    Users Requests</a></li>
+                                    Partner
+                                    Users Requests <span class="badge bg-danger rounded-pill d-none notification-badge"
+                                        data-type="affiliate">0</span></a></li>
                         </ul>
                     </div>
 
                     <a class="nav-link" href="/admindashboard/vip-users">Vip Users</a>
                     <!-- Tv Station Dropdown -->
                     <div class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="tvstationDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            Media Partner
+                        <a class="nav-link d-flex align-items-center gap-1" href="#" id="tvstationDropdown"
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span>Media Partner</span>
+                            <i class="fa-solid fa-caret-down"></i>
+                            <!-- Outer badge: sum -->
+                            <span class="badge bg-danger rounded-pill d-none notification-badge"
+                                data-type="tvstation-sum">0</span>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="tvstationDropdown">
-                            <li><a class="dropdown-item" href="/admindashboard/tvstation/tvstation-users">Media Partner
-                                    Users</a></li>
-                            <li><a class="dropdown-item" href="/admindashboard/tvstation/requests">Winner Requests</a>
+                            <li>
+                                <a class="dropdown-item" href="/admindashboard/tvstation/tvstation-users">
+                                    Media Partner Users
+                                </a>
                             </li>
-                            <li><a class="dropdown-item" href="/admindashboard/user-requests?type=tvstation">Tv Station
-                                    Users Requests</a></li>
+                            <li>
+                                <a class="dropdown-item" href="/admindashboard/tvstation/requests">
+                                    Winner Requests
+                                    <span class="badge bg-danger rounded-pill d-none notification-badge"
+                                        data-type="winnerRequests">0</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/admindashboard/user-requests?type=tvstation">
+                                    Media Partner Users Requests
+                                    <span class="badge bg-danger rounded-pill d-none notification-badge"
+                                        data-type="tvstationRequests">0</span>
+                                </a>
+                            </li>
                         </ul>
                     </div>
                     <a class="nav-link" href="/admindashboard/scanner">Scanner</a>
@@ -229,19 +251,6 @@
                         <button class="btn custom-btn" onclick="return handleLogout(event)">
                             <i class="fa-solid fa-right-from-bracket"></i> Log Out
                         </button>
-                        <!-- Request Button with Badge -->
-                        <!-- <button type="button" class="btn custom-btn position-relative" id="requestBtn"
-                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Requests"
-                            onclick="window.location.href='/admindashboard/tvstation/requests'">
-
-                            <i class="fa-solid fa-clipboard-list"></i>
-
-                            <span id="requestBadge"
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                style="display: none;">
-                                0
-                            </span>
-                        </button> -->
 
                     </div>
                     <!-- Search Icon -->
@@ -334,6 +343,54 @@
         function handleProfileUpdate() {
             window.location.href = "/myprofile";
         }
+
+        async function loadNotificationBadges() {
+            try {
+                const res = await fetch("/admindashboard/notifications");
+                const data = await res.json();
+
+                // Save counts to localStorage
+                localStorage.setItem('notificationCounts', JSON.stringify(data));
+
+                updateBadges(data);
+            } catch (err) {
+                console.error("Failed to load badges:", err);
+            }
+        }
+
+        function updateBadges(data) {
+            document.querySelectorAll(".notification-badge").forEach(badge => {
+                const type = badge.dataset.type;
+                let count = 0;
+
+                switch (type) {
+                    case "tvstation-sum":
+                        count = (data.mediaPartner || 0) + (data.winnerRequests || 0);
+                        break;
+                    case "winnerRequests":
+                        count = data.winnerRequests || 0;
+                        break;
+                    case "tvstationRequests":
+                        count = data.mediaPartner || 0;
+                        break;
+                    case "affiliate":
+                        count = data.affiliate || 0;
+                }
+
+                badge.textContent = count;
+                badge.classList.toggle("d-none", count === 0);
+            });
+        }
+
+        // Show cached badges immediately
+        const cachedData = JSON.parse(localStorage.getItem('notificationCounts') || '{}');
+        updateBadges(cachedData);
+
+        // Then fetch fresh counts
+        loadNotificationBadges();
+        setInterval(loadNotificationBadges, 30000);
+
+
     </script>
 
 </body>

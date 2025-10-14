@@ -6,6 +6,7 @@ const {
   upload,
   cleanupUploadedFiles,
   deleteFileIfExists,
+  copyFileToQuestionsImage,
 } = require("../middleware/multerQuizUploader");
 const QuizQuestion = require("../models/QuizQuestion");
 const VoteQuestion = require("../models/VoteQuestion");
@@ -27,6 +28,8 @@ const BASE_URL = process.env.FRONTEND_URL; // update if needed
 const { addUploadPath } = require("../utils/selectUploadDestination");
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
 const SendEmail = require("../Messages/SendEmail");
+const path = require("path");
+const fs = require("fs"); // also needed if you use fs.copyFileSync
 
 // GET /channels - paginated list
 router.get("/channels", async (req, res) => {
@@ -782,6 +785,8 @@ router.post(
         logoTitle,
         logoDescription,
         logoLink,
+        logoMediaProfile,
+        showLogoSection,
 
         // 🎯 New Jackpot Reward fields
         jackpotRewardName,
@@ -911,11 +916,34 @@ router.post(
       // ✅ Extract file paths
       const questionImagePath = req.files["questionImage"]?.[0]?.filename;
       const questionLogoPath = req.files["questionLogo"]?.[0]?.filename;
-      const logoPath = req.files["logo"]?.[0]?.filename;
       const jackpotRewardImagePath =
         req.files["jackpotRewardImage"]?.[0]?.filename; // ✅ new
       const digitalRewardImagePath =
         req.files["digitalRewardImage"]?.[0]?.filename; // ✅ new
+
+      // Handle logo (copy from existing URL if provided)
+      let logoPath = null;
+
+      // 1️⃣ Check if frontend sent an existing URL to copy
+      if (req.body.existingLogoUrl) {
+        const localSourcePath = path.join(
+          __dirname,
+          "..",
+          req.body.existingLogoUrl
+        );
+        logoPath = copyFileToQuestionsImage(localSourcePath);
+      }
+
+      // 2️⃣ Fallback to uploaded file (if no URL)
+      if (!logoPath && req.files["logo"]?.[0]) {
+        logoPath = `/questions-image/${req.files["logo"][0].filename}`;
+      }
+
+      // ✅ Validate logoMediaProfile (must be one of enum values)
+      const allowedProfiles = ["broadcaster", "project", "episode"];
+      const validLogoMediaProfile = allowedProfiles.includes(logoMediaProfile)
+        ? logoMediaProfile
+        : null;
 
       // ✅ Create and save quiz
       const quizData = new QuizQuestion({
@@ -931,7 +959,7 @@ router.post(
         questionLogo: questionLogoPath
           ? `/questions-image/${questionLogoPath}`
           : null,
-        logo: logoPath ? `/questions-image/${logoPath}` : null,
+        logo: logoPath ? `${logoPath}` : null,
         logoTitle: logoTitle?.trim() || null,
         logoDescription: logoDescription?.trim() || null,
         logoLink: logoLink?.trim() || null,
@@ -955,6 +983,8 @@ router.post(
           : null,
         digitalRewardDescription: digitalRewardDescription?.trim() || "",
         digitalRewardLink: digitalRewardLink?.trim() || null,
+        logoMediaProfile: validLogoMediaProfile,
+        showLogoSection: showLogoSection === "true" || showLogoSection === true,
       });
 
       await quizData.save();
@@ -1001,7 +1031,9 @@ router.post(
         logoTitle,
         logoDescription,
         logoLink,
+        logoMediaProfile, // ✅ NEW FIELD
         clearedImages,
+        showLogoSection,
         // Rewards
         jackpotRewardName,
         jackpotRewardDescription,
@@ -1010,7 +1042,6 @@ router.post(
         digitalRewardDescription,
         digitalRewardLink,
       } = req.body;
-
       // ✅ Validate IDs
       if (
         !mongoose.Types.ObjectId.isValid(channelId) ||
@@ -1105,18 +1136,46 @@ router.post(
       }
 
       // ✅ Handle main images
-      const handleImageUpdate = (field, uploadedFile) => {
+      const handleImageUpdate = (
+        field,
+        uploadedFile,
+        existingUrlField = null
+      ) => {
         if (cleared.includes(field)) {
           deleteFileIfExists(quiz[field]);
           return null;
-        } else if (uploadedFile) {
+        }
+        if (uploadedFile) {
           deleteFileIfExists(quiz[field]);
           return `/questions-image/${uploadedFile.filename}`;
         }
+        // Case 3: Copy existingLogoUrl if provided
+        // 2️⃣ Existing URL to copy
+        if (
+          existingUrlField &&
+          req.body[existingUrlField] &&
+          req.body[existingUrlField] !== quiz[field]
+        ) {
+          const existingUrl = req.body[existingUrlField];
+          const localSourcePath = path.join(__dirname, "..", existingUrl);
+
+          const copiedPath = copyFileToQuestionsImage(localSourcePath);
+          if (copiedPath) {
+            // ✅ delete old logo after successful copy
+            deleteFileIfExists(quiz[field]);
+            return copiedPath;
+          }
+          return quiz[field]; // fallback if copy fails
+        }
+
         return quiz[field];
       };
 
-      quiz.logo = handleImageUpdate("logo", req.files["logo"]?.[0]);
+      quiz.logo = handleImageUpdate(
+        "logo",
+        req.files["logo"]?.[0],
+        "existingLogoUrl"
+      );
       quiz.questionImage = handleImageUpdate(
         "questionImage",
         req.files["questionImage"]?.[0]
@@ -1199,6 +1258,12 @@ router.post(
         };
       });
 
+      // ✅ Validate logoMediaProfile (must be one of enum values)
+      const allowedProfiles = ["broadcaster", "project", "episode"];
+      const validLogoMediaProfile = allowedProfiles.includes(logoMediaProfile)
+        ? logoMediaProfile
+        : null;
+
       // ✅ Update quiz fields
       quiz.channelId = channelId;
       quiz.sessionId = sessionId;
@@ -1209,10 +1274,13 @@ router.post(
       quiz.logoTitle = logoTitle?.trim() || null;
       quiz.logoDescription = logoDescription?.trim() || null;
       quiz.logoLink = logoLink?.trim() || null;
+      quiz.logoMediaProfile = validLogoMediaProfile; // ✅ NEW
       quiz.jackpotCoinDeducted = jCoin;
       quiz.digitalCoinDeducted = dCoin;
       quiz.mode = mode;
       quiz.magicCoinDeducted = magicCoinDeducted;
+      quiz.showLogoSection =
+        showLogoSection === "true" || showLogoSection === true;
 
       // ✅ Reward fields
       if (mode === "jackpot") {
@@ -5273,17 +5341,14 @@ router.post("/user/request", async (req, res) => {
       type,
     });
 
-    // Find the admin user to notify
-    const admin = await User.findOne({ role: "admin" });
-    if (admin && admin.email) {
-      const sender = {
-        email: process.env.SENDER_EMAIL,
-        name: "Magic Code - New User Request",
-      };
+    const sender = {
+      email: process.env.SENDER_EMAIL,
+      name: "Magic Code - New User Request",
+    };
 
-      const subject = "New User Request Submitted";
+    const subject = "New User Request Submitted";
 
-      const htmlContent = `
+    const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -5347,8 +5412,7 @@ router.post("/user/request", async (req, res) => {
       </html>
       `;
 
-       SendEmail(sender, admin.email, subject, htmlContent);
-    }
+    SendEmail(sender, process.env.ADMIN_EMAIL, subject, htmlContent);
 
     return res.status(200).json({
       message: `${
@@ -5367,6 +5431,172 @@ router.post("/user/request", async (req, res) => {
       message: "An error occurred while submitting the request.",
       type: "error",
       data: null,
+    });
+  }
+});
+
+// Media Profiles Page (Broadcaster / Project / Episode)
+router.get("/media-proflies", async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        type: "error",
+      });
+    }
+
+    // ✅ Extract and normalize data
+    const defaultProfile = { title: "", description: "", link: "", logo: "" };
+    const tvRules = user.tvStationRules || {};
+
+    // Use Object.assign to safely merge with defaults
+    const profiles = {
+      broadcaster: { ...defaultProfile, ...(tvRules.broadcaster || {}) },
+      project: { ...defaultProfile, ...(tvRules.project || {}) },
+      episode: { ...defaultProfile, ...(tvRules.episode || {}) },
+    };
+
+    // ✅ Render EJS with all profiles
+    res.render("dashboardnew", {
+      user,
+      activeSection: "media-proflies",
+      profiles,
+      message: null,
+      type: null,
+    });
+  } catch (error) {
+    console.error("Error loading Media Profiles:", error);
+    res.status(500).render("error", {
+      user: {},
+      activeSection: "media-proflies",
+      message: error.message,
+      type: "error",
+    });
+  }
+});
+
+router.post(
+  "/create-media-profile",
+  addUploadPath("uploads"),
+  upload.fields([
+    { name: "broadcaster_logo", maxCount: 1 },
+    { name: "project_logo", maxCount: 1 },
+    { name: "episode_logo", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user.isTvStation) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(403).json({
+          message: "Only TV station users can create media profiles",
+          type: "error",
+        });
+      }
+
+      const { type, title, description, link, delete_logo_type } = req.body;
+
+      if (!type || !["broadcaster", "project", "episode"].includes(type)) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(400).json({
+          message: "Invalid media profile type",
+          type: "error",
+        });
+      }
+
+      if (!title || typeof title !== "string" || !title.trim()) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(400).json({
+          message: "Title is required",
+          type: "error",
+        });
+      }
+
+      // Ensure tvStationRules[type] exists
+      if (!user.tvStationRules[type]) {
+        user.tvStationRules[type] = {};
+      }
+
+      const oldLogo = user.tvStationRules[type].logo;
+      const logoFile = req.files[`${type}_logo`]?.[0];
+      const newLogoPath = logoFile ? `/uploads/${logoFile.filename}` : null;
+
+      // ===== LOGO HANDLING =====
+      if (delete_logo_type === type && !newLogoPath) {
+        // Case: Only deletion requested
+        deleteFileIfExists(oldLogo); // physically remove old logo
+        user.tvStationRules[type].logo = "";
+      } else if (newLogoPath) {
+        // Case: New file uploaded (can be after deletion)
+        deleteFileIfExists(oldLogo); // remove old logo if exists
+        user.tvStationRules[type].logo = newLogoPath;
+      }
+      // else: No change to logo
+
+      // ===== UPDATE TEXT FIELDS =====
+      user.tvStationRules[type].title = title.trim();
+      user.tvStationRules[type].description = description?.trim() || "";
+      user.tvStationRules[type].link = link?.trim() || "";
+
+      await user.save();
+
+      return res.status(200).json({
+        message: `${
+          type.charAt(0).toUpperCase() + type.slice(1)
+        } profile updated successfully`,
+        type: "success",
+        tvStationRules: user.tvStationRules,
+      });
+    } catch (err) {
+      console.error("Error creating media profile:", err.message);
+      cleanupUploadedFiles(req.files, "uploads");
+      return res.status(500).json({
+        message: "Internal server error while creating media profile",
+        type: "error",
+      });
+    }
+  }
+);
+
+// GET /tvstation/media-profile?type=broadcaster
+router.get("/get-media-profile", async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user.isTvStation) {
+      return res.status(403).json({
+        message: "Only TV station users can access media profiles",
+        type: "error",
+      });
+    }
+
+    const { type } = req.query;
+
+    if (!type || !["broadcaster", "project", "episode"].includes(type)) {
+      return res.status(400).json({
+        message: "Invalid media profile type",
+        type: "error",
+      });
+    }
+
+    // Ensure tvStationRules[type] exists
+    const profile = user.tvStationRules[type] || {
+      title: "",
+      description: "",
+      link: "",
+      logo: "",
+    };
+
+    return res.status(200).json({
+      type: "success",
+      profile,
+    });
+  } catch (err) {
+    console.error("Error fetching media profile:", err.message);
+    return res.status(500).json({
+      message: "Internal server error while fetching media profile",
+      type: "error",
     });
   }
 });

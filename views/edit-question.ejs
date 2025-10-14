@@ -39,6 +39,8 @@
                     <input type="hidden" name="sessionId" value="<%= sessionId %>" />
                     <input type="hidden" id="clearedImagesInput" name="clearedImages" />
                     <input type="hidden" id="clearedOptions" name="clearedOptions" />
+                    <input type="hidden" name="existingLogoUrl" value="<%= question.logo || '' %>">
+
 
                     <div class="quiz-question-actions">
                         <button type="button" class="quiz-btn-collapse"
@@ -47,23 +49,43 @@
                         </button>
                     </div>
 
+                    <div class="quiz-toggle-wrapper">
+                        <label for="showLogoToggle" class="quiz-toggle-label">Show Logo</label>
+                        <label class="quiz-toggle-switch">
+                            <input type="checkbox" id="showLogoToggle" name="showLogoSection" value="true"
+                                <%=question.showLogoSection ? 'checked' : '' %>>
+                            <span class="quiz-toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="quiz-form-group">
+                        <label>Media Profile</label>
+                        <select name="mediaProfile" class="quiz-media-profile-select">
+                            <option value="">-- Select Media Profile --</option>
+                            <option value="broadcaster" <%=question.logoMediaProfile==='broadcaster' ? 'selected' : ''
+                                %>>Broadcaster</option>
+                            <option value="project" <%=question.logoMediaProfile==='project' ? 'selected' : '' %>
+                                >Project</option>
+                            <option value="episode" <%=question.logoMediaProfile==='episode' ? 'selected' : '' %>
+                                >Episode</option>
+                        </select>
+                    </div>
 
                     <div class="quiz-form-group">
                         <label>Logo Title </label>
                         <input type="text" name="logoTitle" value="<%= question.logoTitle %>"
-                            placeholder="Enter logo title"  />
+                            placeholder="Enter logo title" />
                     </div>
 
                     <div class="quiz-form-group">
                         <label>Logo Description </label>
                         <input type="text" name="logoDescription" value="<%= question.logoDescription %>"
-                            placeholder="Enter logo description"  />
+                            placeholder="Enter logo description" />
                     </div>
 
                     <div class="quiz-form-group">
                         <label>Logo Link</label>
                         <input type="url" name="logoLink" placeholder="https://example.com"
-                            value="<%= question.logoLink %>"  />
+                            value="<%= question.logoLink %>" />
                     </div>
                     <div class="quiz-form-group">
                         <label>Logo Image </label>
@@ -104,21 +126,6 @@
                         <label>Question Image Link (optional)</label>
                         <input type="url" name="questionImageLink" value="<%= question.questionImageLink || '' %>" />
                     </div>
-
-                    <!-- <div class="quiz-form-group">
-                        <label>Question Logo (optional)</label>
-                        <label class="quiz-file-label">
-                            <span class="quiz-file-label-text">
-                                <%= question.questionLogo ? question.questionLogo.split('/').pop() : 'Choose File' %>
-                            </span>
-                            <input type="file" name="questionLogo" class="quiz-hidden-file" accept="image/*" />
-                        </label>
-                        <% if (question.questionLogo) { %>
-                            <img class="preview-img" src="<%= question.questionLogo %>" style="display: block;" />
-                            <% } else { %>
-                                <img class="preview-img" style="display: none;" />
-                                <% } %>
-                    </div> -->
 
                     <div class="quiz-option-wrapper">
 
@@ -185,80 +192,82 @@
                         <div class="quiz-form-group reward-field reward-jackpot"
                             style="<%= question.mode === 'jackpot' || question.mode === 'both' ? '' : 'display: none;' %>">
                             <label>Jackpot Coin</label>
-                            <input type="number" class="quiz-form-group" name="jackpotCoinDeducted" min="0"
-                                value="<%= question.jackpotCoinDeducted != null ? question.jackpotCoinDeducted : '' %>" />
+                            <input type="number" name="jackpotCoinDeducted"
+                                value="<%= question.jackpotCoinDeducted != null ? question.jackpotCoinDeducted : '' %>"
+                                <% if (question.mode !=='none' && question.mode !=='digital' ) { %> min="10" <% } %> />
 
-                            <label>Jackpot Reward Name</label>
-                            <input type="text" class="quiz-form-group" name="jackpotRewardName"
-                                placeholder="Enter Jackpot Reward Name"
-                                value="<%= question.jackpotRewardName || '' %>" />
+                                <label>Jackpot Reward Name</label>
+                                <input type="text" class="quiz-form-group" name="jackpotRewardName"
+                                    placeholder="Enter Jackpot Reward Name"
+                                    value="<%= question.jackpotRewardName || '' %>" />
 
-                            <div class="quiz-form-group">
-                                <label>Jackpot Reward Image</label>
-                                <label class="quiz-file-label">
-                                    <span class="quiz-file-label-text">
-                                        <%= question.jackpotRewardImage ? question.jackpotRewardImage.split('/').pop()
-                                            : 'Choose Image' %>
-                                    </span>
-                                    <input type="file" name="jackpotRewardImage"
-                                        class="quiz-jackpotRewardImage quiz-hidden-file" accept="image/*" />
-                                </label>
-                                <% if (question.jackpotRewardImage) { %>
-                                    <img class="preview-img quiz-logoImagePreview"
-                                        src="<%= question.jackpotRewardImage %>" style="display: block;" />
-                                    <% } else { %>
-                                        <img class="preview-img quiz-logoImagePreview" style="display: none;" />
-                                        <% } %>
-                            </div>
+                                <div class="quiz-form-group">
+                                    <label>Jackpot Reward Image</label>
+                                    <label class="quiz-file-label">
+                                        <span class="quiz-file-label-text">
+                                            <%= question.jackpotRewardImage ?
+                                                question.jackpotRewardImage.split('/').pop() : 'Choose Image' %>
+                                        </span>
+                                        <input type="file" name="jackpotRewardImage"
+                                            class="quiz-jackpotRewardImage quiz-hidden-file" accept="image/*" />
+                                    </label>
+                                    <% if (question.jackpotRewardImage) { %>
+                                        <img class="preview-img quiz-logoImagePreview"
+                                            src="<%= question.jackpotRewardImage %>" style="display: block;" />
+                                        <% } else { %>
+                                            <img class="preview-img quiz-logoImagePreview" style="display: none;" />
+                                            <% } %>
+                                </div>
 
-                            <label>Jackpot Reward Description</label>
-                            <input type="text" name="jackpotRewardDescription" class="quiz-form-group"
-                                placeholder="Enter Jackpot Reward Description"
-                                value="<%= question.jackpotRewardDescription || '' %>" />
+                                <label>Jackpot Reward Description</label>
+                                <input type="text" name="jackpotRewardDescription" class="quiz-form-group"
+                                    placeholder="Enter Jackpot Reward Description"
+                                    value="<%= question.jackpotRewardDescription || '' %>" />
 
-                            <label>Jackpot Reward Link</label>
-                            <input type="url" name="jackpotRewardLink" class="quiz-form-group"
-                                placeholder="https://example.com" value="<%= question.jackpotRewardLink || '' %>" />
+                                <label>Jackpot Reward Link</label>
+                                <input type="url" name="jackpotRewardLink" class="quiz-form-group"
+                                    placeholder="https://example.com" value="<%= question.jackpotRewardLink || '' %>" />
                         </div>
 
                         <div class="quiz-form-group reward-field reward-digital"
                             style="<%= question.mode === 'digital' || question.mode === 'both' ? '' : 'display: none;' %>">
                             <label>Digital Coin</label>
-                            <input type="number" class="quiz-form-group" name="digitalCoinDeducted" min="0"
-                                value="<%= question.digitalCoinDeducted != null ? question.digitalCoinDeducted : '' %>" />
+                            <input type="number" name="digitalCoinDeducted"
+                                value="<%= question.digitalCoinDeducted != null ? question.digitalCoinDeducted : '' %>"
+                                <% if (question.mode !=='none' && question.mode !=='jackpot' ) { %> min="10" <% } %>/>
 
-                            <label>Digital Reward Name</label>
-                            <input type="text" class="quiz-form-group" name="digitalRewardName"
-                                placeholder="Enter Digital Reward Name"
-                                value="<%= question.digitalRewardName || '' %>" />
+                                <label>Digital Reward Name</label>
+                                <input type="text" class="quiz-form-group" name="digitalRewardName"
+                                    placeholder="Enter Digital Reward Name"
+                                    value="<%= question.digitalRewardName || '' %>" />
 
-                            <div class="quiz-form-group">
-                                <label>Digital Reward Image</label>
-                                <label class="quiz-file-label">
-                                    <span class="quiz-file-label-text">
-                                        <%= question.digitalRewardImage ? question.digitalRewardImage.split('/').pop()
-                                            : 'Choose Image' %>
-                                    </span>
-                                    <input type="file" name="digitalRewardImage"
-                                        class="quiz-digitalRewardImage quiz-hidden-file" accept="image/*" />
-                                </label>
-                                <% if (question.digitalRewardImage) { %>
-                                    <img class="preview-img quiz-logoImagePreview"
-                                        src="<%= question.digitalRewardImage %>" style="display: block;" />
-                                    <% } else { %>
-                                        <img class="preview-img quiz-logoImagePreview" style="display: none;" />
-                                        <% } %>
-                            </div>
+                                <div class="quiz-form-group">
+                                    <label>Digital Reward Image</label>
+                                    <label class="quiz-file-label">
+                                        <span class="quiz-file-label-text">
+                                            <%= question.digitalRewardImage ?
+                                                question.digitalRewardImage.split('/').pop() : 'Choose Image' %>
+                                        </span>
+                                        <input type="file" name="digitalRewardImage"
+                                            class="quiz-digitalRewardImage quiz-hidden-file" accept="image/*" />
+                                    </label>
+                                    <% if (question.digitalRewardImage) { %>
+                                        <img class="preview-img quiz-logoImagePreview"
+                                            src="<%= question.digitalRewardImage %>" style="display: block;" />
+                                        <% } else { %>
+                                            <img class="preview-img quiz-logoImagePreview" style="display: none;" />
+                                            <% } %>
+                                </div>
 
 
-                            <label>Digital Reward Description</label>
-                            <input type="text" class="quiz-form-group" name="digitalRewardDescription"
-                                placeholder="Enter Digital Reward Description"
-                                value="<%= question.digitalRewardDescription || '' %>" />
+                                <label>Digital Reward Description</label>
+                                <input type="text" class="quiz-form-group" name="digitalRewardDescription"
+                                    placeholder="Enter Digital Reward Description"
+                                    value="<%= question.digitalRewardDescription || '' %>" />
 
-                            <label>Digital Reward Link</label>
-                            <input type="url" class="quiz-form-group" name="digitalRewardLink"
-                                placeholder="https://example.com" value="<%= question.digitalRewardLink || '' %>" />
+                                <label>Digital Reward Link</label>
+                                <input type="url" class="quiz-form-group" name="digitalRewardLink"
+                                    placeholder="https://example.com" value="<%= question.digitalRewardLink || '' %>" />
                         </div>
 
                     </div>
@@ -441,6 +450,13 @@
             if (el.type !== "file") formData.append(el.name, el.value);
         });
 
+        // ✅ Include Media Profile explicitly
+        const mediaProfileSelect = form.querySelector('.quiz-media-profile-select');
+        const logoMediaProfile = mediaProfileSelect?.value || null;
+        const showLogoToggle = document.getElementById("showLogoToggle");
+        formData.set("showLogoSection", showLogoToggle.checked ? "true" : "false");
+        formData.append('logoMediaProfile', logoMediaProfile);
+
         ["logo", "questionImage", "questionLogo", "jackpotRewardImage", "digitalRewardImage"].forEach(name => {
             const input = form.querySelector(`input[name="${name}"]`);
             const isCleared = cleared.includes(name);
@@ -482,6 +498,7 @@
         const loader = document.getElementById("loader");
         loader.style.display = "flex";
 
+
         try {
             const response = await fetch("/tvstation/quiz-question/update", {
                 method: "POST",
@@ -516,6 +533,28 @@
                 modeInput.value = mode;
                 jackpotField.style.display = (mode === 'jackpot' || mode === 'both') ? 'block' : 'none';
                 digitalField.style.display = (mode === 'digital' || mode === 'both') ? 'block' : 'none';
+                jackpotField.querySelectorAll('input[type="number"]').forEach(el => {
+                    if (mode === 'none' || mode === 'digital') {
+                        el.required = false;
+                        el.removeAttribute('min');
+                        el.value = '';
+                    } else {
+                        el.required = jackpotField.style.display !== 'none';
+                        el.setAttribute('min', '10');
+                    }
+                });
+
+                digitalField.querySelectorAll('input[type="number"]').forEach(el => {
+                    if (mode === 'none' || mode === 'jackpot') {
+                        el.required = false;
+                        el.removeAttribute('min');
+                        el.value = '';
+                    } else {
+                        el.required = digitalField.style.display !== 'none';
+                        el.setAttribute('min', '10');
+                    }
+                });
+
                 modeButtons.forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
             });
@@ -525,12 +564,118 @@
         digitalField.style.display = (currentMode === 'digital' || currentMode === 'both') ? 'block' : 'none';
     }
 
+
+
+
     document.querySelectorAll('.reward-block').forEach(setupRewardModeSwitcher);
+    function setupMediaProfileDropdown(block) {
+        const select = block.querySelector(".quiz-media-profile-select");
+        const logoTitleInput = block.querySelector('input[name="logoTitle"]');
+        const logoDescInput = block.querySelector('input[name="logoDescription"]');
+        const logoLinkInput = block.querySelector('input[name="logoLink"]');
+        const logoImageInput = block.querySelector(".quiz-logoImage");
+        const logoImagePreview = block.querySelector(".quiz-logoImagePreview");
+
+
+
+        // Hidden input to track existing logo URL
+        let existingLogoUrlInput = block.querySelector('input[name="existingLogoUrl"]');
+        if (!existingLogoUrlInput) {
+            existingLogoUrlInput = document.createElement("input");
+            existingLogoUrlInput.type = "hidden";
+            existingLogoUrlInput.name = "existingLogoUrl";
+            block.appendChild(existingLogoUrlInput);
+        }
+
+
+        const existingClear = logoImageInput.parentElement.querySelector(".quiz-clear-btn");
+        if (existingClear) existingClear.remove();
+
+        // Now safely create one clear button
+        let clearBtn = document.createElement("button");
+        clearBtn.type = "button";
+        clearBtn.innerText = "✕";
+        clearBtn.className = "quiz-clear-btn quiz-logo-clear-btn";
+        logoImageInput.parentElement.appendChild(clearBtn);
+        clearBtn.style.display = "none";
+
+        // Show clear button if preview already has image on page load
+        if (logoImagePreview && logoImagePreview.src && logoImagePreview.style.display !== "none") {
+            clearBtn.style.display = "inline-block";
+        }
+
+
+        clearBtn.addEventListener("click", () => {
+            logoImageInput.value = "";
+            logoImagePreview.src = "";
+            logoImagePreview.style.display = "none";
+            existingLogoUrlInput.value = "";
+            logoImageInput.previousElementSibling.textContent = "Choose File";
+            clearBtn.style.display = "none";
+            // 🔥 Mark 'logo' as cleared for backend
+            const clearedInput = document.getElementById("clearedImagesInput");
+            const clearedList = clearedInput.value ? clearedInput.value.split(",") : [];
+            if (!clearedList.includes("logo")) {
+                clearedList.push("logo");
+                clearedInput.value = clearedList.join(",");
+            }
+        });
+
+        select.addEventListener("change", async () => {
+            const type = select.value;
+            if (!type) return;
+
+            const loader = document.getElementById("loader");
+            if (loader) loader.style.display = "flex";
+
+            try {
+                const res = await fetch(`/tvstation/get-media-profile?type=${type}`);
+                const data = await res.json();
+
+                if (data.type === "success") {
+                    const profile = data.profile;
+
+                    if (profile.logo) {
+                        // Profile has an image: override any attached file
+                        logoImagePreview.src = profile.logo;
+                        logoImagePreview.style.display = "block";
+                        existingLogoUrlInput.value = profile.logo;
+                        clearBtn.style.display = "inline-block";
+                        logoImageInput.previousElementSibling.textContent =
+                            profile.logo.split("/").pop() || "Current File";
+                        logoImageInput.value = "";  // clear attached file
+                    } else {
+                        // Profile has no image
+                        if (!logoImageInput.files[0]) {
+                            // Only clear preview if no file attached by user
+                            logoImagePreview.src = "";
+                            logoImagePreview.style.display = "none";
+                            existingLogoUrlInput.value = "";
+                            clearBtn.style.display = "none";
+                            logoImageInput.previousElementSibling.textContent = "Choose File";
+                        }
+                        // If user attached file, leave it selected
+                    }
+
+                    // Update title, description, link
+                    logoTitleInput.value = profile.title || "";
+                    logoDescInput.value = profile.description || "";
+                    logoLinkInput.value = profile.link || "";
+                }
+                else {
+                    alert(data.message || "Failed to load media profile");
+                }
+            } catch (err) {
+                console.error("Error fetching media profile:", err);
+                alert("Error fetching media profile");
+            } finally {
+                if (loader) loader.style.display = "none";
+            }
+        });
+    }
+
+    // Call it immediately for your form container
+    setupMediaProfileDropdown(document.querySelector(".quiz-container"));
 </script>
-
-
-
-
-
 
 </html>

@@ -84,6 +84,10 @@
             gap: 1rem;
             margin-bottom: 30px;
         }
+
+        .bold {
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -154,7 +158,7 @@
 
                 <div class="coin-popup-buttons">
 
-                    <input type="number" id="applauseAmount" min="1" />
+                    <input type="number" id="applauseAmount" min="10" required />
                     <button onclick="submitApplause()">OK</button>
                     <button onclick="ShareApplause()" data-translate="share">Share</button>
                     <button onclick="closeApplausePopup()"><span data-translate="back">Back</span></button>
@@ -214,7 +218,7 @@
 
                                                     <% if (currentQuestion.logoDescription) { %>
                                                         <p class="uq-logo-text"
-                                                            style="font-size: 1.2rem; font-weight: 500;">
+                                                            style="font-size: 1.2rem; font-weight: bold;">
                                                             <%= currentQuestion.logoDescription %>
                                                         </p>
                                                         <% } %>
@@ -248,7 +252,7 @@
                 <!-- Move Question Image BELOW the text -->
                 <% if (currentQuestion.questionImage) { %>
 
-                    <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500;margin-bottom: 0.8rem;">
+                    <div class="uq-question-text" style="font-size: 1.2rem; font-weight: bold;margin-bottom: 0.8rem;">
                         <%= currentQuestion.question %>
                     </div>
 
@@ -267,7 +271,7 @@
                     <% } %>
 
                         <div style="text-align: center;margin-bottom: 1.5rem;">
-                            <span style="font-weight: normal;">
+                            <span style="font-weight: bold; font-size: 1.2rem;">
                                 <%= currentQuestion.questionDescription %>
                             </span>
                         </div>
@@ -283,14 +287,14 @@
                                             <div class="uq-option-text-wrapper" style="font-size:1rem;font-weight:600;">
 
 
-                                                <div class="coin-popup-buttons"
+                                                <!-- <div class="coin-popup-buttons"
                                                     style="margin-top: 0; margin-bottom: 7px;">
                                                     <button data-translate="share" type="button"
                                                         onclick="TriggerPopup(<%= i %>)">Share</button>
 
-                                                </div>
+                                                </div> -->
 
-                                                <div style="margin-bottom: 0.5rem;width: 258px;">
+                                                <div style="margin-bottom: 0.5rem;width: 258px;font-weight: 500;">
                                                     <span data-translate="youwanttoapplaud">If you want to
                                                         applaud</span>
                                                     <!-- <span data-translate="commaOnApplause">,</span> -->
@@ -309,7 +313,7 @@
                                                 <img class="uq-option-image-large" src="<%= opt.image %>"
                                                     alt="Option Image" />
                                                 <% } %>
-                                                    <span style="font-weight: normal;">
+                                                    <span style="font-weight: bold;">
                                                         <%= opt.description %>
                                                     </span>
                                                     <!-- ✅ Hidden field to store default coin amount -->
@@ -507,7 +511,7 @@
             let lang = document.getElementById("languageSwitcher").value
             if (lang === "hu") {
                 textEl.innerHTML = `Köszönjük. ${optionTitle} ertesitést kap arról, hogy megtapsoltad.`;
-            }else{
+            } else {
 
                 textEl.innerHTML = `<span data-translate="thankYouYouShowedYourAppreciationTo">Thank you. You showed your appreciation to</span> ${optionTitle}. ${optionTitle} <span data-translate="willBeNotifiedAboutYourApplause">will be notified about your applause</span>.`;
             }

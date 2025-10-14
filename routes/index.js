@@ -21,6 +21,7 @@ const UAParser = require("ua-parser-js");
 const fetch = require("node-fetch");
 const AffiliatePayment = require("../models/AffiliatePayment");
 const Coupon = require("../models/Coupon");
+const WinnerRequest = require("../models/WinnerRequest");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -6073,189 +6074,199 @@ router.post("/set-currency", authMiddleware, async (req, res) => {
 });
 
 // GET /admindashboard/user-requests
-router.get("/admindashboard/user-requests", async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 6;
-    const page = parseInt(req.query.page) || 1;
-    const selectedType = req.query.type; // affiliate or tvstation
+router.get(
+  "/admindashboard/user-requests",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit) || 6;
+      const page = parseInt(req.query.page) || 1;
+      const selectedType = req.query.type; // affiliate or tvstation
 
-    // Validate type
-    if (!["affiliate", "tvstation"].includes(selectedType)) {
-      // Render the same page with an error message
-      return res.render("user-requests/requests", {
-        pendingRequests: [],
-        historyRequests: [],
-        limit,
-        totalCounts: { pending: 0, history: 0 },
-        selectedType: null,
-        errorMessage: "Invalid request type",
-      });
-    }
+      // Validate type
+      if (!["affiliate", "tvstation"].includes(selectedType)) {
+        // Render the same page with an error message
+        return res.render("user-requests/requests", {
+          pendingRequests: [],
+          historyRequests: [],
+          limit,
+          totalCounts: { pending: 0, history: 0 },
+          selectedType: null,
+          errorMessage: "Invalid request type",
+        });
+      }
 
-    // Filters
-    const queryMap = {
-      pending: {
-        type: selectedType,
-        isApprovedByAdmin: false,
-        isCancelledByUser: false,
-        isDeclined: false,
-      },
-      history: {
-        type: selectedType,
-        $or: [
-          { isApprovedByAdmin: true },
-          { isCancelledByUser: true },
-          { isDeclined: true },
-        ],
-      },
-    };
+      // Filters
+      const queryMap = {
+        pending: {
+          type: selectedType,
+          isApprovedByAdmin: false,
+          isCancelledByUser: false,
+          isDeclined: false,
+        },
+        history: {
+          type: selectedType,
+          $or: [
+            { isApprovedByAdmin: true },
+            { isCancelledByUser: true },
+            { isDeclined: true },
+          ],
+        },
+      };
 
-    // Helper to fetch requests with user info
-    const fetchRequests = async (filter, skip = 0, limit = 6) => {
-      const [requests, totalCount] = await Promise.all([
-        UserRequest.aggregate([
-          { $match: filter },
-          { $sort: { createdAt: -1 } },
-          { $skip: skip },
-          { $limit: limit },
-          {
-            $lookup: {
-              from: "users",
-              localField: "userId",
-              foreignField: "_id",
-              as: "user",
+      // Helper to fetch requests with user info
+      const fetchRequests = async (filter, skip = 0, limit = 6) => {
+        const [requests, totalCount] = await Promise.all([
+          UserRequest.aggregate([
+            { $match: filter },
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "user",
+              },
             },
-          },
-          { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
-          {
-            $project: {
-              type: 1,
-              isApprovedByAdmin: 1,
-              isCancelledByUser: 1,
-              isDeclined: 1,
-              createdAt: 1,
-              userName: "$user.fullName",
-              userEmail: "$user.email",
-              status: {
-                $switch: {
-                  branches: [
-                    { case: { $eq: ["$isDeclined", true] }, then: "Declined" },
-                    {
-                      case: { $eq: ["$isCancelledByUser", true] },
-                      then: "Cancelled by User",
-                    },
-                    {
-                      case: { $eq: ["$isApprovedByAdmin", true] },
-                      then: "Approved by Admin",
-                    },
-                  ],
-                  default: "Pending",
+            { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+            {
+              $project: {
+                type: 1,
+                isApprovedByAdmin: 1,
+                isCancelledByUser: 1,
+                isDeclined: 1,
+                createdAt: 1,
+                userName: "$user.fullName",
+                userEmail: "$user.email",
+                status: {
+                  $switch: {
+                    branches: [
+                      {
+                        case: { $eq: ["$isDeclined", true] },
+                        then: "Declined",
+                      },
+                      {
+                        case: { $eq: ["$isCancelledByUser", true] },
+                        then: "Cancelled by User",
+                      },
+                      {
+                        case: { $eq: ["$isApprovedByAdmin", true] },
+                        then: "Approved by Admin",
+                      },
+                    ],
+                    default: "Pending",
+                  },
                 },
               },
             },
-          },
-        ]),
-        UserRequest.countDocuments(filter),
-      ]);
+          ]),
+          UserRequest.countDocuments(filter),
+        ]);
 
-      return { requests, totalCount };
-    };
+        return { requests, totalCount };
+      };
 
-    // XHR / AJAX requests
-    if (req.xhr || req.query.loadMore) {
-      const tabType = req.query.tab || "pending";
-      if (!queryMap[tabType])
-        return res.status(400).json({ message: "Invalid tab type" });
+      // XHR / AJAX requests
+      if (req.xhr || req.query.loadMore) {
+        const tabType = req.query.tab || "pending";
+        if (!queryMap[tabType])
+          return res.status(400).json({ message: "Invalid tab type" });
 
-      const skip = (page - 1) * limit;
-      const data = await fetchRequests(queryMap[tabType], skip, limit);
+        const skip = (page - 1) * limit;
+        const data = await fetchRequests(queryMap[tabType], skip, limit);
 
-      return res.json({
-        requests: data.requests,
-        totalCount: data.totalCount,
-        currentPage: page,
-        errorMessage: null,
-      });
-    }
-
-    // Initial render
-    const [pending, history] = await Promise.all([
-      fetchRequests(queryMap.pending, 0, limit),
-      fetchRequests(queryMap.history, 0, limit),
-    ]);
-
-    res.render("user-requests/requests", {
-      pendingRequests: pending.requests,
-      historyRequests: history.requests,
-      limit,
-      totalCounts: {
-        pending: pending.totalCount,
-        history: history.totalCount,
-      },
-      selectedType, // optional, useful if you want to show type in the page
-      errorMessage: null,
-    });
-  } catch (err) {
-    console.error("Error fetching user requests:", err);
-    res
-      .status(500)
-      .render("error", { message: "Failed to load user requests" });
-  }
-});
-
-// POST /admindashboard/user-requests/:id/approve
-router.post("/admindashboard/user-requests/:id/approve", async (req, res) => {
-  try {
-    const requestId = req.params.id;
-    const request = await UserRequest.findById(requestId);
-
-    if (!request) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Request not found" });
-    }
-
-    if (
-      request.isApprovedByAdmin ||
-      request.isDeclined ||
-      request.isCancelledByUser
-    ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Request already processed" });
-    }
-
-    // Find the user first
-    const user = await User.findById(request.userId);
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-
-    // Update user based on request type
-    let approvedText = "";
-    if (request.type === "tvstation") {
-      user.isTvStation = true;
-      approvedText = "Your TV Station user request has been approved!";
-    } else if (request.type === "affiliate") {
-      user.role = "affiliate";
-      approvedText = "Your Affiliate request has been approved!";
-    }
-
-    await user.save(); // first save user
-
-    // Only after user is updated, mark request as approved
-    request.isApprovedByAdmin = true;
-    await request.save();
-
-     const sender = {
-        email: process.env.SENDER_EMAIL,
-        name: "Magic Code - Request Approved",
+        return res.json({
+          requests: data.requests,
+          totalCount: data.totalCount,
+          currentPage: page,
+          errorMessage: null,
+        });
       }
 
-    // --- Prepare approval email ---
-    const contentApproval = `
+      // Initial render
+      const [pending, history] = await Promise.all([
+        fetchRequests(queryMap.pending, 0, limit),
+        fetchRequests(queryMap.history, 0, limit),
+      ]);
+
+      res.render("user-requests/requests", {
+        pendingRequests: pending.requests,
+        historyRequests: history.requests,
+        limit,
+        totalCounts: {
+          pending: pending.totalCount,
+          history: history.totalCount,
+        },
+        selectedType, // optional, useful if you want to show type in the page
+        errorMessage: null,
+      });
+    } catch (err) {
+      console.error("Error fetching user requests:", err);
+      res
+        .status(500)
+        .render("error", { message: "Failed to load user requests" });
+    }
+  }
+);
+
+// POST /admindashboard/user-requests/:id/approve
+router.post(
+  "/admindashboard/user-requests/:id/approve",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const requestId = req.params.id;
+      const request = await UserRequest.findById(requestId);
+
+      if (!request) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Request not found" });
+      }
+
+      if (
+        request.isApprovedByAdmin ||
+        request.isDeclined ||
+        request.isCancelledByUser
+      ) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Request already processed" });
+      }
+
+      // Find the user first
+      const user = await User.findById(request.userId);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      // Update user based on request type
+      let approvedText = "";
+      if (request.type === "tvstation") {
+        user.isTvStation = true;
+        approvedText = "Your TV Station user request has been approved!";
+      } else if (request.type === "affiliate") {
+        user.role = "affiliate";
+        approvedText = "Your Affiliate request has been approved!";
+      }
+
+      await user.save(); // first save user
+
+      // Only after user is updated, mark request as approved
+      request.isApprovedByAdmin = true;
+      await request.save();
+
+      const sender = {
+        email: process.env.SENDER_EMAIL,
+        name: "Magic Code - Request Approved",
+      };
+
+      // --- Prepare approval email ---
+      const contentApproval = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -6305,61 +6316,65 @@ router.post("/admindashboard/user-requests/:id/approve", async (req, res) => {
 </html>
 `;
 
-    // Send the approval email
-    SendEmail(
-      sender,
-      user.email,
-      "Your Request Has Been Approved!",
-      contentApproval
-    );
+      // Send the approval email
+      SendEmail(
+        sender,
+        user.email,
+        "Your Request Has Been Approved!",
+        contentApproval
+      );
 
-    return res.json({
-      success: true,
-      message: "Request approved successfully",
-    });
-  } catch (err) {
-    console.error(err);
-    return res
-      .status(500)
-      .json({ success: false, message: "Failed to approve request" });
+      return res.json({
+        success: true,
+        message: "Request approved successfully",
+      });
+    } catch (err) {
+      console.error(err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to approve request" });
+    }
   }
-});
+);
 
 // POST /user-requests/:id/decline
-router.post("/admindashboard/user-requests/:id/decline", async (req, res) => {
-  try {
-    const requestId = req.params.id;
-    const request = await UserRequest.findById(requestId);
+router.post(
+  "/admindashboard/user-requests/:id/decline",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const requestId = req.params.id;
+      const request = await UserRequest.findById(requestId);
 
-    if (!request) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Request not found" });
-    }
+      if (!request) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Request not found" });
+      }
 
-    if (
-      request.isApprovedByAdmin ||
-      request.isDeclined ||
-      request.isCancelledByUser
-    ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Request already processed" });
-    }
+      if (
+        request.isApprovedByAdmin ||
+        request.isDeclined ||
+        request.isCancelledByUser
+      ) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Request already processed" });
+      }
 
-    request.isDeclined = true;
-    await request.save();
-    // Find the user who made the request
-    const user = await User.findById(request.userId);
-    if (user) {
-      const sender = {
-        email: process.env.SENDER_EMAIL,
-        name: "Magic Code - Request Declined",
-      };
+      request.isDeclined = true;
+      await request.save();
+      // Find the user who made the request
+      const user = await User.findById(request.userId);
+      if (user) {
+        const sender = {
+          email: process.env.SENDER_EMAIL,
+          name: "Magic Code - Request Declined",
+        };
 
-      const subject = "Update on Your Magic Code Request";
+        const subject = "Update on Your Magic Code Request";
 
-      const htmlContent = `
+        const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -6422,19 +6437,75 @@ router.post("/admindashboard/user-requests/:id/decline", async (req, res) => {
 </html>
 `;
 
-      // Send email
-      SendEmail(sender, user.email, subject, htmlContent);
+        // Send email
+        SendEmail(sender, user.email, subject, htmlContent);
+      }
+      return res.json({
+        success: true,
+        message: "Request declined successfully",
+      });
+    } catch (err) {
+      console.error(err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to decline request" });
     }
-    return res.json({
-      success: true,
-      message: "Request declined successfully",
-    });
-  } catch (err) {
-    console.error(err);
-    return res
-      .status(500)
-      .json({ success: false, message: "Failed to decline request" });
   }
-});
+);
+
+let cachedCounts = {
+  affiliate: 0,
+  mediaPartner: 0,
+  winnerRequests: 0, // combined winner requests
+  total: 0,
+};
+let lastUpdated = 0;
+
+router.get(
+  "/admindashboard/notifications",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      // Filters specific to each collection
+      const userRequestFilter = {
+        isApprovedByAdmin: false,
+        isDeclined: false,
+        isCancelledByUser: false,
+      };
+
+      const winnerRequestFilter = {
+        isApprovedByAdmin: false,
+        isApprovedByUser: false,
+        isDeclined: false,
+      };
+
+      const [affiliate, mediaPartner, winnerRequests] = await Promise.all([
+        UserRequest.countDocuments({
+          type: "affiliate",
+          ...userRequestFilter,
+        }),
+        UserRequest.countDocuments({
+          type: "tvstation",
+          ...userRequestFilter,
+        }),
+        WinnerRequest.countDocuments({ ...winnerRequestFilter }), // combined
+      ]);
+
+      const counts = {
+        affiliate,
+        mediaPartner,
+        winnerRequests,
+        total: affiliate + mediaPartner + winnerRequests,
+      };
+
+      res.json(counts);
+    } catch (err) {
+      console.error("Error in notifications API:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
 
 module.exports = router;

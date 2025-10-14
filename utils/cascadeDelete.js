@@ -87,7 +87,7 @@ async function cascadeDelete(type, id) {
 
         // Delete all responses
         try {
-          await QuizQuestionResponse.deleteMany({ questionId: id });
+          // await QuizQuestionResponse.deleteMany({ questionId: id });
         } catch (respErr) {
           console.error(
             `Failed to delete responses for question ${id}:`,
@@ -117,7 +117,7 @@ async function cascadeDelete(type, id) {
 
         // Delete all responses
         try {
-          await VoteQuestionResponse.deleteMany({ questionId: id });
+          // await VoteQuestionResponse.deleteMany({ questionId: id });
         } catch (respErr) {
           console.error(
             `Failed to delete responses for vote question ${id}:`,
@@ -143,7 +143,7 @@ async function cascadeDelete(type, id) {
 
         // Delete all responses
         try {
-          await ApplauseResponse.deleteMany({ questionId: id });
+          // await ApplauseResponse.deleteMany({ questionId: id });
         } catch (respErr) {
           console.error(
             `Failed to delete responses for applause ${id}:`,
