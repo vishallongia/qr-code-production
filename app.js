@@ -73,14 +73,19 @@ app.use(
 // Set EJS as the view engine
 app.set("view engine", "ejs");
 
-// // Use routes from the index.js file
+// Use routes from the index.js file
 app.use("/", indexRouter);
 app.use("/", plansPaymentsRouter); // Handles both plans and payments
 app.use("/admindashboard/affiliate", authMiddleware, affiliateUserRouter);
 app.use("/admindashboard/tvstation", authMiddleware, tvStationAdminRouter);
 app.use("/tvstation", authMiddleware, tvStationUserRouter); // It contains mixed code of voting and quiz
 app.use("/tvstation/applause", authMiddleware, tvStationApplauseApp); // For third app applause
-app.use("/tvstation/magicscreen", authMiddleware, tvStationMagicScreenApp); // For third app applause
+app.use("/tvstation/magicscreen", authMiddleware, tvStationMagicScreenApp); // For fourth app magicscreen
+
+// 404 Handler
+app.use((req, res) => {
+  res.status(404).render("404main");
+});
 
 // Run every 5 minutes
 cron.schedule("*/5 * * * *", () => {

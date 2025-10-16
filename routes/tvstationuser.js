@@ -1485,7 +1485,7 @@ router.get(
           sessionId,
         });
       }
-
+      
       return res.render("user-quiz", {
         channel,
         error: null,
