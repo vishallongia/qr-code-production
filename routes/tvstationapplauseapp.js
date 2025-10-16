@@ -214,6 +214,8 @@ router.post(
         logoTitle,
         logoDescription,
         logoLink,
+        logoMediaProfile = [],
+        showLogoSection = true,
       } = req.body;
 
       // ✅ Validate ObjectId format
@@ -293,6 +295,19 @@ router.post(
       const questionImagePath = req.files["questionImage"]?.[0]?.filename;
       const logoPath = req.files["logo"]?.[0]?.filename;
 
+      // Allowed enum values
+      const allowedProfiles = ["broadcaster", "project", "episode", "custom"];
+
+      // Ensure it's an array (safeguard)
+      let logoProfiles = Array.isArray(logoMediaProfile)
+        ? logoMediaProfile
+        : [];
+
+      // Filter valid values and remove duplicates
+      logoProfiles = [
+        ...new Set(logoProfiles.filter((p) => allowedProfiles.includes(p))),
+      ];
+
       // ✅ Create and save Applause question
       const applauseData = new Applause({
         channelId,
@@ -308,6 +323,8 @@ router.post(
         logoDescription: logoDescription?.trim() || "",
         logoLink: logoLink?.trim() || null,
         questionDescription: questionDescription.trim(),
+        logoMediaProfile: logoProfiles,
+        showLogoSection: showLogoSection === "true" || showLogoSection === true,
       });
 
       await applauseData.save();
@@ -424,6 +441,8 @@ router.post(
         clearedImages,
         clearedOptions,
         questionDescription,
+        logoMediaProfile = [],
+        showLogoSection = true,
       } = req.body;
 
       if (
@@ -578,6 +597,24 @@ router.post(
         };
       });
 
+      // ✅ Validate logoMediaProfile (must be array of allowed enum values)
+      const allowedProfiles = ["broadcaster", "project", "episode", "custom"];
+      let logoProfiles = [];
+
+      if (Array.isArray(logoMediaProfile)) {
+        logoProfiles = logoMediaProfile
+          .map((p) => p.trim())
+          .filter((p) => allowedProfiles.includes(p));
+      } else if (typeof logoMediaProfile === "string") {
+        // single value sent as string
+        if (allowedProfiles.includes(logoMediaProfile.trim())) {
+          logoProfiles = [logoMediaProfile.trim()];
+        }
+      }
+
+      // Remove duplicates
+      logoProfiles = [...new Set(logoProfiles)];
+
       applause.channelId = channelId;
       applause.sessionId = sessionId;
       applause.question = question.trim();
@@ -587,6 +624,9 @@ router.post(
       applause.logoLink = logoLink?.trim() || null;
       applause.questionImageLink = questionImageLink?.trim() || null;
       applause.questionDescription = questionDescription?.trim() || null;
+      applause.logoMediaProfile = logoProfiles;
+      applause.showLogoSection =
+        showLogoSection === "true" || showLogoSection === true;
 
       await applause.save();
 

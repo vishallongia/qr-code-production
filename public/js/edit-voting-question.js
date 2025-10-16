@@ -202,13 +202,21 @@ document
       .filter(Boolean);
 
     const formData = new FormData();
+    // ✅ Collect active media profiles
+    const activeProfiles = Array.from(
+      document.querySelectorAll(
+        '.quiz-media-profile-toggles input[type="checkbox"][name="logoMediaProfile[]"]:checked'
+      )
+    ).map((checkbox) => checkbox.value);
 
-    // Append all non-file inputs
+    // Append all active profiles to FormData
+    activeProfiles.forEach((profile) => {
+      formData.append("logoMediaProfile[]", profile);
+    });
+
     form.querySelectorAll("input, textarea, select").forEach((el) => {
-      if (el.type !== "file") {
-        // Skip optionTexts[] for now (we'll handle options separately)
-        if (el.name !== "optionTexts[]") formData.append(el.name, el.value);
-      }
+      if (el.type === "file" || el.type === "checkbox") return; // skip files and checkboxes
+      if (el.name !== "optionTexts[]") formData.append(el.name, el.value);
     });
 
     // Append main images if not cleared
@@ -338,3 +346,22 @@ function setupRewardModeSwitcher(block) {
     currentMode === "digital" || currentMode === "both" ? "block" : "none";
 }
 document.querySelectorAll(".reward-block").forEach(setupRewardModeSwitcher);
+
+function setupMediaProfileToggles() {
+  const toggles = document.querySelectorAll(
+    '.quiz-media-profile-toggles input[type="checkbox"][name="logoMediaProfile[]"]'
+  );
+  const logoParentContainer = document.getElementById("logoParentContainer");
+
+  toggles.forEach((toggle) => {
+    toggle.addEventListener("change", () => {
+      // Show/hide custom logo container if "custom" checkbox is toggled
+      if (toggle.value === "custom") {
+        logoParentContainer.style.display = toggle.checked ? "block" : "none";
+      }
+    });
+  });
+}
+
+// Call it on page load to attach click listeners only
+document.addEventListener("DOMContentLoaded", setupMediaProfileToggles);

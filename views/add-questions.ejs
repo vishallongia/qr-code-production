@@ -58,7 +58,7 @@
                         </div>
                     </div>
                     <div class="quiz-question-block">
-                        <div class="quiz-toggle-wrapper">
+                        <div class="quiz-toggle-wrapper" style="display: none;">
                             <label for="showLogoToggle" class="quiz-toggle-label">Show Logo</label>
                             <label class="quiz-toggle-switch">
                                 <input type="checkbox" id="showLogoToggle">
@@ -67,14 +67,39 @@
                         </div>
                         <div class="quiz-form-group">
                             <label>Media Profile</label>
-                            <div class="quiz-media-profile-tabs" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button type="button" class="media-profile-btn"
-                                    data-type="broadcaster">Broadcaster</button>
-                                <button type="button" class="media-profile-btn" data-type="project">Project</button>
-                                <button type="button" class="media-profile-btn" data-type="episode">Episode</button>
-                                <button type="button" class="media-profile-btn" data-type="custom">Custom</button>
-                            </div>
+                            <div class="quiz-media-profile-toggles">
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Broadcaster</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox"  name="logoMediaProfile[]" value="broadcaster" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
 
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Project</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox"  name="logoMediaProfile[]" value="project" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Episode</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox"  name="logoMediaProfile[]" value="episode" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Custom</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox"  name="logoMediaProfile[]" value="custom" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                         <div id="logoParentContainer">
                             <div class="quiz-form-group">

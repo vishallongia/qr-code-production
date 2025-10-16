@@ -88,6 +88,17 @@ const magicScreenSchema = new mongoose.Schema(
       ref: "QRCodeData",
       default: null,
     },
+
+    // ⬇️ Updated from single enum to array of enums
+    logoMediaProfile: {
+      type: [String],
+      enum: ["broadcaster", "project", "episode", "custom"],
+      default: [],
+    },
+    showLogoSection: {
+      type: Boolean,
+      default: true, // by default, the logo section will be shown
+    },
   },
   {
     timestamps: true,

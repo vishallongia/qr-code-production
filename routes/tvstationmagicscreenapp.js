@@ -217,6 +217,8 @@ router.post(
         logoTitle,
         logoDescription,
         logoLink,
+        logoMediaProfile = [],
+        showLogoSection = true,
       } = req.body;
 
       // ✅ Validate ObjectId format
@@ -297,6 +299,19 @@ router.post(
       const questionImagePath = req.files["questionImage"]?.[0]?.filename;
       const logoPath = req.files["logo"]?.[0]?.filename;
 
+      // Allowed enum values
+      const allowedProfiles = ["broadcaster", "project", "episode", "custom"];
+
+      // Ensure it's an array (safeguard)
+      let logoProfiles = Array.isArray(logoMediaProfile)
+        ? logoMediaProfile
+        : [];
+
+      // Filter valid values and remove duplicates
+      logoProfiles = [
+        ...new Set(logoProfiles.filter((p) => allowedProfiles.includes(p))),
+      ];
+
       // ✅ Create and save Magic Screen question
       const magicScreenData = new MagicScreen({
         channelId,
@@ -312,6 +327,8 @@ router.post(
         logoDescription: logoDescription?.trim() || "",
         logoLink: logoLink?.trim() || null,
         questionDescription: questionDescription?.trim(),
+        logoMediaProfile: logoProfiles,
+        showLogoSection: showLogoSection === "true" || showLogoSection === true,
       });
 
       await magicScreenData.save();
@@ -428,6 +445,8 @@ router.post(
         clearedImages,
         clearedOptions,
         questionDescription,
+        logoMediaProfile = [],
+        showLogoSection = true,
       } = req.body;
 
       // ✅ Validate IDs
@@ -590,6 +609,24 @@ router.post(
         };
       });
 
+      // ✅ Validate logoMediaProfile (must be array of allowed enum values)
+      const allowedProfiles = ["broadcaster", "project", "episode", "custom"];
+      let logoProfiles = [];
+
+      if (Array.isArray(logoMediaProfile)) {
+        logoProfiles = logoMediaProfile
+          .map((p) => p.trim())
+          .filter((p) => allowedProfiles.includes(p));
+      } else if (typeof logoMediaProfile === "string") {
+        // single value sent as string
+        if (allowedProfiles.includes(logoMediaProfile.trim())) {
+          logoProfiles = [logoMediaProfile.trim()];
+        }
+      }
+
+      // Remove duplicates
+      logoProfiles = [...new Set(logoProfiles)];
+
       // ✅ Save all updates
       magicScreen.channelId = channelId;
       magicScreen.sessionId = sessionId;
@@ -600,6 +637,9 @@ router.post(
       magicScreen.logoLink = logoLink?.trim() || null;
       magicScreen.questionImageLink = questionImageLink?.trim() || null;
       magicScreen.questionDescription = questionDescription?.trim() || null;
+      magicScreen.logoMediaProfile = logoProfiles;
+      magicScreen.showLogoSection =
+        showLogoSection === "true" || showLogoSection === true;
 
       await magicScreen.save();
 

@@ -1035,10 +1035,9 @@ router.post(
         logoTitle,
         logoDescription,
         logoLink,
-        logoMediaProfile = [], // ✅ NEW FIELD
+        logoMediaProfile = [],
         clearedImages,
-        showLogoSection,
-        // Rewards
+        showLogoSection=true,
         jackpotRewardName,
         jackpotRewardDescription,
         jackpotRewardLink,
@@ -1046,7 +1045,7 @@ router.post(
         digitalRewardDescription,
         digitalRewardLink,
       } = req.body;
-      console.log(logoMediaProfile)
+
       if (
         !mongoose.Types.ObjectId.isValid(channelId) ||
         !mongoose.Types.ObjectId.isValid(sessionId)
@@ -1271,7 +1270,6 @@ router.post(
 
       // Remove duplicates
       logoProfiles = [...new Set(logoProfiles)];
-      
 
       // ✅ Update quiz fields
       quiz.channelId = channelId;
@@ -1485,7 +1483,7 @@ router.get(
           sessionId,
         });
       }
-      
+
       return res.render("user-quiz", {
         channel,
         error: null,
@@ -3133,6 +3131,8 @@ router.post(
         logoTitle,
         logoDescription,
         logoLink,
+        logoMediaProfile = [],
+        showLogoSection,
         jackpotRewardName,
         jackpotRewardDescription,
         jackpotRewardLink,
@@ -3228,6 +3228,15 @@ router.post(
       const digitalRewardImagePath =
         req.files["digitalRewardImage"]?.[0]?.filename;
 
+      // ✅ Validate logoMediaProfile
+      const allowedProfiles = ["broadcaster", "project", "episode", "custom"];
+      let logoProfiles = Array.isArray(logoMediaProfile)
+        ? logoMediaProfile
+        : [];
+      logoProfiles = [
+        ...new Set(logoProfiles.filter((p) => allowedProfiles.includes(p))),
+      ];
+
       // ✅ Save Voting Question (no correctAnswerIndex)
       const votingData = new VoteQuestion({
         channelId,
@@ -3261,6 +3270,8 @@ router.post(
           : null,
         digitalRewardDescription: digitalRewardDescription?.trim() || "",
         digitalRewardLink: digitalRewardLink?.trim() || null,
+        logoMediaProfile: logoProfiles,
+        showLogoSection: showLogoSection === "true" || showLogoSection === true,
       });
 
       await votingData.save();
@@ -3379,7 +3390,9 @@ router.post(
         logoTitle,
         logoDescription,
         logoLink,
+        logoMediaProfile = [],
         clearedImages,
+        showLogoSection = true,
         jackpotRewardName,
         jackpotRewardDescription,
         jackpotRewardLink,
@@ -3387,7 +3400,6 @@ router.post(
         digitalRewardDescription,
         digitalRewardLink,
       } = req.body;
-
       // ✅ Validate IDs
       if (
         !mongoose.Types.ObjectId.isValid(channelId) ||
@@ -3577,6 +3589,20 @@ router.post(
         };
       });
 
+      // ✅ Validate logoMediaProfile
+      const allowedProfiles = ["broadcaster", "project", "episode", "custom"];
+      let logoProfiles = [];
+      if (Array.isArray(logoMediaProfile)) {
+        logoProfiles = logoMediaProfile
+          .map((p) => p.trim())
+          .filter((p) => allowedProfiles.includes(p));
+      } else if (typeof logoMediaProfile === "string") {
+        if (allowedProfiles.includes(logoMediaProfile.trim())) {
+          logoProfiles = [logoMediaProfile.trim()];
+        }
+      }
+      logoProfiles = [...new Set(logoProfiles)]; // remove duplicates
+
       // ✅ Update main fields
       votingQuestion.channelId = channelId;
       votingQuestion.sessionId = sessionId;
@@ -3586,6 +3612,9 @@ router.post(
       votingQuestion.logoTitle = logoTitle?.trim() || null;
       votingQuestion.logoDescription = logoDescription?.trim() || null;
       votingQuestion.logoLink = logoLink?.trim() || null;
+      votingQuestion.logoMediaProfile = logoProfiles;
+      votingQuestion.showLogoSection =
+        showLogoSection === "true" || showLogoSection === true;
       votingQuestion.jackpotCoinDeducted = jCoin;
       votingQuestion.digitalCoinDeducted = dCoin;
       votingQuestion.mode = mode;

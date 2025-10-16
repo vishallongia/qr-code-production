@@ -48,53 +48,102 @@
                         </button>
                     </div>
 
+                    <div class="quiz-form-group">
+                        <label>Media Profile</label>
+                        <div class="quiz-media-profile-toggles">
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Broadcaster</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="broadcaster"
+                                        <%=Array.isArray(question.logoMediaProfile) &&
+                                        question.logoMediaProfile.includes('broadcaster') ? 'checked' : '' %> />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Project</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="project"
+                                        <%=Array.isArray(question.logoMediaProfile) &&
+                                        question.logoMediaProfile.includes('project') ? 'checked' : '' %> />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Episode</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="episode"
+                                        <%=Array.isArray(question.logoMediaProfile) &&
+                                        question.logoMediaProfile.includes('episode') ? 'checked' : '' %> />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Custom</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="custom"
+                                        <%=Array.isArray(question.logoMediaProfile) &&
+                                        question.logoMediaProfile.includes('custom') ? 'checked' : '' %> />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="logoParentContainer" style="<%= Array.isArray(question.logoMediaProfile) && question.logoMediaProfile.includes('custom') 
+       ? '' 
+       : 'display: none;' %>">
+                        <div class="quiz-form-group">
+                            <label>Name of Your Channel </label>
+                            <input type="text" name="logoTitle" value="<%= question.logoTitle %>"
+                                placeholder="Enter logo title" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Description of Your Channel Logo </label>
+                            <input type="text" name="logoDescription" value="<%= question.logoDescription %>"
+                                placeholder="Enter logo description" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Logo Link</label>
+                            <input type="url" name="logoLink" placeholder="https://example.com"
+                                value="<%= question.logoLink %>" />
+                        </div>
+                        <div class="quiz-form-group">
+                            <label>Upload Your Channel Logo </label>
+                            <label class="quiz-file-label">
+                                <span class="quiz-file-label-text">
+                                    <%= question.logo ? question.logo.split('/').pop() : 'Choose File' %>
+                                </span>
+                                <input type="file" name="logo" class="quiz-logoImage quiz-hidden-file"
+                                    accept="image/*" />
+                            </label>
+                            <% if (question.logo) { %>
+                                <img class="preview-img quiz-logoImagePreview" src="<%= question.logo %>"
+                                    style="display: block;" />
+                                <% } else { %>
+                                    <img class="preview-img quiz-logoImagePreview" style="display: none;" />
+                                    <% } %>
+                        </div>
+                    </div>
+                    <div class="quiz-form-group">
+                        <label>Name of The Episode</label>
+                        <input type="text" name="question" placeholder="Name of The Episode" value="<%= question.question %>" required />
+                    </div>
 
                     <div class="quiz-form-group">
-                        <label>Name of Your Channel </label>
-                        <input type="text" name="logoTitle" value="<%= question.logoTitle %>"
-                            placeholder="Enter logo title" />
-                    </div>
-
-                    <div class="quiz-form-group">
-                        <label>Description of Your Channel Logo </label>
-                        <input type="text" name="logoDescription" value="<%= question.logoDescription %>"
-                            placeholder="Enter logo description" />
-                    </div>
-
-                    <div class="quiz-form-group">
-                        <label>Logo Link</label>
-                        <input type="url" name="logoLink" placeholder="https://example.com"
-                            value="<%= question.logoLink %>" />
-                    </div>
-                    <div class="quiz-form-group">
-                        <label>Upload Your Channel Logo </label>
-                        <label class="quiz-file-label">
-                            <span class="quiz-file-label-text">
-                                <%= question.logo ? question.logo.split('/').pop() : 'Choose File' %>
-                            </span>
-                            <input type="file" name="logo" class="quiz-logoImage quiz-hidden-file" accept="image/*" />
-                        </label>
-                        <% if (question.logo) { %>
-                            <img class="preview-img quiz-logoImagePreview" src="<%= question.logo %>"
-                                style="display: block;" />
-                            <% } else { %>
-                                <img class="preview-img quiz-logoImagePreview" style="display: none;" />
-                                <% } %>
-                    </div>
-                    <div class="quiz-form-group">
-                        <label>Name of Your Content</label>
-                        <input type="text" name="question" placeholder="Name of Your Content" value="<%= question.question %>" required />
-                    </div>
-
-                    <div class="quiz-form-group">
-                            <label>Description of Your Content</label>
+                            <label>Description of The Episode</label>
                             <input type="text" name="questionDescription"
                                 value="<%= question.questionDescription || '' %>"
-                                placeholder="Description of Your Content" />
+                                placeholder="Description of The Episode" />
                     </div>
 
                     <div class="quiz-form-group">
-                        <label>Upload Image (Preview) of Your Content</label>
+                        <label>Upload Image (Preview) of The Episode</label>
                         <label class="quiz-file-label">
                             <span class="quiz-file-label-text">
                                 <%= question.questionImage ? question.questionImage.split('/').pop() : 'Choose File' %>
@@ -109,17 +158,17 @@
                     </div>
 
                     <div class="quiz-form-group">
-                        <label>Link of Your Conent</label>
+                        <label>Link of The Episode</label>
                         <input type="url" name="questionImageLink" value="<%= question.questionImageLink || '' %>" />
                     </div>
                     <div class="quiz-option-wrapper">
 
-                        
+
 
                         <div id="option-blocks" class="quiz-option-blocks quiz-options-grid">
                             <% question.options.forEach((opt, index)=> { %>
                                 <div class="quiz-option-block" data-option-id="<%= opt._id %>">
-                                    <label>Option <%= index + 1 %></label>
+                                    <label>Content Option <%= index + 1 %></label>
 
                                     <label class="quiz-file-label">
                                         <span class="quiz-file-label-text">
@@ -137,23 +186,28 @@
                                                 <button type="button" class="quiz-option-delete-btn">✕</button>
 
 
-                                    <input type="text" name="optionTexts[]" value="<%= opt.text %>" placeholder="Name of the Image (of the post, video, story, specific guest, any special detail - like the sound, etc.)" required />
+                                                <input type="text" name="optionTexts[]" value="<%= opt.text %>"
+                                                    placeholder="Name of the Image (of the post, video, story, specific guest, any special detail - like the sound, etc.)"
+                                                    required />
 
-                                    <!-- ✅ New: Option Description -->
-                                    <input type="text" name="optionDescriptions[]" value="<%= opt.description || '' %>"
-                                        placeholder="Enter the Description of the Image" />
+                                                <!-- ✅ New: Option Description -->
+                                                <input type="text" name="optionDescriptions[]"
+                                                    value="<%= opt.description || '' %>"
+                                                    placeholder="Enter the Description of the Image" />
 
-                                    <!-- Option Magic Coin Deducted -->
-                                    <input type="number" name="optionMagicCoins[]" min="0"
-                                        value="<%= opt.magicCoinDeducted || 0 %>" placeholder="Select Your Desired Amount for Your Applause, or Your Fans their free Choice"
-                                        required />
+                                                <!-- Option Magic Coin Deducted -->
+                                                <input type="number" name="optionMagicCoins[]" min="0"
+                                                    value="<%= opt.magicCoinDeducted || 0 %>"
+                                                    placeholder="Select Your Desired Amount for Your Applause, or Your Fans their free Choice"
+                                                    required />
 
-                                    
+
                                 </div>
                                 <% }); %>
                         </div>
                         <div class="quiz-option-controls">
-                            <button type="button" id="btn-add-option" class="quiz-btn-add-option">+ Add Option</button>
+                            <button type="button" id="btn-add-option" class="quiz-btn-add-option">+ Add
+                                Option</button>
                         </div>
                     </div>
                     <button type="submit" class="quiz-btn-submit">Edit Your Applause Event</button>
@@ -161,11 +215,13 @@
             </div>
             <% } %>
 
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
-                <script src="/js/toastify-setup.js"></script>
-</body>
 
-<script>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+<script src="/js/applause-edit-question.js"></script>
+
+<!-- <script>
     function setupImagePreviewAndClear(fileInput, previewImg, labelTextEl, clearBtn = null, existingImage = false, getClearedKeyFn = null) {
         const originalName = fileInput.name;
         const originalClass = fileInput.className;
@@ -233,10 +289,10 @@
         const select = document.getElementById("correct-answer-select");
         select.innerHTML = '<option value="">-- Select --</option>';
         blocks.forEach((block, index) => {
-            block.querySelector("label").innerText = `Option ${index + 1}`;
+            block.querySelector("label").innerText = `Content Option ${index + 1}`;
             const option = document.createElement("option");
             option.value = index;
-            option.innerText = `Option ${index + 1}`;
+            option.innerText = `Content Option ${index + 1}`;
             select.appendChild(option);
         });
     }
@@ -286,7 +342,7 @@
 
         const index = document.querySelectorAll(".quiz-option-block").length;
         block.innerHTML = `
-<label>Option ${index + 1}</label>
+<label>Content Option ${index + 1}</label>
 
 <label class="quiz-file-label">
     <span class="quiz-file-label-text">${imageUrl ? imageUrl.split('/').pop() : "Choose Image"}</span>
@@ -297,7 +353,7 @@
 <button type="button" class="quiz-option-delete-btn">✕</button>
 
 <input type="text" name="optionTexts[]" value="${text}" placeholder="Name of the Image (of the post, video, story, specific guest, any special detail - like the sound, etc.)" required />
-<!-- ✅ New -->
+ ✅ New
 <input type="text" name="optionDescriptions[]" value="${description}" 
        placeholder="Enter the Description of the Image" />
        <input type="number" name="optionMagicCoins[]" min="0" value="" placeholder="Select Your Desired Amount for Your Applause, or Your Fans their free Choice" required />
@@ -402,7 +458,7 @@
             loader.style.display = "none";
         }
     });
-</script>
+</script> -->
 
 
 

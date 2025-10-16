@@ -122,6 +122,13 @@ const voteQuestionSchema = new mongoose.Schema(
       ref: "QRCodeData", // Reference to the QRCodeData model
       default: null, // Optional
     },
+    // ✅ Media Profiles for logo section
+    logoMediaProfile: {
+      type: [String],
+      enum: ["broadcaster", "project", "episode", "custom"],
+      default: [],
+    },
+    showLogoSection: { type: Boolean, default: true },
   },
   {
     timestamps: true,

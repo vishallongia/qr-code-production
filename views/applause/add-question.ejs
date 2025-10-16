@@ -14,6 +14,7 @@
 
 <body>
 
+
     <div class="loader-overlay" id="loader">
         <div class="spinner"></div>
     </div>
@@ -43,7 +44,8 @@
             </div>
 
 
-
+            <input type="hidden" id="channelId" name="channelId" value="<%= channel?._id %>">
+            <input type="hidden" id="sessionId" name="sessionId" value="<%= sessionId %>">
             <template id="question-template">
                 <div class="quiz-question-wrapper">
                     <div class="quiz-question-header">
@@ -55,43 +57,80 @@
                     </div>
                     <div class="quiz-question-block">
                         <div class="quiz-form-group">
-                            <label>Name of Your Channel </label>
-                            <input type="text" name="logoTitle" placeholder="Enter logo title" />
+                            <label>Media Profile</label>
+                            <div class="quiz-media-profile-toggles">
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Broadcaster</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox" name="logoMediaProfile[]" value="broadcaster" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Project</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox" name="logoMediaProfile[]" value="project" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Episode</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox" name="logoMediaProfile[]" value="episode" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Custom</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox" name="logoMediaProfile[]" value="custom" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="logoParentContainer">
+                            <div class="quiz-form-group">
+                                <label>Name of Your Channel </label>
+                                <input type="text" name="logoTitle" placeholder="Enter logo title" />
+                            </div>
+
+                            <div class="quiz-form-group">
+                                <label>Description of Your Channel Logo</label>
+                                <input type="text" name="logoDescription" placeholder="Enter logo description" />
+                            </div>
+
+                            <div class="quiz-form-group">
+                                <label>Logo Link </label>
+                                <input type="url" name="logoLink" placeholder="https://example.com" />
+                            </div>
+
+                            <div class="quiz-form-group">
+                                <label>Upload Your Channel Logo</label>
+                                <label class="quiz-file-label">
+                                    <span class="quiz-file-label-text">Choose File</span>
+                                    <input type="file" class="quiz-logoImage quiz-hidden-file" accept="image/*" />
+                                </label>
+                                <img class="preview-img quiz-logoImagePreview" style="display: none;" />
+                            </div>
+
+                            <hr />
+                        </div>
+                        <div class="quiz-form-group">
+                            <label>Name of The Episode</label>
+                            <input type="text" name="question" placeholder="Name of The Episode" value="Who or What do you want to receive applause for?" required />
                         </div>
 
                         <div class="quiz-form-group">
-                            <label>Description of Your Channel Logo</label>
-                            <input type="text" name="logoDescription" placeholder="Enter logo description" />
+                            <label>Description of The Episode</label>
+                            <input type="text" name="questionDescription" placeholder="Description of The Episode" />
                         </div>
 
                         <div class="quiz-form-group">
-                            <label>Logo Link </label>
-                            <input type="url" name="logoLink" placeholder="https://example.com" />
-                        </div>
-
-                        <div class="quiz-form-group">
-                            <label>Upload Your Channel Logo</label>
-                            <label class="quiz-file-label">
-                                <span class="quiz-file-label-text">Choose File</span>
-                                <input type="file" class="quiz-logoImage quiz-hidden-file" accept="image/*" />
-                            </label>
-                            <img class="preview-img quiz-logoImagePreview" style="display: none;" />
-                        </div>
-
-                        <hr />
-                        <div class="quiz-form-group">
-                            <label>Name of Your Content</label>
-                            <input type="text" name="question" placeholder="Name of Your Content"
-                                value="Who or What do you want to receive applause for?" required />
-                        </div>
-
-                        <div class="quiz-form-group">
-                            <label>Description of Your Content</label>
-                            <input type="text" name="questionDescription" placeholder="Description of Your Content" />
-                        </div>
-
-                        <div class="quiz-form-group">
-                            <label>Upload Image (Preview) of Your Content</label>
+                            <label>Upload Image (Preview) of The Episode</label>
                             <label class="quiz-file-label">
                                 <span class="quiz-file-label-text">Choose File</span>
                                 <input type="file" class="quiz-questionImage quiz-hidden-file" accept="image/*" />
@@ -100,7 +139,7 @@
                         </div>
 
                         <div class="quiz-form-group">
-                            <label>Link of Your Conent</label>
+                            <label>Link of The Episode</label>
                             <input type="url" name="questionImageLink" placeholder="https://example.com" />
                         </div>
 
@@ -129,8 +168,12 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
+<script src="/js/applause-add-question.js"></script>
 
-<script>
+</html>
+
+
+<!-- <script>
     const wrapper = document.getElementById("questions-wrapper");
     const template = document.getElementById("question-template");
 
@@ -234,7 +277,7 @@
         optDiv.className = "quiz-option-block";
 
         const label = document.createElement("label");
-        label.innerText = `Option ${index + 1}`;
+        label.innerText = `Content Option ${index + 1}`;
 
         const inputText = document.createElement("input");
         inputText.type = "text";
@@ -323,7 +366,7 @@
         const optionBlocks = block.querySelectorAll(".quiz-option-block");
         optionBlocks.forEach((optBlock, index) => {
             const label = optBlock.querySelector("label");
-            if (label) label.innerText = `Option ${index + 1}`;
+            if (label) label.innerText = `Content Option ${index + 1}`;
 
             const previewImg = optBlock.querySelector(".preview-img");
             if (previewImg) previewImg.className = `preview-img quiz-optionPreview${index}`;
@@ -379,8 +422,8 @@
         const block = document.querySelector(".quiz-question-wrapper");
         const formData = new FormData();
 
-        const channelId = "<%= channel?._id %>";
-        const sessionId = "<%= sessionId %>";
+        const channelId = document.getElementById("channelId").value;
+        const sessionId = document.getElementById("sessionId").value;
         formData.append("sessionId", sessionId);
         formData.append("channelId", channelId);
         formData.append("question", block.querySelector('input[name="question"]').value.trim());
@@ -466,7 +509,4 @@
     });
 
     createQuestionBlock();
-</script>
-
-
-</html>
+</script> -->

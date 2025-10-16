@@ -20,7 +20,7 @@
             margin: 0;
         }
 
-        .uq-question-text{
+        .uq-question-text {
             margin-bottom: 2px;
         }
     </style>
@@ -62,32 +62,55 @@
                 <input type="hidden" name="index" value="<%= index %>">
 
                 <div class="uq-question-header">
-                    <% if (currentQuestion.logoTitle) { %>
-                        <h4 class="uq-logo-title" style="font-size: 1.4rem; font-weight: 600;">
-                            <%= currentQuestion.logoTitle %>
-                        </h4>
-                        <% } %>
-                            <% if (currentQuestion.logo) { %>
-                                <% if (currentQuestion.logoLink) { %>
-                                    <a href="<%= currentQuestion.logoLink %>" target="_blank">
-                                        <img class="uq-question-logo" src="<%= currentQuestion.logo %>" alt="Logo" />
-                                    </a>
-                                    <% } else { %>
-                                        <img class="uq-question-logo" src="<%= currentQuestion.logo %>" alt="Logo" />
-                                        <% } %>
+                    <% const profileSequence=['broadcaster', 'project' , 'episode' , 'custom' ];
+                        profileSequence.forEach((profile)=> {
+                        let profileData = null;
 
-                                            <% if (currentQuestion.logoTitle || currentQuestion.logoDescription) { %>
-                                                <div class="uq-logo-text" style="    width: 100%; text-align: center;">
+                        if (profile === 'custom' && currentQuestion.logo &&
+                        currentQuestion.logoMediaProfile.includes('custom')) {
+                        profileData = {
+                        logo: currentQuestion.logo,
+                        title: currentQuestion.logoTitle,
+                        description: currentQuestion.logoDescription,
+                        link: currentQuestion.logoLink
+                        };
+                        } else if (
+                        user.tvStationRules &&
+                        user.tvStationRules[profile] &&
+                        currentQuestion.logoMediaProfile.includes(profile)
+                        ) {
+                        profileData = user.tvStationRules[profile];
+                        }
 
-                                                    <% if (currentQuestion.logoDescription) { %>
-                                                        <p class="uq-logo-text"
-                                                            style="font-size: 1.2rem; font-weight: 500;">
-                                                            <%= currentQuestion.logoDescription %>
-                                                        </p>
-                                                        <% } %>
-                                                </div>
-                                                <% } %>
+                        if (profileData) {
+                        %>
+                        <% if (profileData.title) { %>
+                            <h4 class="uq-logo-title" style="font-size: 1.4rem; font-weight: 600;">
+                                <%= profileData.title %>
+                            </h4>
+                            <% } %>
+
+                                <% if (profileData.logo) { %>
+                                    <% if (profileData.link) { %>
+                                        <a href="<%= profileData.link %>" target="_blank">
+                                            <img class="uq-question-logo" src="<%= profileData.logo %>" alt="Logo" />
+                                        </a>
+                                        <% } else { %>
+                                            <img class="uq-question-logo" src="<%= profileData.logo %>" alt="Logo" />
+                                            <% } %>
+
+                                                <% if (profileData.title || profileData.description) { %>
+                                                    <div class="uq-logo-text" style="width: 100%; text-align: center;">
+                                                        <% if (profileData.description) { %>
+                                                            <p class="uq-logo-text"
+                                                                style="font-size: 1.2rem; font-weight: 500;">
+                                                                <%= profileData.description %>
+                                                            </p>
+                                                            <% } %>
+                                                    </div>
                                                     <% } %>
+                                                        <% } %>
+                                                            <% } }); %>
                 </div>
 
 

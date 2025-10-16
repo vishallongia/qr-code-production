@@ -48,38 +48,61 @@
                     </div>
 
 
-
                     <div class="quiz-form-group">
-                        <label>Logo Title</label>
-                        <input type="text" name="logoTitle" value="<%= question.logoTitle %>"
-                            placeholder="Enter logo title" />
+                        <label>Media Profile</label>
+                        <div class="quiz-media-profile-toggles">
+                            <% ['broadcaster','project','episode','custom'].forEach(profile=> { %>
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">
+                                        <%= profile.charAt(0).toUpperCase() + profile.slice(1) %>
+                                    </label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox" name="logoMediaProfile[]" value="<%= profile %>"
+                                            <%=Array.isArray(question.logoMediaProfile) &&
+                                            question.logoMediaProfile.includes(profile) ? 'checked' : '' %> />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <% }) %>
+                        </div>
                     </div>
 
-                    <div class="quiz-form-group">
-                        <label>Logo Description </label>
-                        <input type="text" name="logoDescription" value="<%= question.logoDescription %>"
-                            placeholder="Enter logo description" />
-                    </div>
 
-                    <div class="quiz-form-group">
-                        <label>Logo Link </label>
-                        <input type="url" name="logoLink" placeholder="https://example.com"
-                            value="<%= question.logoLink %>" />
-                    </div>
-                    <div class="quiz-form-group">
-                        <label>Logo Image</label>
-                        <label class="quiz-file-label">
-                            <span class="quiz-file-label-text">
-                                <%= question.logo ? question.logo.split('/').pop() : 'Choose File' %>
-                            </span>
-                            <input type="file" name="logo" class="quiz-logoImage quiz-hidden-file" accept="image/*" />
-                        </label>
-                        <% if (question.logo) { %>
-                            <img class="preview-img quiz-logoImagePreview" src="<%= question.logo %>"
-                                style="display: block;" />
-                            <% } else { %>
-                                <img class="preview-img quiz-logoImagePreview" style="display: none;" />
-                                <% } %>
+                    <div id="logoParentContainer"
+                        style="<%= Array.isArray(question.logoMediaProfile) && question.logoMediaProfile.includes('custom') ? '' : 'display: none;' %>">
+                        <div class="quiz-form-group">
+                            <label>Logo Title</label>
+                            <input type="text" name="logoTitle" value="<%= question.logoTitle %>"
+                                placeholder="Enter logo title" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Logo Description </label>
+                            <input type="text" name="logoDescription" value="<%= question.logoDescription %>"
+                                placeholder="Enter logo description" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Logo Link </label>
+                            <input type="url" name="logoLink" placeholder="https://example.com"
+                                value="<%= question.logoLink %>" />
+                        </div>
+                        <div class="quiz-form-group">
+                            <label>Logo Image</label>
+                            <label class="quiz-file-label">
+                                <span class="quiz-file-label-text">
+                                    <%= question.logo ? question.logo.split('/').pop() : 'Choose File' %>
+                                </span>
+                                <input type="file" name="logo" class="quiz-logoImage quiz-hidden-file"
+                                    accept="image/*" />
+                            </label>
+                            <% if (question.logo) { %>
+                                <img class="preview-img quiz-logoImagePreview" src="<%= question.logo %>"
+                                    style="display: block;" />
+                                <% } else { %>
+                                    <img class="preview-img quiz-logoImagePreview" style="display: none;" />
+                                    <% } %>
+                        </div>
                     </div>
                     <div class="quiz-form-group">
                         <label>Voting Question</label>

@@ -1,3 +1,5 @@
+let activeOptionBlock = null; // currently active option block
+let selectedAppId = null;
 const wrapper = document.getElementById("questions-wrapper");
 const template = document.getElementById("question-template");
 
@@ -12,40 +14,25 @@ function setupImagePreview(block) {
       previewSelector: ".quiz-questionLogoPreview",
     },
     { selector: ".quiz-logoImage", previewSelector: ".quiz-logoImagePreview" },
-    {
-      selector: ".quiz-jackpotRewardImage",
-      previewSelector: ".quiz-jackpotRewardImagePreview",
-    },
-    {
-      selector: ".quiz-digitalRewardImage",
-      previewSelector: ".quiz-digitalRewardImagePreview",
-    },
   ];
 
   fileInputs.forEach(({ selector, previewSelector }) => {
     const fileInput = block.querySelector(selector);
     const previewImg = block.querySelector(previewSelector);
-    if (!fileInput) return;
-
-    // ✅ Get the correct label span
-    const labelText = fileInput.parentElement.querySelector(
-      ".quiz-file-label-text"
-    );
-
-    // ✅ Create a new clear button and append to DOM immediately
+    const labelText = fileInput?.previousElementSibling;
     const clearBtn = document.createElement("button");
+
     clearBtn.type = "button";
-    clearBtn.className = "quiz-clear-btn";
     clearBtn.innerText = "✕";
-    clearBtn.style.display = "none"; // initially hidden
+    clearBtn.className = "quiz-clear-btn";
     fileInput.parentElement.appendChild(clearBtn);
 
-    fileInput.addEventListener("change", function (e) {
+    fileInput?.addEventListener("change", function (e) {
       const file = e.target.files[0];
       if (file) {
         previewImg.src = URL.createObjectURL(file);
         previewImg.style.display = "block";
-        if (labelText) labelText.textContent = file.name;
+        labelText.textContent = file.name;
         clearBtn.style.display = "inline-block";
       }
     });
@@ -54,9 +41,11 @@ function setupImagePreview(block) {
       fileInput.value = "";
       previewImg.src = "";
       previewImg.style.display = "none";
-      if (labelText) labelText.textContent = "Choose File";
+      labelText.textContent = "Choose File";
       clearBtn.style.display = "none";
     });
+
+    clearBtn.style.display = "none"; // Initially hidden
   });
 }
 
@@ -117,39 +106,67 @@ function setupRewardModeSwitcher(block) {
       btn.classList.add("active");
     });
   });
-
-  // default select "none"
-  block.querySelector('[data-mode="none"]').click();
 }
 
 function generateOptionBlock(block, index) {
   const optDiv = document.createElement("div");
   optDiv.className = "quiz-option-block";
 
+  // Label
   const label = document.createElement("label");
   label.innerText = `Option ${index + 1}`;
 
+  // Option text
   const inputText = document.createElement("input");
   inputText.type = "text";
   inputText.required = true;
-  inputText.placeholder = "Enter option text";
+  inputText.placeholder = "Question";
+  inputText.style.display = "none";
 
-  // Option Description
+  const summaryText = document.createElement("p");
+  summaryText.className = "summary-text";
+  summaryText.style.display = "none"; // initially hidden
+
+  // Description
   const inputDesc = document.createElement("input");
   inputDesc.type = "text";
-  inputDesc.placeholder = "Enter option description (optional)";
+  inputDesc.placeholder = "Enter the Description";
   inputDesc.className = "quiz-option-description";
+  inputDesc.style.display = "none";
 
+  const summaryDesc = document.createElement("p");
+  summaryDesc.className = "summary-desc";
+  summaryDesc.style.display = "none";
+
+  // Option link
+  const inputLink = document.createElement("input");
+  inputLink.type = "url";
+  inputLink.placeholder = "Enter Link (optional)";
+  inputLink.className = "quiz-option-link";
+  inputLink.style.display = "none";
+
+  const summaryLink = document.createElement("button");
+  summaryLink.type = "button";
+  summaryLink.className = "summary-link quiz-file-label";
+  summaryLink.style.display = "none";
+  summaryLink.innerText = "View Link";
+
+  // File
   const fileLabel = document.createElement("label");
   fileLabel.className = "quiz-file-label";
+
   const fileText = document.createElement("span");
   fileText.className = "quiz-file-label-text";
   fileText.innerText = "Choose Image";
+  fileText.style.display = "none";
+  fileLabel.style.display = "none";
+
   const inputFile = document.createElement("input");
   inputFile.type = "file";
   inputFile.accept = "image/*";
   inputFile.className = "quiz-option-image-input quiz-hidden-file";
   inputFile.dataset.index = index;
+
   fileLabel.append(fileText, inputFile);
 
   const clearBtn = document.createElement("button");
@@ -161,7 +178,17 @@ function generateOptionBlock(block, index) {
 
   const previewImg = document.createElement("img");
   previewImg.className = `preview-img quiz-optionPreview${index}`;
-  previewImg.style.display = "none";
+  // previewImg.style.display = "none";
+
+  const summaryImg = document.createElement("img");
+  summaryImg.className = "summary-img";
+  summaryImg.style.display = "none";
+
+  const summaryAppName = document.createElement("p");
+  summaryAppName.className = "summary-app-name";
+  summaryAppName.style.display = "none";
+  summaryAppName.style.fontWeight = "600";
+  summaryAppName.style.margin = "0px";
 
   inputFile.addEventListener("change", (e) => {
     const file = e.target.files[0];
@@ -170,6 +197,7 @@ function generateOptionBlock(block, index) {
       previewImg.style.display = "block";
       fileText.innerText = file.name;
       clearBtn.style.display = "inline-block";
+      previewImg.style.display = "none";
     }
   });
 
@@ -181,38 +209,51 @@ function generateOptionBlock(block, index) {
     clearBtn.style.display = "none";
   });
 
+  // Delete Button
   const deleteBtn = document.createElement("button");
   deleteBtn.type = "button";
   deleteBtn.className = "quiz-option-delete-btn";
   deleteBtn.innerText = "✕";
   deleteBtn.addEventListener("click", () => {
     const allOptions = block.querySelectorAll(".quiz-option-block");
-    if (allOptions.length > 2) {
+    if (allOptions.length > 1) {
       optDiv.remove();
       renumberOptions(block);
-      updateCorrectAnswerOptions(block);
     } else {
       alert("At least two options are required.");
     }
   });
 
-  optDiv.append(label, inputText, inputDesc, fileLabel, previewImg, deleteBtn);
-  return optDiv;
-}
+  // Select App Button
+  const selectAppBtn = document.createElement("button");
+  selectAppBtn.type = "button";
+  selectAppBtn.className = "quiz-select-app-btn quiz-file-label";
+  selectAppBtn.innerText = "Add Event";
 
-function updateCorrectAnswerOptions(block) {
-  const correctAnswerSelect = block.querySelector(
-    ".quiz-correct-answer-select"
-  );
-  const allOptionBlocks = block.querySelectorAll(".quiz-option-block");
-  correctAnswerSelect.innerHTML = '<option value="">-- Select --</option>';
-
-  allOptionBlocks.forEach((opt, i) => {
-    const option = document.createElement("option");
-    option.value = i;
-    option.innerText = `Option ${i + 1}`;
-    correctAnswerSelect.appendChild(option);
+  selectAppBtn.addEventListener("click", () => {
+    const popup = document.getElementById("app-selection-popup");
+    popup.style.display = "flex";
+    activeOptionBlock = optDiv;
   });
+
+  // append all
+  optDiv.append(
+    label,
+    fileLabel,
+    previewImg,
+    summaryImg,
+    deleteBtn,
+    summaryAppName, // 👈 Added here
+    inputText,
+    summaryText,
+    inputDesc,
+    summaryDesc,
+    inputLink,
+    summaryLink,
+    selectAppBtn
+  );
+
+  return optDiv;
 }
 
 function renumberOptions(block) {
@@ -235,134 +276,7 @@ function generateOptions(block, count = 0) {
     const optDiv = generateOptionBlock(block, i);
     optionContainer.appendChild(optDiv);
   }
-
-  updateCorrectAnswerOptions(block);
 }
-
-function setupMediaProfileToggles(block) {
-  const toggles = block.querySelectorAll('input[name="logoMediaProfile[]"]');
-  const logoParentContainer = block.querySelector("#logoParentContainer");
-
-  function updateCustomVisibility() {
-    const customToggle = block.querySelector(
-      'input[name="logoMediaProfile[]"][value="custom"]'
-    );
-    logoParentContainer.style.display = customToggle?.checked
-      ? "block"
-      : "none";
-  }
-
-  toggles.forEach((toggle) => {
-    toggle.addEventListener("change", () => {
-      // if you want to restrict max 4 selections
-      const checked = block.querySelectorAll(
-        'input[name="logoMediaProfile[]"]:checked'
-      );
-      const maxAllowed = 4;
-
-      if (checked.length > maxAllowed) {
-        toggle.checked = false;
-        showToast(`You can select up to ${maxAllowed} profiles only.`, "error");
-      }
-
-      updateCustomVisibility();
-    });
-  });
-
-  // run once on load
-  updateCustomVisibility();
-}
-
-// function setupMediaProfileDropdown(block) {
-//   const select = block.querySelector(".quiz-media-profile-select");
-//   const logoTitleInput = block.querySelector('input[name="logoTitle"]');
-//   const logoDescInput = block.querySelector('input[name="logoDescription"]');
-//   const logoLinkInput = block.querySelector('input[name="logoLink"]');
-//   const logoImageInput = block.querySelector(".quiz-logoImage");
-//   const logoImagePreview = block.querySelector(".quiz-logoImagePreview");
-
-//   // Create hidden input for existing image URL
-//   let existingLogoUrlInput = block.querySelector(
-//     'input[name="existingLogoUrl"]'
-//   );
-//   if (!existingLogoUrlInput) {
-//     existingLogoUrlInput = document.createElement("input");
-//     existingLogoUrlInput.type = "hidden";
-//     existingLogoUrlInput.name = "existingLogoUrl";
-//     block
-//       .querySelector(".quiz-question-block")
-//       .appendChild(existingLogoUrlInput);
-//   }
-
-//   // Create clear button for logo image
-//   let clearBtn = block.querySelector(".quiz-logo-clear-btn");
-//   if (!clearBtn) {
-//     clearBtn = document.createElement("button");
-//     clearBtn.type = "button";
-//     clearBtn.innerText = "✕";
-//     clearBtn.className = "quiz-clear-btn quiz-logo-clear-btn";
-//     logoImageInput.parentElement.appendChild(clearBtn);
-//     clearBtn.style.display = "none"; // initially hidden
-//   }
-
-//   clearBtn.addEventListener("click", () => {
-//     logoImageInput.value = "";
-//     logoImagePreview.src = "";
-//     logoImagePreview.style.display = "none";
-//     existingLogoUrlInput.value = "";
-//     logoImageInput.previousElementSibling.textContent = "Choose File"; // reset label text
-//     clearBtn.style.display = "none";
-//   });
-
-//   select.addEventListener("change", async () => {
-//     const type = select.value;
-//     if (!type) return;
-
-//     try {
-//       const loader = document.getElementById("loader");
-//       loader.style.display = "flex"; // show loader
-//       const res = await fetch(`/tvstation/get-media-profile?type=${type}`);
-//       const data = await res.json();
-
-//       if (data.type === "success") {
-//         const profile = data.profile;
-
-//         logoTitleInput.value = profile.title || "";
-//         logoDescInput.value = profile.description || "";
-//         logoLinkInput.value = profile.link || "";
-
-//         if (profile.logo) {
-//           logoImagePreview.src = profile.logo;
-//           logoImagePreview.style.display = "block";
-//           existingLogoUrlInput.value = profile.logo;
-//           clearBtn.style.display = "inline-block";
-//           // Show file name in label
-//           const fileName = profile.logo.split("/").pop(); // extract last part of URL
-//           logoImageInput.previousElementSibling.textContent =
-//             fileName || "Current File";
-//         } else {
-//           logoImagePreview.src = "";
-//           logoImagePreview.style.display = "none";
-//           existingLogoUrlInput.value = "";
-//           clearBtn.style.display = "none";
-//           logoImageInput.previousElementSibling.textContent = "Choose File";
-//         }
-
-//         // reset file input
-//         logoImageInput.value = "";
-
-//         // showToast(`Media profile "${type}" loaded`, "success");
-//       } else {
-//         showToast(data.message || "Failed to load media profile", "error");
-//       }
-//     } catch (err) {
-//       console.error("Error fetching media profile:", err);
-//       showToast("Error fetching media profile", "error");
-//     } finally {
-//       loader.style.display = "none"; // hide loader
-//     }
-//   });
-// }
 
 function createQuestionBlock() {
   wrapper.innerHTML = ""; // only one question per form
@@ -390,14 +304,12 @@ function createQuestionBlock() {
     const currentOptions = block.querySelectorAll(".quiz-option-block").length;
     const newOption = generateOptionBlock(block, currentOptions);
     block.querySelector(".quiz-option-blocks").appendChild(newOption);
-    updateCorrectAnswerOptions(block);
   });
 
-  generateOptions(block, 2); // start with 2 options
+  generateOptions(block, 1); // start with 2 options
   setupImagePreview(block);
   setupRewardModeSwitcher(block); // ← Add this line
   setupMediaProfileToggles(block);
-  // setupMediaProfileDropdown(block);
   wrapper.appendChild(block);
 }
 
@@ -407,13 +319,11 @@ document
     e.preventDefault();
 
     const block = document.querySelector(".quiz-question-wrapper");
-    // const existingLogoUrl = block.querySelector(
-    //   'input[name="existingLogoUrl"]'
-    // ).value;
     const formData = new FormData();
 
-    const channelId = document.getElementById("channelId").value;
-    const sessionId = document.getElementById("sessionId").value;
+    const wrapper = document.getElementById("questions-wrapper");
+    const channelId = wrapper.dataset.channelId;
+    const sessionId = wrapper.dataset.sessionId;
     formData.append("sessionId", sessionId);
     formData.append("channelId", channelId);
     formData.append(
@@ -421,12 +331,8 @@ document
       block.querySelector('input[name="question"]').value.trim()
     );
     formData.append(
-      "magicCoinDeducted",
-      block.querySelector('input[name="magicCoinDeducted"]').value
-    );
-    formData.append(
-      "correctAnswerIndex",
-      block.querySelector(".quiz-correct-answer-select").value
+      "questionDescription",
+      block.querySelector('input[name="questionDescription"]').value.trim()
     );
     formData.append(
       "logoTitle",
@@ -441,22 +347,8 @@ document
       block.querySelector('input[name="logoLink"]').value.trim()
     );
 
-    const showLogoToggle = document.querySelector("#showLogoToggle");
-    formData.append("showLogoSection", showLogoToggle.checked);
-
     const logoImage = block.querySelector(".quiz-logoImage")?.files[0];
     if (logoImage) formData.append("logo", logoImage);
-
-    // Mode & reward coins
-    formData.append("mode", block.querySelector('input[name="mode"]').value);
-    formData.append(
-      "jackpotCoinDeducted",
-      block.querySelector('input[name="jackpotCoinDeducted"]')?.value || 0
-    );
-    formData.append(
-      "digitalCoinDeducted",
-      block.querySelector('input[name="digitalCoinDeducted"]')?.value || 0
-    );
 
     const questionImage = block.querySelector(".quiz-questionImage")?.files[0];
     const questionLogo = block.querySelector(".quiz-questionLogo")?.files[0];
@@ -468,52 +360,9 @@ document
     if (questionLogo) formData.append("questionLogo", questionLogo);
     if (questionImageLink)
       formData.append("questionImageLink", questionImageLink);
-    // if (existingLogoUrl) formData.append("existingLogoUrl", existingLogoUrl);
 
     const options = block.querySelectorAll(".quiz-option-block");
     const optionData = [];
-
-    const jackpotRewardName = block
-      .querySelector('input[name="jackpotRewardName"]')
-      .value.trim();
-    const jackpotRewardDescription = block
-      .querySelector('input[name="jackpotRewardDescription"]')
-      .value.trim();
-    const jackpotRewardLink = block
-      .querySelector('input[name="jackpotRewardLink"]')
-      .value.trim();
-    const jackpotRewardImage = block.querySelector(".quiz-jackpotRewardImage")
-      ?.files[0];
-
-    if (jackpotRewardName)
-      formData.append("jackpotRewardName", jackpotRewardName);
-    if (jackpotRewardDescription)
-      formData.append("jackpotRewardDescription", jackpotRewardDescription);
-    if (jackpotRewardLink)
-      formData.append("jackpotRewardLink", jackpotRewardLink);
-    if (jackpotRewardImage)
-      formData.append("jackpotRewardImage", jackpotRewardImage);
-
-    const digitalRewardName = block
-      .querySelector('input[name="digitalRewardName"]')
-      .value.trim();
-    const digitalRewardDescription = block
-      .querySelector('input[name="digitalRewardDescription"]')
-      .value.trim();
-    const digitalRewardLink = block
-      .querySelector('input[name="digitalRewardLink"]')
-      .value.trim();
-    const digitalRewardImage = block.querySelector(".quiz-digitalRewardImage")
-      ?.files[0];
-
-    if (digitalRewardName)
-      formData.append("digitalRewardName", digitalRewardName);
-    if (digitalRewardDescription)
-      formData.append("digitalRewardDescription", digitalRewardDescription);
-    if (digitalRewardLink)
-      formData.append("digitalRewardLink", digitalRewardLink);
-    if (digitalRewardImage)
-      formData.append("digitalRewardImage", digitalRewardImage);
 
     options.forEach((opt, index) => {
       const text = opt.querySelector('input[type="text"]').value.trim();
@@ -521,8 +370,9 @@ document
         opt.querySelector(".quiz-option-description")?.value.trim() || "";
       const file = opt.querySelector('input[type="file"]')?.files[0];
       const imageName = file ? file.name : null;
+      const link = opt.querySelector(".quiz-option-link")?.value.trim() || null; // ✅ include link
 
-      optionData.push({ text, description, imageName });
+      optionData.push({ text, description, imageName, link });
 
       if (file) {
         formData.append("optionsImages", file); // all images under same key
@@ -530,7 +380,7 @@ document
     });
 
     formData.append("options", JSON.stringify(optionData));
-    const selectedProfiles = block.querySelectorAll(
+       const selectedProfiles = block.querySelectorAll(
       'input[name="logoMediaProfile[]"]:checked'
     ); // ← only checked ones
     selectedProfiles.forEach((input) => {
@@ -554,10 +404,13 @@ document
     });
 
     try {
-      const res = await fetch("/tvstation/quiz-question/create", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        "/tvstation/magicscreen/magicscreen-question/create",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const result = await res.json();
       if (result.type === "success") {
@@ -565,7 +418,7 @@ document
 
         const { channelId, sessionId, _id } = result.data; // ✅ Extract
         setTimeout(() => {
-          window.location.href = `/tvstation/channels/${channelId}/session/${sessionId}/editquestion/${_id}`;
+          window.location.href = `/tvstation/magicscreen/channels/${channelId}/session/${sessionId}/editquestion/${_id}`;
         }, 1000);
       } else {
         showToast(result.message || "Something went wrong.", "error");
@@ -579,3 +432,217 @@ document
   });
 
 createQuestionBlock();
+
+window.addEventListener("DOMContentLoaded", async () => {
+  const loader = document.getElementById("loader");
+  loader.style.display = "flex"; // Show loader
+
+  const sessionId = wrapper.dataset.sessionId;
+  const popupContainer = document.getElementById("app-card-container");
+
+  try {
+    const res = await fetch(`/tvstation/${sessionId}/apps`);
+    const result = await res.json();
+
+    if (result.success) {
+      const {
+        quizQuestion,
+        voteQuestion,
+        applauseQuestion,
+        magicScreenQuestion,
+      } = result.data;
+      const questions = [
+        quizQuestion,
+        voteQuestion,
+        applauseQuestion,
+        magicScreenQuestion,
+      ];
+      popupContainer.innerHTML = ""; // Clear existing cards
+
+      questions.forEach((q, idx) => {
+        if (q && (q.question || q.questionImage)) {
+          const card = document.createElement("div");
+          card.className = "app-card";
+          card.dataset.questionId = q._id;
+          card.dataset.question = q.question || "";
+          card.dataset.questionImage = q.questionImage || "";
+          card.dataset.questionLink = q.link || "";
+          card.dataset.appName = q.name || "N/A";
+
+          card.innerHTML = `
+                        <div class="app-name">${card.dataset.appName}</div>
+                        <img src="${
+                          q.questionImage || "/images/default.png"
+                        }" alt="Question Image"/>
+                        <span>${q.question || `Question ${idx + 1}`}</span>
+                    `;
+
+          // Click to select
+          card.addEventListener("click", () => {
+            popupContainer
+              .querySelectorAll(".app-card")
+              .forEach((c) => c.classList.remove("active"));
+            card.classList.add("active");
+            selectedAppId = q._id;
+            // Show selected app name at the top (optional)
+            const selectedAppNameElem =
+              document.getElementById("selected-app-name");
+            selectedAppNameElem.textContent = card.dataset.appName;
+          });
+
+          popupContainer.appendChild(card);
+        }
+      });
+    }
+  } catch (err) {
+    console.error("Error fetching session data:", err);
+    showToast(err.message, "error");
+  } finally {
+    loader.style.display = "none"; // Hide loader after fetch
+  }
+});
+
+// close popup
+document
+  .getElementById("popup-cancel-btn-select-app")
+  .addEventListener("click", () => {
+    document.getElementById("app-selection-popup").style.display = "none";
+  });
+// 2️⃣ When clicking OK in the popup
+document
+  .getElementById("popup-ok-btn-select-app")
+  .addEventListener("click", async () => {
+    if (!selectedAppId || !activeOptionBlock) {
+      alert("Please select an app first.");
+      return;
+    }
+
+    const selectedCard = document.querySelector(
+      `#app-card-container .app-card.active`
+    );
+    if (!selectedCard) return;
+
+    const fileInput = activeOptionBlock.querySelector('input[type="file"]');
+    const textInput = activeOptionBlock.querySelector('input[type="text"]');
+    const linkInput = activeOptionBlock.querySelector(".quiz-option-link");
+    const previewImg = activeOptionBlock.querySelector(".preview-img");
+    const selectAppBtn = activeOptionBlock.querySelector(
+      ".quiz-select-app-btn"
+    );
+    const summaryAppName = activeOptionBlock.querySelector(".summary-app-name");
+
+    const questionImage = selectedCard.dataset.questionImage;
+    const questionText = selectedCard.dataset.question;
+    const questionLink = selectedCard.dataset.questionLink;
+    const appName = selectedCard.dataset.appName;
+
+    // Ensure clear button exists
+    let clearBtn = fileInput.parentElement.querySelector(".quiz-clear-btn");
+    if (!clearBtn) {
+      clearBtn = document.createElement("button");
+      clearBtn.type = "button";
+      clearBtn.className = "quiz-clear-btn";
+      clearBtn.innerText = "✕";
+      fileInput.parentElement.appendChild(clearBtn);
+      clearBtn.addEventListener("click", () => {
+        fileInput.value = "";
+        previewImg.src = "";
+        previewImg.style.display = "none";
+        const labelText = fileInput.previousElementSibling;
+        if (labelText) labelText.textContent = "Choose File";
+        clearBtn.style.display = "none";
+      });
+    }
+
+    // Populate data
+    if (questionImage) {
+      previewImg.src = questionImage;
+      previewImg.style.display = "none";
+      const labelText = fileInput.previousElementSibling;
+      if (labelText) labelText.textContent = questionImage.split("/").pop();
+      clearBtn.style.display = "inline-block";
+      await setImageInputFromUrl(fileInput, questionImage);
+
+      // ✅ Summary for image
+      const summaryImg = activeOptionBlock.querySelector(".summary-img");
+      summaryImg.src = questionImage;
+      summaryImg.style.display = "block";
+      summaryImg.style.width = "100px";
+    }
+
+    if (questionText) {
+      textInput.value = questionText;
+      const summaryText = activeOptionBlock.querySelector(".summary-text");
+      summaryText.textContent = questionText;
+      summaryText.style.display = "block";
+      textInput.style.display = "none";
+    }
+
+    if (questionLink && linkInput) {
+      linkInput.value = questionLink;
+
+      const summaryLink = activeOptionBlock.querySelector(".summary-link");
+      summaryLink.textContent = "Open Front Screen";
+      summaryLink.style.display = "inline-block";
+      summaryLink.onclick = () => window.open(questionLink, "_blank"); // ✅ opens in new tab
+
+      linkInput.style.display = "none";
+    }
+    if (appName) {
+      summaryAppName.textContent = `App: ${appName}`;
+      summaryAppName.style.display = "block";
+    }
+    // Remove selected card & hide popup
+    // selectedCard.remove();
+    document.getElementById("app-selection-popup").style.display = "none";
+
+    // Reset
+    selectedAppId = null;
+    activeOptionBlock = null;
+  });
+
+async function setImageInputFromUrl(fileInput, url) {
+  if (!url) return;
+
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const filename = url.split("/").pop() || "image.png";
+  const file = new File([blob], filename, { type: blob.type });
+
+  // Assign the File to the input
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+  fileInput.files = dataTransfer.files;
+}
+
+function setupMediaProfileToggles(block) {
+  const toggles = block.querySelectorAll('input[name="logoMediaProfile[]"]');
+  const logoParentContainer = block.querySelector("#logoParentContainer");
+
+  function updateCustomVisibility() {
+    const customToggle = block.querySelector(
+      'input[name="logoMediaProfile[]"][value="custom"]'
+    );
+    logoParentContainer.style.display = customToggle?.checked
+      ? "block"
+      : "none";
+  }
+
+  toggles.forEach((toggle) => {
+    toggle.addEventListener("change", () => {
+      // restrict max 4 selections
+      const checked = block.querySelectorAll(
+        'input[name="logoMediaProfile[]"]:checked'
+      );
+      const maxAllowed = 4;
+      if (checked.length > maxAllowed) {
+        toggle.checked = false;
+        showToast(`You can select up to ${maxAllowed} profiles only.`, "error");
+      }
+      updateCustomVisibility();
+    });
+  });
+
+  // run once on load
+  updateCustomVisibility();
+}

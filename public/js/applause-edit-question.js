@@ -105,7 +105,7 @@ function initOptionBlock(block) {
   const deleteBtn = block.querySelector(".quiz-option-delete-btn");
   deleteBtn?.addEventListener("click", () => {
     const total = document.querySelectorAll(".quiz-option-block").length;
-    if (total > 2) {
+    if (total > 1) {
       const optionId = block.dataset.optionId;
       if (optionId) {
         const clearedOptionsInput = document.getElementById("clearedOptions");
@@ -125,7 +125,12 @@ function initOptionBlock(block) {
   });
 }
 
-function addOptionBlock(text = "", imageUrl = "", description = "") {
+function addOptionBlock(
+  text = "",
+  imageUrl = "",
+  description = "",
+  magicCoins = 0
+) {
   const block = document.createElement("div");
   block.className = "quiz-option-block";
 
@@ -135,10 +140,6 @@ function addOptionBlock(text = "", imageUrl = "", description = "") {
   const index = document.querySelectorAll(".quiz-option-block").length;
   block.innerHTML = `
 <label>Option ${index + 1}</label>
-<input type="text" name="optionTexts[]" value="${text}" required />
-<!-- ✅ New -->
-<input type="text" name="optionDescriptions[]" value="${description}" 
-       placeholder="Enter option description (optional)" />
 
 <label class="quiz-file-label">
     <span class="quiz-file-label-text">${
@@ -153,6 +154,13 @@ function addOptionBlock(text = "", imageUrl = "", description = "") {
     imageUrl ? "inline-block" : "none"
   };">✕</button>
 <button type="button" class="quiz-option-delete-btn">✕</button>
+
+<input type="text" name="optionTexts[]" value="${text}" placeholder="Name of the Image (of the post, video, story, specific guest, any special detail - like the sound, etc.)" required />
+<!-- ✅ New -->
+<input type="text" name="optionDescriptions[]" value="${description}" 
+       placeholder="Enter the Description of the Image" />
+       <input type="number" name="optionMagicCoins[]" min="0" value="" placeholder="Select Your Desired Amount for Your Applause, or Your Fans their free Choice" required />
+
 `;
 
   initOptionBlock(block);
@@ -168,13 +176,7 @@ document.getElementById("btn-add-option").addEventListener("click", () => {
   addOptionBlock();
 });
 
-[
-  "logo",
-  "questionImage",
-  "questionLogo",
-  "jackpotRewardImage",
-  "digitalRewardImage",
-].forEach((name) => {
+["logo", "questionImage", "questionLogo"].forEach((name) => {
   const input = document.querySelector(`input[name="${name}"]`);
   const label = input
     ?.closest(".quiz-file-label")
@@ -220,19 +222,7 @@ document
       if (el.type === "file" || el.type === "checkbox") return; // ✅ skip
       formData.append(el.name, el.value);
     });
-
-
-    const showLogoToggle = document.getElementById("showLogoToggle");
-    formData.set("showLogoSection", showLogoToggle.checked ? "true" : "false");
-    // formData.append("logoMediaProfile", logoMediaProfile);
-
-    [
-      "logo",
-      "questionImage",
-      "questionLogo",
-      "jackpotRewardImage",
-      "digitalRewardImage",
-    ].forEach((name) => {
+    ["logo", "questionImage", "questionLogo"].forEach((name) => {
       const input = form.querySelector(`input[name="${name}"]`);
       const isCleared = cleared.includes(name);
       if (input?.files[0] && !isCleared) {
@@ -248,6 +238,8 @@ document
       const description = block
         .querySelector('input[name="optionDescriptions[]"]')
         .value.trim();
+      const magicCoins =
+        block.querySelector('input[name="optionMagicCoins[]"]').value || 0;
       const fileInput = block.querySelector("input[type='file']");
       const img = block.querySelector("img.preview-img");
       const optionId = block.dataset.optionId || block.dataset.newKey;
@@ -257,7 +249,8 @@ document
       optionsArray.push({
         _id: block.dataset.optionId || optionId,
         text,
-        description, // ✅ new field
+        description,
+        magicCoinDeducted: parseInt(magicCoins, 10), // ✅ ADD THIS
         imageName:
           !newFile && !isCleared && img?.src && !img.src.startsWith("blob:")
             ? img.src.split("/").pop()
@@ -277,10 +270,13 @@ document
     loader.style.display = "flex";
 
     try {
-      const response = await fetch("/tvstation/quiz-question/update", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "/tvstation/applause/applause-question/update",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
       const result = await response.json();
       if (result.type === "success") {
         showToast(result.message || "Question updated successfully", "success");
@@ -297,55 +293,6 @@ document
       loader.style.display = "none";
     }
   });
-
-function setupRewardModeSwitcher(block) {
-  const modeButtons = block.querySelectorAll(".reward-mode-btn");
-  const modeInput = block.querySelector('input[name="mode"]');
-  const jackpotField = block.querySelector(".reward-jackpot");
-  const digitalField = block.querySelector(".reward-digital");
-  const currentMode = modeInput?.value || "jackpot";
-  modeButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const mode = btn.dataset.mode;
-      modeInput.value = mode;
-      jackpotField.style.display =
-        mode === "jackpot" || mode === "both" ? "block" : "none";
-      digitalField.style.display =
-        mode === "digital" || mode === "both" ? "block" : "none";
-      jackpotField.querySelectorAll('input[type="number"]').forEach((el) => {
-        if (mode === "none" || mode === "digital") {
-          el.required = false;
-          el.removeAttribute("min");
-          el.value = "";
-        } else {
-          el.required = jackpotField.style.display !== "none";
-          el.setAttribute("min", "10");
-        }
-      });
-
-      digitalField.querySelectorAll('input[type="number"]').forEach((el) => {
-        if (mode === "none" || mode === "jackpot") {
-          el.required = false;
-          el.removeAttribute("min");
-          el.value = "";
-        } else {
-          el.required = digitalField.style.display !== "none";
-          el.setAttribute("min", "10");
-        }
-      });
-
-      modeButtons.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-    });
-    if (btn.dataset.mode === currentMode) btn.classList.add("active");
-  });
-  jackpotField.style.display =
-    currentMode === "jackpot" || currentMode === "both" ? "block" : "none";
-  digitalField.style.display =
-    currentMode === "digital" || currentMode === "both" ? "block" : "none";
-}
-
-document.querySelectorAll(".reward-block").forEach(setupRewardModeSwitcher);
 
 function setupMediaProfileToggles() {
   const toggles = document.querySelectorAll(

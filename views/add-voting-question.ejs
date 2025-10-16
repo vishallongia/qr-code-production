@@ -51,28 +51,64 @@
                             <button type="button" style="display: none;" class="quiz-btn-delete">Delete</button>
                         </div>
                     </div>
+                    <div class="quiz-form-group">
+                        <label>Media Profile</label>
+                        <div class="quiz-media-profile-toggles">
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Broadcaster</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="broadcaster" />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Project</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="project" />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Episode</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="episode" />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Custom</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="custom" />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="quiz-question-block">
-                        <div class="quiz-form-group">
-                            <label>Logo Title </label>
-                            <input type="text" name="logoTitle" placeholder="Enter logo title" />
+                        <div id="logoParentContainer">
+                            <div class="quiz-form-group">
+                                <label>Logo Title </label>
+                                <input type="text" name="logoTitle" placeholder="Enter logo title" />
+                            </div>
+                            <div class="quiz-form-group">
+                                <label>Logo Description</label>
+                                <input type="text" name="logoDescription" placeholder="Enter logo description" />
+                            </div>
+                            <div class="quiz-form-group">
+                                <label>Logo Link </label>
+                                <input type="url" name="logoLink" placeholder="https://example.com" />
+                            </div>
+                            <div class="quiz-form-group">
+                                <label>Logo Image</label>
+                                <label class="quiz-file-label">
+                                    <span class="quiz-file-label-text">Choose File</span>
+                                    <input type="file" class="quiz-logoImage quiz-hidden-file" accept="image/*" />
+                                </label>
+                                <img class="preview-img quiz-logoImagePreview" style="display: none;" />
+                            </div>
+                            <hr />
                         </div>
-                        <div class="quiz-form-group">
-                            <label>Logo Description</label>
-                            <input type="text" name="logoDescription" placeholder="Enter logo description" />
-                        </div>
-                        <div class="quiz-form-group">
-                            <label>Logo Link </label>
-                            <input type="url" name="logoLink" placeholder="https://example.com" />
-                        </div>
-                        <div class="quiz-form-group">
-                            <label>Logo Image</label>
-                            <label class="quiz-file-label">
-                                <span class="quiz-file-label-text">Choose File</span>
-                                <input type="file" class="quiz-logoImage quiz-hidden-file" accept="image/*" />
-                            </label>
-                            <img class="preview-img quiz-logoImagePreview" style="display: none;" />
-                        </div>
-                        <hr />
                         <div class="quiz-form-group">
                             <label>Question</label>
                             <input type="text" name="question" placeholder="Enter your question" required />

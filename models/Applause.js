@@ -90,6 +90,17 @@ const applauseSchema = new mongoose.Schema(
       default: 70, // default commission percentage
       min: 0,
     },
+
+    // ⬇️ Updated from single enum to array of enums
+    logoMediaProfile: {
+      type: [String],
+      enum: ["broadcaster", "project", "episode", "custom"],
+      default: [],
+    },
+    showLogoSection: {
+      type: Boolean,
+      default: true, // by default, the logo section will be shown
+    },
   },
   {
     timestamps: true,

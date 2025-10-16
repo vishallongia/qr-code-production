@@ -48,7 +48,7 @@
                         </button>
                     </div>
 
-                    <div class="quiz-toggle-wrapper">
+                    <div class="quiz-toggle-wrapper" style="display: none;">
                         <label for="showLogoToggle" class="quiz-toggle-label">Show Logo</label>
                         <label class="quiz-toggle-switch">
                             <input type="checkbox" id="showLogoToggle" name="showLogoSection" value="true"
@@ -56,34 +56,49 @@
                             <span class="quiz-toggle-slider"></span>
                         </label>
                     </div>
-                    <!-- <div class="quiz-form-group">
-                        <label>Media Profile</label>
-                        <select name="mediaProfile" class="quiz-media-profile-select">
-                            <option value="">-- Select Media Profile --</option>
-                            <option value="broadcaster" <%=question.logoMediaProfile==='broadcaster' ? 'selected' : ''
-                                %>>Broadcaster</option>
-                            <option value="project" <%=question.logoMediaProfile==='project' ? 'selected' : '' %>
-                                >Project</option>
-                            <option value="episode" <%=question.logoMediaProfile==='episode' ? 'selected' : '' %>
-                                >Episode</option>
-                        </select>
-                    </div> -->
 
                     <div class="quiz-form-group">
                         <label>Media Profile</label>
-                        <div class="quiz-media-profile-tabs" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button type="button"
-                                class="media-profile-btn <%= Array.isArray(question.logoMediaProfile) && question.logoMediaProfile.includes('broadcaster') ? 'active' : '' %>"
-                                data-type="broadcaster">Broadcaster</button>
-                            <button type="button"
-                                class="media-profile-btn <%= Array.isArray(question.logoMediaProfile) && question.logoMediaProfile.includes('project') ? 'active' : '' %>"
-                                data-type="project">Project</button>
-                            <button type="button"
-                                class="media-profile-btn <%= Array.isArray(question.logoMediaProfile) && question.logoMediaProfile.includes('episode') ? 'active' : '' %>"
-                                data-type="episode">Episode</button>
-                            <button type="button"
-                                class="media-profile-btn <%= Array.isArray(question.logoMediaProfile) && question.logoMediaProfile.includes('custom') ? 'active' : '' %>"
-                                data-type="custom">Custom</button>
+                        <div class="quiz-media-profile-toggles">
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Broadcaster</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="broadcaster"
+                                        <%=Array.isArray(question.logoMediaProfile) &&
+                                        question.logoMediaProfile.includes('broadcaster') ? 'checked' : '' %> />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Project</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="project"
+                                        <%=Array.isArray(question.logoMediaProfile) &&
+                                        question.logoMediaProfile.includes('project') ? 'checked' : '' %> />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Episode</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="episode"
+                                        <%=Array.isArray(question.logoMediaProfile) &&
+                                        question.logoMediaProfile.includes('episode') ? 'checked' : '' %> />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="quiz-toggle-wrapper">
+                                <label class="quiz-toggle-label">Custom</label>
+                                <label class="quiz-toggle-switch">
+                                    <input type="checkbox" name="logoMediaProfile[]" value="custom"
+                                        <%=Array.isArray(question.logoMediaProfile) &&
+                                        question.logoMediaProfile.includes('custom') ? 'checked' : '' %> />
+                                    <span class="quiz-toggle-slider"></span>
+                                </label>
+                            </div>
                         </div>
                     </div>
 

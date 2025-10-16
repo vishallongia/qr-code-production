@@ -585,12 +585,9 @@ select:focus {
 /* Toggle wrapper: flex row, justify-end */
 .quiz-toggle-wrapper {
     display: flex;
-    justify-content: flex-end;
-    /* right align */
+    justify-content: flex-start;
     align-items: center;
-    /* vertically center label & toggle */
     gap: 10px;
-    /* spacing between label & toggle */
     margin: 12px 0;
 }
 
@@ -600,6 +597,7 @@ select:focus {
     color: var(--text-color);
     font-size: 15px;
     user-select: none;
+    min-width: 100px;
 }
 
 /* Switch container */
@@ -684,6 +682,59 @@ select:focus {
     transform: scaleY(1);
 }
 
+
+/* ==============================
+   Media Profile Toggle Slider
+============================== */
+
+.quiz-media-profile-tabs {
+    display: flex;
+    gap: 10px;
+    background: #f3f3f7;
+    border-radius: 30px;
+    padding: 6px;
+    width: fit-content;
+}
+
+.media-toggle {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-weight: 500;
+    font-size: 14px;
+    color: #555;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    user-select: none;
+    padding: 6px 14px;
+}
+
+/* Hide radio buttons */
+.media-toggle input[type="radio"] {
+    display: none;
+}
+
+/* Background for active one */
+.media-toggle input[type="radio"]:checked+span {
+    background-color: var(--submit-btn-bg);
+    color: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    border-radius: 25px;
+    padding: 6px 14px;
+    transition: all 0.25s ease-in-out;
+}
+
+/* Hover Effect */
+.media-toggle:hover span {
+    background-color: rgba(24, 2, 75, 0.1);
+    border-radius: 25px;
+    transition: background-color 0.2s ease-in-out;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
     .popup-content {
@@ -710,5 +761,10 @@ select:focus {
 
     .app-card-container {
         grid-template-columns: 1fr;
+    }
+
+    .quiz-media-profile-tabs {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
