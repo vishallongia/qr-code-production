@@ -123,10 +123,11 @@ const quizQuestionSchema = new mongoose.Schema(
       ref: "QRCodeData", // Reference to the QRCodeData model
       default: null, // Optional
     },
+    // ⬇️ Updated from single enum to array of enums
     logoMediaProfile: {
-      type: String,
-      enum: ["broadcaster", "project", "episode"],
-      default: null, // default is null until user selects
+      type: [String],
+      enum: ["broadcaster", "project", "episode", "custom"],
+      default: [],
     },
     showLogoSection: {
       type: Boolean,

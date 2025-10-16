@@ -168,79 +168,81 @@
                         <div class="quiz-form-group reward-field reward-jackpot"
                             style="<%= question.mode === 'jackpot' || question.mode === 'both' ? '' : 'display: none;' %>">
                             <label>Jackpot Coin</label>
-                            <input type="number" class="quiz-form-group" name="jackpotCoinDeducted" min="10"
-                                value="<%= question.jackpotCoinDeducted != null ? question.jackpotCoinDeducted : '' %>" />
+                            <input type="number" name="jackpotCoinDeducted"
+                                value="<%= question.jackpotCoinDeducted != null ? question.jackpotCoinDeducted : '' %>"
+                                <% if (question.mode !=='none' && question.mode !=='digital' ) { %> min="10" <% } %> />
 
-                            <label>Jackpot Reward Name</label>
-                            <input type="text" class="quiz-form-group" name="jackpotRewardName"
-                                placeholder="Enter Jackpot Reward Name"
-                                value="<%= question.jackpotRewardName || '' %>" />
+                                <label>Jackpot Reward Name</label>
+                                <input type="text" class="quiz-form-group" name="jackpotRewardName"
+                                    placeholder="Enter Jackpot Reward Name"
+                                    value="<%= question.jackpotRewardName || '' %>" />
 
-                            <div class="quiz-form-group">
-                                <label>Jackpot Reward Image</label>
-                                <label class="quiz-file-label">
-                                    <span class="quiz-file-label-text">
-                                        <%= question.jackpotRewardImage ? question.jackpotRewardImage.split('/').pop()
-                                            : 'Choose Image' %>
-                                    </span>
-                                    <input type="file" name="jackpotRewardImage"
-                                        class="quiz-jackpotRewardImage quiz-hidden-file" accept="image/*" />
-                                </label>
-                                <% if (question.jackpotRewardImage) { %>
-                                    <img class="preview-img quiz-logoImagePreview"
-                                        src="<%= question.jackpotRewardImage %>" style="display: block;" />
-                                    <% } else { %>
-                                        <img class="preview-img quiz-logoImagePreview" style="display: none;" />
-                                        <% } %>
-                            </div>
+                                <div class="quiz-form-group">
+                                    <label>Jackpot Reward Image</label>
+                                    <label class="quiz-file-label">
+                                        <span class="quiz-file-label-text">
+                                            <%= question.jackpotRewardImage ?
+                                                question.jackpotRewardImage.split('/').pop() : 'Choose Image' %>
+                                        </span>
+                                        <input type="file" name="jackpotRewardImage"
+                                            class="quiz-jackpotRewardImage quiz-hidden-file" accept="image/*" />
+                                    </label>
+                                    <% if (question.jackpotRewardImage) { %>
+                                        <img class="preview-img quiz-logoImagePreview"
+                                            src="<%= question.jackpotRewardImage %>" style="display: block;" />
+                                        <% } else { %>
+                                            <img class="preview-img quiz-logoImagePreview" style="display: none;" />
+                                            <% } %>
+                                </div>
 
-                            <label>Jackpot Reward Description</label>
-                            <input type="text" name="jackpotRewardDescription" class="quiz-form-group"
-                                placeholder="Enter Jackpot Reward Description"
-                                value="<%= question.jackpotRewardDescription || '' %>" />
+                                <label>Jackpot Reward Description</label>
+                                <input type="text" name="jackpotRewardDescription" class="quiz-form-group"
+                                    placeholder="Enter Jackpot Reward Description"
+                                    value="<%= question.jackpotRewardDescription || '' %>" />
 
-                            <label>Jackpot Reward Link</label>
-                            <input type="url" name="jackpotRewardLink" class="quiz-form-group"
-                                placeholder="https://example.com" value="<%= question.jackpotRewardLink || '' %>" />
+                                <label>Jackpot Reward Link</label>
+                                <input type="url" name="jackpotRewardLink" class="quiz-form-group"
+                                    placeholder="https://example.com" value="<%= question.jackpotRewardLink || '' %>" />
                         </div>
 
                         <div class="quiz-form-group reward-field reward-digital"
                             style="<%= question.mode === 'digital' || question.mode === 'both' ? '' : 'display: none;' %>">
                             <label>Digital Coin</label>
-                            <input type="number" class="quiz-form-group" name="digitalCoinDeducted" min="10"
-                                value="<%= question.digitalCoinDeducted != null ? question.digitalCoinDeducted : '' %>" />
+                            <input type="number" name="digitalCoinDeducted"
+                                value="<%= question.digitalCoinDeducted != null ? question.digitalCoinDeducted : '' %>"
+                                <% if (question.mode !=='none' && question.mode !=='jackpot' ) { %> min="10" <% } %>/>
 
-                            <label>Digital Reward Name</label>
-                            <input type="text" class="quiz-form-group" name="digitalRewardName"
-                                placeholder="Enter Digital Reward Name"
-                                value="<%= question.digitalRewardName || '' %>" />
+                                <label>Digital Reward Name</label>
+                                <input type="text" class="quiz-form-group" name="digitalRewardName"
+                                    placeholder="Enter Digital Reward Name"
+                                    value="<%= question.digitalRewardName || '' %>" />
 
-                            <div class="quiz-form-group">
-                                <label>Digital Reward Image</label>
-                                <label class="quiz-file-label">
-                                    <span class="quiz-file-label-text">
-                                        <%= question.digitalRewardImage ? question.digitalRewardImage.split('/').pop()
-                                            : 'Choose Image' %>
-                                    </span>
-                                    <input type="file" name="digitalRewardImage"
-                                        class="quiz-digitalRewardImage quiz-hidden-file" accept="image/*" />
-                                </label>
-                                <% if (question.digitalRewardImage) { %>
-                                    <img class="preview-img quiz-logoImagePreview"
-                                        src="<%= question.digitalRewardImage %>" style="display: block;" />
-                                    <% } else { %>
-                                        <img class="preview-img quiz-logoImagePreview" style="display: none;" />
-                                        <% } %>
-                            </div>
+                                <div class="quiz-form-group">
+                                    <label>Digital Reward Image</label>
+                                    <label class="quiz-file-label">
+                                        <span class="quiz-file-label-text">
+                                            <%= question.digitalRewardImage ?
+                                                question.digitalRewardImage.split('/').pop() : 'Choose Image' %>
+                                        </span>
+                                        <input type="file" name="digitalRewardImage"
+                                            class="quiz-digitalRewardImage quiz-hidden-file" accept="image/*" />
+                                    </label>
+                                    <% if (question.digitalRewardImage) { %>
+                                        <img class="preview-img quiz-logoImagePreview"
+                                            src="<%= question.digitalRewardImage %>" style="display: block;" />
+                                        <% } else { %>
+                                            <img class="preview-img quiz-logoImagePreview" style="display: none;" />
+                                            <% } %>
+                                </div>
 
-                            <label>Digital Reward Description</label>
-                            <input type="text" class="quiz-form-group" name="digitalRewardDescription"
-                                placeholder="Enter Digital Reward Description"
-                                value="<%= question.digitalRewardDescription || '' %>" />
+                                <label>Digital Reward Description</label>
+                                <input type="text" class="quiz-form-group" name="digitalRewardDescription"
+                                    placeholder="Enter Digital Reward Description"
+                                    value="<%= question.digitalRewardDescription || '' %>" />
 
-                            <label>Digital Reward Link</label>
-                            <input type="url" class="quiz-form-group" name="digitalRewardLink"
-                                placeholder="https://example.com" value="<%= question.digitalRewardLink || '' %>" />
+                                <label>Digital Reward Link</label>
+                                <input type="url" class="quiz-form-group" name="digitalRewardLink"
+                                    placeholder="https://example.com" value="<%= question.digitalRewardLink || '' %>" />
                         </div>
 
                     </div>
@@ -251,9 +253,10 @@
 
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
                 <script src="/js/toastify-setup.js"></script>
+                <script src="/js/edit-voting-question.js"></script>
 </body>
 
-<script>
+<!-- <script>
     function setupImagePreviewAndClear(fileInput, previewImg, labelTextEl, clearBtn = null, existingImage = false, getClearedKeyFn = null) {
         const originalName = fileInput.name;
         const originalClass = fileInput.className;
@@ -504,7 +507,7 @@
         digitalField.style.display = (currentMode === 'digital' || currentMode === 'both') ? 'block' : 'none';
     }
     document.querySelectorAll('.reward-block').forEach(setupRewardModeSwitcher);
-</script>
+</script> -->
 
 
 

@@ -44,9 +44,11 @@
 
 
             <template id="question-template">
-                <input type="hidden" name="existingLogoUrl" />
+
 
                 <div class="quiz-question-wrapper">
+                    <input type="hidden" id="channelId" value="<%= channel?._id %>">
+                    <input type="hidden" id="sessionId" value="<%= sessionId %>">
 
                     <div class="quiz-question-header">
                         <span class="quiz-question-title">Quiz</span>
@@ -65,38 +67,42 @@
                         </div>
                         <div class="quiz-form-group">
                             <label>Media Profile</label>
-                            <select name="mediaProfile" class="quiz-media-profile-select">
-                                <option value="">-- Select Media Profile --</option>
-                                <option value="broadcaster">Broadcaster</option>
-                                <option value="project">Project</option>
-                                <option value="episode">Episode</option>
-                            </select>
-                        </div>
-                        <div class="quiz-form-group">
-                            <label>Logo Title </label>
-                            <input type="text" name="logoTitle" placeholder="Enter logo title" />
-                        </div>
+                            <div class="quiz-media-profile-tabs" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button type="button" class="media-profile-btn"
+                                    data-type="broadcaster">Broadcaster</button>
+                                <button type="button" class="media-profile-btn" data-type="project">Project</button>
+                                <button type="button" class="media-profile-btn" data-type="episode">Episode</button>
+                                <button type="button" class="media-profile-btn" data-type="custom">Custom</button>
+                            </div>
 
-                        <div class="quiz-form-group">
-                            <label>Logo Description</label>
-                            <input type="text" name="logoDescription" placeholder="Enter logo description" />
                         </div>
+                        <div id="logoParentContainer">
+                            <div class="quiz-form-group">
+                                <label>Logo Title </label>
+                                <input type="text" name="logoTitle" placeholder="Enter logo title" />
+                            </div>
 
-                        <div class="quiz-form-group">
-                            <label>Logo Link </label>
-                            <input type="url" name="logoLink" placeholder="https://example.com" />
+                            <div class="quiz-form-group">
+                                <label>Logo Description</label>
+                                <input type="text" name="logoDescription" placeholder="Enter logo description" />
+                            </div>
+
+                            <div class="quiz-form-group">
+                                <label>Logo Link </label>
+                                <input type="url" name="logoLink" placeholder="https://example.com" />
+                            </div>
+
+                            <div class="quiz-form-group">
+                                <label>Logo Image</label>
+                                <label class="quiz-file-label">
+                                    <span class="quiz-file-label-text">Choose File</span>
+                                    <input type="file" class="quiz-logoImage quiz-hidden-file" accept="image/*" />
+                                </label>
+                                <img class="preview-img quiz-logoImagePreview" style="display: none;" />
+                            </div>
+
+                            <hr />
                         </div>
-
-                        <div class="quiz-form-group">
-                            <label>Logo Image</label>
-                            <label class="quiz-file-label">
-                                <span class="quiz-file-label-text">Choose File</span>
-                                <input type="file" class="quiz-logoImage quiz-hidden-file" accept="image/*" />
-                            </label>
-                            <img class="preview-img quiz-logoImagePreview" style="display: none;" />
-                        </div>
-
-                        <hr />
                         <div class="quiz-form-group">
                             <label>Question</label>
                             <input type="text" name="question" placeholder="Enter your question" required />
@@ -216,8 +222,13 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
+<script src="/js/add-quiz-question.js"></script>
 
-<script>
+
+
+</html>
+
+<!-- <script>
     const wrapper = document.getElementById("questions-wrapper");
     const template = document.getElementById("question-template");
 
@@ -578,8 +589,8 @@
         const existingLogoUrl = block.querySelector('input[name="existingLogoUrl"]').value;
         const formData = new FormData();
 
-        const channelId = "<%= channel?._id %>";
-        const sessionId = "<%= sessionId %>";
+        const channelId = document.getElementById("channelId").value;
+        const sessionId = document.getElementById("sessionId").value;
         formData.append("sessionId", sessionId);
         formData.append("channelId", channelId);
         formData.append("question", block.querySelector('input[name="question"]').value.trim());
@@ -594,7 +605,7 @@
         const logoMediaProfile = mediaProfileSelect?.value || null;
         formData.append("logoMediaProfile", logoMediaProfile);
         const showLogoToggle = document.querySelector("#showLogoToggle");
-        formData.append("showLogoSection", showLogoToggle.checked); 
+        formData.append("showLogoSection", showLogoToggle.checked);
 
 
 
@@ -705,7 +716,4 @@
     });
 
     createQuestionBlock();
-</script>
-
-
-</html>
+</script> -->

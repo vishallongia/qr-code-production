@@ -740,7 +740,6 @@ router.get(
           user: req.user,
         });
       }
-
       return res.render("edit-question", {
         error: null,
         channel,
@@ -785,7 +784,7 @@ router.post(
         logoTitle,
         logoDescription,
         logoLink,
-        logoMediaProfile,
+        logoMediaProfile = [],
         showLogoSection,
 
         // 🎯 New Jackpot Reward fields
@@ -921,29 +920,38 @@ router.post(
       const digitalRewardImagePath =
         req.files["digitalRewardImage"]?.[0]?.filename; // ✅ new
 
-      // Handle logo (copy from existing URL if provided)
-      let logoPath = null;
+      // ✅ Handle logo only if uploaded
+      const logoPath = req.files["logo"]?.[0]
+        ? `/questions-image/${req.files["logo"][0].filename}`
+        : null;
 
       // 1️⃣ Check if frontend sent an existing URL to copy
-      if (req.body.existingLogoUrl) {
-        const localSourcePath = path.join(
-          __dirname,
-          "..",
-          req.body.existingLogoUrl
-        );
-        logoPath = copyFileToQuestionsImage(localSourcePath);
-      }
+      // if (req.body.existingLogoUrl) {
+      //   const localSourcePath = path.join(
+      //     __dirname,
+      //     "..",
+      //     req.body.existingLogoUrl
+      //   );
+      //   logoPath = copyFileToQuestionsImage(localSourcePath);
+      // }
 
-      // 2️⃣ Fallback to uploaded file (if no URL)
-      if (!logoPath && req.files["logo"]?.[0]) {
-        logoPath = `/questions-image/${req.files["logo"][0].filename}`;
-      }
+      // // 2️⃣ Fallback to uploaded file (if no URL)
+      // if (!logoPath && req.files["logo"]?.[0]) {
+      //   logoPath = `/questions-image/${req.files["logo"][0].filename}`;
+      // }
 
-      // ✅ Validate logoMediaProfile (must be one of enum values)
-      const allowedProfiles = ["broadcaster", "project", "episode"];
-      const validLogoMediaProfile = allowedProfiles.includes(logoMediaProfile)
+      // Allowed enum values
+      const allowedProfiles = ["broadcaster", "project", "episode", "custom"];
+
+      // Ensure it's an array (safeguard)
+      let logoProfiles = Array.isArray(logoMediaProfile)
         ? logoMediaProfile
-        : null;
+        : [];
+
+      // Filter valid values and remove duplicates
+      logoProfiles = [
+        ...new Set(logoProfiles.filter((p) => allowedProfiles.includes(p))),
+      ];
 
       // ✅ Create and save quiz
       const quizData = new QuizQuestion({
@@ -967,23 +975,19 @@ router.post(
         digitalCoinDeducted: dCoin,
         mode,
         magicCoinDeducted,
-
-        // 🎯 New Jackpot Reward fields
         jackpotRewardName: jackpotRewardName?.trim() || "",
         jackpotRewardImage: jackpotRewardImagePath
           ? `/questions-image/${jackpotRewardImagePath}`
           : null,
         jackpotRewardDescription: jackpotRewardDescription?.trim() || "",
         jackpotRewardLink: jackpotRewardLink?.trim() || null,
-
-        // 🎯 New Digital Reward fields
         digitalRewardName: digitalRewardName?.trim() || "",
         digitalRewardImage: digitalRewardImagePath
           ? `/questions-image/${digitalRewardImagePath}`
           : null,
         digitalRewardDescription: digitalRewardDescription?.trim() || "",
         digitalRewardLink: digitalRewardLink?.trim() || null,
-        logoMediaProfile: validLogoMediaProfile,
+        logoMediaProfile: logoProfiles,
         showLogoSection: showLogoSection === "true" || showLogoSection === true,
       });
 
@@ -1031,7 +1035,7 @@ router.post(
         logoTitle,
         logoDescription,
         logoLink,
-        logoMediaProfile, // ✅ NEW FIELD
+        logoMediaProfile = [], // ✅ NEW FIELD
         clearedImages,
         showLogoSection,
         // Rewards
@@ -1042,7 +1046,7 @@ router.post(
         digitalRewardDescription,
         digitalRewardLink,
       } = req.body;
-      // ✅ Validate IDs
+      console.log(logoMediaProfile)
       if (
         !mongoose.Types.ObjectId.isValid(channelId) ||
         !mongoose.Types.ObjectId.isValid(sessionId)
@@ -1136,11 +1140,7 @@ router.post(
       }
 
       // ✅ Handle main images
-      const handleImageUpdate = (
-        field,
-        uploadedFile,
-        existingUrlField = null
-      ) => {
+      const handleImageUpdate = (field, uploadedFile) => {
         if (cleared.includes(field)) {
           deleteFileIfExists(quiz[field]);
           return null;
@@ -1151,31 +1151,27 @@ router.post(
         }
         // Case 3: Copy existingLogoUrl if provided
         // 2️⃣ Existing URL to copy
-        if (
-          existingUrlField &&
-          req.body[existingUrlField] &&
-          req.body[existingUrlField] !== quiz[field]
-        ) {
-          const existingUrl = req.body[existingUrlField];
-          const localSourcePath = path.join(__dirname, "..", existingUrl);
+        // if (
+        //   existingUrlField &&
+        //   req.body[existingUrlField] &&
+        //   req.body[existingUrlField] !== quiz[field]
+        // ) {
+        //   const existingUrl = req.body[existingUrlField];
+        //   const localSourcePath = path.join(__dirname, "..", existingUrl);
 
-          const copiedPath = copyFileToQuestionsImage(localSourcePath);
-          if (copiedPath) {
-            // ✅ delete old logo after successful copy
-            deleteFileIfExists(quiz[field]);
-            return copiedPath;
-          }
-          return quiz[field]; // fallback if copy fails
-        }
+        //   const copiedPath = copyFileToQuestionsImage(localSourcePath);
+        //   if (copiedPath) {
+        //     // ✅ delete old logo after successful copy
+        //     deleteFileIfExists(quiz[field]);
+        //     return copiedPath;
+        //   }
+        //   return quiz[field]; // fallback if copy fails
+        // }
 
         return quiz[field];
       };
 
-      quiz.logo = handleImageUpdate(
-        "logo",
-        req.files["logo"]?.[0],
-        "existingLogoUrl"
-      );
+      quiz.logo = handleImageUpdate("logo", req.files["logo"]?.[0]);
       quiz.questionImage = handleImageUpdate(
         "questionImage",
         req.files["questionImage"]?.[0]
@@ -1258,11 +1254,24 @@ router.post(
         };
       });
 
-      // ✅ Validate logoMediaProfile (must be one of enum values)
-      const allowedProfiles = ["broadcaster", "project", "episode"];
-      const validLogoMediaProfile = allowedProfiles.includes(logoMediaProfile)
-        ? logoMediaProfile
-        : null;
+      // ✅ Validate logoMediaProfile (must be array of allowed enum values)
+      const allowedProfiles = ["broadcaster", "project", "episode", "custom"];
+      let logoProfiles = [];
+
+      if (Array.isArray(logoMediaProfile)) {
+        logoProfiles = logoMediaProfile
+          .map((p) => p.trim())
+          .filter((p) => allowedProfiles.includes(p));
+      } else if (typeof logoMediaProfile === "string") {
+        // single value sent as string
+        if (allowedProfiles.includes(logoMediaProfile.trim())) {
+          logoProfiles = [logoMediaProfile.trim()];
+        }
+      }
+
+      // Remove duplicates
+      logoProfiles = [...new Set(logoProfiles)];
+      
 
       // ✅ Update quiz fields
       quiz.channelId = channelId;
@@ -1274,7 +1283,7 @@ router.post(
       quiz.logoTitle = logoTitle?.trim() || null;
       quiz.logoDescription = logoDescription?.trim() || null;
       quiz.logoLink = logoLink?.trim() || null;
-      quiz.logoMediaProfile = validLogoMediaProfile; // ✅ NEW
+      quiz.logoMediaProfile = logoProfiles;
       quiz.jackpotCoinDeducted = jCoin;
       quiz.digitalCoinDeducted = dCoin;
       quiz.mode = mode;
