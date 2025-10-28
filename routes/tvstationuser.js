@@ -12,6 +12,7 @@ const QuizQuestion = require("../models/QuizQuestion");
 const VoteQuestion = require("../models/VoteQuestion");
 const Applause = require("../models/Applause");
 const MagicScreen = require("../models/MagicScreen");
+const Comment = require("../models/Comments");
 const Channel = require("../models/Channel");
 const WinnerRequest = require("../models/WinnerRequest"); // adjust path
 const UserRequest = require("../models/UserRequest");
@@ -20,6 +21,7 @@ const QuizQuestionResponse = require("../models/QuizQuestionResponse");
 const VoteQuestionResponse = require("../models/VoteQuestionResponse");
 const ApplauseResponse = require("../models/ApplauseResponse");
 const MagicScreenResponse = require("../models/MagicScreenResponse");
+const CommentResponse = require("../models/CommentResponse");
 const MagicCoinCommission = require("../models/MagicCoinCommission");
 const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
 const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
@@ -28,8 +30,6 @@ const BASE_URL = process.env.FRONTEND_URL; // update if needed
 const { addUploadPath } = require("../utils/selectUploadDestination");
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
 const SendEmail = require("../Messages/SendEmail");
-const path = require("path");
-const fs = require("fs"); // also needed if you use fs.copyFileSync
 
 // GET /channels - paginated list
 router.get("/channels", async (req, res) => {
@@ -1037,7 +1037,7 @@ router.post(
         logoLink,
         logoMediaProfile = [],
         clearedImages,
-        showLogoSection=true,
+        showLogoSection = true,
         jackpotRewardName,
         jackpotRewardDescription,
         jackpotRewardLink,
@@ -1415,6 +1415,7 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
       }
 
@@ -1430,6 +1431,7 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
       }
 
@@ -1442,6 +1444,7 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
       }
 
@@ -1454,7 +1457,17 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
+      }
+
+      // ✅ Fetch full createdBy user
+      let tvStationUser = null;
+      if (
+        channel.createdBy &&
+        mongoose.Types.ObjectId.isValid(channel.createdBy)
+      ) {
+        tvStationUser = await User.findById(channel.createdBy).lean();
       }
 
       const index =
@@ -1481,6 +1494,7 @@ router.get(
           hasNext,
           availableCoins: req.user.walletCoins,
           sessionId,
+          tvStationUser, // full createdBy user
         });
       }
 
@@ -1488,6 +1502,7 @@ router.get(
         channel,
         error: null,
         user: req.user,
+        tvStationUser,
         currentQuestion,
         index,
         total,
@@ -1504,6 +1519,7 @@ router.get(
         index: 0,
         total: 0,
         availableCoins: 0,
+        tvStationUser: null,
       });
     }
   }
@@ -2415,6 +2431,7 @@ router.get(
 );
 
 // POST /api/channel/:channelId/session/:sessionId/qr
+// POST /api/channel/:channelId/session/:sessionId/qr
 router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
   try {
     const { channelId, sessionId } = req.params;
@@ -2426,86 +2443,78 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
       logo = `/images/logo1.jpg`,
     } = req.body;
 
-    if (
-      !type ||
-      ![
-        "quiz",
-        "voting",
-        "shopping",
-        "brand",
-        "applause",
-        "magicscreen",
-      ].includes(type)
-    ) {
+    // ✅ Validate type
+    const validTypes = [
+      "quiz",
+      "voting",
+      "shopping",
+      "brand",
+      "applause",
+      "magicscreen",
+      "comment",
+    ];
+
+    if (!validTypes.includes(type)) {
       return res
         .status(400)
         .json({ success: false, message: "Invalid app type" });
     }
 
-    // Step 1: Find the channel
+    // ✅ Step 1: Find Channel
     const channel = await Channel.findById(channelId);
     if (!channel)
       return res
         .status(404)
         .json({ success: false, message: "Channel not found" });
 
-    // Step 2: Find the session
+    // ✅ Step 2: Find Session
     const session = await Session.findById(sessionId);
     if (!session)
       return res
         .status(404)
         .json({ success: false, message: "Session not found" });
 
-    // Step 3: Find the first question of the given type to get linked QR
-    let questionModel = null;
+    // ✅ Step 3: Model Mapping
+    const ModelMap = {
+      quiz: QuizQuestion,
+      voting: VoteQuestion,
+      // shopping: ProductQuestion,
+      // brand: BrandQuestion,
+      applause: Applause,
+      magicscreen: MagicScreen,
+      comment: Comment,
+    };
 
-    switch (type) {
-      case "quiz":
-        questionModel = QuizQuestion;
-        break;
-      case "voting":
-        questionModel = VoteQuestion;
-        break;
-      case "shopping":
-        questionModel = ProductQuestion;
-        break;
-      case "brand":
-        questionModel = BrandQuestion;
-        break;
-      case "applause":
-        questionModel = Applause;
-        break;
-      case "magicscreen":
-        questionModel = MagicScreen;
-        break;
-    }
-
+    const questionModel = ModelMap[type];
     if (!questionModel)
       return res
         .status(400)
         .json({ success: false, message: "Invalid question type" });
 
+    // ✅ Step 4: Fetch Question with linked QR
     const question = await questionModel
       .findOne({ sessionId })
       .populate("linkedQRCode")
       .lean();
 
-    let qr = question?.linkedQRCode || null;
+    const qr = question?.linkedQRCode || null;
 
+    // ✅ Step 5: Build URLs
+    const urlPaths = {
+      applause: `tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play`,
+      magicscreen: `tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play`,
+      comment: `tvstation/comment/channels/${channelId}/session/${sessionId}/comment-play`,
+      default: `tvstation/channels/${channelId}/session/${sessionId}/${type}-play`,
+    };
+
+    const qrUrl = `${BASE_URL}/${
+      urlPaths[type] || urlPaths.default
+    }/?lang=${encodeURIComponent(lang)}`;
+
+    const defaultUrl = qrUrl; // same logic if no QR linked
+
+    // ✅ Step 6: Handle no QR case
     if (!qr) {
-      const defaultUrl =
-        type === "applause"
-          ? `${BASE_URL}/tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=${encodeURIComponent(
-              lang
-            )}`
-          : type === "magicscreen"
-          ? `${BASE_URL}/tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play/?lang=${encodeURIComponent(
-              lang
-            )}`
-          : `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=${encodeURIComponent(
-              lang
-            )}`;
-
       return res.status(200).json({
         success: true,
         message: "No linked QR found for this session",
@@ -2513,34 +2522,21 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
       });
     }
 
-    let qrUrl;
-    if (type === "applause") {
-      qrUrl = `${BASE_URL}/tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=${encodeURIComponent(
-        lang
-      )}`;
-    } else if (type === "magicscreen") {
-      qrUrl = `${BASE_URL}/tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play/?lang=${encodeURIComponent(
-        lang
-      )}`;
-    } else {
-      qrUrl = `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=${encodeURIComponent(
-        lang
-      )}`;
-    }
+    // ✅ Step 7: Apply updates
+    const updatedQR = {
+      ...qr,
+      url: qrUrl,
+      backgroundColor: backgroundColor || qr.backgroundColor,
+      qrDotColor: qrDotColor || qr.qrDotColor,
+      logo: logo || qr.logo,
+      redirectUrl: `${BASE_URL}/${qr.code || qr.qrName}`,
+    };
 
-    qr.url = qrUrl;
+    // ✅ Step 8: Save updates
+    await QRCodeData.findByIdAndUpdate(qr._id, updatedQR, { new: true });
 
-    if (backgroundColor) qr.backgroundColor = backgroundColor;
-    if (qrDotColor) qr.qrDotColor = qrDotColor;
-    if (logo) qr.logo = logo;
-
-    // Save updates
-    await QRCodeData.findByIdAndUpdate(qr._id, qr, { new: true });
-
-    // No toObject() needed since qr is already plain object
-    qr.redirectUrl = `${BASE_URL}/${qr.code || qr.qrName}`;
-
-    res.json({ success: true, qr });
+    // ✅ Step 9: Response
+    res.json({ success: true, qr: updatedQR });
   } catch (error) {
     console.error("QR update error:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -2561,6 +2557,7 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
         "brand",
         "applause",
         "magicscreen",
+        "comment",
       ].includes(type)
     ) {
       return res.status(400).json({
@@ -2626,6 +2623,17 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
       qr = magicscreenQuestion?.linkedQRCode || null;
     }
 
+    if (type === "comment") {
+      const commentQuestion = await Comment.findOne(
+        { sessionId },
+        "linkedQRCode"
+      )
+        .populate("linkedQRCode")
+        .lean();
+
+      qr = commentQuestion?.linkedQRCode || null;
+    }
+
     // ⚠️ Later: add for shopping, brand
 
     const defaultUrl =
@@ -2633,6 +2641,8 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
         ? `${BASE_URL}/tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=en`
         : type === "magicscreen"
         ? `${BASE_URL}/tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play/?lang=en`
+        : type === "comment"
+        ? `${BASE_URL}/tvstation/comment/channels/${session.channelId}/session/${sessionId}/comment-play/?lang=en`
         : `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=en`;
 
     if (!qr) {
@@ -3958,6 +3968,7 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
       }
 
@@ -3973,6 +3984,7 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
       }
 
@@ -3985,6 +3997,7 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
       }
 
@@ -3997,7 +4010,16 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
+      }
+      // ✅ Fetch full createdBy user (same as quiz-play)
+      let tvStationUser = null;
+      if (
+        channel.createdBy &&
+        mongoose.Types.ObjectId.isValid(channel.createdBy)
+      ) {
+        tvStationUser = await User.findById(channel.createdBy).lean();
       }
 
       const index =
@@ -4054,6 +4076,7 @@ router.get(
           hasNext,
           availableCoins: req.user.walletCoins,
           sessionId,
+          tvStationUser, // added consistency
         });
       }
 
@@ -4066,6 +4089,7 @@ router.get(
         total,
         availableCoins,
         sessionId,
+        tvStationUser,
       });
     } catch (err) {
       console.error("Error loading quiz question:", err);
@@ -4077,6 +4101,7 @@ router.get(
         index: 0,
         total: 0,
         availableCoins: 0,
+        tvStationUser: null,
       });
     }
   }
@@ -4936,10 +4961,14 @@ router.post("/quiz-viewed", async (req, res) => {
   const userId = req.user?._id;
 
   // Validate type first
-  if (!type || !["quiz", "voting", "applause", "magicscreen"].includes(type)) {
+  if (
+    !type ||
+    !["quiz", "voting", "applause", "magicscreen", "comment"].includes(type)
+  ) {
     return res.status(400).json({
       success: false,
-      message: "Invalid type. Must be 'quiz', 'voting' or 'applause'.",
+      message:
+        "Invalid type. Must be 'quiz', 'voting' or 'applause' or 'comment'.",
     });
   }
 
@@ -4996,6 +5025,16 @@ router.post("/quiz-viewed", async (req, res) => {
         selectedLink: null, // Not answered
         isNoResponseGiven: true,
       });
+    } else if (type === "comment") {
+      await CommentResponse.create({
+        userId,
+        questionId,
+        channelId,
+        sessionId,
+        selectedOptionIndex: 0,
+        selectedLink: null,
+        isNoResponseGiven: true,
+      });
     }
 
     return res.status(200).json({ success: true });
@@ -5007,11 +5046,11 @@ router.post("/quiz-viewed", async (req, res) => {
 
 router.post("/link-magic-code", async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { sessionId, type } = req.query; // type = "quiz" | "voting"
-    const { qrCodeId } = req.body; // QR code ID from request body
-    // ✅ Ensure req.user is populated (authentication middleware required)
+    const userId = req.user?._id;
+    const { sessionId, type } = req.query;
+    const { qrCodeId } = req.body;
 
+    // 1️⃣ Basic validation
     if (!userId) {
       return res.status(401).json({
         message: "Unauthorized. User not logged in.",
@@ -5021,61 +5060,64 @@ router.post("/link-magic-code", async (req, res) => {
 
     if (!sessionId || !qrCodeId || !type) {
       return res.status(400).json({
-        message: "sessionId, qrCodeId, and type (quiz|voting) are required",
+        message: "sessionId, qrCodeId, and type are required.",
         type: "error",
       });
     }
 
-    const Model =
-      type === "quiz"
-        ? QuizQuestion
-        : type === "voting"
-        ? VoteQuestion
-        : type === "applause"
-        ? Applause
-        : type === "magicscreen"
-        ? MagicScreen
-        : null;
+    // 2️⃣ Supported types and model map
+    const ModelMap = {
+      quiz: QuizQuestion,
+      voting: VoteQuestion,
+      applause: Applause,
+      magicscreen: MagicScreen,
+      comment: Comment,
+      // shopping: Shopping,
+      // brand: Brand,
+    };
+
+    const Model = ModelMap[type];
 
     if (!Model) {
       return res.status(400).json({
         message:
-          "Invalid type. Must be 'quiz' or 'voting' or 'applause' or 'magicscreen'.",
+          "Invalid type. Must be one of: quiz, voting, applause, magicscreen, comment, shopping, brand.",
         type: "error",
       });
     }
 
-    // 1️⃣ Find the Question and channel
+    // 3️⃣ Find question + channel details
     const question = await Model.findOne({ sessionId })
       .populate({ path: "channelId", select: "createdBy" })
       .lean();
 
     if (!question) {
       return res.status(404).json({
-        message: `No ${type} question found for the provided sessionId`,
+        message: `No ${type} question found for the provided sessionId.`,
         type: "error",
       });
     }
 
-    // 2️⃣ Validate channel ownership
+    // 4️⃣ Validate channel ownership
     if (
       !question.channelId ||
       question.channelId.createdBy.toString() !== userId.toString()
     ) {
       return res.status(403).json({
-        message: "You are not authorized to link a Magic Code to this question",
+        message: "You are not authorized to link a Magic Code to this session.",
         type: "error",
       });
     }
 
-    // 3️⃣ Find the QR code by ID
+    // 5️⃣ Validate QR Code ownership
     const qrCode = await QRCodeData.findById(qrCodeId).select(
       "user_id assignedTo"
     );
+
     if (!qrCode) {
       return res
         .status(404)
-        .json({ message: "QR code not found", type: "error" });
+        .json({ message: "QR code not found.", type: "error" });
     }
 
     const isOwner = qrCode.user_id?.toString() === userId.toString();
@@ -5083,41 +5125,37 @@ router.post("/link-magic-code", async (req, res) => {
 
     if (!isOwner && !isAssigned) {
       return res.status(403).json({
-        message: "You are not authorized to use this QR code",
+        message: "You are not authorized to use this QR code.",
         type: "error",
       });
     }
 
-    await Promise.all([
-      QuizQuestion.updateMany(
-        { linkedQRCode: qrCode._id },
-        { $unset: { linkedQRCode: "" } }
-      ),
-      VoteQuestion.updateMany(
-        { linkedQRCode: qrCode._id },
-        { $unset: { linkedQRCode: "" } }
-      ),
-      Applause.updateMany(
-        { linkedQRCode: qrCode._id },
-        { $unset: { linkedQRCode: "" } }
-      ),
-      MagicScreen.updateMany(
-        { linkedQRCode: qrCode._id },
-        { $unset: { linkedQRCode: "" } }
-      ),
-    ]);
+    // 6️⃣ Unlink QR code from all models (prevent duplicates)
+    await Promise.all(
+      Object.values(ModelMap).map((M) =>
+        M.updateMany(
+          { linkedQRCode: qrCode._id },
+          { $unset: { linkedQRCode: "" } }
+        )
+      )
+    );
 
-    // 5️⃣ Link QR code to this question
-    let playUrl;
+    // 7️⃣ Build the play URL dynamically
+    const base = process.env.FRONTEND_URL;
+    const channelId = question.channelId._id;
 
-    if (type === "applause") {
-      playUrl = `${process.env.FRONTEND_URL}/tvstation/applause/channels/${question.channelId._id}/session/${sessionId}/applause-play/?lang=en`;
-    } else if (type === "magicscreen") {
-      playUrl = `${process.env.FRONTEND_URL}/tvstation/magicscreen/channels/${question.channelId._id}/session/${sessionId}/magicscreen-play/?lang=en`;
-    } else {
-      playUrl = `${process.env.FRONTEND_URL}/tvstation/channels/${question.channelId._id}/session/${sessionId}/${type}-play/?lang=en`;
-    }
+    const urlPaths = {
+      applause: `tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=en`,
+      magicscreen: `tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play/?lang=en`,
+      comment: `tvstation/comment/channels/${channelId}/session/${sessionId}/comment-play/?lang=en`,
+      shopping: `tvstation/shopping/channels/${channelId}/session/${sessionId}/shopping-play/?lang=en`,
+      brand: `tvstation/brand/channels/${channelId}/session/${sessionId}/brand-play/?lang=en`,
+      default: `tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=en`,
+    };
 
+    const playUrl = `${base}/${urlPaths[type] || urlPaths.default}`;
+
+    // 8️⃣ Link the QR code + update the user
     await Promise.all([
       Model.updateOne(
         { _id: question._id },
@@ -5127,33 +5165,47 @@ router.post("/link-magic-code", async (req, res) => {
         { _id: qrCode._id },
         { $set: { type: "url", url: playUrl } }
       ),
-      // 6️⃣ Set showEditOnScan to false
       User.updateOne({ _id: userId }, { $set: { showEditOnScan: false } }),
     ]);
 
+    // 9️⃣ Generate management link for response
+    const managePath =
+      type === "applause"
+        ? `applause`
+        : type === "magicscreen"
+        ? `magicscreen`
+        : type === "comment"
+        ? `comment`
+        : type === "shopping"
+        ? `shopping`
+        : type === "brand"
+        ? `brand`
+        : type;
+
+    const manageLink = `${base}/tvstation/${managePath}/channels/${channelId}/session/${sessionId}/${managePath}`;
+
+    // 🔟 Send success response
     return res.status(200).json({
-      message: "Magic Code linked successfully",
+      message: "Magic Code linked successfully.",
       type: "success",
-      link:
-        type === "applause"
-          ? `${process.env.FRONTEND_URL}/tvstation/applause/channels/${question.channelId._id}/session/${sessionId}/applause`
-          : type === "magicscreen"
-          ? `${process.env.FRONTEND_URL}/tvstation/magicscreen/channels/${question.channelId._id}/session/${sessionId}/magicscreen`
-          : `${process.env.FRONTEND_URL}/tvstation/channels/${question.channelId._id}/session/${sessionId}/${type}`,
+      link: manageLink,
     });
   } catch (err) {
     console.error("Error linking Magic Code:", err);
-    return res
-      .status(500)
-      .json({ message: "Internal server error", type: "error" });
+    return res.status(500).json({
+      message: "Internal server error.",
+      type: "error",
+    });
   }
 });
 
+// POST /api/unlink-magic-code
 router.post("/unlink-magic-code", async (req, res) => {
   try {
     const userId = req.user._id;
-    const { sessionId, type } = req.query; // type = "quiz" | "voting" | "applause"
+    const { sessionId, type } = req.query; // e.g. type = "quiz" | "voting" | "applause" | "magicscreen" | "comment"
 
+    // ✅ Validate authentication
     if (!userId) {
       return res.status(401).json({
         message: "Unauthorized. User not logged in.",
@@ -5161,32 +5213,37 @@ router.post("/unlink-magic-code", async (req, res) => {
       });
     }
 
+    // ✅ Validate params
     if (!sessionId || !type) {
       return res.status(400).json({
-        message: "sessionId and type (quiz|voting|applause) are required",
+        message:
+          "sessionId and type (quiz|voting|applause|magicscreen|comment) are required",
         type: "error",
       });
     }
 
-    const Model =
-      type === "quiz"
-        ? QuizQuestion
-        : type === "voting"
-        ? VoteQuestion
-        : type === "applause"
-        ? Applause
-        : type === "magicscreen"
-        ? MagicScreen
-        : null;
+    // ✅ Model mapping
+    const ModelMap = {
+      quiz: QuizQuestion,
+      voting: VoteQuestion,
+      applause: Applause,
+      magicscreen: MagicScreen,
+      comment: Comment,
+      // shopping: ProductQuestion,
+      // brand: BrandQuestion,
+    };
+
+    const Model = ModelMap[type];
 
     if (!Model) {
       return res.status(400).json({
-        message: "Invalid type. Must be 'quiz', 'voting', or 'applause'.",
+        message:
+          "Invalid type. Must be one of: quiz, voting, applause, magicscreen, comment, shopping, or brand.",
         type: "error",
       });
     }
 
-    // 1️⃣ Find the Question and channel
+    // ✅ 1️⃣ Find the question & channel
     const question = await Model.findOne({ sessionId })
       .populate({ path: "channelId", select: "createdBy" })
       .lean();
@@ -5198,7 +5255,7 @@ router.post("/unlink-magic-code", async (req, res) => {
       });
     }
 
-    // 2️⃣ Validate channel ownership
+    // ✅ 2️⃣ Validate channel ownership
     if (
       !question.channelId ||
       question.channelId.createdBy.toString() !== userId.toString()
@@ -5210,7 +5267,7 @@ router.post("/unlink-magic-code", async (req, res) => {
       });
     }
 
-    // 3️⃣ Get linked QR code
+    // ✅ 3️⃣ Ensure it has a linked QR
     if (!question.linkedQRCode) {
       return res.status(400).json({
         message: "This question has no linked Magic Code",
@@ -5220,21 +5277,22 @@ router.post("/unlink-magic-code", async (req, res) => {
 
     const qrCodeId = question.linkedQRCode;
 
-    // 4️⃣ Unlink QR from this question
+    // ✅ 4️⃣ Unlink QR from this question
     await Model.updateOne(
       { _id: question._id },
       { $unset: { linkedQRCode: "" } }
     );
 
-    // 5️⃣ Reset QR code data (optional — set back to default)
+    // ✅ 5️⃣ Reset QR data (optional default reset)
     await QRCodeData.updateOne(
       { _id: qrCodeId },
       {
         $unset: { url: "" },
-        $set: { type: "text", text: "Your Message" }, // optional marker
+        $set: { type: "text", text: "Your Message" },
       }
     );
 
+    // ✅ 6️⃣ Return success response
     return res.status(200).json({
       message: "Magic Code unlinked successfully",
       type: "success",

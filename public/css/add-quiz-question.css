@@ -144,7 +144,7 @@ select:focus {
 .quiz-option-blocks {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+    gap: 2.5rem;
 }
 
 .quiz-option-block {
@@ -734,6 +734,94 @@ select:focus {
     border-radius: 25px;
     transition: background-color 0.2s ease-in-out;
 }
+
+
+/* ✅ Container for all logos */
+.quiz-option-logos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+    justify-content: flex-start;
+    background: var(--container-bg);
+    padding: 10px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+/* ✅ Each logo image */
+.quiz-option-logo {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border: 2px solid var(--input-border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background-color: #fff;
+}
+
+
+
+/* ✅ Active (selected) logo — uses theme link colors */
+.active-logo {
+    border-color: var(--link-color);
+    box-shadow: 0 0 10px var(--link-hover-color);
+    border-radius: 50%;
+    /* fully round */
+    transform: scale(1.1);
+    transition: all 0.25s ease;
+}
+
+
+.quiz-option-logos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.quiz-option-logo {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    transition: 0.2s ease;
+}
+
+.quiz-option-logo:hover {
+    transform: scale(1.05);
+}
+
+.quiz-option-logo.active-logo {
+    border-color: #007bff;
+}
+
+.quiz-selected-logo-preview {
+    display: block;
+    margin-top: 8px;
+    border-radius: 6px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.quiz-option-inner {
+    display: flex;
+    flex-flow: column;
+    gap: 10px;
+}
+
+.quiz-option-block.dragging {
+    opacity: 0.6;
+    background: #f0f0f0;
+    transform: scale(1.02);
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.quiz-option-block {
+    transition: transform 0.15s ease;
+}
+
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {

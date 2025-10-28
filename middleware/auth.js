@@ -1,10 +1,26 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User"); // Replace with your User model
+// ✅ List of routes that don't need authentication
+const PUBLIC_PLAY_ROUTES = [
+  "quiz-play",
+  "voting-play",
+  "applause-play",
+  "magicscreen-play",
+  "comment-play"
+  // add more like "reaction-play", "buzzer-play" later
+];
 
 const authMiddleware = async (req, res, next) => {
   try {
     // Get the token from cookies
     const token = req.cookies.token;
+    const path = req.path.toLowerCase();
+
+    if (!token) {
+      if (PUBLIC_PLAY_ROUTES.some((route) => path.includes(route))) {
+        return next();
+      }
+    }
 
     if (!token && req.path !== "/") {
       return handleAuthError(req, res, "Token is missing. Please log in.");

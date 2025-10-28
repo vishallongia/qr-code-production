@@ -9,6 +9,7 @@ const tvStationAdminRouter = require("./routes/tvstationadmin");
 const tvStationUserRouter = require("./routes/tvstationuser");
 const tvStationApplauseApp = require("./routes/tvstationapplauseapp");
 const tvStationMagicScreenApp = require("./routes/tvstationmagicscreenapp");
+const tvStationCommentApp = require("./routes/tvstationcommentapp");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -66,6 +67,10 @@ app.use(express.static("public"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/logos", express.static(path.join(__dirname, "logos")));
 app.use(
+  "/comment-logos",
+  express.static(path.join(__dirname, "comment-logos"))
+);
+app.use(
   "/questions-image",
   express.static(path.join(__dirname, "questions-image"))
 );
@@ -81,6 +86,7 @@ app.use("/admindashboard/tvstation", authMiddleware, tvStationAdminRouter);
 app.use("/tvstation", authMiddleware, tvStationUserRouter); // It contains mixed code of voting and quiz
 app.use("/tvstation/applause", authMiddleware, tvStationApplauseApp); // For third app applause
 app.use("/tvstation/magicscreen", authMiddleware, tvStationMagicScreenApp); // For fourth app magicscreen
+app.use("/tvstation/comment", authMiddleware, tvStationCommentApp); // For fourth app magicscreen
 
 // 404 Handler
 app.use((req, res) => {

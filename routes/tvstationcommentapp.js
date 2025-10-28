@@ -9,19 +9,21 @@ const {
 } = require("../middleware/multerQuizUploader");
 const Channel = require("../models/Channel");
 const User = require("../models/User");
-const MagicScreenResponse = require("../models/MagicScreenResponse");
+const Comment = require("../models/Comments");
+const CommentResponse = require("../models/CommentResponse");
 const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
 const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
 const Session = require("../models/Session"); // adjust path if needed
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
-const MagicScreen = require("../models/MagicScreen");
+const fs = require("fs");
+const path = require("path");
 
 router.get(
-  "/channels/:channelId/session/:sessionId/magicscreen",
+  "/channels/:channelId/session/:sessionId/comment",
   async (req, res) => {
     const { channelId, sessionId } = req.params;
 
-    // Validate ObjectIds
+    // ✅ Validate ObjectIds
     if (
       !mongoose.Types.ObjectId.isValid(channelId) ||
       !mongoose.Types.ObjectId.isValid(sessionId)
@@ -29,7 +31,7 @@ router.get(
       return res.render("dashboardnew", {
         channel: null,
         error: "Invalid Channel or Session ID",
-        activeSection: "magicscreen",
+        activeSection: "comment",
         user: req.user,
         sessionId: null,
         channelId: null,
@@ -45,7 +47,7 @@ router.get(
         return res.render("dashboardnew", {
           channel: null,
           error: "Channel or session not found",
-          activeSection: "magicscreen",
+          activeSection: "comment",
           user: req.user,
           sessionId: null,
           channelId: null,
@@ -53,12 +55,12 @@ router.get(
         });
       }
 
-      // Check ownership
+      // ✅ Check ownership
       if (!channel.createdBy.equals(req.user._id)) {
         return res.render("dashboardnew", {
           channel,
           error: "Access denied",
-          activeSection: "magicscreen",
+          activeSection: "comment",
           user: req.user,
           sessionId: null,
           channelId: null,
@@ -66,10 +68,12 @@ router.get(
         });
       }
 
+      // ✅ Pagination
       const skip = parseInt(req.query.skip) || 0;
       const limit = parseInt(req.query.limit) || 5;
 
-      const magicScreens = await MagicScreen.find({
+      // ✅ Fetch comments
+      const comment = await Comment.find({
         channelId,
         sessionId,
       })
@@ -78,32 +82,32 @@ router.get(
         .limit(limit)
         .lean();
 
-      const total = await MagicScreen.countDocuments({ channelId, sessionId });
-      const hasMore = skip + magicScreens.length < total;
+      const total = await Comment.countDocuments({ channelId, sessionId });
+      const hasMore = skip + comment.length < total;
 
-      // Handle AJAX / JSON request
+      // ✅ Handle AJAX / JSON request
       if (req.xhr || req.headers.accept.includes("json")) {
-        return res.json({ type: "success", data: magicScreens, hasMore });
+        return res.json({ type: "success", data: comment, hasMore });
       }
 
-      // Render dashboard view
+      // ✅ Render dashboard view
       return res.render("dashboardnew", {
         channel,
         error: null,
-        activeSection: "magicscreen",
+        activeSection: "comment",
         user: req.user,
-        quizQuestions: magicScreens,
+        quizQuestions: comment, // keeping the same variable name used in frontend template
         hasMore,
         sessionId,
         channelId,
         session,
       });
     } catch (err) {
-      console.error("Error fetching magic screen for session:", err);
+      console.error("Error fetching comments for session:", err);
       return res.render("dashboardnew", {
         channel: null,
         error: "Server error. Please try again later.",
-        activeSection: "magicscreen",
+        activeSection: "comment",
         user: req.user,
         quizQuestions: null,
         hasMore: false,
@@ -113,7 +117,7 @@ router.get(
 );
 
 router.get(
-  "/channels/:channelId/session/:sessionId/addmagicscreenquestion",
+  "/channels/:channelId/session/:sessionId/addcommentquestion",
   async (req, res) => {
     const { channelId, sessionId } = req.params;
 
@@ -121,7 +125,7 @@ router.get(
       !mongoose.Types.ObjectId.isValid(channelId) ||
       !mongoose.Types.ObjectId.isValid(sessionId)
     ) {
-      return res.render("magicscreen/add-question", {
+      return res.render("comment/add-comment", {
         channel: null,
         session: null,
         error: "Invalid Channel or Session ID",
@@ -134,7 +138,7 @@ router.get(
       const session = await Session.findById(sessionId);
 
       if (!channel || !session) {
-        return res.render("magicscreen/add-question", {
+        return res.render("comment/add-comment", {
           channel: null,
           session: null,
           error: "Channel or Session not found",
@@ -144,7 +148,7 @@ router.get(
 
       // ✅ Verify ownership
       if (!channel.createdBy.equals(req.user._id)) {
-        return res.render("magicscreen/add-question", {
+        return res.render("comment/add-comment", {
           channel: null,
           session: null,
           error: "Access denied",
@@ -154,7 +158,7 @@ router.get(
 
       // ✅ Ensure session belongs to this channel
       if (!session.channelId.equals(channel._id)) {
-        return res.render("magicscreen/add-question", {
+        return res.render("comment/add-comment", {
           channel: null,
           session: null,
           error: "Session does not belong to this channel",
@@ -162,21 +166,19 @@ router.get(
         });
       }
 
-      // ✅ Only one question allowed per session
-      const existingQuestion = await MagicScreen.findOne({ sessionId });
-
-      if (existingQuestion) {
-        return res.render("magicscreen/add-question", {
+      const existingComment = await Comment.findOne({ sessionId });
+      if (existingComment) {
+        return res.render("comment/add-comment", {
           channel,
           session,
-          error: "Only one question is allowed per session.",
+          error: "Only one comment is allowed per session.",
           user: req.user,
           sessionId,
         });
       }
 
-      // ✅ Render add question page
-      return res.render("magicscreen/add-question", {
+      // ✅ Render add comment page
+      return res.render("comment/add-comment", {
         channel,
         session,
         error: null,
@@ -185,10 +187,10 @@ router.get(
       });
     } catch (err) {
       console.error(
-        "Error in GET /channels/:channelId/session/:sessionId/addmagicscreenquestion:",
+        "Error in GET /channels/:channelId/session/:sessionId/addcomment:",
         err
       );
-      return res.render("magicscreen/add-question", {
+      return res.render("comment/add-comment", {
         channel: null,
         session: null,
         error: "Server error, please try again later.",
@@ -199,7 +201,7 @@ router.get(
 );
 
 router.post(
-  "/magicscreen-question/create",
+  "/comment-question/create",
   upload.fields([
     { name: "questionImage", maxCount: 1 },
     { name: "logo", maxCount: 1 },
@@ -218,7 +220,6 @@ router.post(
         logoDescription,
         logoLink,
         logoMediaProfile = [],
-        showLogoSection = true,
       } = req.body;
 
       // ✅ Validate ObjectId format
@@ -233,7 +234,6 @@ router.post(
         });
       }
 
-      // ✅ Validate required fields
       if (!channelId || !sessionId || !options) {
         cleanupUploadedFiles(req.files);
         return res.status(400).json({
@@ -242,21 +242,20 @@ router.post(
         });
       }
 
+      // ✅ Verify ownership
       const channel = await Channel.findById(channelId);
       const session = await Session.findById(sessionId);
-
       if (!channel || !session) {
         cleanupUploadedFiles(req.files);
-        return res.status(400).json({
-          message: "Channel or Session not found",
+        return res.status(404).json({
+          message: "Channel or session not found.",
           type: "error",
         });
       }
-
       if (!channel.createdBy.equals(req.user._id)) {
         cleanupUploadedFiles(req.files);
         return res.status(403).json({
-          message: "Access denied",
+          message: "Access denied.",
           type: "error",
         });
       }
@@ -276,7 +275,7 @@ router.post(
       if (!Array.isArray(parsedOptions) || parsedOptions.length < 1) {
         cleanupUploadedFiles(req.files);
         return res.status(400).json({
-          message: "At least 1 option is required.",
+          message: "At least one option is required.",
           type: "error",
         });
       }
@@ -286,12 +285,18 @@ router.post(
           (file) => file.originalname === opt.imageName
         );
 
+        // ✅ If logo was selected, directly use its src (and ignore file)
+        const imageSrc = opt.selectedLogoSrc?.trim()
+          ? opt.selectedLogoSrc.trim()
+          : imageFile
+          ? `/questions-image/${imageFile.filename}`
+          : null;
+
         return {
           text: opt.text?.trim(),
           description: opt.description?.trim() || "",
-          image: imageFile ? `/questions-image/${imageFile.filename}` : null,
-          link: opt.link?.trim() || null, // ✅ new link field
-          magicCoinDeducted: Math.max(0, parseInt(opt.magicCoinDeducted) || 0),
+          image: imageSrc, // ✅ handles both uploaded or predefined
+          link: opt.link?.trim() || null,
         };
       });
 
@@ -299,21 +304,13 @@ router.post(
       const questionImagePath = req.files["questionImage"]?.[0]?.filename;
       const logoPath = req.files["logo"]?.[0]?.filename;
 
-      // Allowed enum values
       const allowedProfiles = ["broadcaster", "project", "episode", "custom"];
-
-      // Ensure it's an array (safeguard)
-      let logoProfiles = Array.isArray(logoMediaProfile)
-        ? logoMediaProfile
+      const logoProfiles = Array.isArray(logoMediaProfile)
+        ? logoMediaProfile.filter((p) => allowedProfiles.includes(p))
         : [];
 
-      // Filter valid values and remove duplicates
-      logoProfiles = [
-        ...new Set(logoProfiles.filter((p) => allowedProfiles.includes(p))),
-      ];
-
-      // ✅ Create and save Magic Screen question
-      const magicScreenData = new MagicScreen({
+      // ✅ Create comment question
+      const commentQuestion = new Comment({
         channelId,
         sessionId,
         question: question.trim(),
@@ -326,23 +323,22 @@ router.post(
         logoTitle: logoTitle?.trim() || "",
         logoDescription: logoDescription?.trim() || "",
         logoLink: logoLink?.trim() || null,
-        questionDescription: questionDescription?.trim(),
+        questionDescription: questionDescription?.trim() || "",
         logoMediaProfile: logoProfiles,
-        showLogoSection: showLogoSection === "true" || showLogoSection === true,
       });
 
-      await magicScreenData.save();
+      await commentQuestion.save();
 
-      return res.status(201).json({
-        message: "Magic Screen question saved successfully.",
+      res.status(201).json({
+        message: "Comment question created successfully.",
         type: "success",
-        data: magicScreenData,
+        data: commentQuestion,
       });
     } catch (err) {
-      console.error("Error saving Magic Screen question:", err);
+      console.error("Error saving comment question:", err);
       cleanupUploadedFiles(req.files);
-      return res.status(500).json({
-        message: "Failed to save Magic Screen question.",
+      res.status(500).json({
+        message: "Failed to save comment question.",
         type: "error",
       });
     }
@@ -360,7 +356,7 @@ router.get(
       !mongoose.Types.ObjectId.isValid(questionId) ||
       !mongoose.Types.ObjectId.isValid(sessionId)
     ) {
-      return res.render("magicscreen/edit-question", {
+      return res.render("comment/edit-comment", {
         error: "Invalid Channel ID, Question ID, or Session ID",
         channel: null,
         question: null,
@@ -372,7 +368,7 @@ router.get(
       const channel = await Channel.findById(channelId);
 
       if (!channel) {
-        return res.render("magicscreen/edit-question", {
+        return res.render("comment/edit-comment", {
           error: "Channel not found",
           channel: null,
           question: null,
@@ -381,7 +377,7 @@ router.get(
       }
 
       if (!channel.createdBy.equals(req.user._id)) {
-        return res.render("magicscreen/edit-question", {
+        return res.render("comment/edit-comment", {
           error: "Access denied",
           channel: null,
           question: null,
@@ -389,21 +385,21 @@ router.get(
         });
       }
 
-      const question = await MagicScreen.findOne({
+      const question = await Comment.findOne({
         _id: questionId,
         channelId,
       }).lean();
 
       if (!question) {
-        return res.render("magicscreen/edit-question", {
-          error: "Magic Screen question not found",
+        return res.render("comment/edit-comment", {
+          error: "Comment not found",
           channel,
           question: null,
           user: req.user,
         });
       }
 
-      return res.render("magicscreen/edit-question", {
+      return res.render("comment/edit-comment", {
         error: null,
         channel,
         question,
@@ -411,8 +407,8 @@ router.get(
         sessionId,
       });
     } catch (err) {
-      console.error("Error fetching magic screen question for edit:", err);
-      return res.render("magicscreen/edit-question", {
+      console.error("Error fetching comment for edit:", err);
+      return res.render("comment/edit-comment", {
         error: "Server error. Try again later.",
         channel: null,
         question: null,
@@ -423,7 +419,7 @@ router.get(
 );
 
 router.post(
-  "/magicscreen-question/update",
+  "/comment-question/update",
   upload.fields([
     { name: "questionImage", maxCount: 1 },
     { name: "questionLogo", maxCount: 1 },
@@ -458,13 +454,13 @@ router.post(
         return res.status(400).json({ message: "Invalid IDs", type: "error" });
       }
 
-      // ✅ Find Magic Screen question
-      const magicScreen = await MagicScreen.findById(questionId);
-      if (!magicScreen) {
+      // ✅ Find Comment
+      const comment = await Comment.findById(questionId);
+      if (!comment) {
         cleanupUploadedFiles(req.files);
         return res
           .status(404)
-          .json({ message: "Magic Screen question not found", type: "error" });
+          .json({ message: "Comment not found", type: "error" });
       }
 
       // ✅ Validate channel/session ownership
@@ -524,22 +520,22 @@ router.post(
 
       const handleImageUpdate = (field, uploadedFile) => {
         if (cleared.includes(field)) {
-          deleteFileIfExists(magicScreen[field]);
+          deleteFileIfExists(comment[field]);
           return null;
         } else if (uploadedFile) {
-          deleteFileIfExists(magicScreen[field]);
-          return `/questions-image/${uploadedFile.filename}`;
+          deleteFileIfExists(comment[field]);
+          return `/comment-image/${uploadedFile.filename}`;
         }
-        return magicScreen[field];
+        return comment[field];
       };
 
       // ✅ Update main images
-      magicScreen.logo = handleImageUpdate("logo", req.files["logo"]?.[0]);
-      magicScreen.questionImage = handleImageUpdate(
+      comment.logo = handleImageUpdate("logo", req.files["logo"]?.[0]);
+      comment.questionImage = handleImageUpdate(
         "questionImage",
         req.files["questionImage"]?.[0]
       );
-      magicScreen.questionLogo = handleImageUpdate(
+      comment.questionLogo = handleImageUpdate(
         "questionLogo",
         req.files["questionLogo"]?.[0]
       );
@@ -560,12 +556,12 @@ router.post(
       if (clearedOptions) {
         const fullyClearedOptionIds = clearedOptions.split(",");
         fullyClearedOptionIds.forEach((id) => {
-          const existingOpt = magicScreen.options.find(
+          const existingOpt = comment.options.find(
             (o) => o._id.toString() === id
           );
           if (existingOpt) deleteFileIfExists(existingOpt.image);
         });
-        magicScreen.options = magicScreen.options.filter(
+        comment.options = comment.options.filter(
           (o) => !fullyClearedOptionIds.includes(o._id.toString())
         );
       }
@@ -577,25 +573,52 @@ router.post(
             ? opt._id
             : new mongoose.Types.ObjectId();
 
+        // Find existing option to get old image
         let oldImage = null;
         if (opt._id) {
-          const found = magicScreen.options.find(
+          const found = comment.options.find(
             (o) => o._id.toString() === opt._id.toString()
           );
           oldImage = found ? found.image : null;
         }
 
         let newImage = oldImage;
+
+        // ✅ Case 1: New file uploaded manually
         if (fileByOptionId.has(opt._id)) {
-          deleteFileIfExists(oldImage);
+          // delete only if previous was manually uploaded (/questions-image/)
+          if (oldImage && oldImage.startsWith("/questions-image/")) {
+            deleteFileIfExists(oldImage);
+          }
           newImage = `/questions-image/${fileByOptionId.get(opt._id).filename}`;
-        } else if (
+        }
+
+        // ✅ Case 2: Cleared image
+        else if (
           cleared.includes(opt._id) ||
           cleared.includes(`optionImage-${opt._id}`)
         ) {
-          deleteFileIfExists(oldImage);
+          if (oldImage && oldImage.startsWith("/questions-image/")) {
+            deleteFileIfExists(oldImage);
+          }
           newImage = null;
-        } else if (opt.imageName && !oldImage) {
+        }
+
+        // ✅ Case 3: New option uses a predefined logo
+        else if (
+          opt.selectedLogoSrc &&
+          opt.selectedLogoSrc.startsWith("/comment-logos/")
+        ) {
+          // 🧩 If old image was manually uploaded, delete it
+          if (oldImage && oldImage.startsWith("/questions-image/")) {
+            deleteFileIfExists(oldImage);
+          }
+
+          newImage = opt.selectedLogoSrc.trim();
+        }
+
+        // ✅ Case 4: imageName manually passed (existing image reuse)
+        else if (opt.imageName && !oldImage) {
           newImage = `/questions-image/${opt.imageName}`;
         }
 
@@ -603,13 +626,12 @@ router.post(
           _id: optId,
           text: opt.text?.trim() || "",
           description: opt.description?.trim() || "",
-          link: opt.link?.trim() || "", // ✅ link field added
-          magicCoinDeducted: parseInt(opt.magicCoinDeducted) || 0,
+          link: opt.link?.trim() || "",
           image: newImage,
         };
       });
 
-      // ✅ Validate logoMediaProfile (must be array of allowed enum values)
+      // ✅ Validate logoMediaProfile
       const allowedProfiles = ["broadcaster", "project", "episode", "custom"];
       let logoProfiles = [];
 
@@ -618,51 +640,49 @@ router.post(
           .map((p) => p.trim())
           .filter((p) => allowedProfiles.includes(p));
       } else if (typeof logoMediaProfile === "string") {
-        // single value sent as string
         if (allowedProfiles.includes(logoMediaProfile.trim())) {
           logoProfiles = [logoMediaProfile.trim()];
         }
       }
 
-      // Remove duplicates
       logoProfiles = [...new Set(logoProfiles)];
 
-      // ✅ Save all updates
-      magicScreen.channelId = channelId;
-      magicScreen.sessionId = sessionId;
-      magicScreen.question = question.trim();
-      magicScreen.options = formattedOptions;
-      magicScreen.logoTitle = logoTitle?.trim() || null;
-      magicScreen.logoDescription = logoDescription?.trim() || null;
-      magicScreen.logoLink = logoLink?.trim() || null;
-      magicScreen.questionImageLink = questionImageLink?.trim() || null;
-      magicScreen.questionDescription = questionDescription?.trim() || null;
-      magicScreen.logoMediaProfile = logoProfiles;
-      magicScreen.showLogoSection =
+      // ✅ Save updates
+      comment.channelId = channelId;
+      comment.sessionId = sessionId;
+      comment.question = question.trim();
+      comment.options = formattedOptions;
+      comment.logoTitle = logoTitle?.trim() || null;
+      comment.logoDescription = logoDescription?.trim() || null;
+      comment.logoLink = logoLink?.trim() || null;
+      comment.questionImageLink = questionImageLink?.trim() || null;
+      comment.questionDescription = questionDescription?.trim() || null;
+      comment.logoMediaProfile = logoProfiles;
+      comment.showLogoSection =
         showLogoSection === "true" || showLogoSection === true;
 
-      await magicScreen.save();
+      await comment.save();
 
       return res.status(200).json({
-        message: "Magic Screen question updated successfully.",
+        message: "Comment updated successfully.",
         type: "success",
-        data: magicScreen,
+        data: comment,
       });
     } catch (err) {
-      console.error("Error updating Magic Screen question:", err);
+      console.error("Error updating Comment:", err);
       cleanupUploadedFiles(req.files);
       return res.status(500).json({
-        message: "Failed to update Magic Screen question",
+        message: "Failed to update Comment",
         type: "error",
       });
     }
   }
 );
 
-// DELETE Magic Screen event (same structure as applause delete)
+// DELETE Comment event (same structure as Magic Screen)
 router.delete("/:id", async (req, res) => {
   try {
-    const questionId = req.params.id; // ✅ same naming as your applause route
+    const questionId = req.params.id;
     const { channelId } = req.body;
     const userId = req.user?._id;
 
@@ -686,23 +706,24 @@ router.delete("/:id", async (req, res) => {
       });
     }
 
-    // Validate magic screen event
-    const magicScreen = await MagicScreen.findOne({
+    // Validate comment event
+    const comment = await Comment.findOne({
       _id: questionId,
       channelId,
     });
-    if (!magicScreen) {
+
+    if (!comment) {
       return res.status(404).json({
-        message: "Magic Screen event not found",
+        message: "Comment event not found",
         type: "error",
       });
     }
 
     // Perform cascading deletion
-    await cascadeDelete("magicScreen", questionId);
+    await cascadeDelete("commentQuestion", questionId);
 
     return res.status(200).json({
-      message: "Magic Screen event deleted successfully",
+      message: "Comment event deleted successfully",
       type: "success",
     });
   } catch (err) {
@@ -715,7 +736,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 router.get(
-  "/channels/:channelId/session/:sessionId/magicscreen-play",
+  "/channels/:channelId/session/:sessionId/comment-play",
   async (req, res) => {
     const { channelId, sessionId } = req.params;
 
@@ -725,7 +746,7 @@ router.get(
         !mongoose.Types.ObjectId.isValid(channelId) ||
         !mongoose.Types.ObjectId.isValid(sessionId)
       ) {
-        return res.render("magicscreen/user-magic-screen", {
+        return res.render("comment/user-comment", {
           channel: null,
           error: "Invalid Channel ID or Session ID",
           user: req.user,
@@ -741,7 +762,7 @@ router.get(
       const session = await Session.findById(sessionId);
 
       if (!channel) {
-        return res.render("magicscreen/user-magic-screen", {
+        return res.render("comment/user-comment", {
           channel: null,
           error: "Channel not found",
           user: req.user,
@@ -754,7 +775,7 @@ router.get(
       }
 
       if (!session) {
-        return res.render("magicscreen/user-magic-screen", {
+        return res.render("comment/user-comment", {
           channel: null,
           error: "Session not found",
           user: req.user,
@@ -767,9 +788,9 @@ router.get(
       }
 
       if (!channel.isRunning) {
-        return res.render("magicscreen/user-magic-screen", {
+        return res.render("comment/user-comment", {
           channel: null,
-          error: "Magic Screen session is not currently running",
+          error: "Comment session is not currently running",
           user: req.user,
           currentQuestion: null,
           index: 0,
@@ -779,7 +800,7 @@ router.get(
         });
       }
 
-      // ✅ Fetch full createdBy user for metadata (consistent with quiz/voting)
+      // ✅ Fetch full createdBy user (metadata)
       let tvStationUser = null;
       if (
         channel.createdBy &&
@@ -787,24 +808,25 @@ router.get(
       ) {
         tvStationUser = await User.findById(channel.createdBy).lean();
       }
+
       const index =
         req.query.index !== undefined ? parseInt(req.query.index) : 0;
 
-      // ✅ Fetch MagicScreen questions instead of Applause
-      const magicScreens = await MagicScreen.find({ sessionId })
+      // ✅ Fetch Comment documents instead of MagicScreen
+      const comments = await Comment.find({ sessionId })
         .sort({ createdAt: 1 })
         .skip(index)
         .limit(1)
         .lean();
 
-      const total = await MagicScreen.countDocuments({ sessionId });
-      const currentQuestion = magicScreens[0] || null;
+      const total = await Comment.countDocuments({ sessionId });
+      const currentQuestion = comments[0] || null;
       const hasNext = index + 1 < total;
 
       const availableCoins = req.user?.walletCoins || 0;
 
       // ✅ JSON response for AJAX requests
-      if (req.xhr || req.headers.accept.includes("json")) {
+      if (req.xhr || req.headers.accept?.includes("json")) {
         return res.json({
           type: "success",
           data: currentQuestion,
@@ -813,12 +835,12 @@ router.get(
           hasNext,
           availableCoins,
           sessionId,
-          tvStationUser: null,
+          tvStationUser,
         });
       }
 
       // ✅ Render EJS page
-      return res.render("magicscreen/user-magic-screen", {
+      return res.render("comment/user-comment", {
         channel,
         error: null,
         user: req.user,
@@ -830,8 +852,8 @@ router.get(
         tvStationUser,
       });
     } catch (err) {
-      console.error("Error loading magic screen question:", err);
-      return res.render("magicscreen/user-magic-screen", {
+      console.error("Error loading comment question:", err);
+      return res.render("comment/user-comment", {
         channel: null,
         error: "Server error. Please try again later.",
         user: req.user,
@@ -844,7 +866,7 @@ router.get(
   }
 );
 
-router.post("/magic-screen-response", async (req, res) => {
+router.post("/comment-response", async (req, res) => {
   const {
     questionId,
     channelId,
@@ -854,6 +876,7 @@ router.post("/magic-screen-response", async (req, res) => {
   } = req.body;
   const userId = req.user?._id;
 
+  // ✅ Validate required fields
   if (!questionId || !channelId || selectedOptionIndex === undefined) {
     return res.status(400).json({
       success: false,
@@ -862,22 +885,23 @@ router.post("/magic-screen-response", async (req, res) => {
   }
 
   try {
-    const question = await MagicScreen.findById(questionId);
+    // ✅ Verify Comment exists
+    const question = await Comment.findById(questionId);
     if (!question) {
       return res.status(404).json({
         success: false,
-        message: "Magic screen question not found",
+        message: "Comment question not found",
       });
     }
 
-    // Save MagicScreen response
-    const response = await MagicScreenResponse.create({
+    // ✅ Save Comment response
+    const response = await CommentResponse.create({
       userId,
       questionId,
       channelId,
       sessionId,
       selectedOptionIndex,
-      selectedLink: selectedLink || null, // save the clicked link
+      selectedLink: selectedLink || null, // Save clicked link if any
     });
 
     return res.status(200).json({
@@ -885,7 +909,7 @@ router.post("/magic-screen-response", async (req, res) => {
       responseId: response._id,
     });
   } catch (err) {
-    console.error("Error saving magic screen response:", err);
+    console.error("Error saving comment response:", err);
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -894,7 +918,7 @@ router.post("/magic-screen-response", async (req, res) => {
 });
 
 router.get(
-  "/channel/:channelId/session/:sessionId/magicscreen-response-tracker",
+  "/channel/:channelId/session/:sessionId/comment-response-tracker",
   async (req, res) => {
     const currentPage = parseInt(req.query.page) || 1;
     const recordsPerPage = parseInt(process.env.USER_PER_PAGE) || 10;
@@ -905,11 +929,11 @@ router.get(
     const channel = await Channel.findById(channelId);
     if (!channel || !channel.createdBy.equals(req.user._id)) {
       return res.render("dashboardnew", {
-        magicScreenResponses: [],
+        commentResponses: [], // ✅ same key
         totalResponsesWithoutPagination: 0,
         currentPage: 1,
         totalPages: 0,
-        activeSection: "magicscreen-response-tracker",
+        activeSection: "comment-response-tracker",
         user: req.user,
         error: "Access denied",
         sessionId,
@@ -922,11 +946,11 @@ router.get(
     const session = await Session.findOne({ _id: sessionId, channelId });
     if (!session) {
       return res.render("dashboardnew", {
-        magicScreenResponses: [],
+        commentResponses: [], // ✅ same key
         totalResponsesWithoutPagination: 0,
         currentPage: 1,
         totalPages: 0,
-        activeSection: "magicscreen-response-tracker",
+        activeSection: "comment-response-tracker",
         user: req.user,
         error: "Session not found",
         sessionId,
@@ -937,26 +961,26 @@ router.get(
 
     // 3️⃣ Count QR scans if linked
     let qrScanCount = 0;
-    const magicScreenQuestion = await MagicScreen.findOne(
+    const commentQuestion = await Comment.findOne(
       { sessionId },
       "linkedQRCode"
     ).lean();
 
-    const magicScreenQrId = magicScreenQuestion?.linkedQRCode || null;
+    const commentQrId = commentQuestion?.linkedQRCode || null;
 
-    if (magicScreenQrId) {
-      const qrDoc = await QRCodeData.findById(magicScreenQrId);
+    if (commentQrId) {
+      const qrDoc = await QRCodeData.findById(commentQrId);
       if (qrDoc) {
         qrScanCount = await QRScanLog.countDocuments({ qrCodeId: qrDoc._id });
       }
     }
 
     try {
-      const result = await MagicScreenResponse.aggregate([
-        // Lookup magic screen question
+      const result = await CommentResponse.aggregate([
+        // Lookup Comment question
         {
           $lookup: {
-            from: "magicscreens",
+            from: "comments",
             localField: "questionId",
             foreignField: "_id",
             as: "question",
@@ -997,7 +1021,7 @@ router.get(
           $project: {
             questionText: "$question.question",
             selectedOptionIndex: 1,
-            selectedLink: 1, // ✅ include selected link
+            selectedLink: 1,
             createdAt: 1,
             userName: "$user.fullName",
             userEmail: "$user.email",
@@ -1021,35 +1045,35 @@ router.get(
         },
       ]);
 
-      const magicScreenResponses = result[0].data;
+      const commentResponses = result[0].data; // ✅ same key name
       const totalResponses = result[0].totalCount[0]?.total || 0;
       const totalPages = Math.ceil(totalResponses / recordsPerPage);
       const totalResponsesExcludingNoResponse =
         result[0].totalCountExcludingNoResponse[0]?.total || 0;
 
       res.render("dashboardnew", {
-        magicScreenResponses,
+        commentResponses, // ✅ keep identical key for EJS reuse
         totalResponsesWithoutPagination: totalResponses,
         totalResponsesExcludingNoResponse,
-        qrScanCount, // ✅ include QR scan count
+        qrScanCount,
         currentPage,
         totalPages,
         error: null,
-        activeSection: "magicscreen-response-tracker",
+        activeSection: "comment-response-tracker",
         user: req.user,
         sessionId,
         channelId,
       });
     } catch (error) {
-      console.error("Error fetching magic screen responses:", error);
+      console.error("Error fetching comment responses:", error);
       res.status(500).render("dashboardnew", {
-        magicScreenResponses: [],
+        commentResponses: [], // ✅ same key
         totalResponsesWithoutPagination: 0,
         qrScanCount: 0,
         error: "Server Error",
         currentPage: 1,
         totalPages: 0,
-        activeSection: "magicscreen-response-tracker",
+        activeSection: "comment-response-tracker",
         user: req.user,
         sessionId,
         channelId,
@@ -1057,5 +1081,27 @@ router.get(
     }
   }
 );
+
+// ✅ API to return list of comment logos
+router.get("/comment-logos", (req, res) => {
+  const dir = path.join(__dirname, "..", "comment-logos");
+
+  fs.readdir(dir, (err, files) => {
+    if (err) {
+      console.error("Error reading comment-logos folder:", err);
+      return res.status(500).json({ error: "Unable to load logos" });
+    }
+
+    // Filter only image files
+    const imageFiles = files.filter((file) =>
+      /\.(png|jpg|jpeg|gif|svg)$/i.test(file)
+    );
+
+    // Build public URLs
+    const urls = imageFiles.map((file) => `/comment-logos/${file}`);
+
+    res.json(urls);
+  });
+});
 
 module.exports = router;

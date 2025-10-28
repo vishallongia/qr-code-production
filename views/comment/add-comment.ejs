@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Comment Event</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+    <link rel="stylesheet" href="/css/add-quiz-question.css" />
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+
+    <!-- App Selection Popup -->
+    <div id="app-selection-popup" class="popup-overlay" style="display:none;">
+        <div class="popup-content" style="position: relative; max-width: 700px; padding: 20px;">
+            <h3>Select an App</h3>
+
+            <p style="margin-bottom: 12px;">Please choose an app you want to link with this option.</p>
+
+
+            <!-- App Card Container -->
+            <div id="app-card-container" class="app-card-container"></div>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <button id="popup-ok-btn-select-app" class="btn">Add Event</button>
+                <button id="popup-cancel-btn-select-app" class="btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+    </div>
+    <% if (error) { %>
+        <div class="quiz-error-message">
+            <%= error %>
+        </div>
+        <% } else { %>
+            <div class="quiz-container">
+                <nav class="breadcrumbs">
+                    <a href="/tvstation/channels">Projects</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Events</a>
+                    <span>&rsaquo;</span>
+                    <a
+                        href="/tvstation/comment/channels/<%= channel._id %>/session/<%= sessionId %>/comment">Comment</a>
+                    <span>&rsaquo;</span>
+                    <span class="active">Create a Comment Event</span>
+                </nav>
+                <h2>Create a New Comment Event</h2>
+                <form id="questions-form">
+                    <div id="questions-wrapper" data-channel-id="<%= channel?._id %>"
+                        data-session-id="<%= sessionId %>">></div>
+                    <button type="submit" class="quiz-btn-submit">Save Comment Event</button>
+                </form>
+            </div>
+
+
+
+            <template id="question-template">
+                <div class="quiz-question-wrapper">
+                    <div class="quiz-question-header">
+                        <span class="quiz-question-title">Comment Event</span>
+                        <div class="quiz-question-actions">
+                            <button type="button" class="quiz-btn-collapse" style="display: none;">Collapse</button>
+                            <button type="button" style="display: none;" class="quiz-btn-delete">Delete</button>
+                        </div>
+                    </div>
+                    <div class="quiz-question-block">
+                        <div class="quiz-form-group">
+                            <label>Media Profile</label>
+                            <div class="quiz-media-profile-toggles">
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Broadcaster</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox" name="logoMediaProfile[]" value="broadcaster" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Project</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox" name="logoMediaProfile[]" value="project" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Episode</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox" name="logoMediaProfile[]" value="episode" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="quiz-toggle-wrapper">
+                                    <label class="quiz-toggle-label">Custom</label>
+                                    <label class="quiz-toggle-switch">
+                                        <input type="checkbox" name="logoMediaProfile[]" value="custom" />
+                                        <span class="quiz-toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="logoParentContainer">
+                            <div class="quiz-form-group">
+                                <label>Name of Your Channel </label>
+                                <input type="text" name="logoTitle" placeholder="Enter logo title" />
+                            </div>
+
+                            <div class="quiz-form-group">
+                                <label>Description of Your Channel Logo</label>
+                                <input type="text" name="logoDescription" placeholder="Enter logo description" />
+                            </div>
+
+                            <div class="quiz-form-group">
+                                <label>Logo Link </label>
+                                <input type="url" name="logoLink" placeholder="https://example.com" />
+                            </div>
+
+                            <div class="quiz-form-group">
+                                <label>Upload Your Channel Logo</label>
+                                <label class="quiz-file-label">
+                                    <span class="quiz-file-label-text">Choose File</span>
+                                    <input type="file" class="quiz-logoImage quiz-hidden-file" accept="image/*" />
+                                </label>
+                                <img class="preview-img quiz-logoImagePreview" style="display: none;" />
+                            </div>
+
+                            <hr />
+                        </div>
+                        <div class="quiz-form-group">
+                            <label>Name of Your Content</label>
+                            <input type="text" name="question" placeholder="Name of Your Content" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Description of Your Content</label>
+                            <input type="text" name="questionDescription" placeholder="Description of Your Content" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Upload Image (Preview) of Your Content</label>
+                            <label class="quiz-file-label">
+                                <span class="quiz-file-label-text">Choose File</span>
+                                <input type="file" class="quiz-questionImage quiz-hidden-file" accept="image/*" />
+                            </label>
+                            <img class="preview-img quiz-questionImagePreview" style="display: none;" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Link of Your Conent</label>
+                            <input type="url" name="questionImageLink" placeholder="https://example.com" />
+                        </div>
+
+                        <div class="quiz-form-group" style="display: none;">
+                            <label> Logo (optional)</label>
+                            <label class="quiz-file-label">
+                                <span class="quiz-file-label-text">Choose File</span>
+                                <input type="file" class="quiz-questionLogo quiz-hidden-file" accept="image/*" />
+                            </label>
+                            <img class="preview-img quiz-questionLogoPreview" style="display: none;" />
+                        </div>
+
+                        <div class="quiz-option-wrapper">
+                            <div class="quiz-option-blocks quiz-options-grid"></div>
+                            <div class="quiz-option-controls">
+                                <button type="button" class="quiz-btn-add-option">+ Add Option</button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="sessionId" value="<%= sessionId %>" />
+
+                    </div>
+                </div>
+            </template>
+            <% } %>
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+<script src="/js/add-comment-question.js"></script>
+
+</html>

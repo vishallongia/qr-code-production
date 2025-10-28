@@ -2428,7 +2428,7 @@ router.post("/change-my-profile", authMiddleware, async (req, res) => {
     res.cookie("token", token, {
       httpOnly: false,
       maxAge: Number(process.env.COOKIE_EXPIRATION),
-    }); // Expires in 1 Year
+    }); // Expires in 1 Year period
 
     res.status(200).json({
       message: "Profile updated successfully",
@@ -3040,19 +3040,19 @@ router.get(
       const codeData = await QRCodeData.findOne({ code: alphanumericCode });
 
       // ✅ Check Channel code if user is still not found
-      if (!user) {
-        const channel = await Channel.findOne({ code: alphanumericCode });
-        if (channel) {
-          if (!user) {
-            const channel = await Channel.findOne({ code: alphanumericCode });
-            if (channel) {
-              return res.render("login", {
-                redirectUrl: codeData?.url, // send the original path
-              });
-            }
-          }
-        }
-      }
+      // if (!user) {
+      //   const channel = await Channel.findOne({ code: alphanumericCode });
+      //   if (channel) {
+      //     if (!user) {
+      //       const channel = await Channel.findOne({ code: alphanumericCode });
+      //       if (channel) {
+      //         return res.render("login", {
+      //           redirectUrl: codeData?.url, // send the original path
+      //         });
+      //       }
+      //     }
+      //   }
+      // }
 
       // If specialOfferCouponId exists, override content from coupon.specialOffer
       let specialOfferData = null;

@@ -712,6 +712,7 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
       }
 
@@ -727,6 +728,7 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
       }
 
@@ -739,6 +741,7 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
       }
 
@@ -751,7 +754,17 @@ router.get(
           index: 0,
           total: 0,
           availableCoins: 0,
+          tvStationUser: null,
         });
+      }
+
+         // ✅ Fetch full createdBy user (consistent across all routes)
+      let tvStationUser = null;
+      if (
+        channel.createdBy &&
+        mongoose.Types.ObjectId.isValid(channel.createdBy)
+      ) {
+        tvStationUser = await User.findById(channel.createdBy).lean();
       }
 
       const index =
@@ -780,6 +793,7 @@ router.get(
           hasNext,
           availableCoins,
           sessionId,
+          tvStationUser,
         });
       }
 
@@ -793,6 +807,7 @@ router.get(
         total,
         availableCoins,
         sessionId,
+        tvStationUser,
       });
     } catch (err) {
       console.error("Error loading applause question:", err);
@@ -804,6 +819,7 @@ router.get(
         index: 0,
         total: 0,
         availableCoins: 0,
+        tvStationUser: null,
       });
     }
   }

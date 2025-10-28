@@ -8,6 +8,8 @@ const Applause = require("../models/Applause");
 const ApplauseResponse = require("../models/ApplauseResponse");
 const MagicScreen = require("../models/MagicScreen");
 const MagicScreenResponse = require("../models/MagicScreenResponse");
+const Comment = require("../models/Comments");
+const CommentResponse = require("../models/CommentResponse");
 const { deleteFileIfExists } = require("../middleware/multerQuizUploader");
 async function cascadeDelete(type, id) {
   switch (type) {
@@ -191,6 +193,46 @@ async function cascadeDelete(type, id) {
         await MagicScreen.deleteOne({ _id: id });
       } catch (err) {
         console.error(`Error deleting magic screen ${id}:`, err);
+      }
+      break;
+
+    case "commentQuestion":
+      try {
+        const question = await Comment.findById(id);
+        if (!question) return;
+
+        // Helper to check if image is from /comment-logos/
+        const shouldDelete = (path) => {
+          return path && !path.includes("/comment-logos/");
+        };
+
+        // Delete main images
+        if (shouldDelete(question.logo)) deleteFileIfExists(question.logo);
+        if (shouldDelete(question.questionImage))
+          deleteFileIfExists(question.questionImage);
+        if (shouldDelete(question.questionLogo))
+          deleteFileIfExists(question.questionLogo);
+
+        // Delete option images (if any)
+        if (question.options?.length) {
+          question.options.forEach((option) => {
+            if (shouldDelete(option.image)) deleteFileIfExists(option.image);
+          });
+        }
+
+        // Delete all responses
+        try {
+          await CommentResponse.deleteMany({ questionId: id });
+        } catch (respErr) {
+          console.error(
+            `Failed to delete responses for comment ${id}:`,
+            respErr
+          );
+        }
+
+        await Comment.deleteOne({ _id: id });
+      } catch (err) {
+        console.error(`Error deleting comment question ${id}:`, err);
       }
       break;
   }
