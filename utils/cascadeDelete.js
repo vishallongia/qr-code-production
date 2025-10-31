@@ -10,6 +10,9 @@ const MagicScreen = require("../models/MagicScreen");
 const MagicScreenResponse = require("../models/MagicScreenResponse");
 const Comment = require("../models/Comments");
 const CommentResponse = require("../models/CommentResponse");
+const Portfolio = require("../models/Portfolios");
+const PortfolioResponse = require("../models/PortfolioResponse");
+
 const { deleteFileIfExists } = require("../middleware/multerQuizUploader");
 async function cascadeDelete(type, id) {
   switch (type) {
@@ -233,6 +236,46 @@ async function cascadeDelete(type, id) {
         await Comment.deleteOne({ _id: id });
       } catch (err) {
         console.error(`Error deleting comment question ${id}:`, err);
+      }
+      break;
+
+    case "portfolioQuestion":
+      try {
+        const question = await Portfolio.findById(id);
+        if (!question) return;
+
+        // Helper to check if image is from /portfolio-logos/
+        const shouldDelete = (path) => {
+          return path && !path.includes("/portfolio-logos/");
+        };
+
+        // Delete main images
+        if (shouldDelete(question.logo)) deleteFileIfExists(question.logo);
+        if (shouldDelete(question.questionImage))
+          deleteFileIfExists(question.questionImage);
+        if (shouldDelete(question.questionLogo))
+          deleteFileIfExists(question.questionLogo);
+
+        // Delete option images (if any)
+        if (question.options?.length) {
+          question.options.forEach((option) => {
+            if (shouldDelete(option.image)) deleteFileIfExists(option.image);
+          });
+        }
+
+        // Delete all responses
+        try {
+          await PortfolioResponse.deleteMany({ questionId: id });
+        } catch (respErr) {
+          console.error(
+            `Failed to delete responses for portfolio ${id}:`,
+            respErr
+          );
+        }
+
+        await Portfolio.deleteOne({ _id: id });
+      } catch (err) {
+        console.error(`Error deleting portfolio question ${id}:`, err);
       }
       break;
   }

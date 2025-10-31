@@ -500,6 +500,13 @@
                 </div>
                 <% } %>
 
+                <% if (activeSection==='portfolio' ) { %>
+                <!-- Include the header partial -->
+                <div id="show-section" class="fade-in" style="width: 100%;">
+                    <%- include('../components/portfolio/portfolio'); -%>
+                </div>
+                <% } %>
+
                     <% if (activeSection==='media-proflies' ) { %>
                         <!-- Include the header partial -->
                         <div id="show-section" class="fade-in" style="width: 100%;">
@@ -511,6 +518,13 @@
                                 <!-- Include the header partial -->
                                 <div id="show-section" class="fade-in" style="width: 100%;">
                                     <%- include('../components/comment/comment-response-tracking'); -%>
+                                </div>
+                                <% } %>
+
+                                 <% if (activeSection==='portfolio-response-tracker' ) { %>
+                                <!-- Include the header partial -->
+                                <div id="show-section" class="fade-in" style="width: 100%;">
+                                    <%- include('../components/portfolio/portfolio-response-tracking'); -%>
                                 </div>
                                 <% } %>
 

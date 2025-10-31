@@ -874,7 +874,7 @@ router.post("/comment-response", async (req, res) => {
     selectedOptionIndex,
     selectedLink,
   } = req.body;
-  const userId = req.user?._id;
+  const userId = req.user?._id || null;
 
   // ✅ Validate required fields
   if (!questionId || !channelId || selectedOptionIndex === undefined) {
@@ -1005,7 +1005,7 @@ router.get(
           },
         },
 
-        // Lookup user info
+        // Lookup user info — include null userId (left join)
         {
           $lookup: {
             from: "users",
@@ -1014,7 +1014,12 @@ router.get(
             as: "user",
           },
         },
-        { $unwind: "$user" },
+        {
+          $unwind: {
+            path: "$user",
+            preserveNullAndEmptyArrays: true, // ✅ include responses with no userId
+          },
+        },
 
         // Project only necessary fields
         {

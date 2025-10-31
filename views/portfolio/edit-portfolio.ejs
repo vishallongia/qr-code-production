@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Edit Comment Session</title>
+    <title>Edit Portfolio Session</title>
     <link rel="stylesheet" href="/css/add-quiz-question.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
@@ -30,11 +30,11 @@
                     <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Events</a>
                     <span>&rsaquo;</span>
                     <a
-                        href="/tvstation/comment/channels/<%= channel._id %>/session/<%= sessionId %>/comment">Comment</a>
+                        href="/tvstation/portfolio/channels/<%= channel._id %>/session/<%= sessionId %>/portfolio">Portfolio</a>
                     <span>&rsaquo;</span>
-                    <span class="active">Edit Comment Event</span>
+                    <span class="active">Edit Portfolio Event</span>
                 </nav>
-                <h2>Edit Comment Event</h2>
+                <h2>Edit Portfolio Event</h2>
                 <form id="edit-question-form" enctype="multipart/form-data">
                     <input type="hidden" name="channelId" value="<%= channel._id %>" />
                     <input type="hidden" name="questionId" value="<%= question._id %>" />
@@ -45,7 +45,7 @@
 
                     <div class="quiz-question-actions">
                         <button type="button" class="quiz-btn-collapse"
-                            onclick="window.open('/tvstation/comment/channels/<%= channel._id %>/session/<%= sessionId %>/comment-play', '_blank')">
+                            onclick="window.open('/tvstation/portfolio/channels/<%= channel._id %>/session/<%= sessionId %>/portfolio-play', '_blank')">
                              See Frontend
                         </button>
                     </div>
@@ -175,11 +175,11 @@
 
                                     <!-- Option text fields -->
                                     <input type="text" name="optionTexts[]" value="<%= opt.text %>"
-                                        placeholder="Name of Your Respective Comment Section (Optional)" required />
+                                        placeholder="Name of Your Respective Portfolio Section (Optional)" required />
                                     <input type="text" name="optionDescriptions[]" value="<%= opt.description || '' %>"
                                         placeholder="Enter Description" />
                                     <input type="url" name="optionLinks[]" value="<%= opt.link || '' %>"
-                                        placeholder="Link of the Comments of Your Selected Social Media Channel" />
+                                        placeholder="Link of the Portfolios of Your Selected Social Media Channel" />
 
                                     <!-- ✅ Selected logo/image preview -->
                                     <% if (opt.selectedLogoSrc) { %>
@@ -228,7 +228,7 @@
 
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
                 <script src="/js/toastify-setup.js"></script>
-                <script src="/js/edit-comment-question.js"></script>
+                <script src="/js/edit-portfolio-question.js"></script>
 </body>
 
 </html>

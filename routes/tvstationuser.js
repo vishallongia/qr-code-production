@@ -13,6 +13,7 @@ const VoteQuestion = require("../models/VoteQuestion");
 const Applause = require("../models/Applause");
 const MagicScreen = require("../models/MagicScreen");
 const Comment = require("../models/Comments");
+const Portfolio = require("../models/Portfolios");
 const Channel = require("../models/Channel");
 const WinnerRequest = require("../models/WinnerRequest"); // adjust path
 const UserRequest = require("../models/UserRequest");
@@ -22,6 +23,7 @@ const VoteQuestionResponse = require("../models/VoteQuestionResponse");
 const ApplauseResponse = require("../models/ApplauseResponse");
 const MagicScreenResponse = require("../models/MagicScreenResponse");
 const CommentResponse = require("../models/CommentResponse");
+const PortfolioResponse = require("../models/PortfolioResponse");
 const MagicCoinCommission = require("../models/MagicCoinCommission");
 const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
 const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
@@ -1416,6 +1418,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -1432,6 +1435,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -1445,6 +1449,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -1458,6 +1463,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -1495,9 +1501,9 @@ router.get(
           availableCoins: req.user.walletCoins,
           sessionId,
           tvStationUser, // full createdBy user
+          session,
         });
       }
-
       return res.render("user-quiz", {
         channel,
         error: null,
@@ -1508,6 +1514,7 @@ router.get(
         total,
         availableCoins,
         sessionId,
+        session,
       });
     } catch (err) {
       console.error("Error loading quiz question:", err);
@@ -2452,6 +2459,7 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
       "applause",
       "magicscreen",
       "comment",
+      "portfolio",
     ];
 
     if (!validTypes.includes(type)) {
@@ -2483,6 +2491,7 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
       applause: Applause,
       magicscreen: MagicScreen,
       comment: Comment,
+      portfolio: Portfolio,
     };
 
     const questionModel = ModelMap[type];
@@ -2504,6 +2513,7 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
       applause: `tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play`,
       magicscreen: `tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play`,
       comment: `tvstation/comment/channels/${channelId}/session/${sessionId}/comment-play`,
+      portfolio: `tvstation/portfolio/channels/${channelId}/session/${sessionId}/portfolio-play`,
       default: `tvstation/channels/${channelId}/session/${sessionId}/${type}-play`,
     };
 
@@ -2558,6 +2568,7 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
         "applause",
         "magicscreen",
         "comment",
+        "portfolio",
       ].includes(type)
     ) {
       return res.status(400).json({
@@ -2634,6 +2645,17 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
       qr = commentQuestion?.linkedQRCode || null;
     }
 
+    if (type === "portfolio") {
+      const portfolioQuestion = await Portfolio.findOne(
+        { sessionId },
+        "linkedQRCode"
+      )
+        .populate("linkedQRCode")
+        .lean();
+
+      qr = portfolioQuestion?.linkedQRCode || null;
+    }
+
     // ⚠️ Later: add for shopping, brand
 
     const defaultUrl =
@@ -2643,6 +2665,8 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
         ? `${BASE_URL}/tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play/?lang=en`
         : type === "comment"
         ? `${BASE_URL}/tvstation/comment/channels/${session.channelId}/session/${sessionId}/comment-play/?lang=en`
+        : type === "portfolio"
+        ? `${BASE_URL}/tvstation/portfolio/channels/${session.channelId}/session/${sessionId}/portfolio-play/?lang=en`
         : `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=en`;
 
     if (!qr) {
@@ -4958,17 +4982,24 @@ router.post(
 
 router.post("/quiz-viewed", async (req, res) => {
   const { questionId, channelId, sessionId, type } = req.body;
-  const userId = req.user?._id;
+  const userId = req.user?._id || null;
 
   // Validate type first
   if (
     !type ||
-    !["quiz", "voting", "applause", "magicscreen", "comment"].includes(type)
+    ![
+      "quiz",
+      "voting",
+      "applause",
+      "magicscreen",
+      "comment",
+      "portfolio",
+    ].includes(type)
   ) {
     return res.status(400).json({
       success: false,
       message:
-        "Invalid type. Must be 'quiz', 'voting' or 'applause' or 'comment'.",
+        "Invalid type. Must be 'quiz', 'voting' or 'applause' or 'comment' or 'portfolio'.",
     });
   }
 
@@ -5016,6 +5047,7 @@ router.post("/quiz-viewed", async (req, res) => {
         isNoResponseGiven: true,
       });
     } else if (type === "magicscreen") {
+      console.log("works here")
       await MagicScreenResponse.create({
         userId,
         questionId,
@@ -5027,6 +5059,16 @@ router.post("/quiz-viewed", async (req, res) => {
       });
     } else if (type === "comment") {
       await CommentResponse.create({
+        userId,
+        questionId,
+        channelId,
+        sessionId,
+        selectedOptionIndex: 0,
+        selectedLink: null,
+        isNoResponseGiven: true,
+      });
+    } else if (type === "portfolio") {
+      await PortfolioResponse.create({
         userId,
         questionId,
         channelId,
@@ -5072,6 +5114,7 @@ router.post("/link-magic-code", async (req, res) => {
       applause: Applause,
       magicscreen: MagicScreen,
       comment: Comment,
+      portfolio: Portfolio,
       // shopping: Shopping,
       // brand: Brand,
     };
@@ -5081,7 +5124,7 @@ router.post("/link-magic-code", async (req, res) => {
     if (!Model) {
       return res.status(400).json({
         message:
-          "Invalid type. Must be one of: quiz, voting, applause, magicscreen, comment, shopping, brand.",
+          "Invalid type. Must be one of: quiz, voting, applause, magicscreen, comment, portfolio, shopping, brand.",
         type: "error",
       });
     }
@@ -5148,6 +5191,7 @@ router.post("/link-magic-code", async (req, res) => {
       applause: `tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=en`,
       magicscreen: `tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play/?lang=en`,
       comment: `tvstation/comment/channels/${channelId}/session/${sessionId}/comment-play/?lang=en`,
+      portfolio: `tvstation/portfolio/channels/${channelId}/session/${sessionId}/portfolio-play/?lang=en`,
       shopping: `tvstation/shopping/channels/${channelId}/session/${sessionId}/shopping-play/?lang=en`,
       brand: `tvstation/brand/channels/${channelId}/session/${sessionId}/brand-play/?lang=en`,
       default: `tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=en`,
@@ -5176,6 +5220,8 @@ router.post("/link-magic-code", async (req, res) => {
         ? `magicscreen`
         : type === "comment"
         ? `comment`
+        : type === "portfolio"
+        ? `portfolio`
         : type === "shopping"
         ? `shopping`
         : type === "brand"
@@ -5217,7 +5263,7 @@ router.post("/unlink-magic-code", async (req, res) => {
     if (!sessionId || !type) {
       return res.status(400).json({
         message:
-          "sessionId and type (quiz|voting|applause|magicscreen|comment) are required",
+          "sessionId and type (quiz|voting|applause|magicscreen|comment|portfolio) are required",
         type: "error",
       });
     }
@@ -5229,6 +5275,7 @@ router.post("/unlink-magic-code", async (req, res) => {
       applause: Applause,
       magicscreen: MagicScreen,
       comment: Comment,
+      portfolio: Portfolio,
       // shopping: ProductQuestion,
       // brand: BrandQuestion,
     };
@@ -5238,7 +5285,7 @@ router.post("/unlink-magic-code", async (req, res) => {
     if (!Model) {
       return res.status(400).json({
         message:
-          "Invalid type. Must be one of: quiz, voting, applause, magicscreen, comment, shopping, or brand.",
+          "Invalid type. Must be one of: quiz, voting, applause, magicscreen, comment, portfolio, shopping, or brand.",
         type: "error",
       });
     }

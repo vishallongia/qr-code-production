@@ -1,6 +1,10 @@
 const wrapper = document.getElementById("questions-wrapper");
 const template = document.getElementById("question-template");
 
+// Global state references (you can keep these shared)
+let activeOptionBlock = null;
+let selectedAppId = null;
+
 function setupImagePreview(block) {
   const fileInputs = [
     {
@@ -118,7 +122,8 @@ async function generateOptionBlock(block, index) {
   const inputText = document.createElement("input");
   inputText.type = "text";
   inputText.required = true;
-  inputText.placeholder = "Name of Your Respective Comment Section (Optional)";
+  inputText.placeholder =
+    "Name of Your Respective Portfolio Section (Optional)";
 
   // Description
   const inputDesc = document.createElement("input");
@@ -129,7 +134,8 @@ async function generateOptionBlock(block, index) {
   // Option link
   const inputLink = document.createElement("input");
   inputLink.type = "url";
-  inputLink.placeholder = "Link of the Comments of Your Selected Social Media Channel";
+  inputLink.placeholder =
+    "Link of the Portfolios of Your Selected Social Media Channel";
   inputLink.className = "quiz-option-link";
 
   // File
@@ -343,7 +349,7 @@ document
         // ✅ Convert absolute → relative (remove domain)
         try {
           const url = new URL(selectedLogo.src);
-          selectedLogoSrc = url.pathname; // e.g. "/comment-logos/LinkedIn.png"
+          selectedLogoSrc = url.pathname; // e.g. "/portfolio-logos/LinkedIn.png"
         } catch {
           // In case it's already relative
           selectedLogoSrc = selectedLogo.src;
@@ -382,10 +388,13 @@ document
     });
 
     try {
-      const res = await fetch("/tvstation/comment/comment-question/create", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        "/tvstation/portfolio/portfolio-question/create",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const result = await res.json();
       if (result.type === "success") {
@@ -393,7 +402,7 @@ document
 
         const { channelId, sessionId, _id } = result.data; // ✅ Extract
         setTimeout(() => {
-          window.location.href = `/tvstation/comment/channels/${channelId}/session/${sessionId}/editquestion/${_id}`;
+          window.location.href = `/tvstation/portfolio/channels/${channelId}/session/${sessionId}/editquestion/${_id}`;
         }, 1000);
       } else {
         showToast(result.message || "Something went wrong.", "error");
@@ -410,26 +419,17 @@ document
 let cachedLogos = [];
 let logosFetched = false;
 
-async function fetchCommentLogos() {
-  // ✅ Show loader before starting
-  loader.style.display = "flex";
-
-  if (logosFetched) {
-    loader.style.display = "none"; // ✅ Hide loader immediately if already cached
-    return cachedLogos;
-  }
+async function fetchPortfolioLogos() {
+  if (logosFetched) return cachedLogos; // ✅ Return cached logos if already loaded
 
   try {
-    const res = await fetch("/tvstation/comment/comment-logos");
+    const res = await fetch("/tvstation/portfolio/portfolio-logos");
     cachedLogos = await res.json();
     logosFetched = true;
     return cachedLogos;
   } catch (err) {
-    console.error("Error loading comment logos:", err);
+    console.error("Error loading portfolio logos:", err);
     return [];
-  } finally {
-    // ✅ Always hide loader, success or fail
-    loader.style.display = "none";
   }
 }
 
@@ -437,7 +437,7 @@ async function createLogoSelectionContainer(previewImg) {
   const container = document.createElement("div");
   container.className = "quiz-option-logos";
 
-  const urls = await fetchCommentLogos();
+  const urls = await fetchPortfolioLogos();
 
   urls.forEach((src) => {
     const logoImg = document.createElement("img");
@@ -653,3 +653,177 @@ function enableOptionDragAndDrop(block) {
     hoverLock = { block: hovered, x, y };
   });
 }
+
+// New Functionallity in option hybrid approach for options (can select event too in popups)
+
+async function populateAppSelectionPopup(sessionId, popupContainer) {
+  const loader = document.getElementById("loader");
+  loader.style.display = "flex";
+
+  try {
+    const res = await fetch(`/tvstation/${sessionId}/apps`);
+    const result = await res.json();
+
+    if (!result.success)
+      throw new Error(result.message || "Failed to load apps.");
+
+    const {
+      quizQuestion,
+      voteQuestion,
+      applauseQuestion,
+      magicScreenQuestion,
+    } = result.data;
+    const questions = [
+      quizQuestion,
+      voteQuestion,
+      applauseQuestion,
+      magicScreenQuestion,
+    ];
+    popupContainer.innerHTML = "";
+
+    questions.forEach((q, idx) => {
+      if (!q || (!q.question && !q.questionImage)) return;
+
+      const card = document.createElement("div");
+      card.className = "app-card";
+      card.dataset.questionId = q._id;
+      card.dataset.question = q.question || "";
+      card.dataset.questionImage = q.questionImage || "";
+      card.dataset.questionLink = q.link || "";
+      card.dataset.appName = q.name || "N/A";
+
+      card.innerHTML = `
+        <div class="app-name">${card.dataset.appName}</div>
+        <img src="${
+          q.questionImage || "/images/default.png"
+        }" alt="Question Image"/>
+        <span>${q.question || `Question ${idx + 1}`}</span>
+      `;
+
+      // Select behavior
+      card.addEventListener("click", () => {
+        popupContainer
+          .querySelectorAll(".app-card")
+          .forEach((c) => c.classList.remove("active"));
+        card.classList.add("active");
+        selectedAppId = q._id;
+
+        const selectedAppNameElem =
+          document.getElementById("selected-app-name");
+        if (selectedAppNameElem)
+          selectedAppNameElem.textContent = card.dataset.appName;
+      });
+
+      popupContainer.appendChild(card);
+    });
+  } catch (err) {
+    console.error("Error fetching apps:", err);
+    showToast(err.message, "error");
+  } finally {
+    loader.style.display = "none";
+  }
+}
+
+/**
+ * Handle popup OK button click → fills selected app data into active option block
+ */
+async function handleAppSelectionConfirm() {
+  if (!selectedAppId || !activeOptionBlock) {
+    alert("Please select an app first.");
+    return;
+  }
+
+  const selectedCard = document.querySelector(
+    "#app-card-container .app-card.active"
+  );
+  if (!selectedCard) return;
+
+  const fileInput = activeOptionBlock.querySelector('input[type="file"]');
+  const textInput = activeOptionBlock.querySelector('input[type="text"]');
+  const linkInput = activeOptionBlock.querySelector(".quiz-option-link");
+  const previewImg = activeOptionBlock.querySelector(".preview-img");
+  const summaryAppName = activeOptionBlock.querySelector(".summary-app-name");
+
+  const questionImage = selectedCard.dataset.questionImage;
+  const questionText = selectedCard.dataset.question;
+  const questionLink = selectedCard.dataset.questionLink;
+  const appName = selectedCard.dataset.appName;
+
+  // Set image
+  if (questionImage) {
+    await setImageInputFromUrl(fileInput, questionImage);
+    previewImg.src = questionImage;
+    previewImg.style.display = "none";
+
+    const summaryImg = activeOptionBlock.querySelector(".summary-img");
+    summaryImg.src = questionImage;
+    summaryImg.style.display = "block";
+    summaryImg.style.width = "100px";
+  }
+
+  // Set text
+  if (questionText) {
+    textInput.value = questionText;
+    const summaryText = activeOptionBlock.querySelector(".summary-text");
+    summaryText.textContent = questionText;
+    summaryText.style.display = "block";
+    textInput.style.display = "none";
+  }
+
+  // Set link
+  if (questionLink && linkInput) {
+    linkInput.value = questionLink;
+    const summaryLink = activeOptionBlock.querySelector(".summary-link");
+    summaryLink.textContent = "Open Front Screen";
+    summaryLink.style.display = "inline-block";
+    summaryLink.onclick = () => window.open(questionLink, "_blank");
+    linkInput.style.display = "none";
+  }
+
+  // Set app name summary
+  if (appName) {
+    summaryAppName.textContent = `App: ${appName}`;
+    summaryAppName.style.display = "block";
+  }
+
+  // Hide popup
+  document.getElementById("app-selection-popup").style.display = "none";
+  selectedAppId = null;
+  activeOptionBlock = null;
+}
+
+/**
+ * Helper function to convert an image URL into a File and assign it to an input[type=file]
+ */
+async function setImageInputFromUrl(fileInput, url) {
+  if (!url) return;
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const filename = url.split("/").pop() || "image.png";
+  const file = new File([blob], filename, { type: blob.type });
+
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+  fileInput.files = dataTransfer.files;
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  const sessionId =
+    document.getElementById("questions-wrapper").dataset.sessionId;
+  const popupContainer = document.getElementById("app-card-container");
+
+  // Populate apps into popup
+  await populateAppSelectionPopup(sessionId, popupContainer);
+
+  // Bind popup OK button
+  document
+    .getElementById("popup-ok-btn-select-app")
+    .addEventListener("click", handleAppSelectionConfirm);
+
+  // Bind Cancel button
+  document
+    .getElementById("popup-cancel-btn-select-app")
+    .addEventListener("click", () => {
+      document.getElementById("app-selection-popup").style.display = "none";
+    });
+});

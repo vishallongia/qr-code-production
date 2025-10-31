@@ -1,14 +1,15 @@
 const mongoose = require("mongoose");
 
-const magicScreenResponseSchema = new mongoose.Schema(
+const portfolioResponseSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
     questionId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "MagicScreen", // Reference to the MagicScreen model
+      ref: "Portfolio", // ✅ Reference to the Portfolio model
       required: true,
     },
     channelId: {
@@ -25,7 +26,7 @@ const magicScreenResponseSchema = new mongoose.Schema(
       default: true,
     },
     selectedLink: {
-      type: String, // New field to store the link of the selected option
+      type: String, // Store the link of the selected option
       default: null,
     },
     sessionId: {
@@ -42,7 +43,4 @@ const magicScreenResponseSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model(
-  "MagicScreenResponse",
-  magicScreenResponseSchema
-);
+module.exports = mongoose.model("PortfolioResponse", portfolioResponseSchema);

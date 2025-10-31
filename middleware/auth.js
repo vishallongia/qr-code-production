@@ -6,7 +6,11 @@ const PUBLIC_PLAY_ROUTES = [
   "voting-play",
   "applause-play",
   "magicscreen-play",
-  "comment-play"
+  "comment-play",
+  "portfolio-play",
+  "magic-screen-response",
+  "quiz-viewed",
+  "comment-response",
   // add more like "reaction-play", "buzzer-play" later
 ];
 
@@ -17,10 +21,15 @@ const authMiddleware = async (req, res, next) => {
     const path = req.path.toLowerCase();
 
     if (!token) {
-      if (PUBLIC_PLAY_ROUTES.some((route) => path.includes(route))) {
+      const pathSegments = path.split("/").filter(Boolean);
+      const lastSegment = pathSegments[pathSegments.length - 1] || "";
+
+      // ✅ Allow only if the last segment exactly matches a public route
+      if (PUBLIC_PLAY_ROUTES.includes(lastSegment)) {
         return next();
       }
     }
+
 
     if (!token && req.path !== "/") {
       return handleAuthError(req, res, "Token is missing. Please log in.");

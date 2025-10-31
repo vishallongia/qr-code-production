@@ -247,9 +247,13 @@ function setupMediaProfileToggles(block) {
     const customToggle = block.querySelector(
       'input[name="logoMediaProfile[]"][value="custom"]'
     );
-    logoParentContainer.style.display = customToggle?.checked
-      ? "block"
-      : "none";
+    const broadcasterToggle = block.querySelector(
+      'input[name="logoMediaProfile[]"][value="broadcaster"]'
+    );
+
+    // Show the container if either custom OR broadcaster is checked
+    logoParentContainer.style.display =
+      customToggle?.checked || broadcasterToggle?.checked ? "block" : "none";
   }
 
   toggles.forEach((toggle) => {

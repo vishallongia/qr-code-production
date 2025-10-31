@@ -10,6 +10,7 @@ const tvStationUserRouter = require("./routes/tvstationuser");
 const tvStationApplauseApp = require("./routes/tvstationapplauseapp");
 const tvStationMagicScreenApp = require("./routes/tvstationmagicscreenapp");
 const tvStationCommentApp = require("./routes/tvstationcommentapp");
+const tvStationPortfolioApp = require("./routes/tvstationportfolioapp");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -71,6 +72,10 @@ app.use(
   express.static(path.join(__dirname, "comment-logos"))
 );
 app.use(
+  "/portfolio-logos",
+  express.static(path.join(__dirname, "portfolio-logos"))
+);
+app.use(
   "/questions-image",
   express.static(path.join(__dirname, "questions-image"))
 );
@@ -87,6 +92,7 @@ app.use("/tvstation", authMiddleware, tvStationUserRouter); // It contains mixed
 app.use("/tvstation/applause", authMiddleware, tvStationApplauseApp); // For third app applause
 app.use("/tvstation/magicscreen", authMiddleware, tvStationMagicScreenApp); // For fourth app magicscreen
 app.use("/tvstation/comment", authMiddleware, tvStationCommentApp); // For fourth app magicscreen
+app.use("/tvstation/portfolio", authMiddleware, tvStationPortfolioApp); // For fourth app magicscreen
 
 // 404 Handler
 app.use((req, res) => {

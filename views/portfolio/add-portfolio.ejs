@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Comment Event</title>
+    <title>Add Portfolio Event</title>
     <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
     <link rel="stylesheet" href="/css/add-quiz-question.css" />
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
@@ -50,15 +50,15 @@
                     <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Events</a>
                     <span>&rsaquo;</span>
                     <a
-                        href="/tvstation/comment/channels/<%= channel._id %>/session/<%= sessionId %>/comment">Comment</a>
+                        href="/tvstation/portfolio/channels/<%= channel._id %>/session/<%= sessionId %>/portfolio">Portfolio</a>
                     <span>&rsaquo;</span>
-                    <span class="active">Create a Comment Event</span>
+                    <span class="active">Create a Portfolio Event</span>
                 </nav>
-                <h2>Create a New Comment Event</h2>
+                <h2>Create a New Portfolio Event</h2>
                 <form id="questions-form">
                     <div id="questions-wrapper" data-channel-id="<%= channel?._id %>"
                         data-session-id="<%= sessionId %>">></div>
-                    <button type="submit" class="quiz-btn-submit">Save Comment Event</button>
+                    <button type="submit" class="quiz-btn-submit">Save Portfolio Event</button>
                 </form>
             </div>
 
@@ -67,7 +67,7 @@
             <template id="question-template">
                 <div class="quiz-question-wrapper">
                     <div class="quiz-question-header">
-                        <span class="quiz-question-title">Comment Event</span>
+                        <span class="quiz-question-title">Portfolio Event</span>
                         <div class="quiz-question-actions">
                             <button type="button" class="quiz-btn-collapse" style="display: none;">Collapse</button>
                             <button type="button" style="display: none;" class="quiz-btn-delete">Delete</button>
@@ -186,6 +186,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
-<script src="/js/add-comment-question.js"></script>
+<script src="/js/add-portfolio-question.js"></script>
 
 </html>

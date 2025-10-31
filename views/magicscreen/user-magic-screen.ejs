@@ -262,10 +262,10 @@
 
         if (link) {
             option.addEventListener('click', (e) => {
-                if (!window.isLoggedIn) {
-                    coinPopup.style.display = "flex";
-                    return;
-                }
+                // if (!window.isLoggedIn) {
+                //     coinPopup.style.display = "flex";
+                //     return;
+                // }
                 // Prevent label click from toggling radio twice
                 if (e.target.tagName !== 'INPUT') {
                     window.open(link, '_blank');

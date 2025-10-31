@@ -221,7 +221,6 @@ document
       formData.append(el.name, el.value);
     });
 
-
     const showLogoToggle = document.getElementById("showLogoToggle");
     formData.set("showLogoSection", showLogoToggle.checked ? "true" : "false");
     // formData.append("logoMediaProfile", logoMediaProfile);
@@ -356,7 +355,7 @@ function setupMediaProfileToggles() {
   toggles.forEach((toggle) => {
     toggle.addEventListener("change", () => {
       // Show/hide custom logo container if "custom" checkbox is toggled
-      if (toggle.value === "custom") {
+      if (toggle.value === "custom" || toggle.value === "broadcaster") {
         logoParentContainer.style.display = toggle.checked ? "block" : "none";
       }
     });

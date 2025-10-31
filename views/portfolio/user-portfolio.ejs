@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Magic Comments</title>
+    <title>Magic Portfolios</title>
     <link rel="stylesheet" href="/css/user-quiz.css" />
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -59,7 +59,7 @@
     </div>
     <input type="hidden" name="sessionId" value="<%= sessionId %>">
     <div class="uq-header">
-        <div class="uq-logo" onclick="window.location.href='/'">Magic Comments</div>
+        <div class="uq-logo" onclick="window.location.href='/'">Magic Portfolios</div>
         <div class="uq-coins" id="walletCoins" onclick="window.location.href='/magic-coin-wallet'">
             🪙 Magic Coins: <%= availableCoins || "N/A" %>
         </div>
@@ -262,10 +262,10 @@
 
         if (link) {
             option.addEventListener('click', (e) => {
-                // if (!window.isLoggedIn) {
-                //     coinPopup.style.display = "flex";
-                //     return;
-                // }
+                if (!window.isLoggedIn) {
+                    coinPopup.style.display = "flex";
+                    return;
+                }
                 // Prevent label click from toggling radio twice
                 if (e.target.tagName !== 'INPUT') {
                     window.open(link, '_blank');
@@ -293,7 +293,7 @@
             loader.style.display = "flex";
 
             // Save response via API
-            fetch("/tvstation/comment/comment-response", {
+            fetch("/tvstation/portfolio/portfolio-response", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -310,7 +310,7 @@
                 .then(data => {
                     if (data.success) {
                         console.log("Response saved:", data);
-                        localStorage.setItem(`comment_response_${questionId}_${sessionId}`, "answered");
+                        localStorage.setItem(`portfolio_response_${questionId}_${sessionId}`, "answered");
 
                     } else {
                         console.error("Failed to save response:", data.message);
@@ -332,8 +332,8 @@
         const channelId = document.querySelector('input[name="channelId"]').value;
         const sessionId = document.querySelector('input[name="sessionId"]').value;
 
-        const responseKey = `comment_response_${questionId}_${sessionId}`;
-        const landKey = `comment_land_${questionId}_${sessionId}`;
+        const responseKey = `portfolio_response_${questionId}_${sessionId}`;
+        const landKey = `portfolio_land_${questionId}_${sessionId}`;
 
         // ✅ Reset answer state here, before first visit/session checks
         if (localStorage.getItem(responseKey) === "answered") {
@@ -360,7 +360,7 @@
                 localStorage.getItem(responseKey) === "never" && // not answered
                 sessionStorage.getItem(landKey) === "visited"    // means reload/close
             ) {
-                const payload = JSON.stringify({ questionId, channelId, sessionId, type: "comment" });
+                const payload = JSON.stringify({ questionId, channelId, sessionId, type: "portfolio" });
 
                 if (navigator.sendBeacon) {
                     const blob = new Blob([payload], { type: "application/json" });

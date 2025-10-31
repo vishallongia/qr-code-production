@@ -223,15 +223,40 @@
                         profileSequence.forEach((profile)=> {
                         let profileData = null;
 
-                        if (profile === 'custom' && currentQuestion.logo &&
-                        currentQuestion.logoMediaProfile.includes('custom')) {
+                        if (
+                        ['custom', 'broadcaster'].includes(profile) &&
+                        currentQuestion.logo &&
+                        currentQuestion.logoMediaProfile.includes(profile)
+                        ) {
                         profileData = {
                         logo: currentQuestion.logo,
                         title: currentQuestion.logoTitle,
                         description: currentQuestion.logoDescription,
                         link: currentQuestion.logoLink
                         };
-                        } else if (
+                        }
+
+                        else if (profile === 'project' && currentQuestion.logoMediaProfile.includes('project') &&
+                        channel) {
+                        profileData = {
+                        logo: channel.logo || '',
+                        title: channel.logoTitle || '',
+                        description: channel.description || '',
+                        link: channel.link || ''
+                        };
+                        }
+
+                        else if (profile === 'episode' && currentQuestion.logoMediaProfile.includes('episode') &&
+                        session) {
+                        profileData = {
+                        logo: session.logo || '',
+                        title: session.logoTitle || '',
+                        description: session.description || '',
+                        link: session.link || ''
+                        };
+                        }
+
+                        else if (
                         tvStationUser.tvStationRules &&
                         tvStationUser.tvStationRules[profile] &&
                         currentQuestion.logoMediaProfile.includes(profile)

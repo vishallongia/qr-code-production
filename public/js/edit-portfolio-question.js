@@ -3,15 +3,15 @@ let activeOptionBlock = null;
 let cachedLogos = [];
 let logosFetched = false;
 
-async function fetchCommentLogos() {
+async function fetchPortfolioLogos() {
   if (logosFetched) return cachedLogos;
 
   try {
-    const res = await fetch("/tvstation/comment/comment-logos");
+    const res = await fetch("/tvstation/portfolio/portfolio-logos");
     cachedLogos = await res.json();
     logosFetched = true;
   } catch (err) {
-    console.error("Error loading comment logos:", err);
+    console.error("Error loading portfolio logos:", err);
     cachedLogos = [];
   }
 
@@ -286,9 +286,9 @@ function addOptionBlock(text = "", imageUrl = "", description = "", link = "") {
     <div class="quiz-option-inner">
       <label>Option ${index + 1}</label>
 
-      <input type="text" name="optionTexts[]" value="${text}" placeholder="Name of Your Respective Comment Section (Optional)" required />
+      <input type="text" name="optionTexts[]" value="${text}" placeholder="Name of Your Respective Portfolio Section (Optional)" required />
       <input type="text" name="optionDescriptions[]" value="${description}" placeholder="Enter Description" />
-      <input type="url" name="optionLinks[]" value="${link}" placeholder="Link of the Comments of Your Selected Social Media Channel" />
+      <input type="url" name="optionLinks[]" value="${link}" placeholder="Link of the Portfolios of Your Selected Social Media Channel" />
 
       <div class="quiz-logo-and-preview-wrapper" style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
       <img class="quiz-selected-logo-preview" style="display:none; max-width:150px; margin-top:6px;" />
@@ -417,7 +417,7 @@ document
       if (activeLogo) {
         try {
           const url = new URL(activeLogo.src);
-          selectedLogoSrc = url.pathname; // ✅ only "/comment-logos/LinkedIn.png"
+          selectedLogoSrc = url.pathname; // ✅ only "/portfolio-logos/LinkedIn.png"
         } catch {
           // If it's already relative (no host)
           selectedLogoSrc = activeLogo.src;
@@ -450,7 +450,7 @@ document
 
     try {
       const response = await fetch(
-        "/tvstation/comment/comment-question/update",
+        "/tvstation/portfolio/portfolio-question/update",
         {
           method: "POST",
           body: formData,
@@ -631,7 +631,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const loader = document.getElementById("loader");
   loader.style.display = "flex";
   try {
-    await fetchCommentLogos(); // Load logos once
+    await fetchPortfolioLogos(); // Load logos once
 
     document.querySelectorAll(".quiz-option-block").forEach((block) => {
       // Ensure preview image exists (create if missing)
