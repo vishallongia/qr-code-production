@@ -355,11 +355,23 @@ function setupMediaProfileToggles() {
   toggles.forEach((toggle) => {
     toggle.addEventListener("change", () => {
       // Show/hide custom logo container if "custom" checkbox is toggled
-      if (toggle.value === "custom" || toggle.value === "broadcaster") {
+      if (toggle.value === "custom") {
         logoParentContainer.style.display = toggle.checked ? "block" : "none";
       }
     });
   });
+
+  // Handle edit button behavior
+  const editBroadcaster = document.getElementById("edit-broadcaster");
+  if (editBroadcaster) {
+    editBroadcaster.addEventListener("click", () => {
+      logoParentContainer.style.display =
+        logoParentContainer.style.display === "none" ||
+        logoParentContainer.style.display === ""
+          ? "block"
+          : "none";
+    });
+  }
 }
 
 // Call it on page load to attach click listeners only

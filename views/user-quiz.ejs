@@ -240,7 +240,7 @@
                         channel) {
                         profileData = {
                         logo: channel.logo || '',
-                        title: channel.logoTitle || '',
+                        title: channel.channelName || '',
                         description: channel.description || '',
                         link: channel.link || ''
                         };
@@ -250,18 +250,10 @@
                         session) {
                         profileData = {
                         logo: session.logo || '',
-                        title: session.logoTitle || '',
+                        title: session.name || '',
                         description: session.description || '',
                         link: session.link || ''
                         };
-                        }
-
-                        else if (
-                        tvStationUser.tvStationRules &&
-                        tvStationUser.tvStationRules[profile] &&
-                        currentQuestion.logoMediaProfile.includes(profile)
-                        ) {
-                        profileData = tvStationUser.tvStationRules[profile];
                         }
 
                         if (profileData) {
@@ -311,7 +303,7 @@
 
                 <!-- Move Question Image BELOW the text -->
                 <% if (currentQuestion.questionImage) { %>
-                    <div class="uq-question-image-wrapper">
+                    <div class="uq-question-image-wrapper" style="display: none;">
                         <% if (currentQuestion.questionImageLink) { %>
                             <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
                                 <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"
@@ -323,7 +315,7 @@
                                 <% } %>
                     </div>
                     <% } %>
-                        <div class="uq-question-text" style="font-size: 1.4rem; font-weight: bold;">
+                        <div class="uq-question-text" style="font-size: 1.4rem; font-weight: bold; display: none;">
                             <%= currentQuestion.question %>
                         </div>
                         <!-- Options -->

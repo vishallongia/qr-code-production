@@ -74,6 +74,8 @@
                                         <input type="checkbox" name="logoMediaProfile[]" value="broadcaster" />
                                         <span class="quiz-toggle-slider"></span>
                                     </label>
+                                      <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
+                                    id="edit-broadcaster">Edit</button>
                                 </div>
 
                                 <div class="quiz-toggle-wrapper">
@@ -82,6 +84,8 @@
                                         <input type="checkbox" name="logoMediaProfile[]" value="project" />
                                         <span class="quiz-toggle-slider"></span>
                                     </label>
+                                      <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
+                                    id="edit-project">Edit</button>
                                 </div>
 
                                 <div class="quiz-toggle-wrapper">
@@ -90,6 +94,8 @@
                                         <input type="checkbox" name="logoMediaProfile[]" value="episode" />
                                         <span class="quiz-toggle-slider"></span>
                                     </label>
+                                      <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
+                                    id="edit-episode">Edit</button>
                                 </div>
 
                                 <div class="quiz-toggle-wrapper" style="display: none;">
@@ -128,9 +134,10 @@
 
                             <hr />
                         </div>
+                        <div style="display: none;">
                         <div class="quiz-form-group">
                             <label>Question</label>
-                            <input type="text" name="question" placeholder="Enter your question" required />
+                            <input type="text" name="question" placeholder="Enter your question" value="<%= session?.name || '' %>" />
                         </div>
 
                         <div class="quiz-form-group">
@@ -154,6 +161,7 @@
                                 <input type="file" class="quiz-questionLogo quiz-hidden-file" accept="image/*" />
                             </label>
                             <img class="preview-img quiz-questionLogoPreview" style="display: none;" />
+                        </div>
                         </div>
 
                         <div class="quiz-option-wrapper">

@@ -243,18 +243,34 @@ function setupMediaProfileToggles(block) {
   const toggles = block.querySelectorAll('input[name="logoMediaProfile[]"]');
   const logoParentContainer = block.querySelector("#logoParentContainer");
 
-  function updateCustomVisibility() {
-    const customToggle = block.querySelector(
-      'input[name="logoMediaProfile[]"][value="custom"]'
-    );
-    const broadcasterToggle = block.querySelector(
-      'input[name="logoMediaProfile[]"][value="broadcaster"]'
-    );
+function updateCustomVisibility() {
+  const customToggle = block.querySelector(
+    'input[name="logoMediaProfile[]"][value="custom"]'
+  );
+  const editBroadcaster = block.querySelector("#edit-broadcaster");
 
-    // Show the container if either custom OR broadcaster is checked
+  // 🟢 Toggle container when custom checkbox changes
+  const updateVisibility = () => {
+    logoParentContainer.style.display = customToggle?.checked
+      ? "block"
+      : "none";
+  };
+
+  customToggle?.addEventListener("change", updateVisibility);
+
+  // 🟢 Toggle container when edit-broadcaster is clicked
+  editBroadcaster?.addEventListener("click", () => {
     logoParentContainer.style.display =
-      customToggle?.checked || broadcasterToggle?.checked ? "block" : "none";
-  }
+      logoParentContainer.style.display === "none" ||
+      logoParentContainer.style.display === ""
+        ? "block"
+        : "none";
+  });
+
+  // 🟢 Set initial state on load
+  updateVisibility();
+}
+
 
   toggles.forEach((toggle) => {
     toggle.addEventListener("change", () => {

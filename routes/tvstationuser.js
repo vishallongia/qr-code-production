@@ -32,6 +32,7 @@ const BASE_URL = process.env.FRONTEND_URL; // update if needed
 const { addUploadPath } = require("../utils/selectUploadDestination");
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
 const SendEmail = require("../Messages/SendEmail");
+const { session } = require("passport");
 
 // GET /channels - paginated list
 router.get("/channels", async (req, res) => {
@@ -705,11 +706,13 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
+        session:null
       });
     }
 
     try {
       const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
 
       if (!channel) {
         return res.render("edit-question", {
@@ -717,6 +720,7 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
+          session:null
         });
       }
 
@@ -726,9 +730,19 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
+          session:null
         });
       }
 
+      if (!session) {
+        return res.render("edit-question", {
+          error: "Session not found",
+          channel,
+          session: null,
+          question: null,
+          user: req.user,
+        });
+      }
       const question = await QuizQuestion.findOne({
         _id: questionId,
         channelId,
@@ -740,6 +754,7 @@ router.get(
           channel,
           question: null,
           user: req.user,
+          session : null
         });
       }
       return res.render("edit-question", {
@@ -748,6 +763,7 @@ router.get(
         question,
         user: req.user,
         sessionId,
+        session
       });
     } catch (err) {
       console.error("Error fetching question for edit:", err);
@@ -5047,7 +5063,7 @@ router.post("/quiz-viewed", async (req, res) => {
         isNoResponseGiven: true,
       });
     } else if (type === "magicscreen") {
-      console.log("works here")
+      console.log("works here");
       await MagicScreenResponse.create({
         userId,
         questionId,
