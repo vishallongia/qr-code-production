@@ -60,6 +60,8 @@
                                     <input type="checkbox" name="logoMediaProfile[]" value="broadcaster" />
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
+                                <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
+                                    id="edit-broadcaster">Edit</button>
                             </div>
                             <div class="quiz-toggle-wrapper">
                                 <label class="quiz-toggle-label">Project</label>
@@ -67,6 +69,8 @@
                                     <input type="checkbox" name="logoMediaProfile[]" value="project" />
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
+                                <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
+                                    id="edit-project">Edit</button>
                             </div>
                             <div class="quiz-toggle-wrapper">
                                 <label class="quiz-toggle-label">Episode</label>
@@ -74,8 +78,10 @@
                                     <input type="checkbox" name="logoMediaProfile[]" value="episode" />
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
+                                <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
+                                    id="edit-episode">Edit</button>
                             </div>
-                            <div class="quiz-toggle-wrapper">
+                            <div class="quiz-toggle-wrapper" style="display: none;">
                                 <label class="quiz-toggle-label">Custom</label>
                                 <label class="quiz-toggle-switch">
                                     <input type="checkbox" name="logoMediaProfile[]" value="custom" />
@@ -109,9 +115,10 @@
                             </div>
                             <hr />
                         </div>
+                        <div style="display: none;">
                         <div class="quiz-form-group">
                             <label>Question</label>
-                            <input type="text" name="question" placeholder="Enter your question" required />
+                            <input type="text" name="question" placeholder="Enter your question" value="<%= session?.name || '' %>" />
                         </div>
                         <div class="quiz-form-group">
                             <label>Question Image (optional)</label>
@@ -124,6 +131,7 @@
                         <div class="quiz-form-group">
                             <label>Question Image Link (optional)</label>
                             <input type="url" name="questionImageLink" placeholder="https://example.com" />
+                        </div>
                         </div>
                         <div class="quiz-option-wrapper">
                             <div class="quiz-option-blocks quiz-options-grid"></div>

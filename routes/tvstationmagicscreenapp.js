@@ -365,11 +365,13 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
+        session: null,
       });
     }
 
     try {
       const channel = await Channel.findById(channelId);
+      const session = await Channel.findById(sessionId);
 
       if (!channel) {
         return res.render("magicscreen/edit-question", {
@@ -377,6 +379,7 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
+          session: null,
         });
       }
 
@@ -386,6 +389,7 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
+          session: null,
         });
       }
 
@@ -400,6 +404,7 @@ router.get(
           channel,
           question: null,
           user: req.user,
+          session: null,
         });
       }
 
@@ -409,6 +414,7 @@ router.get(
         question,
         user: req.user,
         sessionId,
+        session,
       });
     } catch (err) {
       console.error("Error fetching magic screen question for edit:", err);
@@ -417,6 +423,7 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
+        session: null,
       });
     }
   }
@@ -750,6 +757,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session : null
         });
       }
 
@@ -763,6 +771,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session:null
         });
       }
 
@@ -776,6 +785,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session : null
         });
       }
 
@@ -814,6 +824,7 @@ router.get(
           availableCoins,
           sessionId,
           tvStationUser: null,
+          session
         });
       }
 
@@ -828,6 +839,7 @@ router.get(
         availableCoins,
         sessionId,
         tvStationUser,
+        session
       });
     } catch (err) {
       console.error("Error loading magic screen question:", err);
@@ -839,6 +851,7 @@ router.get(
         index: 0,
         total: 0,
         availableCoins: 0,
+        session : null
       });
     }
   }

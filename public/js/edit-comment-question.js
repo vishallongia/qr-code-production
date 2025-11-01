@@ -445,6 +445,23 @@ document
     formData.append("options", JSON.stringify(optionsArray));
     formData.append("clearedImages", cleared.join(","));
 
+        // ✅ Convert FormData to plain object for logging
+    const formDataObj = {};
+    formData.forEach((value, key) => {
+      if (formDataObj[key]) {
+        if (!Array.isArray(formDataObj[key])) {
+          formDataObj[key] = [formDataObj[key]];
+        }
+        formDataObj[key].push(value);
+      } else {
+        formDataObj[key] = value;
+      }
+    });
+
+        console.log("🧩 DEBUG: FormData JSON payload:");
+    console.log(JSON.stringify(formDataObj, null, 2));
+
+
     const loader = document.getElementById("loader");
     loader.style.display = "flex";
 
@@ -475,18 +492,43 @@ document
 
 function setupMediaProfileToggles() {
   const toggles = document.querySelectorAll(
-    '.quiz-media-profile-toggles input[type="checkbox"][name="logoMediaProfile[]"]'
+    '.quiz-media-profile-toggles input[name="logoMediaProfile[]"]'
   );
   const logoParentContainer = document.getElementById("logoParentContainer");
+  const editBroadcaster = document.getElementById("edit-broadcaster");
 
+  if (!logoParentContainer) return; // safety check
+
+  // Helper to show/hide based on "custom" checkbox
+  function updateVisibility() {
+    const customToggle = document.querySelector(
+      'input[name="logoMediaProfile[]"][value="custom"]'
+    );
+    logoParentContainer.style.display = customToggle?.checked
+      ? "block"
+      : "none";
+  }
+
+  // Handle "custom" checkbox toggle
   toggles.forEach((toggle) => {
     toggle.addEventListener("change", () => {
-      // Show/hide custom logo container if "custom" checkbox is toggled
-      if (toggle.value === "custom") {
-        logoParentContainer.style.display = toggle.checked ? "block" : "none";
-      }
+      if (toggle.value === "custom") updateVisibility();
     });
   });
+
+  // Handle edit-broadcaster click to toggle container visibility
+  if (editBroadcaster) {
+    editBroadcaster.addEventListener("click", () => {
+      logoParentContainer.style.display =
+        logoParentContainer.style.display === "none" ||
+        logoParentContainer.style.display === ""
+          ? "block"
+          : "none";
+    });
+  }
+
+  // Initialize correct state on page load
+  updateVisibility();
 }
 
 function setupUnifiedPreview(optDiv) {

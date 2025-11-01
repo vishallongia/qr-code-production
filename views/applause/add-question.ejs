@@ -65,6 +65,8 @@
                                         <input type="checkbox" name="logoMediaProfile[]" value="broadcaster" />
                                         <span class="quiz-toggle-slider"></span>
                                     </label>
+                                    <button type="button" class="quiz-btn-submit"
+                                        style="margin:2px 0px; padding: 4px 8px;" id="edit-broadcaster">Edit</button>
                                 </div>
 
                                 <div class="quiz-toggle-wrapper">
@@ -73,6 +75,8 @@
                                         <input type="checkbox" name="logoMediaProfile[]" value="project" />
                                         <span class="quiz-toggle-slider"></span>
                                     </label>
+                                    <button type="button" class="quiz-btn-submit"
+                                        style="margin:2px 0px; padding: 4px 8px;" id="edit-project">Edit</button>
                                 </div>
 
                                 <div class="quiz-toggle-wrapper">
@@ -81,9 +85,11 @@
                                         <input type="checkbox" name="logoMediaProfile[]" value="episode" />
                                         <span class="quiz-toggle-slider"></span>
                                     </label>
+                                    <button type="button" class="quiz-btn-submit"
+                                        style="margin:2px 0px; padding: 4px 8px;" id="edit-episode">Edit</button>
                                 </div>
 
-                                <div class="quiz-toggle-wrapper">
+                                <div class="quiz-toggle-wrapper" style="display: none;">
                                     <label class="quiz-toggle-label">Custom</label>
                                     <label class="quiz-toggle-switch">
                                         <input type="checkbox" name="logoMediaProfile[]" value="custom" />
@@ -119,28 +125,32 @@
 
                             <hr />
                         </div>
-                        <div class="quiz-form-group">
-                            <label>Name of The Episode</label>
-                            <input type="text" name="question" placeholder="Name of The Episode" value="Who or What do you want to receive applause for?" required />
-                        </div>
+                        <div style="display: none;">
+                            <div class="quiz-form-group">
+                                <label>Name of The Episode</label>
+                                <input type="text" name="question" placeholder="Name of The Episode"
+                                    value="<%= session?.name || '' %>" />
+                            </div>
 
-                        <div class="quiz-form-group">
-                            <label>Description of The Episode</label>
-                            <input type="text" name="questionDescription" placeholder="Description of The Episode" />
-                        </div>
+                            <div class="quiz-form-group">
+                                <label>Description of The Episode</label>
+                                <input type="text" name="questionDescription"
+                                    placeholder="Description of The Episode" />
+                            </div>
 
-                        <div class="quiz-form-group">
-                            <label>Upload Image (Preview) of The Episode</label>
-                            <label class="quiz-file-label">
-                                <span class="quiz-file-label-text">Choose File</span>
-                                <input type="file" class="quiz-questionImage quiz-hidden-file" accept="image/*" />
-                            </label>
-                            <img class="preview-img quiz-questionImagePreview" style="display: none;" />
-                        </div>
+                            <div class="quiz-form-group">
+                                <label>Upload Image (Preview) of The Episode</label>
+                                <label class="quiz-file-label">
+                                    <span class="quiz-file-label-text">Choose File</span>
+                                    <input type="file" class="quiz-questionImage quiz-hidden-file" accept="image/*" />
+                                </label>
+                                <img class="preview-img quiz-questionImagePreview" style="display: none;" />
+                            </div>
 
-                        <div class="quiz-form-group">
-                            <label>Link of The Episode</label>
-                            <input type="url" name="questionImageLink" placeholder="https://example.com" />
+                            <div class="quiz-form-group">
+                                <label>Link of The Episode</label>
+                                <input type="url" name="questionImageLink" placeholder="https://example.com" />
+                            </div>
                         </div>
 
                         <div class="quiz-form-group" style="display: none;">

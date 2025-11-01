@@ -16,6 +16,7 @@ const MagicCoinCommission = require("../models/MagicCoinCommission");
 const Session = require("../models/Session"); // adjust path if needed
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
 const Applause = require("../models/Applause");
+const { session } = require("passport");
 
 router.get(
   "/channels/:channelId/session/:sessionId/applause",
@@ -361,11 +362,13 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
+        session: null,
       });
     }
 
     try {
       const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
 
       if (!channel) {
         return res.render("applause/edit-question", {
@@ -373,6 +376,7 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
+          session: null,
         });
       }
 
@@ -382,6 +386,17 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
+          session: null,
+        });
+      }
+
+      if (!session) {
+        return res.render("applause/edit-question", {
+          error: "Session not found",
+          channel: null,
+          question: null,
+          user: req.user,
+          session: null,
         });
       }
 
@@ -396,6 +411,7 @@ router.get(
           channel,
           question: null,
           user: req.user,
+          session: null,
         });
       }
 
@@ -405,6 +421,7 @@ router.get(
         question,
         user: req.user,
         sessionId,
+        session,
       });
     } catch (err) {
       console.error("Error fetching applause question for edit:", err);
@@ -413,6 +430,7 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
+        session: null,
       });
     }
   }
@@ -729,6 +747,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -742,6 +761,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -755,10 +775,11 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
-         // ✅ Fetch full createdBy user (consistent across all routes)
+      // ✅ Fetch full createdBy user (consistent across all routes)
       let tvStationUser = null;
       if (
         channel.createdBy &&
@@ -794,6 +815,7 @@ router.get(
           availableCoins,
           sessionId,
           tvStationUser,
+          session,
         });
       }
 
@@ -808,6 +830,7 @@ router.get(
         availableCoins,
         sessionId,
         tvStationUser,
+        session,
       });
     } catch (err) {
       console.error("Error loading applause question:", err);
@@ -820,6 +843,7 @@ router.get(
         total: 0,
         availableCoins: 0,
         tvStationUser: null,
+        session: null,
       });
     }
   }

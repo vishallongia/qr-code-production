@@ -51,8 +51,9 @@
                     <div class="quiz-form-group">
                         <label>Media Profile</label>
                         <div class="quiz-media-profile-toggles">
-                            <% ['broadcaster','project','episode','custom'].forEach(profile=> { %>
-                                <div class="quiz-toggle-wrapper">
+                            <% ['broadcaster', 'project' , 'episode' , 'custom' ].forEach(profile=> { %>
+                                <div class="quiz-toggle-wrapper"
+                                    style="<%= profile === 'custom' ? 'display: none;' : '' %>">
                                     <label class="quiz-toggle-label">
                                         <%= profile.charAt(0).toUpperCase() + profile.slice(1) %>
                                     </label>
@@ -62,10 +63,17 @@
                                             question.logoMediaProfile.includes(profile) ? 'checked' : '' %> />
                                         <span class="quiz-toggle-slider"></span>
                                     </label>
+
+                                    <% if (profile !=='custom' ) { %>
+                                        <button type="button" class="quiz-btn-submit"
+                                            style="margin:2px 0px; padding: 4px 8px;"
+                                            id="edit-<%= profile %>">Edit</button>
+                                        <% } %>
                                 </div>
                                 <% }) %>
                         </div>
                     </div>
+
 
 
                     <div id="logoParentContainer"
@@ -104,31 +112,34 @@
                                     <% } %>
                         </div>
                     </div>
-                    <div class="quiz-form-group">
-                        <label>Voting Question</label>
-                        <input type="text" name="question" value="<%= question.question %>"
-                            placeholder="Enter voting question" required />
-                    </div>
+                    <div style="display: none;">
+                        <div class="quiz-form-group">
+                            <label>Voting Question</label>
+                            <input type="text" name="question" value="<%= session?.name || '' %>"
+                                placeholder="Enter voting question" />
+                        </div>
 
-                    <div class="quiz-form-group">
-                        <label>Question Image (optional)</label>
-                        <label class="quiz-file-label">
-                            <span class="quiz-file-label-text">
-                                <%= question.questionImage ? question.questionImage.split('/').pop() : 'Choose File' %>
-                            </span>
-                            <input type="file" name="questionImage" class="quiz-hidden-file" accept="image/*" />
-                        </label>
-                        <% if (question.questionImage) { %>
-                            <img class="preview-img" src="<%= question.questionImage %>" style="display: block;" />
-                            <% } else { %>
-                                <img class="preview-img" style="display: none;" />
-                                <% } %>
-                    </div>
+                        <div class="quiz-form-group">
+                            <label>Question Image (optional)</label>
+                            <label class="quiz-file-label">
+                                <span class="quiz-file-label-text">
+                                    <%= question.questionImage ? question.questionImage.split('/').pop() : 'Choose File'
+                                        %>
+                                </span>
+                                <input type="file" name="questionImage" class="quiz-hidden-file" accept="image/*" />
+                            </label>
+                            <% if (question.questionImage) { %>
+                                <img class="preview-img" src="<%= question.questionImage %>" style="display: block;" />
+                                <% } else { %>
+                                    <img class="preview-img" style="display: none;" />
+                                    <% } %>
+                        </div>
 
-                    <div class="quiz-form-group">
-                        <label>Question Image Link (optional)</label>
-                        <input type="url" name="questionImageLink" value="<%= question.questionImageLink || '' %>"
-                            placeholder="https://example.com" />
+                        <div class="quiz-form-group">
+                            <label>Question Image Link (optional)</label>
+                            <input type="url" name="questionImageLink" value="<%= question.questionImageLink || '' %>"
+                                placeholder="https://example.com" />
+                        </div>
                     </div>
 
                     <div class="quiz-option-wrapper">

@@ -62,7 +62,8 @@
                                 </div>
                                 <% if (q.questionImage) { %>
                                     <div class="quiz-admin-question-image" style="margin-top: 8px;">
-                                        <img src="<%= q.questionImage %>" alt="Question Image"
+                                        <img src="<%= session.logo ? session.logo : '/images/no-image.png' %>"
+                                            alt="Question Image"
                                             style="max-width: 150px; height: auto; border-radius: 4px;" />
                                     </div>
                                     <% } %>

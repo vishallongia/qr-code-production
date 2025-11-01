@@ -361,11 +361,13 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
+        session : null
       });
     }
 
     try {
       const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
 
       if (!channel) {
         return res.render("comment/edit-comment", {
@@ -373,6 +375,7 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
+          session: null,
         });
       }
 
@@ -382,6 +385,7 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
+          session: null,
         });
       }
 
@@ -396,6 +400,7 @@ router.get(
           channel,
           question: null,
           user: req.user,
+          session: null,
         });
       }
 
@@ -405,6 +410,7 @@ router.get(
         question,
         user: req.user,
         sessionId,
+        session,
       });
     } catch (err) {
       console.error("Error fetching comment for edit:", err);
@@ -413,6 +419,7 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
+        session: null,
       });
     }
   }
@@ -524,7 +531,7 @@ router.post(
           return null;
         } else if (uploadedFile) {
           deleteFileIfExists(comment[field]);
-          return `/comment-image/${uploadedFile.filename}`;
+          return `/questions-image/${uploadedFile.filename}`;
         }
         return comment[field];
       };
@@ -771,6 +778,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -784,6 +792,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -797,6 +806,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -836,6 +846,7 @@ router.get(
           availableCoins,
           sessionId,
           tvStationUser,
+          session,
         });
       }
 
@@ -850,6 +861,7 @@ router.get(
         availableCoins,
         sessionId,
         tvStationUser,
+        session,
       });
     } catch (err) {
       console.error("Error loading comment question:", err);
@@ -861,6 +873,7 @@ router.get(
         index: 0,
         total: 0,
         availableCoins: 0,
+        session: null,
       });
     }
   }

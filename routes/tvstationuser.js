@@ -706,7 +706,7 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
-        session:null
+        session: null,
       });
     }
 
@@ -720,7 +720,7 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
-          session:null
+          session: null,
         });
       }
 
@@ -730,7 +730,7 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
-          session:null
+          session: null,
         });
       }
 
@@ -754,7 +754,7 @@ router.get(
           channel,
           question: null,
           user: req.user,
-          session : null
+          session: null,
         });
       }
       return res.render("edit-question", {
@@ -763,7 +763,7 @@ router.get(
         question,
         user: req.user,
         sessionId,
-        session
+        session,
       });
     } catch (err) {
       console.error("Error fetching question for edit:", err);
@@ -3358,11 +3358,13 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
+        session: null,
       });
     }
 
     try {
       const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
 
       if (!channel) {
         return res.render("edit-voting-question", {
@@ -3370,6 +3372,7 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
+          session: null,
         });
       }
 
@@ -3377,6 +3380,17 @@ router.get(
         return res.render("edit-voting-question", {
           error: "Access denied",
           channel: null,
+          question: null,
+          user: req.user,
+          session: null,
+        });
+      }
+
+      if (!session) {
+        return res.render("edit-voting-question", {
+          error: "Session not found",
+          channel,
+          session: null,
           question: null,
           user: req.user,
         });
@@ -3393,6 +3407,7 @@ router.get(
           channel,
           question: null,
           user: req.user,
+          session: null,
         });
       }
 
@@ -3402,6 +3417,7 @@ router.get(
         question,
         user: req.user,
         sessionId,
+        session,
       });
     } catch (err) {
       console.error("Error fetching voting question for edit:", err);
@@ -4009,6 +4025,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -4025,6 +4042,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -4038,6 +4056,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
 
@@ -4051,6 +4070,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session: null,
         });
       }
       // ✅ Fetch full createdBy user (same as quiz-play)
@@ -4116,7 +4136,8 @@ router.get(
           hasNext,
           availableCoins: req.user.walletCoins,
           sessionId,
-          tvStationUser, // added consistency
+          tvStationUser, 
+          session
         });
       }
 
@@ -4130,6 +4151,7 @@ router.get(
         availableCoins,
         sessionId,
         tvStationUser,
+        session
       });
     } catch (err) {
       console.error("Error loading quiz question:", err);
@@ -4142,6 +4164,7 @@ router.get(
         total: 0,
         availableCoins: 0,
         tvStationUser: null,
+        session: null,
       });
     }
   }
