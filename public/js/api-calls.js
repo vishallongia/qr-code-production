@@ -112,6 +112,7 @@ async function handleLogin(event) {
         currentUrl.includes("applause-play") ||
         currentUrl.includes("magicscreen-play") || 
         currentUrl.includes("comment-play") ||
+        currentUrl.includes("product-play") ||
         currentUrl.includes("portfolio-play") 
       ) {
         window.location.href = currentUrl;

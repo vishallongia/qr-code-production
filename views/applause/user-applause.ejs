@@ -88,6 +88,14 @@
         .bold {
             font-weight: bold;
         }
+
+        .event-icon {
+            width: 50px;
+            height: auto;
+            position: relative;
+            top: 12px;
+
+        }
     </style>
 </head>
 
@@ -173,7 +181,8 @@
     <input type="hidden" name="sessionId" value="<%= sessionId %>">
     <div class="uq-header">
         <div class="uq-logo">
-            <span onclick="window.location.href='/'">Magic Applause</span>
+            <span onclick="window.location.href='/'">Magic <img class="event-icon"
+                    src="\images\icons\events-icons\APPLAUSE (3).png" alt=""></span>
             <span>
                 <img src="\images\copy.png" alt="" id="copy_btn" class="share-btn" onclick="share()">
             </span>
@@ -201,7 +210,7 @@
                 <input type="hidden" name="questionId" value="<%= currentQuestion._id %>">
                 <input type="hidden" name="index" value="<%= index %>">
 
-                 <div class="uq-question-header">
+                <div class="uq-question-header">
                     <% const profileSequence=['broadcaster', 'project' , 'episode' , 'custom' ];
                         profileSequence.forEach((profile)=> {
                         let profileData = null;
@@ -272,7 +281,7 @@
 
 
                 <!-- Question Header -->
-                <div class="uq-question-header" style="display: none;">
+                <div class="uq-question-header" >
                     <% if (currentQuestion.questionLogo) { %>
                         <% if (currentQuestion.questionImageLink) { %>
                             <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
@@ -295,7 +304,8 @@
                 <!-- Move Question Image BELOW the text -->
                 <% if (currentQuestion.questionImage) { %>
 
-                    <div class="uq-question-text" style="font-size: 1.2rem; font-weight: bold;margin-bottom: 0.8rem; display: none;">
+                    <div class="uq-question-text"
+                        style="font-size: 1.2rem; font-weight: bold;margin-bottom: 0.8rem; ">
                         <%= currentQuestion.question %>
                     </div>
 

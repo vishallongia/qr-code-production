@@ -445,11 +445,16 @@
                                     <span data-translate="tv_station">Magic Media</span>
                                 </button>
 
-                                <button class="nav-item-custom" data-link="/tvstation/media-proflies">
+                                <!-- <button class="nav-item-custom" data-link="/tvstation/media-proflies">
                                     <img src="\images\icons\Magic Media LOGO ZOOM.png" alt="Magic Media Profiles">
                                     <span data-translate="tv_station">Magic Media Profiles</span>
-                                </button>
+                                </button> -->
                                 <% } %>
+
+                                 <button class="nav-item-custom" data-link="/safe-id/safeids-list">
+                                <img src="/images/SUBSCRIPTION.png" alt="Magic Coin Wallet">
+                                <span data-translate="magic_coin_wallet">Safe Id</span>
+                            </button>
                 </nav>
 
                 <button class="logout-btn" onclick="return handleLogout(event)">
@@ -492,11 +497,40 @@
                 });
             </script>
 
+              <% if (activeSection==='safe-id-list' ) { %>
+                <!-- Include the header partial -->
+                <div id="show-section" class="fade-in" style="width: 100%;">
+                    <%- include('../components/safeId/safeId'); -%>
+                </div>
+                <% } %>
+
+              <% if (activeSection==='brand' ) { %>
+                <!-- Include the header partial -->
+                <div id="show-section" class="fade-in" style="width: 100%;">
+                    <%- include('../components/brand/brand'); -%>
+                </div>
+                <% } %>
+
+
+                   <% if (activeSection==='brand-response-tracker' ) { %>
+                                <!-- Include the header partial -->
+                                <div id="show-section" class="fade-in" style="width: 100%;">
+                                    <%- include('../components/brand/brand-response-tracking'); -%>
+                                </div>
+                                <% } %>
+
 
             <% if (activeSection==='comment' ) { %>
                 <!-- Include the header partial -->
                 <div id="show-section" class="fade-in" style="width: 100%;">
                     <%- include('../components/comment/comment'); -%>
+                </div>
+                <% } %>
+
+                <% if (activeSection==='product' ) { %>
+                <!-- Include the header partial -->
+                <div id="show-section" class="fade-in" style="width: 100%;">
+                    <%- include('../components/product/product'); -%>
                 </div>
                 <% } %>
 
@@ -518,6 +552,13 @@
                                 <!-- Include the header partial -->
                                 <div id="show-section" class="fade-in" style="width: 100%;">
                                     <%- include('../components/comment/comment-response-tracking'); -%>
+                                </div>
+                                <% } %>
+
+                                <% if (activeSection==='product-response-tracker' ) { %>
+                                <!-- Include the header partial -->
+                                <div id="show-section" class="fade-in" style="width: 100%;">
+                                    <%- include('../components/product/product-response-tracking'); -%>
                                 </div>
                                 <% } %>
 

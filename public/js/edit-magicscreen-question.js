@@ -346,12 +346,20 @@ window.addEventListener("DOMContentLoaded", async () => {
         voteQuestion,
         applauseQuestion,
         magicScreenQuestion,
+        commentQuestion,
+        portfolioQuestion,
+        brandQuestion,
+        productQuestion
       } = result.data;
       const questions = [
         quizQuestion,
         voteQuestion,
         applauseQuestion,
         magicScreenQuestion,
+        commentQuestion,
+        portfolioQuestion,
+        brandQuestion,
+        productQuestion
       ];
       popupContainer.innerHTML = "";
 

@@ -272,3 +272,20 @@ function resetForm() {
   label.textContent = "Choose Logo";
   submitBtn.textContent = "Create Episode";
 }
+
+window.onload = function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const id = urlParams.get('id');
+
+  // If id exists, call your function
+  if (id) {
+     const button = document.querySelector(`[data-session-id="${id}"]`);
+    
+    // If button exists, simulate a click
+    if (button) {
+      button.click();
+    } else {
+      console.warn("No button found with data-session-id:", id);
+    }
+  }
+}

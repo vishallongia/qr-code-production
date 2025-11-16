@@ -9,6 +9,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
     <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+    <style>
+        .event-icon {
+            width: 90px;
+            height: auto;
+            position: relative;
+            background: #18024b;
+            padding: 9px;
+            border-radius: 8px;
+            margin-top: 7px;
+        }
+    </style>
 </head>
 
 <body>
@@ -32,7 +44,12 @@
                     <span>&rsaquo;</span>
                     <span class="active">Edit Quiz Event</span>
                 </nav>
-                <h2>Edit Quiz Event</h2>
+
+                <div style="text-align: center;">
+                    <img class="event-icon" src="\images\icons\events-icons\QUIZ-.png" alt="">
+                </div>
+
+                <h2>Event Editor</h2>
                 <form id="edit-question-form" enctype="multipart/form-data">
                     <input type="hidden" name="channelId" value="<%= channel._id %>" />
                     <input type="hidden" name="questionId" value="<%= question._id %>" />
@@ -42,9 +59,10 @@
 
 
                     <div class="quiz-question-actions">
+
                         <button type="button" class="quiz-btn-collapse"
                             onclick="window.open('/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/quiz-play', '_blank')">
-                            Open Quiz
+                            Open Event
                         </button>
                     </div>
 
@@ -58,7 +76,14 @@
                     </div>
 
                     <div class="quiz-form-group">
-                        <label>Media Profile</label>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label>Toggle What to Show on Front End Header</label>
+                            <button type="submit" class="quiz-btn-collapse">
+                                Save Front End Header
+                            </button>
+                        </div>
+
                         <div class="quiz-media-profile-toggles">
                             <div class="quiz-toggle-wrapper">
                                 <label class="quiz-toggle-label">Broadcaster</label>
@@ -81,7 +106,8 @@
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
                                 <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
-                                    id="edit-project">Edit</button>
+                                    id="edit-project"
+                                    onclick="window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')">Edit</button>
                             </div>
 
                             <div class="quiz-toggle-wrapper">
@@ -93,7 +119,8 @@
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
                                 <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
-                                    id="edit-episode">Edit</button>
+                                    id="edit-episode"
+                                    onclick="window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')">Edit</button>
                             </div>
 
                             <div class="quiz-toggle-wrapper" style="display: none;">
@@ -143,10 +170,10 @@
                                     <% } %>
                         </div>
                     </div>
-                    <div style="display: none;">
+                    <div style="display: block;">
                         <div class="quiz-form-group">
                             <label>Question</label>
-                            <input type="text" name="question" value="<%= session?.name || '' %>" />
+                            <input type="text" name="question" value="<%= question.question || '' %>" />
                         </div>
 
                         <div class="quiz-form-group">

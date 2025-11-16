@@ -121,7 +121,7 @@ async function generateOptionBlock(block, index) {
   // Option text
   const inputText = document.createElement("input");
   inputText.type = "text";
-  inputText.required = true;
+  // inputText.required = true;
   inputText.placeholder =
     "Name of Your Respective Portfolio Section (Optional)";
 
@@ -454,34 +454,49 @@ createQuestionBlock();
 function setupMediaProfileToggles(block) {
   const toggles = block.querySelectorAll('input[name="logoMediaProfile[]"]');
   const logoParentContainer = block.querySelector("#logoParentContainer");
+  const customToggle = block.querySelector(
+    'input[name="logoMediaProfile[]"][value="custom"]'
+  );
+  const editBroadcaster = block.querySelector("#edit-broadcaster");
 
+  if (!logoParentContainer) return;
+
+  // ✅ Show/hide container based only on "custom"
   function updateCustomVisibility() {
-    const customToggle = block.querySelector(
-      'input[name="logoMediaProfile[]"][value="custom"]'
-    );
     logoParentContainer.style.display = customToggle?.checked
       ? "block"
       : "none";
   }
 
+  // ✅ Attach change listener to "custom" only
+  customToggle?.addEventListener("change", updateCustomVisibility);
+
+  // ✅ Attach independent toggle for Edit Broadcaster button
+  editBroadcaster?.addEventListener("click", () => {
+    const currentDisplay = window.getComputedStyle(logoParentContainer).display;
+    logoParentContainer.style.display =
+      currentDisplay === "none" ? "block" : "none";
+  });
+
+  // ✅ Add checkbox limit protection (without calling updateVisibility every time)
   toggles.forEach((toggle) => {
     toggle.addEventListener("change", () => {
-      // restrict max 4 selections
       const checked = block.querySelectorAll(
         'input[name="logoMediaProfile[]"]:checked'
       );
       const maxAllowed = 4;
+
       if (checked.length > maxAllowed) {
         toggle.checked = false;
         showToast(`You can select up to ${maxAllowed} profiles only.`, "error");
       }
-      updateCustomVisibility();
     });
   });
 
-  // run once on load
+  // ✅ Initial visibility on load
   updateCustomVisibility();
 }
+
 
 function setupUnifiedPreview(optDiv) {
   const fileInput = optDiv.querySelector(".quiz-option-image-input");

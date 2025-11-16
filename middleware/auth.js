@@ -7,10 +7,14 @@ const PUBLIC_PLAY_ROUTES = [
   "applause-play",
   "magicscreen-play",
   "comment-play",
+  "product-play",
   "portfolio-play",
   "magic-screen-response",
   "quiz-viewed",
   "comment-response",
+  "product-response",
+  "brand-play",
+  "brand-response"
   // add more like "reaction-play", "buzzer-play" later
 ];
 

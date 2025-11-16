@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Safe ID Management</title>
+
+    <link rel="stylesheet" href="/css/channel-quiz.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+</head>
+
+<input type="hidden" id="safeId-length" value="<%= safeIds?.length || 0 %>">
+
+<body>
+
+    <!-- Safe ID Create / Edit Popup -->
+    <div id="popup-add-safeid" class="popup-overlay" style="display: none;">
+        <div class="popup-content" style="position: relative; max-width: 500px; width: 90%;">
+
+            <div class="popup-sticky-header">
+                <span id="close-popup-safeid" style="font-size: 25px; cursor: pointer;">&times;</span>
+            </div>
+
+            <h2 style="text-align: center; margin-bottom: 20px;" id="safeId-popup-title">
+                Create New Safe ID
+            </h2>
+
+            <form id="safeId-form" enctype="multipart/form-data">
+                <input type="hidden" name="removeLogo" id="remove-logo-flag" value="false">
+                <input type="hidden" id="safeId-edit-id" value="">
+
+                <!-- Safe ID Name -->
+                <div class="form-group">
+                    <input type="text" id="safeId-name" name="name" class="number-input" placeholder="Safe ID Name"
+                        required />
+                </div>
+
+                <!-- Logo Title -->
+                <div class="form-group">
+                    <input type="text" id="safeId-logo-title" name="logoTitle" class="number-input"
+                        placeholder="Logo Title (optional)" />
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <textarea id="safeId-description" name="description" class="number-input"
+                        placeholder="Safe ID Description" rows="3"></textarea>
+                </div>
+
+                <!-- Optional Link -->
+                <div class="form-group">
+                    <input type="url" id="safeId-link" name="link" class="number-input" placeholder="Optional Link" />
+                </div>
+
+                <!-- Logo Upload -->
+                <div class="form-group" style="position: relative;">
+                    <input type="file" id="safeId-logo" name="logo" accept="image/*" style="display:none;">
+                    <label for="safeId-logo" class="stylish-file-label" id="safeId-logo-label">
+                        Choose Logo
+                    </label>
+
+                    <!-- Preview -->
+                    <div id="safeId-logo-preview-container" style="margin-top: 10px; display:none; position:relative;">
+                        <span id="clear-logo-btn" class="clear-logo-btn" title="Remove selected image">&times;</span>
+
+                        <img id="safeId-logo-preview" src="" alt="Logo Preview"
+                            style="max-width:100%; max-height:150px; border-radius:10px;">
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="form-group" style="text-align:center;">
+                    <button type="submit" class="btn" id="safeId-submit-btn">Create Safe ID</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumbs">
+        <span class="active">Safe IDs</span>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="quiz-admin-container">
+
+        <% if (error) { %>
+            <div class="quiz-admin-error">
+                <%= error %>
+            </div>
+            <% } else { %>
+
+                <div class="quiz-admin-header">
+                    <h1>Safe IDs
+                    </h1>
+                    <div class="quiz-admin-controls">
+                        <button class="btn" id="create-safeId-btn">+ Create New Safe ID</button>
+                    </div>
+                </div>
+
+                <div class="quiz-admin-questions">
+
+                    <% if (safeIds && safeIds.length> 0) { %>
+                        <% safeIds.forEach(s=> { %>
+                            <div class="quiz-admin-question-card">
+
+                                <div class="quiz-admin-question-header">
+
+                                    <!-- Logo -->
+                                    <div class="session-logo-wrapper">
+                                        <% const hasLogo=s.logo; %>
+                                            <% const imageSrc=hasLogo ? s.logo : '/images/no-image.png' ; %>
+
+                                                <% if (s.link && hasLogo) { %>
+                                                    <a href="<%= s.link %>" target="_blank">
+                                                        <img src="<%= imageSrc %>" alt="Safe ID Logo"
+                                                            class="session-logo-image" />
+                                                    </a>
+                                                    <% } else { %>
+                                                        <img src="<%= imageSrc %>" alt="Safe ID Logo"
+                                                            class="session-logo-image" />
+                                                        <% } %>
+                                    </div>
+
+                                    <!-- Info -->
+                                    <div class="session-details">
+                                        <div class="quiz-admin-question-text">
+                                            <%= s.safeId %>
+                                        </div>
+
+                                        <div class="quiz-admin-info">
+                                            <% if (s.logoTitle) { %>
+                                                <span><strong>Logo Title:</strong>
+                                                    <%= s.logoTitle %>
+                                                </span>
+                                                <% } %>
+
+                                                    <% if (s.description) { %>
+                                                        <span><strong>Description:</strong>
+                                                            <%= s.description %>
+                                                        </span>
+                                                        <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="quiz-admin-actions">
+                                    <button class="edit-safeId-btn" data-id="<%= s._id %>" data-name="<%= s.safeId %>"
+                                        data-logo-title="<%= s.logoTitle %>" data-description="<%= s.description %>"
+                                        data-link="<%= s.link %>" data-logo-url="<%= s.logo || '' %>">
+                                        Edit Safe ID
+                                    </button>
+
+                                    <button class="delete-btn delete delete-safeId-btn" data-id="<%= s._id %>">
+                                        Delete Safe ID
+                                    </button>
+                                </div>
+                                <button class="btn" style="margin-top: 15px;" data-id="<%= s._id %>"
+                                    onclick="window.open('/safe-id/safe-variant/create?safeId=<%= s._id %>', '_blank')">
+                                    + Create Safe Variant
+                                </button>
+
+                                <!-- Safe Variants Section -->
+                                <% if (variantsMap[s._id] && variantsMap[s._id].length> 0) { %>
+                                    <div style="margin-top: 10px;">
+                                        <strong>Safe Variants:</strong>
+                                        <div style="margin-top: 8px;">
+                                            <% variantsMap[s._id].forEach((v, index)=> { %>
+                                                <button class="btn"
+                                                    onclick="window.location.href='/safe-id/safe-variant/view/<%= v._id %>'"
+                                                    style="margin: 4px; padding: 6px 12px;">
+                                                    <%= v.question && v.question.trim() !=="" ? v.question : ("Variant " + (index + 1)) 
+                    %>
+                </button>
+            <% }) %>
+        </div>
+    </div>
+<% } %>
+
+
+                            </div>
+                            <% }) %>
+                                <% } else { %>
+                                    <p style=" padding:1rem;">No Safe IDs available.</p>
+                                                        <% } %>
+
+                                        </div>
+
+                                        <% if (hasMore) { %>
+                                            <div class="quiz-admin-load" id="loadMoreContainer">
+                                                <button id="loadMoreBtn">Load More</button>
+                                                <div id="loadingText"
+                                                    style="display:none; text-align:center; margin-top:10px; font-weight:500;">
+                                                    Loading...
+                                                </div>
+                                            </div>
+                                            <% } %>
+
+                                                <% } %>
+
+                                    </div>
+
+</body>
+
+<!-- Correct JS -->
+<script src="/js/safe-id.js"></script>
+
+</html>

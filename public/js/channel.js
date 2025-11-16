@@ -172,3 +172,13 @@ function OpenEditFromImg(id) {
         console.warn("Button not found for ID:", id);
     }
 }
+
+window.onload = function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const id = urlParams.get('id');
+
+  // If id exists, call your function
+  if (id) {
+    OpenEditFromImg(id);
+  }
+}

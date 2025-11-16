@@ -232,7 +232,7 @@ router.post(
       }
 
       // ✅ Validate required fields
-      if (!channelId || !sessionId || !question || !options) {
+      if (!channelId || !sessionId || !options) {
         cleanupUploadedFiles(req.files);
         return res.status(400).json({
           message: "Missing required fields.",
@@ -495,7 +495,7 @@ router.post(
           .json({ message: "Access denied", type: "error" });
       }
 
-      if (!question || !options) {
+      if ( !options) {
         cleanupUploadedFiles(req.files);
         return res
           .status(400)

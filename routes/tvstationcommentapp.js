@@ -1,4 +1,5 @@
-const express = require("express");
+const fs = require("fs");
+const path = require("path");const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 require("dotenv").config();
@@ -15,8 +16,7 @@ const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
 const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
 const Session = require("../models/Session"); // adjust path if needed
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
-const fs = require("fs");
-const path = require("path");
+
 
 router.get(
   "/channels/:channelId/session/:sessionId/comment",

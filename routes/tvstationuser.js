@@ -13,7 +13,9 @@ const VoteQuestion = require("../models/VoteQuestion");
 const Applause = require("../models/Applause");
 const MagicScreen = require("../models/MagicScreen");
 const Comment = require("../models/Comments");
+const Product = require("../models/Products");
 const Portfolio = require("../models/Portfolios");
+const Brand = require("../models/Brand");
 const Channel = require("../models/Channel");
 const WinnerRequest = require("../models/WinnerRequest"); // adjust path
 const UserRequest = require("../models/UserRequest");
@@ -23,7 +25,9 @@ const VoteQuestionResponse = require("../models/VoteQuestionResponse");
 const ApplauseResponse = require("../models/ApplauseResponse");
 const MagicScreenResponse = require("../models/MagicScreenResponse");
 const CommentResponse = require("../models/CommentResponse");
+const ProductResponse = require("../models/ProductResponse");
 const PortfolioResponse = require("../models/PortfolioResponse");
+const BrandResponse = require("../models/BrandResponse");
 const MagicCoinCommission = require("../models/MagicCoinCommission");
 const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
 const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
@@ -2475,6 +2479,7 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
       "applause",
       "magicscreen",
       "comment",
+      "product",
       "portfolio",
     ];
 
@@ -2503,10 +2508,11 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
       quiz: QuizQuestion,
       voting: VoteQuestion,
       // shopping: ProductQuestion,
-      // brand: BrandQuestion,
+      brand: Brand,
       applause: Applause,
       magicscreen: MagicScreen,
       comment: Comment,
+      product: Product,
       portfolio: Portfolio,
     };
 
@@ -2529,7 +2535,9 @@ router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
       applause: `tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play`,
       magicscreen: `tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play`,
       comment: `tvstation/comment/channels/${channelId}/session/${sessionId}/comment-play`,
+      product: `tvstation/product/channels/${channelId}/session/${sessionId}/product-play`,
       portfolio: `tvstation/portfolio/channels/${channelId}/session/${sessionId}/portfolio-play`,
+      brand: `tvstation/brand/channels/${channelId}/session/${sessionId}/brand-play`,
       default: `tvstation/channels/${channelId}/session/${sessionId}/${type}-play`,
     };
 
@@ -2584,6 +2592,7 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
         "applause",
         "magicscreen",
         "comment",
+        "product",
         "portfolio",
       ].includes(type)
     ) {
@@ -2661,6 +2670,17 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
       qr = commentQuestion?.linkedQRCode || null;
     }
 
+    if (type === "product") {
+      const productQuestion = await Product.findOne(
+        { sessionId },
+        "linkedQRCode"
+      )
+        .populate("linkedQRCode")
+        .lean();
+
+      qr = productQuestion?.linkedQRCode || null;
+    }
+
     if (type === "portfolio") {
       const portfolioQuestion = await Portfolio.findOne(
         { sessionId },
@@ -2672,6 +2692,13 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
       qr = portfolioQuestion?.linkedQRCode || null;
     }
 
+    if (type === "brand") {
+      const brandQuestion = await Brand.findOne({ sessionId }, "linkedQRCode")
+        .populate("linkedQRCode")
+        .lean();
+
+      qr = brandQuestion?.linkedQRCode || null;
+    }
     // ⚠️ Later: add for shopping, brand
 
     const defaultUrl =
@@ -2683,6 +2710,10 @@ router.get("/session/:sessionId/qr/:type", async (req, res) => {
         ? `${BASE_URL}/tvstation/comment/channels/${session.channelId}/session/${sessionId}/comment-play/?lang=en`
         : type === "portfolio"
         ? `${BASE_URL}/tvstation/portfolio/channels/${session.channelId}/session/${sessionId}/portfolio-play/?lang=en`
+        : type === "brand"
+        ? `${BASE_URL}/tvstation/brand/channels/${channelId}/session/${sessionId}/brand-play/?lang=en`
+        : type === "product"
+        ? `${BASE_URL}/tvstation/product/channels/${session.channelId}/session/${sessionId}/product-play/?lang=en`
         : `${BASE_URL}/tvstation/channels/${channelId}/session/${sessionId}/${type}-play/?lang=en`;
 
     if (!qr) {
@@ -4136,8 +4167,8 @@ router.get(
           hasNext,
           availableCoins: req.user.walletCoins,
           sessionId,
-          tvStationUser, 
-          session
+          tvStationUser,
+          session,
         });
       }
 
@@ -4151,7 +4182,7 @@ router.get(
         availableCoins,
         sessionId,
         tvStationUser,
-        session
+        session,
       });
     } catch (err) {
       console.error("Error loading quiz question:", err);
@@ -5032,7 +5063,9 @@ router.post("/quiz-viewed", async (req, res) => {
       "applause",
       "magicscreen",
       "comment",
+      "product",
       "portfolio",
+      "brand",
     ].includes(type)
   ) {
     return res.status(400).json({
@@ -5086,7 +5119,6 @@ router.post("/quiz-viewed", async (req, res) => {
         isNoResponseGiven: true,
       });
     } else if (type === "magicscreen") {
-      console.log("works here");
       await MagicScreenResponse.create({
         userId,
         questionId,
@@ -5108,6 +5140,26 @@ router.post("/quiz-viewed", async (req, res) => {
       });
     } else if (type === "portfolio") {
       await PortfolioResponse.create({
+        userId,
+        questionId,
+        channelId,
+        sessionId,
+        selectedOptionIndex: 0,
+        selectedLink: null,
+        isNoResponseGiven: true,
+      });
+    } else if (type === "brand") {
+      await BrandResponse.create({
+        userId,
+        questionId,
+        channelId,
+        sessionId,
+        selectedOptionIndex: 0,
+        selectedLink: null,
+        isNoResponseGiven: true,
+      });
+    } else if (type === "product") {
+      await ProductResponse.create({
         userId,
         questionId,
         channelId,
@@ -5153,9 +5205,10 @@ router.post("/link-magic-code", async (req, res) => {
       applause: Applause,
       magicscreen: MagicScreen,
       comment: Comment,
+      product: Product,
       portfolio: Portfolio,
       // shopping: Shopping,
-      // brand: Brand,
+      brand: Brand,
     };
 
     const Model = ModelMap[type];
@@ -5230,6 +5283,7 @@ router.post("/link-magic-code", async (req, res) => {
       applause: `tvstation/applause/channels/${channelId}/session/${sessionId}/applause-play/?lang=en`,
       magicscreen: `tvstation/magicscreen/channels/${channelId}/session/${sessionId}/magicscreen-play/?lang=en`,
       comment: `tvstation/comment/channels/${channelId}/session/${sessionId}/comment-play/?lang=en`,
+      product: `tvstation/product/channels/${channelId}/session/${sessionId}/product-play/?lang=en`,
       portfolio: `tvstation/portfolio/channels/${channelId}/session/${sessionId}/portfolio-play/?lang=en`,
       shopping: `tvstation/shopping/channels/${channelId}/session/${sessionId}/shopping-play/?lang=en`,
       brand: `tvstation/brand/channels/${channelId}/session/${sessionId}/brand-play/?lang=en`,
@@ -5251,23 +5305,18 @@ router.post("/link-magic-code", async (req, res) => {
       User.updateOne({ _id: userId }, { $set: { showEditOnScan: false } }),
     ]);
 
-    // 9️⃣ Generate management link for response
-    const managePath =
-      type === "applause"
-        ? `applause`
-        : type === "magicscreen"
-        ? `magicscreen`
-        : type === "comment"
-        ? `comment`
-        : type === "portfolio"
-        ? `portfolio`
-        : type === "shopping"
-        ? `shopping`
-        : type === "brand"
-        ? `brand`
-        : type;
+    const pathMap = {
+      applause: "applause",
+      magicscreen: "magicscreen",
+      comment: "comment",
+      portfolio: "portfolio",
+      shopping: "shopping",
+      brand: "brand",
+    };
 
-    const manageLink = `${base}/tvstation/${managePath}/channels/${channelId}/session/${sessionId}/${managePath}`;
+    const manageLink = `${base}/tvstation${
+      pathMap[type] ? `/${pathMap[type]}` : ""
+    }/channels/${channelId}/session/${sessionId}/${type}`;
 
     // 🔟 Send success response
     return res.status(200).json({
@@ -5314,9 +5363,10 @@ router.post("/unlink-magic-code", async (req, res) => {
       applause: Applause,
       magicscreen: MagicScreen,
       comment: Comment,
+      product: Product,
       portfolio: Portfolio,
       // shopping: ProductQuestion,
-      // brand: BrandQuestion,
+      brand: Brand,
     };
 
     const Model = ModelMap[type];
@@ -5419,46 +5469,94 @@ router.get("/:sessionId/apps", async (req, res) => {
       });
     }
 
-    const baseUrl = `${req.protocol}://${req.get("host")}/tvstation/channels/${
-      channel._id
-    }/session/${session._id}`;
+    const host = `${req.protocol}://${req.get("host")}`;
+    const channelId = channel._id;
+    const sid = session._id;
 
-    // 3️⃣ Fetch one record from each model for this session
-    const quizQuestion = await QuizQuestion.findOne({ sessionId })
-      .sort({ createdAt: 1 })
-      .select("question questionImage");
-    const voteQuestion = await VoteQuestion.findOne({ sessionId })
-      .sort({ createdAt: 1 })
-      .select("question questionImage");
-    const applauseQuestion = await Applause.findOne({ sessionId })
-      .sort({ createdAt: 1 })
-      .select("question questionImage");
+    // 3️⃣ Fetch all app data in parallel
+    const [quiz, vote, applause, comment, portfolio, brand, product] =
+      await Promise.all([
+        QuizQuestion.findOne({ sessionId })
+          .sort({ createdAt: 1 })
+          .select("question questionImage"),
+        VoteQuestion.findOne({ sessionId })
+          .sort({ createdAt: 1 })
+          .select("question questionImage"),
+        Applause.findOne({ sessionId })
+          .sort({ createdAt: 1 })
+          .select("question questionImage"),
+        Comment.findOne({ sessionId })
+          .sort({ createdAt: 1 })
+          .select("question questionImage"),
+        Portfolio.findOne({ sessionId })
+          .sort({ createdAt: 1 })
+          .select("question questionImage"),
+        Brand.findOne({ sessionId })
+          .sort({ createdAt: 1 })
+          .select("question questionImage"),
+        Product.findOne({ sessionId })
+          .sort({ createdAt: 1 })
+          .select("question questionImage"),
+      ]);
 
-    // 4️⃣ Attach respective links
+    // 4️⃣ Helper for link generation
+    const makeLink = (type, playPath) => {
+      if (type === "quiz" || type === "voting") {
+        return `${host}/tvstation/channels/${channelId}/session/${sid}/${playPath}/`;
+      }
+      return `${host}/tvstation/${type}/channels/${channelId}/session/${sid}/${playPath}/`;
+    };
+
+    // 5️⃣ Keep same frontend key pattern
     const data = {
-      quizQuestion: quizQuestion
+      quizQuestion: quiz
         ? {
             name: "Quiz",
-            ...quizQuestion.toObject(),
-            link: `${baseUrl}/quiz-play/`,
+            ...quiz.toObject(),
+            link: makeLink("quiz", "quiz-play"),
           }
         : null,
-      voteQuestion: voteQuestion
+      voteQuestion: vote
         ? {
             name: "Vote",
-            ...voteQuestion.toObject(),
-            link: `${baseUrl}/voting-play/`,
+            ...vote.toObject(),
+            link: makeLink("voting", "voting-play"),
           }
         : null,
-      applauseQuestion: applauseQuestion
+      applauseQuestion: applause
         ? {
             name: "Applause",
-            ...applauseQuestion.toObject(),
-            link: `${req.protocol}://${req.get(
-              "host"
-            )}/tvstation/applause/channels/${channel._id}/session/${
-              session._id
-            }/applause-play/`,
+            ...applause.toObject(),
+            link: makeLink("applause", "applause-play"),
+          }
+        : null,
+      commentQuestion: comment
+        ? {
+            name: "Comment",
+            ...comment.toObject(),
+            link: makeLink("comment", "comment-play"),
+          }
+        : null,
+      portfolioQuestion: portfolio
+        ? {
+            name: "Portfolio",
+            ...portfolio.toObject(),
+            link: makeLink("portfolio", "portfolio-play"),
+          }
+        : null,
+
+      brandQuestion: brand
+        ? {
+            name: "Brand",
+            ...brand.toObject(),
+            link: makeLink("brand", "brand-play"),
+          }
+        : null,
+      productQuestion: product
+        ? {
+            name: "Product",
+            ...product.toObject(),
+            link: makeLink("product", "product-play"),
           }
         : null,
     };

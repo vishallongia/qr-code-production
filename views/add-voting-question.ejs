@@ -33,7 +33,12 @@
                     <span>&rsaquo;</span>
                     <span class="active">Create a New Voting Event</span>
                 </nav>
-                <h2>Create a New Voting Event</h2>
+                
+                <div style="text-align: center;">
+                    <img class="event-icon" src="\images\icons\events-icons\VOTE-.png" alt="">
+                </div>
+
+                <h2>Event Editor</h2>
                 <form id="voting-form">
                     <div id="voting-questions-wrapper"></div>
                     <button type="submit" class="quiz-btn-submit">Submit Voting Event</button>
@@ -52,7 +57,12 @@
                         </div>
                     </div>
                     <div class="quiz-form-group">
-                        <label>Media Profile</label>
+                                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label>Toggle What to Show on Front End Header</label>
+                            <button type="submit" class="quiz-btn-collapse">
+                                Save Front End Header
+                            </button>
+                        </div>
                         <div class="quiz-media-profile-toggles">
                             <div class="quiz-toggle-wrapper">
                                 <label class="quiz-toggle-label">Broadcaster</label>
@@ -70,7 +80,7 @@
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
                                 <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
-                                    id="edit-project">Edit</button>
+                                    id="edit-project" onclick="window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')" >Edit</button>
                             </div>
                             <div class="quiz-toggle-wrapper">
                                 <label class="quiz-toggle-label">Episode</label>
@@ -79,7 +89,7 @@
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
                                 <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
-                                    id="edit-episode">Edit</button>
+                                    id="edit-episode" onclick="window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')">Edit</button>
                             </div>
                             <div class="quiz-toggle-wrapper" style="display: none;">
                                 <label class="quiz-toggle-label">Custom</label>
@@ -115,10 +125,10 @@
                             </div>
                             <hr />
                         </div>
-                        <div style="display: none;">
+                        <div style="display: block;">
                         <div class="quiz-form-group">
                             <label>Question</label>
-                            <input type="text" name="question" placeholder="Enter your question" value="<%= session?.name || '' %>" />
+                            <input type="text" name="question" placeholder="Enter your question"  />
                         </div>
                         <div class="quiz-form-group">
                             <label>Question Image (optional)</label>

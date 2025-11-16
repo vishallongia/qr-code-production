@@ -49,6 +49,14 @@
             flex: 0 0 280px;
             scroll-snap-align: start;
         }
+
+                .event-icon {
+            width: 50px;
+            height: auto;
+            position: relative;
+            top: 12px;
+
+        }
     </style>
 </head>
 
@@ -59,7 +67,8 @@
     </div>
     <input type="hidden" name="sessionId" value="<%= sessionId %>">
     <div class="uq-header">
-        <div class="uq-logo" onclick="window.location.href='/'">Magic Portfolios</div>
+        <div class="uq-logo" onclick="window.location.href='/'">Magic <img class="event-icon"
+                    src="\images\icons\events-icons\PORTFOLIO 3.png" alt=""></div>
         <div class="uq-coins" id="walletCoins" onclick="window.location.href='/magic-coin-wallet'">
             🪙 Magic Coins: <%= availableCoins || "N/A" %>
         </div>
@@ -103,25 +112,43 @@
                 <input type="hidden" name="questionId" value="<%= currentQuestion._id %>">
                 <input type="hidden" name="index" value="<%= index %>">
 
-                <div class="uq-question-header">
+               
+                 <div class="uq-question-header">
                     <% const profileSequence=['broadcaster', 'project' , 'episode' , 'custom' ];
                         profileSequence.forEach((profile)=> {
                         let profileData = null;
 
-                        if (profile === 'custom' && currentQuestion.logo &&
-                        currentQuestion.logoMediaProfile.includes('custom')) {
+                        if (
+                        ['custom', 'broadcaster'].includes(profile) &&
+                        currentQuestion.logo &&
+                        currentQuestion.logoMediaProfile.includes(profile)
+                        ) {
                         profileData = {
                         logo: currentQuestion.logo,
                         title: currentQuestion.logoTitle,
                         description: currentQuestion.logoDescription,
                         link: currentQuestion.logoLink
                         };
-                        } else if (
-                        tvStationUser.tvStationRules &&
-                        tvStationUser.tvStationRules[profile] &&
-                        currentQuestion.logoMediaProfile.includes(profile)
-                        ) {
-                        profileData = tvStationUser.tvStationRules[profile];
+                        }
+
+                        else if (profile === 'project' && currentQuestion.logoMediaProfile.includes('project') &&
+                        channel) {
+                        profileData = {
+                        logo: channel.logo || '',
+                        title: channel.channelName || '',
+                        description: channel.description || '',
+                        link: channel.link || ''
+                        };
+                        }
+
+                        else if (profile === 'episode' && currentQuestion.logoMediaProfile.includes('episode') &&
+                        session) {
+                        profileData = {
+                        logo: session.logo || '',
+                        title: session.name || '',
+                        description: session.description || '',
+                        link: session.link || ''
+                        };
                         }
 
                         if (profileData) {
@@ -173,12 +200,12 @@
 
 
                 <!-- Move Question Image BELOW the text -->
-                <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500;">
+                <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500; ">
                     <%= currentQuestion.question %>
                 </div>
 
                 <% if (currentQuestion.questionImage) { %>
-                    <div class="uq-question-image-wrapper">
+                    <div class="uq-question-image-wrapper" >
                         <% if (currentQuestion.questionImageLink) { %>
                             <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
                                 <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"
@@ -193,7 +220,7 @@
 
 
 
-                        <div style="text-align: center;margin-bottom: 0.7rem;">
+                        <div style="text-align: center;margin-bottom: 0.7rem; ">
                             <span style="font-weight: normal;">
                                 <%= currentQuestion.questionDescription %>
                             </span>

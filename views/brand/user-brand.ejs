@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Magic Brand</title>
+    <link rel="stylesheet" href="/css/user-quiz.css" />
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+    <style>
+        .uq-logo-title {
+            margin: 0;
+        }
+
+        .uq-logo-text {
+            margin: 0;
+        }
+
+        .uq-question-text {
+            margin-bottom: 2px;
+        }
+
+        .uq-options {
+            display: flex;
+            overflow-x: auto;
+            gap: 1.2rem;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            padding: 1rem 0 1rem 1rem;
+            max-width: 900px;
+            margin: 2rem auto;
+        }
+
+        .uq-option {
+            background: var(--white);
+            /* border: 1px solid var(--secondary); */
+            border-radius: var(--radius);
+            /* box-shadow: var(--shadow); */
+            padding: 1.2rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.3s;
+            flex: 0 0 280px;
+            scroll-snap-align: start;
+        }
+
+        .event-icon {
+            width: 50px;
+            height: auto;
+            position: relative;
+            top: 12px;
+
+        }
+
+    </style>
+</head>
+
+<body class="user-quiz-page">
+
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+    </div>
+    <input type="hidden" name="sessionId" value="<%= sessionId %>">
+    <div class="uq-header">
+        <div class="uq-logo" onclick="window.location.href='/'">Magic <img class="event-icon"
+                    src="\images\icons\events-icons\BRANDS-.png" alt=""></div>
+        <div class="uq-coins" id="walletCoins" onclick="window.location.href='/magic-coin-wallet'">
+            🪙 Magic Coins: <%= availableCoins || "N/A" %>
+        </div>
+
+    </div>
+    </div>
+
+    <div class="language-selector-container">
+        <select id="languageSwitcher" class="language-selector-select">
+            <option value="en">English</option>
+            <option value="de">Deutsch (German)</option>
+            <option value="hu">Hungarian</option>
+            <option value="ro">Romanian</option>
+        </select>
+    </div>
+
+
+    <div class="coin-popup-overlay" id="coinPopup" style="display: none;">
+        <div class="coin-popup">
+            <div class="coin-popup-inner">
+
+                <% if (!user || Object.keys(user).length===0) { %>
+                    <!-- 🔐 Show this when user not logged in -->
+                    <div class="login-prompt">
+                        <p id="selectedOptionText">Please login to continue</p>
+                        <div class="coin-popup-buttons">
+                            <button onclick="window.location.href='/'">Login</button>
+                            <button onclick="window.location.href='/register'">Register</button>
+                        </div>
+                    </div>
+                    <% } %>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="uq-container">
+        <% if (currentQuestion) { %>
+            <form action="/submit-answer" method="POST">
+                <input type="hidden" name="channelId" value="<%= channel._id %>">
+                <input type="hidden" name="questionId" value="<%= currentQuestion._id %>">
+                <input type="hidden" name="index" value="<%= index %>">
+
+                  <div class="uq-question-header">
+                    <% const profileSequence=['broadcaster', 'project' , 'episode' , 'custom' ];
+                        profileSequence.forEach((profile)=> {
+                        let profileData = null;
+
+                        if (
+                        ['custom', 'broadcaster'].includes(profile) &&
+                        currentQuestion.logo &&
+                        currentQuestion.logoMediaProfile.includes(profile)
+                        ) {
+                        profileData = {
+                        logo: currentQuestion.logo,
+                        title: currentQuestion.logoTitle,
+                        description: currentQuestion.logoDescription,
+                        link: currentQuestion.logoLink
+                        };
+                        }
+
+                        else if (profile === 'project' && currentQuestion.logoMediaProfile.includes('project') &&
+                        channel) {
+                        profileData = {
+                        logo: channel.logo || '',
+                        title: channel.channelName || '',
+                        description: channel.description || '',
+                        link: channel.link || ''
+                        };
+                        }
+
+                        else if (profile === 'episode' && currentQuestion.logoMediaProfile.includes('episode') &&
+                        session) {
+                        profileData = {
+                        logo: session.logo || '',
+                        title: session.name || '',
+                        description: session.description || '',
+                        link: session.link || ''
+                        };
+                        }
+
+                        if (profileData) {
+                        %>
+                        <% if (profileData.title) { %>
+                            <h4 class="uq-logo-title" style="font-size: 1.4rem; font-weight: 600;">
+                                <%= profileData.title %>
+                            </h4>
+                            <% } %>
+
+                                <% if (profileData.logo) { %>
+                                    <% if (profileData.link) { %>
+                                        <a href="<%= profileData.link %>" target="_blank">
+                                            <img class="uq-question-logo" src="<%= profileData.logo %>" alt="Logo" />
+                                        </a>
+                                        <% } else { %>
+                                            <img class="uq-question-logo" src="<%= profileData.logo %>" alt="Logo" />
+                                            <% } %>
+
+                                                <% if (profileData.title || profileData.description) { %>
+                                                    <div class="uq-logo-text" style="width: 100%; text-align: center;">
+                                                        <% if (profileData.description) { %>
+                                                            <p class="uq-logo-text"
+                                                                style="font-size: 1.2rem; font-weight: 500;">
+                                                                <%= profileData.description %>
+                                                            </p>
+                                                            <% } %>
+                                                    </div>
+                                                    <% } %>
+                                                        <% } %>
+                                                            <% } }); %>
+                </div>
+
+
+                <!-- Question Header -->
+                <div class="uq-question-header">
+                    <% if (currentQuestion.questionLogo) { %>
+                        <% if (currentQuestion.questionImageLink) { %>
+                            <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
+                                <img class="uq-question-logo" src="<%= currentQuestion.questionLogo %>"
+                                    alt="Question Logo" />
+                            </a>
+                            <% } else { %>
+                                <img class="uq-question-logo" src="<%= currentQuestion.questionLogo %>"
+                                    alt="Question Logo" />
+                                <% } %>
+                                    <% } %>
+                </div>
+
+
+                <!-- Move Question Image BELOW the text -->
+                <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500; ">
+                    <%= currentQuestion.question %>
+                </div>
+
+                <% if (currentQuestion.questionImage) { %>
+                    <div class="uq-question-image-wrapper">
+                        <% if (currentQuestion.questionImageLink) { %>
+                            <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
+                                <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"
+                                    alt="Question Image" />
+                            </a>
+                            <% } else { %>
+                                <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"
+                                    alt="Question Image" />
+                                <% } %>
+                    </div>
+                    <% } %>
+
+
+
+                        <div style="text-align: center;margin-bottom: 0.7rem; ">
+                            <span style="font-weight: normal;">
+                                <%= currentQuestion.questionDescription %>
+                            </span>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="uq-options">
+                            <% currentQuestion.options.forEach((opt, i)=> { %>
+                                <div class="uq-option" data-link="<%= opt.link || '' %>" style="text-align: center;">
+                                    <label for="opt<%= i %>">
+                                        <input type="radio" name="selectedOptionIndex" id="opt<%= i %>"
+                                            value="<%= i %>">
+                                        <div class="uq-option-text-wrapper"
+                                            style="font-size: 1.0rem; font-weight: 600;">
+                                            <!-- <span class="uq-option-letter">
+                                                <%= String.fromCharCode(65 + i) %>.
+                                            </span> -->
+                                            <% if (opt.link) { const urlParts=opt.link.split('/'); let
+                                                lastPart=urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
+                                                // Remove '-play' suffix if present
+                                                lastPart=lastPart.replace(/-play$/i, '' ); // Capitalize first letter
+                                                const appName=lastPart.charAt(0).toUpperCase() + lastPart.slice(1); %>
+                                                <span
+                                                    style="display:none; margin-top: 0.5rem; font-weight: 500; color: #333;">
+                                                    <%= appName %>
+                                                </span>
+                                                <% } %>
+
+                                                    <span class="uq-option-text">
+                                                        <%= opt.text %>
+                                                    </span>
+                                        </div>
+                                        <% if (opt.image) { %>
+                                            <img class="uq-option-image-large" src="<%= opt.image %>"
+                                                alt="Option Image" />
+                                            <% } %>
+
+                                                <span class="" style="font-weight: normal;">
+                                                    <%= opt.description %>
+                                                </span>
+                                    </label>
+                                </div>
+                                <% }) %>
+                        </div>
+
+                        <!-- Navigation -->
+                        <% const prevIndex=index> 0 ? index - 1 : 0; %>
+                            <% const nextIndex=index + 1 < total ? index + 1 : index; %>
+            </form>
+            <% } else { %>
+                <p>
+                    <%= error || "No question found or quiz ended." %>
+                </p>
+                <% } %>
+    </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+<script src="/js/toastify-setup.js"></script>
+<script>
+    let selectedOptionIndex = null;
+    window.isLoggedIn = <%= user ? 'true' : 'false' %>;
+    const coinPopup = document.getElementById("coinPopup");
+
+    document.querySelectorAll('.uq-option').forEach(option => {
+        const link = option.dataset.link;
+
+        if (link) {
+            option.addEventListener('click', (e) => {
+                // if (!window.isLoggedIn) {
+                //     coinPopup.style.display = "flex";
+                //     return;
+                // }
+                // Prevent label click from toggling radio twice
+                if (e.target.tagName !== 'INPUT') {
+                    window.open(link, '_blank');
+                }
+            });
+        }
+    });
+
+
+    const loader = document.getElementById('loader');
+    const sessionId = "<%= sessionId %>";
+    const channelId = "<%= channel._id %>";
+    const questionId = "<%= currentQuestion?._id %>";
+
+    document.querySelectorAll('.uq-option').forEach((option, i) => {
+        const link = option.dataset.link;
+
+        option.addEventListener('click', (e) => {
+            // Prevent label click from toggling radio twice
+            if (e.target.tagName === 'INPUT') return;
+
+            selectedOptionIndex = i;
+
+            // Show loader
+            loader.style.display = "flex";
+
+            // Save response via API
+            fetch("/tvstation/brand/brand-response", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    questionId,
+                    channelId,
+                    sessionId,
+                    selectedOptionIndex,
+                    selectedLink: link || null
+                }),
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log("Response saved:", data);
+                        localStorage.setItem(`brand_response_${questionId}_${sessionId}`, "answered");
+
+                    } else {
+                        console.error("Failed to save response:", data.message);
+                    }
+                })
+                .catch(err => console.error("Error sending response:", err))
+                .finally(() => {
+                    // Hide loader
+                    loader.style.display = "none";
+                });
+        });
+    });
+</script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const questionId = document.querySelector('input[name="questionId"]').value;
+        const channelId = document.querySelector('input[name="channelId"]').value;
+        const sessionId = document.querySelector('input[name="sessionId"]').value;
+
+        const responseKey = `brand_response_${questionId}_${sessionId}`;
+        const landKey = `brand_land_${questionId}_${sessionId}`;
+
+        // ✅ Reset answer state here, before first visit/session checks
+        if (localStorage.getItem(responseKey) === "answered") {
+            localStorage.setItem(responseKey, "never");
+            console.log("Reset answered → now marked as never for this load.");
+        }
+
+        // First visit: mark response state if not present
+        if (!localStorage.getItem(responseKey)) {
+            localStorage.setItem(responseKey, "never"); // never answered
+        }
+
+        // Mark session land to differentiate first load vs reload
+        if (!sessionStorage.getItem(landKey)) {
+            sessionStorage.setItem(landKey, "visited");
+            // console.log("Valid first land → no Beacon will fire now.");
+        } else {
+            // console.log("Intentional reload detected.");
+        }
+
+        // Fire Beacon only on unload if unanswered AND it’s not the first land
+        window.addEventListener("beforeunload", () => {
+            if (
+                localStorage.getItem(responseKey) === "never" && // not answered
+                sessionStorage.getItem(landKey) === "visited"    // means reload/close
+            ) {
+                const payload = JSON.stringify({ questionId, channelId, sessionId, type: "brand" });
+
+                if (navigator.sendBeacon) {
+                    const blob = new Blob([payload], { type: "application/json" });
+                    navigator.sendBeacon("/tvstation/quiz-viewed", blob);
+                    // console.log("Beacon sent on unload (user didn’t answer).");
+                } else {
+                    fetch("/tvstation/quiz-viewed", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: payload
+                    })
+                        .then(() => console.log("Fallback Beacon sent on unload."))
+                        .catch(err => console.error("Error recording viewed-only response:", err));
+                }
+            }
+        });
+    });
+</script>
+
+<script>
+    const langSelector = document.querySelector('.language-selector-select');
+    const selectedLang = document.querySelector('.selected-lang');
+    const dropdownItems = document.querySelectorAll('.language-dropdown li');
+
+    langSelector.addEventListener('click', () => {
+        langSelector.classList.toggle('active');
+    });
+
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const lang = e.target.getAttribute('data-lang');
+            selectedLang.textContent = lang;
+            langSelector.classList.remove('active');
+        });
+    });
+
+    // Optional: Click outside to close dropdown
+    document.addEventListener('click', (e) => {
+        if (!langSelector.contains(e.target)) {
+            langSelector.classList.remove('active');
+        }
+    });
+</script>
+<!-- <script src="\js\translationsForMiniApps.js"></script> -->
+
+
+
+</html>

@@ -37,7 +37,8 @@ const applauseSchema = new mongoose.Schema(
     },
     question: {
       type: String,
-      required: true,
+      default: "",
+      // required: true,
       trim: true,
     },
 

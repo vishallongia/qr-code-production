@@ -24,6 +24,14 @@
         .uq-option-image-large {
             margin: 0;
         }
+
+        .event-icon {
+            width: 50px;
+            height: auto;
+            position: relative;
+            top: 12px;
+
+        }
     </style>
 </head>
 
@@ -194,7 +202,8 @@
     </div>
     <input type="hidden" name="sessionId" value="<%= sessionId %>">
     <div class="uq-header">
-        <div class="uq-logo" onclick="window.location.href='/'">Magic Quiz</div>
+        <div class="uq-logo" onclick="window.location.href='/'">Magic <img class="event-icon"
+                    src="\images\icons\events-icons\QUIZ-.png" alt=""></div>
         <div class="uq-coins" id="walletCoins" onclick="window.location.href='/magic-coin-wallet'">
             🪙 Magic Coins: <%= availableCoins || "N/A" %>
         </div>
@@ -303,7 +312,7 @@
 
                 <!-- Move Question Image BELOW the text -->
                 <% if (currentQuestion.questionImage) { %>
-                    <div class="uq-question-image-wrapper" style="display: none;">
+                    <div class="uq-question-image-wrapper">
                         <% if (currentQuestion.questionImageLink) { %>
                             <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
                                 <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"
@@ -315,7 +324,7 @@
                                 <% } %>
                     </div>
                     <% } %>
-                        <div class="uq-question-text" style="font-size: 1.4rem; font-weight: bold; display: none;">
+                        <div class="uq-question-text" style="font-size: 1.4rem; font-weight: bold; display: block;">
                             <%= currentQuestion.question %>
                         </div>
                         <!-- Options -->

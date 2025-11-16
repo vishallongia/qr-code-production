@@ -10,6 +10,15 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+    <style>
+        .event-icon {
+            width: 50px;
+            height: auto;
+            position: relative;
+            top: 12px;
+
+        }
+    </style>
 </head>
 
 <body class="user-quiz-page">
@@ -178,7 +187,8 @@
     </div>
     <input type="hidden" name="sessionId" value="<%= sessionId %>">
     <div class="uq-header">
-        <div class="uq-logo" onclick="window.location.href='/'">Magic Voting</div>
+        <div class="uq-logo" onclick="window.location.href='/'">Magic <img class="event-icon"
+                    src="\images\icons\events-icons\VOTE-.png" alt=""></div>
         <div class="uq-coins" id="walletCoins" onclick="window.location.href='/magic-coin-wallet'">
             🪙 Magic Coins: <%= availableCoins || "N/A" %>
         </div>
@@ -293,7 +303,7 @@
 
                 <!-- Move Question Image BELOW the text -->
                 <% if (currentQuestion.questionImage) { %>
-                    <div class="uq-question-image-wrapper" style="display: none;">
+                    <div class="uq-question-image-wrapper">
                         <% if (currentQuestion.questionImageLink) { %>
                             <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
                                 <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"
@@ -305,7 +315,7 @@
                                 <% } %>
                     </div>
                     <% } %>
-                        <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500; display: none;">
+                        <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500; display: block;">
                             <%= currentQuestion.question %>
                         </div>
                         <!-- Options -->

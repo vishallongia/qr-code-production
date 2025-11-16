@@ -32,7 +32,12 @@
                     <span>&rsaquo;</span>
                     <span class="active">Edit Voting Event</span>
                 </nav>
-                <h2>Voting Event</h2>
+                <div style="text-align: center;">
+                    <img class="event-icon" src="\images\icons\events-icons\VOTE-.png" alt="">
+                </div>
+
+                <h2>Event Editor</h2>
+
                 <form id="edit-question-form" enctype="multipart/form-data">
                     <input type="hidden" name="channelId" value="<%= channel._id %>" />
                     <input type="hidden" name="questionId" value="<%= question._id %>" />
@@ -43,13 +48,18 @@
                     <div class="quiz-question-actions">
                         <button type="button" class="quiz-btn-collapse"
                             onclick="window.open('/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting-play', '_blank')">
-                            Open Voting
+                            Open Event
                         </button>
                     </div>
 
 
                     <div class="quiz-form-group">
-                        <label>Media Profile</label>
+                                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label>Toggle What to Show on Front End Header</label>
+                            <button type="submit" class="quiz-btn-collapse">
+                                Save Front End Header
+                            </button>
+                        </div>
                         <div class="quiz-media-profile-toggles">
                             <% ['broadcaster', 'project' , 'episode' , 'custom' ].forEach(profile=> { %>
                                 <div class="quiz-toggle-wrapper"
@@ -112,10 +122,10 @@
                                     <% } %>
                         </div>
                     </div>
-                    <div style="display: none;">
+                    <div style="display: block;">
                         <div class="quiz-form-group">
                             <label>Voting Question</label>
-                            <input type="text" name="question" value="<%= session?.name || '' %>"
+                            <input type="text" name="question" value="<%= question.question || '' %>"
                                 placeholder="Enter voting question" />
                         </div>
 
@@ -289,6 +299,22 @@
                 <script src="/js/toastify-setup.js"></script>
                 <script src="/js/edit-voting-question.js"></script>
 </body>
+
+<script>
+
+    window.onload = function() {
+        document.getElementById('edit-project').addEventListener('click', function() {
+    window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')
+    // your code here
+});
+
+document.getElementById('edit-episode').addEventListener('click', function() {
+    window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')
+    // your code here
+});
+    }
+
+</script>
 
 <!-- <script>
     function setupImagePreviewAndClear(fileInput, previewImg, labelTextEl, clearBtn = null, existingImage = false, getClearedKeyFn = null) {

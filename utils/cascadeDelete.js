@@ -10,8 +10,12 @@ const MagicScreen = require("../models/MagicScreen");
 const MagicScreenResponse = require("../models/MagicScreenResponse");
 const Comment = require("../models/Comments");
 const CommentResponse = require("../models/CommentResponse");
+const Product = require("../models/Products");
+const ProductResponse = require("../models/ProductResponse");
 const Portfolio = require("../models/Portfolios");
 const PortfolioResponse = require("../models/PortfolioResponse");
+const Brand = require("../models/Brand");
+const BrandResponse = require("../models/BrandResponse");
 
 const { deleteFileIfExists } = require("../middleware/multerQuizUploader");
 async function cascadeDelete(type, id) {
@@ -278,7 +282,82 @@ async function cascadeDelete(type, id) {
         console.error(`Error deleting portfolio question ${id}:`, err);
       }
       break;
+
+    case "brandQuestion":
+      try {
+        const question = await Brand.findById(id);
+        if (!question) return;
+
+        // Delete main images
+        deleteFileIfExists(question.logo);
+        deleteFileIfExists(question.questionImage);
+        deleteFileIfExists(question.questionLogo);
+
+        // Delete option images (if any)
+        if (question.options?.length) {
+          question.options.forEach((option) => {
+            deleteFileIfExists(option.image);
+          });
+        }
+
+        // Delete all responses
+        try {
+          await BrandResponse.deleteMany({ questionId: id });
+        } catch (respErr) {
+          console.error(`Failed to delete responses for brand ${id}:`, respErr);
+        }
+
+        // Finally delete brand question
+        await Brand.deleteOne({ _id: id });
+      } catch (err) {
+        console.error(`Error deleting brand question ${id}:`, err);
+      }
+      break;
+
+    case "productQuestion":
+      try {
+        const question = await Product.findById(id);
+        if (!question) return;
+
+        // Helper to check if image is from /comment-logos/
+        const shouldDelete = (path) => {
+          return path && !path.includes("/comment-logos/");
+        };
+
+        // Delete main images
+        if (shouldDelete(question.logo)) deleteFileIfExists(question.logo);
+        if (shouldDelete(question.questionImage))
+          deleteFileIfExists(question.questionImage);
+        if (shouldDelete(question.questionLogo))
+          deleteFileIfExists(question.questionLogo);
+
+        // Delete option images (if any)
+        if (question.options?.length) {
+          question.options.forEach((option) => {
+            if (shouldDelete(option.image)) deleteFileIfExists(option.image);
+          });
+        }
+
+        // Delete all responses
+        try {
+          await ProductResponse.deleteMany({ questionId: id });
+        } catch (respErr) {
+          console.error(
+            `Failed to delete responses for product ${id}:`,
+            respErr
+          );
+        }
+
+        await Product.deleteOne({ _id: id });
+      } catch (err) {
+        console.error(`Error deleting product question ${id}:`, err);
+      }
+      break;
+
+
   }
+
+
 }
 
 module.exports = { cascadeDelete };

@@ -49,6 +49,14 @@
             flex: 0 0 280px;
             scroll-snap-align: start;
         }
+
+                .event-icon {
+            width: 50px;
+            height: auto;
+            position: relative;
+            top: 12px;
+
+        }
     </style>
 </head>
 
@@ -59,7 +67,8 @@
     </div>
     <input type="hidden" name="sessionId" value="<%= sessionId %>">
     <div class="uq-header">
-        <div class="uq-logo" onclick="window.location.href='/'">Magic Screen</div>
+        <div class="uq-logo" onclick="window.location.href='/'">Magic <img class="event-icon"
+                    src="\images\icons\events-icons\SCREEN (2).png" alt=""></div>
         <div class="uq-coins" id="walletCoins" onclick="window.location.href='/magic-coin-wallet'">
             🪙 Magic Coins: <%= availableCoins || "N/A" %>
         </div>
@@ -190,12 +199,12 @@
 
 
                 <!-- Move Question Image BELOW the text -->
-                <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500; display: none;">
+                <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500; ">
                     <%= currentQuestion.question %>
                 </div>
 
                 <% if (currentQuestion.questionImage) { %>
-                    <div class="uq-question-image-wrapper" style="display: none;>
+                    <div class="uq-question-image-wrapper" >
                         <% if (currentQuestion.questionImageLink) { %>
                             <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
                                 <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"

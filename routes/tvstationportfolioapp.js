@@ -366,6 +366,8 @@ router.get(
 
     try {
       const channel = await Channel.findById(channelId);
+      const session = await Session.findById(sessionId);
+
 
       if (!channel) {
         return res.render("portfolio/edit-portfolio", {
@@ -373,6 +375,7 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
+          session : null
         });
       }
 
@@ -382,6 +385,7 @@ router.get(
           channel: null,
           question: null,
           user: req.user,
+          session : null
         });
       }
 
@@ -396,6 +400,7 @@ router.get(
           channel,
           question: null,
           user: req.user,
+          session : null
         });
       }
 
@@ -405,6 +410,7 @@ router.get(
         question,
         user: req.user,
         sessionId,
+        session 
       });
     } catch (err) {
       console.error("Error fetching portfolio for edit:", err);
@@ -413,6 +419,7 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
+        session : null
       });
     }
   }
@@ -524,7 +531,7 @@ router.post(
           return null;
         } else if (uploadedFile) {
           deleteFileIfExists(portfolio[field]);
-          return `/portfolio-image/${uploadedFile.filename}`;
+          return `/questions-image/${uploadedFile.filename}`;
         }
         return portfolio[field];
       };
@@ -755,6 +762,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session : null
         });
       }
 
@@ -771,6 +779,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session : null
         });
       }
 
@@ -784,6 +793,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session : null
         });
       }
 
@@ -797,6 +807,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
+          session : null
         });
       }
 
@@ -836,6 +847,7 @@ router.get(
           availableCoins,
           sessionId,
           tvStationUser,
+          session
         });
       }
 
@@ -850,6 +862,7 @@ router.get(
         availableCoins,
         sessionId,
         tvStationUser,
+        session
       });
     } catch (err) {
       console.error("Error loading portfolio question:", err);

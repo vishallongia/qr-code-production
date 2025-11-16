@@ -390,3 +390,5 @@ function setupMediaProfileToggles() {
 
 // Call it on page load to attach click listeners only
 document.addEventListener("DOMContentLoaded", setupMediaProfileToggles);
+
+
