@@ -112,12 +112,12 @@ async function generateOptionBlock(block, index) {
 
   // Label
   const label = document.createElement("label");
-  label.innerText = `Option ${index + 1}`;
+  label.innerText = `Chat`;
 
   // Option text
   const inputText = document.createElement("input");
   inputText.type = "text";
-  inputText.placeholder = "Name of Your Respective Comment Section (Optional)";
+  inputText.placeholder = "Name of Your Respective Chat Section (Optional)";
 
   // Description
   const inputDesc = document.createElement("input");
@@ -129,7 +129,7 @@ async function generateOptionBlock(block, index) {
   const inputLink = document.createElement("input");
   inputLink.type = "text";
   inputLink.placeholder =
-    "Link of the Comments of Your Selected Social Media Channel";
+    "Link of the Chat of Your Selected Social Media Channel";
   inputLink.className = "quiz-option-link";
 
   // File
@@ -285,6 +285,10 @@ document
 
     const block = document.querySelector(".quiz-question-wrapper");
     const formData = new FormData();
+
+    const showSafeIdProfile =
+      block.querySelector('input[name="showSafeIdProfile"]')?.checked || false;
+    formData.append("showSafeIdProfile", showSafeIdProfile);
 
     formData.append(
       "question",
@@ -470,49 +474,22 @@ async function createLogoSelectionContainer(previewImg) {
 createQuestionBlock();
 
 function setupMediaProfileToggles(block) {
-  const toggles = block.querySelectorAll('input[name="logoMediaProfile[]"]');
-  const logoParentContainer = block.querySelector("#logoParentContainer");
-  const customToggle = block.querySelector(
-    'input[name="logoMediaProfile[]"][value="custom"]'
+  const toggle = block.querySelector(
+    'input[name="logoMediaProfile[]"][value="safeId"]'
   );
-  const editBroadcaster = block.querySelector("#edit-broadcaster");
+  const logoParentContainer = block.querySelector("#logoParentContainer");
 
-  if (!logoParentContainer) return;
+  if (!toggle || !logoParentContainer) return;
 
-  // ✅ Show/hide container based only on "custom"
-  function updateCustomVisibility() {
-    logoParentContainer.style.display = customToggle?.checked
-      ? "block"
-      : "none";
+  // Show/hide container based on toggle
+  function updateVisibility() {
+    // logoParentContainer.style.display = toggle.checked ? "block" : "none";
   }
 
-  // ✅ Attach change listener to "custom" only
-  customToggle?.addEventListener("change", updateCustomVisibility);
+  toggle.addEventListener("change", updateVisibility);
 
-  // ✅ Attach independent toggle for Edit Broadcaster button
-  editBroadcaster?.addEventListener("click", () => {
-    const currentDisplay = window.getComputedStyle(logoParentContainer).display;
-    logoParentContainer.style.display =
-      currentDisplay === "none" ? "block" : "none";
-  });
-
-  // ✅ Add checkbox limit protection (without calling updateVisibility every time)
-  toggles.forEach((toggle) => {
-    toggle.addEventListener("change", () => {
-      const checked = block.querySelectorAll(
-        'input[name="logoMediaProfile[]"]:checked'
-      );
-      const maxAllowed = 4;
-
-      if (checked.length > maxAllowed) {
-        toggle.checked = false;
-        showToast(`You can select up to ${maxAllowed} profiles only.`, "error");
-      }
-    });
-  });
-
-  // ✅ Initial visibility on load
-  updateCustomVisibility();
+  // Initial state
+  updateVisibility();
 }
 
 function setupUnifiedPreview(optDiv) {

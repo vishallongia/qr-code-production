@@ -57,7 +57,6 @@
             top: 12px;
 
         }
-
     </style>
 </head>
 
@@ -66,10 +65,10 @@
     <div class="loader-overlay" id="loader">
         <div class="spinner"></div>
     </div>
-    <input type="hidden" name="sessionId" value="<%= sessionId %>">
+    <input type="hidden" name="variantId" value="<%= variant._id %>">
     <div class="uq-header">
         <div class="uq-logo" onclick="window.location.href='/'">Magic <img class="event-icon"
-                    src="\images\icons\events-icons\COMMENTS (2).png" alt=""></div>
+                src="\images\icons\events-icons\COMMENTS (2).png" alt=""></div>
         <div class="uq-coins" id="walletCoins" onclick="window.location.href='/magic-coin-wallet'">
             🪙 Magic Coins: <%= availableCoins || "N/A" %>
         </div>
@@ -107,93 +106,59 @@
     </div>
 
     <div class="uq-container">
-        <% if (currentQuestion) { %>
+        <% if (variant) { %>
             <form action="/submit-answer" method="POST">
-                <input type="hidden" name="channelId" value="<%= channel._id %>">
-                <input type="hidden" name="questionId" value="<%= currentQuestion._id %>">
+                <input type="hidden" name="questionId" value="<%= variant._id %>">
                 <input type="hidden" name="index" value="<%= index %>">
 
-                  <div class="uq-question-header">
-                    <% const profileSequence=['broadcaster', 'project' , 'episode' , 'custom' ];
-                        profileSequence.forEach((profile)=> {
-                        let profileData = null;
+                <div class="uq-question-header">
 
-                        if (
-                        ['custom', 'broadcaster'].includes(profile) &&
-                        currentQuestion.logo &&
-                        currentQuestion.logoMediaProfile.includes(profile)
-                        ) {
-                        profileData = {
-                        logo: currentQuestion.logo,
-                        title: currentQuestion.logoTitle,
-                        description: currentQuestion.logoDescription,
-                        link: currentQuestion.logoLink
-                        };
-                        }
+                    <% const profileData=variant.safeId; %>
 
-                        else if (profile === 'project' && currentQuestion.logoMediaProfile.includes('project') &&
-                        channel) {
-                        profileData = {
-                        logo: channel.logo || '',
-                        title: channel.channelName || '',
-                        description: channel.description || '',
-                        link: channel.link || ''
-                        };
-                        }
+                        <% if (variant.showSafeIdProfile && profileData && (profileData.logo || profileData.logoTitle ||
+                            profileData.description)) { %>
 
-                        else if (profile === 'episode' && currentQuestion.logoMediaProfile.includes('episode') &&
-                        session) {
-                        profileData = {
-                        logo: session.logo || '',
-                        title: session.name || '',
-                        description: session.description || '',
-                        link: session.link || ''
-                        };
-                        }
+                            <% if (profileData.logoTitle) { %>
+                                <h4 class="uq-logo-title" style="font-size: 1.4rem; font-weight: 600;">
+                                    <%= profileData.logoTitle %>
+                                </h4>
+                                <% } %>
 
-                        if (profileData) {
-                        %>
-                        <% if (profileData.title) { %>
-                            <h4 class="uq-logo-title" style="font-size: 1.4rem; font-weight: 600;">
-                                <%= profileData.title %>
-                            </h4>
-                            <% } %>
+                                    <% if (profileData.logo) { %>
+                                        <% if (profileData.link) { %>
+                                            <a href="<%= profileData.link %>" target="_blank">
+                                                <img class="uq-question-logo" src="<%= profileData.logo %>"
+                                                    alt="Logo" />
+                                            </a>
+                                            <% } else { %>
+                                                <img class="uq-question-logo" src="<%= profileData.logo %>"
+                                                    alt="Logo" />
+                                                <% } %>
+                                                    <% } %>
 
-                                <% if (profileData.logo) { %>
-                                    <% if (profileData.link) { %>
-                                        <a href="<%= profileData.link %>" target="_blank">
-                                            <img class="uq-question-logo" src="<%= profileData.logo %>" alt="Logo" />
-                                        </a>
-                                        <% } else { %>
-                                            <img class="uq-question-logo" src="<%= profileData.logo %>" alt="Logo" />
-                                            <% } %>
-
-                                                <% if (profileData.title || profileData.description) { %>
-                                                    <div class="uq-logo-text" style="width: 100%; text-align: center;">
                                                         <% if (profileData.description) { %>
                                                             <p class="uq-logo-text"
                                                                 style="font-size: 1.2rem; font-weight: 500;">
                                                                 <%= profileData.description %>
                                                             </p>
                                                             <% } %>
-                                                    </div>
-                                                    <% } %>
-                                                        <% } %>
-                                                            <% } }); %>
+
+                                                                <% } %>
                 </div>
 
 
+
+
+
                 <!-- Question Header -->
-                <div class="uq-question-header" >
-                    <% if (currentQuestion.questionLogo) { %>
-                        <% if (currentQuestion.questionImageLink) { %>
-                            <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
-                                <img class="uq-question-logo" src="<%= currentQuestion.questionLogo %>"
-                                    alt="Question Logo" />
+                <div class="uq-question-header">
+                    <% if (variant.questionLogo) { %>
+                        <% if (variant.questionImageLink) { %>
+                            <a href="<%= variant.questionImageLink %>" target="_blank">
+                                <img class="uq-question-logo" src="<%= variant.questionLogo %>" alt="Question Logo" />
                             </a>
                             <% } else { %>
-                                <img class="uq-question-logo" src="<%= currentQuestion.questionLogo %>"
-                                    alt="Question Logo" />
+                                <img class="uq-question-logo" src="<%= variant.questionLogo %>" alt="Question Logo" />
                                 <% } %>
                                     <% } %>
                 </div>
@@ -201,18 +166,18 @@
 
                 <!-- Move Question Image BELOW the text -->
                 <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500;">
-                    <%= currentQuestion.question %>
+                    <%= variant.question %>
                 </div>
 
-                <% if (currentQuestion.questionImage) { %>
+                <% if (variant.questionImage) { %>
                     <div class="uq-question-image-wrapper">
-                        <% if (currentQuestion.questionImageLink) { %>
-                            <a href="<%= currentQuestion.questionImageLink %>" target="_blank">
-                                <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"
+                        <% if (variant.questionImageLink) { %>
+                            <a href="<%= variant.questionImageLink %>" target="_blank">
+                                <img class="uq-question-image" src="<%= variant.questionImage %>"
                                     alt="Question Image" />
                             </a>
                             <% } else { %>
-                                <img class="uq-question-image" src="<%= currentQuestion.questionImage %>"
+                                <img class="uq-question-image" src="<%= variant.questionImage %>"
                                     alt="Question Image" />
                                 <% } %>
                     </div>
@@ -222,13 +187,39 @@
 
                         <div style="text-align: center;margin-bottom: 0.7rem; ">
                             <span style="font-weight: normal;">
-                                <%= currentQuestion.questionDescription %>
+                                <%= variant.questionDescription %>
                             </span>
                         </div>
 
+                          <div style="text-align: center;margin-bottom: 0.7rem; ">
+                            <span style="font-weight: normal;">
+                                <%= variant.questionMessage %>
+                            </span>
+                        </div>
+
+                          <div style="text-align: center;margin-bottom: 0.5rem; ">
+                            <span style="font-weight: normal;">
+                                <%= variant.generalPhoneNumber %>
+                            </span>
+                        </div>
+
+                          <div style="text-align: center;margin-bottom: 0.5rem; ">
+                            <span style="font-weight: normal;">
+                                <%= variant.emergencyPhoneNumber %>
+                            </span>
+                        </div>
+
+                          <div style="text-align: center;margin-bottom: 0.5rem; ">
+                            <span style="font-weight: normal;">
+                                <%= variant.otherPhoneNumber %>
+                            </span>
+                        </div>
+
+                     
+
                         <!-- Options -->
                         <div class="uq-options">
-                            <% currentQuestion.options.forEach((opt, i)=> { %>
+                            <% variant.options.forEach((opt, i)=> { %>
                                 <div class="uq-option" data-link="<%= opt.link || '' %>" style="text-align: center;">
                                     <label for="opt<%= i %>">
                                         <input type="radio" name="selectedOptionIndex" id="opt<%= i %>"
@@ -266,6 +257,12 @@
                                 <% }) %>
                         </div>
 
+                             <div style="text-align: center;margin-bottom: 0.5rem; ">
+                            <span style="font-weight: normal;">
+                                <%= variant.email %>
+                            </span>
+                        </div>
+
                         <!-- Navigation -->
                         <% const prevIndex=index> 0 ? index - 1 : 0; %>
                             <% const nextIndex=index + 1 < total ? index + 1 : index; %>
@@ -279,7 +276,7 @@
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
 <script src="/js/toastify-setup.js"></script>
-<script>
+<!-- <script>
     let selectedOptionIndex = null;
     window.isLoggedIn = <%= user ? 'true' : 'false' %>;
     const coinPopup = document.getElementById("coinPopup");
@@ -303,9 +300,7 @@
 
 
     const loader = document.getElementById('loader');
-    const sessionId = "<%= sessionId %>";
-    const channelId = "<%= channel._id %>";
-    const questionId = "<%= currentQuestion?._id %>";
+    const questionId = "<%= variant?._id %>";
 
     document.querySelectorAll('.uq-option').forEach((option, i) => {
         const link = option.dataset.link;
@@ -430,7 +425,7 @@
             langSelector.classList.remove('active');
         }
     });
-</script>
+</script> -->
 <!-- <script src="\js\translationsForMiniApps.js"></script> -->
 
 

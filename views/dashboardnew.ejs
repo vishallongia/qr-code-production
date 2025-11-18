@@ -497,6 +497,13 @@
                 });
             </script>
 
+              <% if (activeSection==='variantDetail' ) { %>
+                <!-- Include the header partial -->
+                <div id="show-section" class="fade-in" style="width: 100%;">
+                    <%- include('../components/safe-id-variant/safe-id-variant'); -%>
+                </div>
+                <% } %>
+
               <% if (activeSection==='safe-id-list' ) { %>
                 <!-- Include the header partial -->
                 <div id="show-section" class="fade-in" style="width: 100%;">

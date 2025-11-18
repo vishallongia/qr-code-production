@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Edit Comment Session</title>
+    <title>Edit Safe ID Variant Session</title>
     <link rel="stylesheet" href="/css/add-quiz-question.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
@@ -22,34 +22,21 @@
         </div>
         <% } else { %>
             <div class="quiz-container">
-                <nav class="breadcrumbs">
-                    <a href="/tvstation/channels">Projects</a>
-                    <span>&rsaquo;</span>
-                    <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
-                    <span>&rsaquo;</span>
-                    <a href="/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>">Events</a>
-                    <span>&rsaquo;</span>
-                    <a
-                        href="/tvstation/comment/channels/<%= channel._id %>/session/<%= sessionId %>/comment">Comment</a>
-                    <span>&rsaquo;</span>
-                    <span class="active">Edit Comment Event</span>
-                </nav>
                 <div style="text-align: center;">
                     <img class="event-icon" src="\images\icons\events-icons\COMMENTS%20(2).png" alt="">
                 </div>
 
                 <h2>Event Editor</h2>
                 <form id="edit-question-form" enctype="multipart/form-data">
-                    <input type="hidden" name="channelId" value="<%= channel._id %>" />
-                    <input type="hidden" name="questionId" value="<%= question._id %>" />
-                    <input type="hidden" name="sessionId" value="<%= sessionId %>" />
+                    <input type="hidden" name="safeVariantId" value="<%= safeVariant._id %>" />
+                    <input type="hidden" name="safeId" value="<%= safeId %>" />
                     <input type="hidden" id="clearedImagesInput" name="clearedImages" />
                     <input type="hidden" id="clearedOptions" name="clearedOptions" />
 
 
                     <div class="quiz-question-actions">
                         <button type="button" class="quiz-btn-collapse"
-                            onclick="window.open('/tvstation/comment/channels/<%= channel._id %>/session/<%= sessionId %>/comment-play', '_blank')">
+                            onclick="window.open('/tvstation/comment/channels/', '_blank')">
                             Open Event
                         </button>
                     </div>
@@ -63,85 +50,47 @@
                         </div>
                         <div class="quiz-media-profile-toggles">
                             <div class="quiz-toggle-wrapper">
-                                <label class="quiz-toggle-label">Broadcaster</label>
+                                <label class="quiz-toggle-label">Safe ID Profile</label>
                                 <label class="quiz-toggle-switch">
-                                    <input type="checkbox" name="logoMediaProfile[]" value="broadcaster"
-                                        <%=Array.isArray(question.logoMediaProfile) &&
-                                        question.logoMediaProfile.includes('broadcaster') ? 'checked' : '' %> />
-                                    <span class="quiz-toggle-slider"></span>
-                                </label>
-                                <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
-                                    id="edit-broadcaster">Edit</button>
-                            </div>
-
-                            <div class="quiz-toggle-wrapper">
-                                <label class="quiz-toggle-label">Project</label>
-                                <label class="quiz-toggle-switch">
-                                    <input type="checkbox" name="logoMediaProfile[]" value="project"
-                                        <%=Array.isArray(question.logoMediaProfile) &&
-                                        question.logoMediaProfile.includes('project') ? 'checked' : '' %> />
-                                    <span class="quiz-toggle-slider"></span>
-                                </label>
-                                <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
-                                    id="edit-project"
-                                    onclick="window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')">Edit</button>
-                            </div>
-
-                            <div class="quiz-toggle-wrapper">
-                                <label class="quiz-toggle-label">Episode</label>
-                                <label class="quiz-toggle-switch">
-                                    <input type="checkbox" name="logoMediaProfile[]" value="episode"
-                                        <%=Array.isArray(question.logoMediaProfile) &&
-                                        question.logoMediaProfile.includes('episode') ? 'checked' : '' %> />
-                                    <span class="quiz-toggle-slider"></span>
-                                </label>
-                                <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
-                                    id="edit-episode"
-                                    onclick="window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')">Edit</button>
-                            </div>
-
-                            <div class="quiz-toggle-wrapper" style="display: none;">
-                                <label class="quiz-toggle-label">Custom</label>
-                                <label class="quiz-toggle-switch">
-                                    <input type="checkbox" name="logoMediaProfile[]" value="custom"
-                                        <%=Array.isArray(question.logoMediaProfile) &&
-                                        question.logoMediaProfile.includes('custom') ? 'checked' : '' %> />
+                                    <input type="checkbox" id="safeIdToggle" name="showSafeIdProfile"
+                                        <%=safeVariant.showSafeIdProfile ? 'checked' : '' %> />
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
                             </div>
                         </div>
+
                     </div>
-                    <div id="logoParentContainer" style="<%= Array.isArray(question.logoMediaProfile) && question.logoMediaProfile.includes('custom') 
+                    <div id="logoParentContainer" style="<%= Array.isArray(safeVariant.logoMediaProfile) && safeVariant.logoMediaProfile.includes('custom') 
        ? '' 
        : 'display: none;' %>">
                         <div class="quiz-form-group">
                             <label>Name of Your Channel </label>
-                            <input type="text" name="logoTitle" value="<%= question.logoTitle %>"
+                            <input type="text" name="logoTitle" value="<%= safeVariant.logoTitle %>"
                                 placeholder="Enter logo title" />
                         </div>
 
                         <div class="quiz-form-group">
                             <label>Description of Your Channel Logo </label>
-                            <input type="text" name="logoDescription" value="<%= question.logoDescription %>"
+                            <input type="text" name="logoDescription" value="<%= safeVariant.logoDescription %>"
                                 placeholder="Enter logo description" />
                         </div>
 
                         <div class="quiz-form-group">
                             <label>Logo Link</label>
                             <input type="url" name="logoLink" placeholder="https://example.com"
-                                value="<%= question.logoLink %>" />
+                                value="<%= safeVariant.logoLink %>" />
                         </div>
                         <div class="quiz-form-group">
                             <label>Upload Your Channel Logo </label>
                             <label class="quiz-file-label">
                                 <span class="quiz-file-label-text">
-                                    <%= question.logo ? question.logo.split('/').pop() : 'Choose File' %>
+                                    <%= safeVariant.logo ? safeVariant.logo.split('/').pop() : 'Choose File' %>
                                 </span>
                                 <input type="file" name="logo" class="quiz-logoImage quiz-hidden-file"
                                     accept="image/*" />
                             </label>
-                            <% if (question.logo) { %>
-                                <img class="preview-img quiz-logoImagePreview" src="<%= question.logo %>"
+                            <% if (safeVariant.logo) { %>
+                                <img class="preview-img quiz-logoImagePreview" src="<%= safeVariant.logo %>"
                                     style="display: block;" />
                                 <% } else { %>
                                     <img class="preview-img quiz-logoImagePreview" style="display: none;" />
@@ -151,57 +100,81 @@
 
                     <div>
                         <div class="quiz-form-group">
-                            <label>Event Name</label>
-                            <input type="text" name="question" placeholder="Name of Your Event"
-                                value="<%= question.question || '' %>" />
+                            <label>Safe ID Event Name</label>
+                            <input type="text" name="question" placeholder="Safe ID Event Name"
+                                value="<%= safeVariant.question || '' %>" />
                         </div>
-                        <div class="quiz-form-group">
-                            <label>Description of Your Event</label>
-                            <input type="text" name="questionDescription"
-                                value="<%= question.questionDescription || '' %>"
-                                placeholder="Description of Your Event" />
-                        </div>
-
                         <div class="quiz-form-group">
                             <label>Upload Image (Preview) of Your Event</label>
                             <label class="quiz-file-label">
                                 <span class="quiz-file-label-text">
-                                    <%= question.questionImage ? question.questionImage.split('/').pop() : 'Choose File'
-                                        %>
+                                    <%= safeVariant.questionImage ? safeVariant.questionImage.split('/').pop()
+                                        : 'Choose File' %>
                                 </span>
                                 <input type="file" name="questionImage" class="quiz-hidden-file" accept="image/*" />
                             </label>
-                            <% if (question.questionImage) { %>
-                                <img class="preview-img" src="<%= question.questionImage %>" style="display: block;" />
+                            <% if (safeVariant.questionImage) { %>
+                                <img class="preview-img" src="<%= safeVariant.questionImage %>"
+                                    style="display: block;" />
                                 <% } else { %>
                                     <img class="preview-img" style="display: none;" />
                                     <% } %>
                         </div>
+                        <div class="quiz-form-group">
+                            <label>Description</label>
+                            <input type="text" name="questionDescription"
+                                value="<%= safeVariant.questionDescription || '' %>" placeholder="Description" />
+                        </div>
+
+
 
                         <div class="quiz-form-group">
-                            <label>Link of Your Event</label>
-                            <input type="url" name="questionImageLink"
-                                value="<%= question.questionImageLink || '' %>" />
+                            <label>Message</label>
+                            <input type="text" name="questionMessage" value="<%= safeVariant.questionMessage || '' %>"
+                                placeholder="Enter Your Message" />
                         </div>
                     </div>
+
+                    <!-- ⭐ NEW CONTACT DETAILS SECTION ⭐ -->
+                    <!-- ⭐ NEW CONTACT DETAILS SECTION ⭐ -->
+                    <div class="quiz-form-group">
+                        <label>General Phone Number</label>
+                        <input type="tel" name="generalPhoneNumber" placeholder="+91 57555 or any number"
+                            value="<%= safeVariant.generalPhoneNumber || '' %>" />
+                    </div>
+
+                    <div class="quiz-form-group">
+                        <label>Emergency Phone Number</label>
+                        <input type="tel" name="emergencyPhoneNumber" placeholder="+91 57555 or any number"
+                            value="<%= safeVariant.emergencyPhoneNumber || '' %>" />
+                    </div>
+
+                    <div class="quiz-form-group">
+                        <label>Other Phone Number</label>
+                        <input type="tel" name="otherPhoneNumber" placeholder="+91 57555 or any number"
+                            value="<%= safeVariant.otherPhoneNumber || '' %>" />
+                    </div>
+                    <!-- ⭐ END CONTACT DETAILS ⭐ -->
+
+                    <!-- ⭐ END CONTACT DETAILS ⭐ -->
                     <div class="quiz-option-wrapper">
 
 
 
                         <div id="option-blocks" class="quiz-option-blocks quiz-options-grid">
-                            <% question.options.forEach((opt, index)=> { %>
+                            <% safeVariant.options.forEach((opt, index)=> { %>
                                 <div class="quiz-option-block" data-option-id="<%= opt._id %>">
-                                    <label>Option <%= index + 1 %></label>
+                                    <label>Chat</label>
 
 
 
                                     <!-- Option text fields -->
                                     <input type="text" name="optionTexts[]" value="<%= opt.text %>"
-                                        placeholder="Name of Your Respective Comment Section (Optional)" required />
+                                        placeholder="Name of Your Respective Chat Section (Optional)" />
                                     <input type="text" name="optionDescriptions[]" value="<%= opt.description || '' %>"
                                         placeholder="Enter Description" />
                                     <input type="url" name="optionLinks[]" value="<%= opt.link || '' %>"
-                                        placeholder="Link of the Comments of Your Selected Social Media Channel" />
+                                        placeholder="Link of the Chat of Your Selected Social Media Channel" />
 
                                     <!-- ✅ Selected logo/image preview -->
                                     <% if (opt.selectedLogoSrc) { %>
@@ -242,6 +215,11 @@
                             <button type="button" id="btn-add-option" class="quiz-btn-add-option">+ Add
                                 Option</button>
                         </div>
+                        <div class="quiz-form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" placeholder="yourname@example.com"
+                                value="<%= safeVariant.email || '' %>" />
+                        </div>
                     </div>
                     <button type="submit" class="quiz-btn-submit">Save</button>
                 </form>
@@ -250,7 +228,7 @@
 
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
                 <script src="/js/toastify-setup.js"></script>
-                <script src="/js/edit-comment-question.js"></script>
+                <script src="/js/edit-safe-variant.js"></script>
 </body>
 
 </html>

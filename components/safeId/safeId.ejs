@@ -31,25 +31,25 @@
                 <input type="hidden" id="safeId-edit-id" value="">
 
                 <!-- Safe ID Name -->
-                <div class="form-group">
+                <div class="form-group" style="margin: 15px 0;">
                     <input type="text" id="safeId-name" name="name" class="number-input" placeholder="Safe ID Name"
                         required />
                 </div>
 
                 <!-- Logo Title -->
-                <div class="form-group">
+                <div class="form-group" style="margin: 15px 0;">
                     <input type="text" id="safeId-logo-title" name="logoTitle" class="number-input"
                         placeholder="Logo Title (optional)" />
                 </div>
 
                 <!-- Description -->
-                <div class="form-group">
+                <div class="form-group" style="margin: 15px 0;">
                     <textarea id="safeId-description" name="description" class="number-input"
                         placeholder="Safe ID Description" rows="3"></textarea>
                 </div>
 
                 <!-- Optional Link -->
-                <div class="form-group">
+                <div class="form-group" style="margin: 15px 0;">
                     <input type="url" id="safeId-link" name="link" class="number-input" placeholder="Optional Link" />
                 </div>
 
@@ -70,7 +70,7 @@
                 </div>
 
                 <!-- Submit -->
-                <div class="form-group" style="text-align:center;">
+                <div class="form-group" style="text-align:center; margin: 15px 0;">
                     <button type="submit" class="btn" id="safeId-submit-btn">Create Safe ID</button>
                 </div>
             </form>
@@ -170,7 +170,7 @@
                                         <div style="margin-top: 8px;">
                                             <% variantsMap[s._id].forEach((v, index)=> { %>
                                                 <button class="btn"
-                                                    onclick="window.location.href='/safe-id/safe-variant/view/<%= v._id %>'"
+                                                    onclick="window.open('/safe-id/variant/<%= v._id %>', '_blank')"
                                                     style="margin: 4px; padding: 6px 12px;">
                                                     <%= v.question && v.question.trim() !=="" ? v.question : ("Variant " + (index + 1)) 
                     %>

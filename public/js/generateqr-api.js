@@ -112,18 +112,27 @@ if (!urlParams.has("magiccode")) {
 
       setTimeout(() => {
         const params = new URLSearchParams(window.location.search);
+
         const sessionId = params.get("sessionId");
         const channelId = params.get("channelId");
-        const type = params.get("type"); // quiz or voting
+        const type = params.get("type");
+        const variantId = params.get("variantId");
 
-        if (sessionId && channelId && type) {
-          // Construct final URL
-          window.location.href = `/authenticateqr?channelId=${channelId}&sessionId=${sessionId}&type=${type}&linked=true`;
-        } else {
-          // Fallback if query params missing
-          showToast(result.message, "success"); // Show success message
-          window.location.href = `/dashboard?magiccode=${result.qrCode.id}`;
+        // 1️⃣ Priority: Safe ID Variant
+        if (type === "safe-id-variant" && variantId) {
+          window.location.href = `/authenticateqr?sessionId=true&type=${type}&linked=true&variantId=${variantId}`;
+          return;
         }
+
+        // 2️⃣ Normal Session-based redirect
+        if (sessionId && channelId && type) {
+          window.location.href = `/authenticateqr?channelId=${channelId}&sessionId=${sessionId}&type=${type}&linked=true`;
+          return;
+        }
+
+        // 3️⃣ Fallback
+        showToast(result.message, "success");
+        window.location.href = `/dashboard?magiccode=${result.qrCode.id}`;
       }, 1000);
 
       // window.location.reload();
@@ -320,12 +329,6 @@ submitBtnUpdate.addEventListener("click", async (event) => {
     // generatedSection.style.display = "block";
 
     showToast(result.message, "success");
-    // document.getElementById("qrCodePrintData").value = JSON.stringify(
-    //   Object.fromEntries(
-    //     Object.entries(result.qrCode).filter(([_, value]) => value !== null)
-    //   )
-    // );
-
     window.location.reload();
     toggleLoaderVisibility(false);
   } catch (error) {

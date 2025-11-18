@@ -2457,7 +2457,7 @@ router.get(
   }
 );
 
-// POST /api/channel/:channelId/session/:sessionId/qr
+
 // POST /api/channel/:channelId/session/:sessionId/qr
 router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
   try {

@@ -145,6 +145,7 @@
         const sessionId = urlParams.get("sessionId");
         channelId = urlParams.get("channelId");
         const type = urlParams.get("type");
+        const variantId = urlParams.get("variantId");
         const singleSelection = !!sessionId; // only one QR can be selected if sessionId exists
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -183,16 +184,30 @@
                 createMagicButton.style.display = "flex"
 
                 createMagicButton.onclick = () => {
-                    window.location.href = `/dashboard?sessionId=${sessionId}&channelId=${channelId}&type=${type}&linked=true`;
+                    if (type === "safe-id-variant") {
+                        window.location.href = `/dashboard?variantId=${variantId}&type=${type}&linked=true`;
+                    } else {
+                        window.location.href = `/dashboard?sessionId=${sessionId}&channelId=${channelId}&type=${type}&linked=true`;
+                    }
                 };
 
                 if (document.getElementById("NoQR")) {
                     linkBtn.textContent = "Link to New Magic Code";
                     linkBtn.onclick = () => {
-                        window.location.href = `/dashboard?sessionId=${sessionId}&channelId=${channelId}&type=${type}&linked=true`;
+                        if (type === "safe-id-variant") {
+                            window.location.href = `/dashboard?variantId=${variantId}&type=${type}&linked=true`;
+                        } else {
+                            window.location.href = `/dashboard?sessionId=${sessionId}&channelId=${channelId}&type=${type}&linked=true`;
+                        }
                     };
                 } else {
-                    linkBtn.onclick = linkMagicCode;
+                    linkBtn.onclick = () => {
+    if (type === "safe-id-variant") {
+        linkMagicCode(variantId);
+    } else {
+        linkMagicCode();
+    }
+};
                 }
 
             } else {
@@ -248,7 +263,6 @@
             }
         }
 
-        // Function to call your link-magic-code API
         async function linkMagicCode() {
             const selectedQRs = Array.from(document.querySelectorAll(".tile-selected"))
                 .map(card => card.getAttribute("data-id"));
@@ -258,23 +272,32 @@
                 return;
             }
 
-            document.getElementById("loader").style.display = "flex"
+            document.getElementById("loader").style.display = "flex";
+
+            let url = "";
+
+            if (type === "safe-id-variant") {
+                url = `/safe-id/safe-variant/link-magic-code?variantId=${variantId}`;
+            } else {
+                url = `/tvstation/link-magic-code?sessionId=${sessionId}&type=${type}`;
+            }
 
             try {
-                const res = await fetch(`/tvstation/link-magic-code?sessionId=${sessionId}&type=${type}`, {
+                const res = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ qrCodeId: selectedQRs[0] }) // if multiple, you can handle multiple IDs
+                    body: JSON.stringify({ qrCodeId: selectedQRs[0] })
                 });
 
                 const data = await res.json();
+
                 if (res.ok) {
                     showToast(data.message, "success");
-                    // Redirect to the quiz link sent by backend
+
                     if (data.link) {
                         setTimeout(() => {
                             window.location.href = data.link;
-                        }, 1000); // small delay to show success toast
+                        }, 1000);
                     }
                 } else {
                     showToast(data.message || "Failed to link Magic Code.", "error");
@@ -282,11 +305,11 @@
             } catch (err) {
                 console.error(err);
                 showToast("Something went wrong.", "error");
-            }
-            finally {
-                document.getElementById("loader").style.display = "none"
+            } finally {
+                document.getElementById("loader").style.display = "none";
             }
         }
+
 
     </script>
 
