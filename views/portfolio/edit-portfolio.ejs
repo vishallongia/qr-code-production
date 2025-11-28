@@ -23,7 +23,9 @@
         <% } else { %>
             <div class="quiz-container">
                 <nav class="breadcrumbs">
-                    <a href="/tvstation/channels">Projects</a>
+                    <a href="/tvstation/broadcasters/list">Broadcasters</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels?broadcasterId=<%= channel.broadcasterId %>">Projects</a>
                     <span>&rsaquo;</span>
                     <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                     <span>&rsaquo;</span>
@@ -50,7 +52,7 @@
                     <div class="quiz-question-actions">
                         <button type="button" class="quiz-btn-collapse"
                             onclick="window.open('/tvstation/portfolio/channels/<%= channel._id %>/session/<%= sessionId %>/portfolio-play', '_blank')">
-                            Open Event
+                            Show Me the Frontend
                         </button>
                     </div>
 
@@ -197,7 +199,7 @@
 
                                     <!-- Option text fields -->
                                     <input type="text" name="optionTexts[]" value="<%= opt.text %>"
-                                        placeholder="Name of Your Respective Portfolio Section (Optional)"  />
+                                        placeholder="Name of Your Respective Portfolio Section (Optional)" />
                                     <input type="text" name="optionDescriptions[]" value="<%= opt.description || '' %>"
                                         placeholder="Enter Description" />
                                     <input type="url" name="optionLinks[]" value="<%= opt.link || '' %>"

@@ -757,7 +757,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
-          session : null
+          session: null,
         });
       }
 
@@ -771,7 +771,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
-          session:null
+          session: null,
         });
       }
 
@@ -785,7 +785,7 @@ router.get(
           total: 0,
           availableCoins: 0,
           tvStationUser: null,
-          session : null
+          session: null,
         });
       }
 
@@ -824,7 +824,7 @@ router.get(
           availableCoins,
           sessionId,
           tvStationUser: null,
-          session
+          session,
         });
       }
 
@@ -839,7 +839,7 @@ router.get(
         availableCoins,
         sessionId,
         tvStationUser,
-        session
+        session,
       });
     } catch (err) {
       console.error("Error loading magic screen question:", err);
@@ -851,7 +851,7 @@ router.get(
         index: 0,
         total: 0,
         availableCoins: 0,
-        session : null
+        session: null,
       });
     }
   }
@@ -928,6 +928,7 @@ router.get(
         sessionId,
         channelId,
         qrScanCount: 0,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
 
@@ -945,6 +946,7 @@ router.get(
         sessionId,
         channelId,
         qrScanCount: 0,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
 
@@ -1068,6 +1070,7 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     } catch (error) {
       console.error("Error fetching magic screen responses:", error);
@@ -1082,6 +1085,7 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
   }

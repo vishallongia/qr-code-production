@@ -16,7 +16,8 @@ const QRCodeData = require("../models/QRCODEDATA"); // Adjust the path as necess
 const Payment = require("../models/Payment");
 const QRCodeHistory = require("../models/QRCodeHistory"); // Adjust path as per your folder structure
 const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
-const Channel = require("../models/Channel");
+const SafeId = require("../models/SafeId");
+const SafeIdVariant = require("../models/SafeIdVariant");
 const UAParser = require("ua-parser-js");
 const fetch = require("node-fetch");
 const AffiliatePayment = require("../models/AffiliatePayment");
@@ -577,8 +578,6 @@ router.post("/assign-qr-code", async (req, res) => {
         });
       }
     } else {
-      // Create a new user if the user does not exist
-      const randomPassword = Math.random().toString(36).slice(-8); // Generate a random password
       let usernameAsPW = email.split("@")[0];
       const hashedPassword = await bcrypt.hash(usernameAsPW, 10);
       const encryptedPassword = encryptPassword(usernameAsPW);
@@ -591,6 +590,79 @@ router.post("/assign-qr-code", async (req, res) => {
       });
 
       await user.save();
+
+      // ✅ Add SafeId + default variants for this new user
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        // Create SafeId
+        const safeIdDoc = await SafeId.create(
+          [
+            {
+              safeId: user.fullName || `SafeID-${user._id}`,
+              createdBy: user._id,
+              logo: null,
+              logoTitle: "",
+              description: "",
+              link: "",
+            },
+          ],
+          { session }
+        ).then((res) => res[0]);
+
+        // Base variant template
+        const base = {
+          safeId: safeIdDoc._id,
+          questionDescription: "",
+          questionMessage: "",
+          questionImage: null,
+          options: [{ text: "", description: "", image: null, link: null }],
+          showSafeIdProfile: false,
+          generalPhoneNumber: "",
+          emergencyPhoneNumber: "",
+          otherPhoneNumber: "",
+          email: "",
+        };
+
+        // Default variants
+        const variants = [
+          {
+            ...base,
+            question: "Car",
+            questionImage: "/images/icons/car.png",
+          },
+          {
+            ...base,
+            question: "Bike",
+            questionImage: "/images/icons/bike.png",
+          },
+          {
+            ...base,
+            question: "School",
+            questionImage: "/images/icons/school.png",
+          },
+          {
+            ...base,
+            question: "Phone",
+            questionImage: "/images/icons/phone.png",
+          },
+        ];
+
+        await SafeIdVariant.insertMany(variants, { session });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        console.log(`✔ SafeId and variants created for user: ${user._id}`);
+      } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
+        console.error(
+          `❌ Failed to create SafeId for user ${user._id}:`,
+          err.message
+        );
+      }
     }
 
     //Check if user has any isFirstQr: true QR code assigned
@@ -1761,6 +1833,78 @@ router.post("/usemagiclink", async (req, res) => {
         });
 
         await user.save();
+        // ✅ Add SafeId + default variants for this new user
+        const session = await mongoose.startSession();
+        session.startTransaction();
+
+        try {
+          // Create SafeId
+          const safeIdDoc = await SafeId.create(
+            [
+              {
+                safeId: user.fullName || `SafeID-${user._id}`,
+                createdBy: user._id,
+                logo: null,
+                logoTitle: "",
+                description: "",
+                link: "",
+              },
+            ],
+            { session }
+          ).then((res) => res[0]);
+
+          // Base variant template
+          const base = {
+            safeId: safeIdDoc._id,
+            questionDescription: "",
+            questionMessage: "",
+            questionImage: null,
+            options: [{ text: "", description: "", image: null, link: null }],
+            showSafeIdProfile: false,
+            generalPhoneNumber: "",
+            emergencyPhoneNumber: "",
+            otherPhoneNumber: "",
+            email: "",
+          };
+
+          // Default variants
+          const variants = [
+            {
+              ...base,
+              question: "Car",
+              questionImage: "/images/icons/car.png",
+            },
+            {
+              ...base,
+              question: "Bike",
+              questionImage: "/images/icons/bike.png",
+            },
+            {
+              ...base,
+              question: "School",
+              questionImage: "/images/icons/school.png",
+            },
+            {
+              ...base,
+              question: "Phone",
+              questionImage: "/images/icons/phone.png",
+            },
+          ];
+
+          await SafeIdVariant.insertMany(variants, { session });
+
+          await session.commitTransaction();
+          session.endSession();
+
+          console.log(`✔ SafeId and variants created for user: ${user._id}`);
+        } catch (err) {
+          await session.abortTransaction();
+          session.endSession();
+          console.error(
+            `❌ Failed to create SafeId for user ${user._id}:`,
+            err.message
+          );
+        }
       }
     }
 
@@ -2016,6 +2160,81 @@ router.get(
         userPasswordKey: encryptedPassword,
       });
       await newUser.save();
+
+      // ✅ SafeId + default variants for the new user
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        // Create SafeId
+        const safeIdDoc = await SafeId.create(
+          [
+            {
+              safeId: newUser.fullName || `SafeID-${newUser._id}`,
+              createdBy: newUser._id,
+              logo: null,
+              logoTitle: "",
+              description: "",
+              link: "",
+            },
+          ],
+          { session }
+        ).then((res) => res[0]);
+
+        // Base variant template
+        const base = {
+          safeId: safeIdDoc._id,
+          questionDescription: "",
+          questionMessage: "",
+          questionImage: null,
+          options: [{ text: "", description: "", image: null, link: null }],
+          showSafeIdProfile: false,
+          generalPhoneNumber: "",
+          emergencyPhoneNumber: "",
+          otherPhoneNumber: "",
+          email: "",
+        };
+
+        // Default variants
+        const variants = [
+          {
+            ...base,
+            question: "Car",
+            questionImage: "/images/icons/car.png",
+          },
+          {
+            ...base,
+            question: "Bike",
+            questionImage: "/images/icons/bike.png",
+          },
+          {
+            ...base,
+            question: "School",
+            questionImage: "/images/icons/school.png",
+          },
+          {
+            ...base,
+            question: "Phone",
+            questionImage: "/images/icons/phone.png",
+          },
+        ];
+
+        await SafeIdVariant.insertMany(variants, { session });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        console.log(
+          `✔ SafeId and variants created for Google user: ${newUser._id}`
+        );
+      } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
+        console.error(
+          `❌ Failed to create SafeId for Google user ${newUser._id}:`,
+          err.message
+        );
+      }
 
       // Generate JWT token for new user
       const token = jwt.sign(
@@ -3679,141 +3898,6 @@ router.post(
     }
   }
 );
-
-// New APi Changes as provided
-
-// router.post(
-//   "/create-demo-users",
-//   upload.fields([{ name: "media-file", maxCount: 1 }]),
-//   multerErrorHandler,
-//   async (req, res) => {
-//     let UserArrObj = [];
-//     let { totalNumbers } = req.body; // Get the number of users to create
-
-//     totalNumbers = parseInt(totalNumbers, 10) || 1; // Default to 1 if not provided
-//     let startNumber = "0000001"; // Starting point
-
-//     // Get the largest existing user number
-//     const largestUser = await User.findOne(
-//       { email: { $regex: /^[0-9]+@magic-code\.net$/ } } // Filter only relevant emails
-//     )
-//       .sort({ email: -1 }) // Sort numerically
-//       .limit(1);
-
-//     if (largestUser) {
-//       startNumber = String(
-//         parseInt(largestUser.email.split("@")[0], 10) + 1
-//       ).padStart(7, "0");
-//     }
-//     const session = await mongoose.startSession(); // Start a session
-//     session.startTransaction(); // Start a transaction
-//     try {
-//       for (let i = 0; i < totalNumbers; i++) {
-//         let fullName = "User";
-//         let email = `${startNumber}@magic-code.net`;
-//         let password = startNumber;
-//         let qrName = startNumber;
-//         let type = "url";
-//         let qrDotColor = "#000000";
-//         let backgroundColor = "#FFFFFF";
-//         let dotStyle = "rounded";
-//         let cornerStyle = "dot";
-//         let text = "";
-//         let url = "";
-
-//         const existingUser = await User.findOne({ email }).session(session);
-//         if (existingUser) {
-//           await session.abortTransaction();
-//           return res
-//             .status(400)
-//             .json({ message: "Email already in use", type: "error" });
-//         }
-
-//         const hashedPassword = await bcrypt.hash(password, 10);
-//         const encryptedPassword = encryptPassword(password);
-//         const newUser = new User({
-//           fullName,
-//           email,
-//           password: hashedPassword,
-//           role: "demo-user",
-//           isActive: true,
-//           userPasswordKey: encryptedPassword,
-//         });
-
-//         await newUser.save({ session });
-
-//         const code = generateCode();
-
-//         // Ensure unique code
-//         let existingCode = await QRCodeData.findOne({ code }).session(session);
-
-//         while (existingCode) {
-//           code = generateCode(); // Generate new code
-//           existingCode = await QRCodeData.findOne({ code }).session(session); // Check again
-//         }
-
-//         const qrCodeId = new mongoose.Types.ObjectId(); // Generate _id manually
-
-//         let qrCode = new QRCodeData({
-//           _id: qrCodeId, // Assign generated _id
-//           user_id: newUser._id,
-//           type,
-//           url: `${process.env.FRONTEND_URL}/assign-qr-code/${encryptPassword(
-//             qrCodeId.toString()
-//           )}`,
-//           text,
-//           code,
-//           qrName,
-//           qrDotColor,
-//           backgroundColor,
-//           dotStyle,
-//           cornerStyle,
-//           applyGradient: "none",
-//           logo: process.env.STATIC_LOGO,
-//           // isTrial: true,
-//           // isFirstActivationFree: true,
-//           // isQrActivated: false,
-//         });
-
-//         // Save only once
-//         await qrCode.save({ session });
-
-//         UserArrObj.push({
-//           uid: newUser._id,
-//           email,
-//           password,
-//           code,
-//           resetLinkValue: `${
-//             process.env.FRONTEND_URL
-//           }/assign-qr-code/${encryptPassword(qrCode._id.toString())}`,
-//           qrCode,
-//         });
-
-//         // Increment number
-//         startNumber = String(parseInt(startNumber, 10) + 1).padStart(7, "0");
-//       }
-//       await session.commitTransaction();
-//       session.endSession();
-//     } catch (error) {
-//       console.error("Error during registration:", error);
-//       // Check if session is defined before using it
-//       // Check if session exists and is still active before aborting
-//       if (session && session.inTransaction()) {
-//         await session.abortTransaction();
-//         session.endSession();
-//       }
-//       return res.status(500).json({
-//         message: "Something went wrong please try again later",
-//         type: "error",
-//       });
-//     }
-//     res.status(201).json({
-//       message: "Demo users successfully registered",
-//       data: UserArrObj,
-//       type: "success",
-//     });
-//   }
-// );
 
 router.post(
   "/create-trial-users",

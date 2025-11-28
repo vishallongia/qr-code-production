@@ -256,6 +256,15 @@ document.getElementById("voting-form").addEventListener("submit", async (e) => {
     block.querySelector('input[name="question"]').value.trim()
   );
   formData.append(
+    "questionTitle",
+    block.querySelector('input[name="questionTitle"]').value.trim()
+  );
+
+  formData.append(
+    "questionDescription",
+    block.querySelector('input[name="questionDescription"]').value.trim()
+  );
+  formData.append(
     "magicCoinDeducted",
     block.querySelector('input[name="magicCoinDeducted"]').value
   );

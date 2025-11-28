@@ -41,11 +41,7 @@ const voteQuestionSchema = new mongoose.Schema(
         message: "At least 2 options are required.",
       },
     },
-    // correctAnswerIndex: {
-    //   type: Number,
-    //   required: true,
-    //   min: 0,
-    // },
+
     questionImage: {
       type: String, // Optional image URL or path
       default: null,
@@ -57,6 +53,14 @@ const voteQuestionSchema = new mongoose.Schema(
     questionLogo: {
       type: String, // Optional logo image
       default: null,
+    },
+    questionTitle: {
+      type: String,
+      default: "",
+    },
+    questionDescription: {
+      type: String,
+      default: "",
     },
     mode: {
       type: String,

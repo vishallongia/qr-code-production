@@ -47,9 +47,15 @@
 
                             <% if (variant.questionImage) { %>
                                 <div class="quiz-admin-question-image" style="margin-top: 8px;">
-                                    <img src="<%= variant.questionImage || '/images/no-image.png' %>"
+                                    <img src="<%= variant.questionImage || '/images/image-placehoder.png' %>"
                                         alt="Question Image"
-                                        style="max-width: 150px; height: auto; border-radius: 4px;" />
+                                        style="max-width: 150px;
+    width: 60px;
+    height: auto;
+    border-radius: 4px;
+    background: #18024b;
+    margin: 5px;
+    padding: 5px;" />
                                 </div>
                                 <% } %>
 
@@ -67,7 +73,8 @@
                                     </div>
 
                                     <div class="quiz-admin-actions">
-                                        <a href="/safe-id/safe-variant/edit?safeVariantId=<%= variant._id %>" target="_blank">
+                                        <a href="/safe-id/safe-variant/edit?safeVariantId=<%= variant._id %>"
+                                            target="_blank">
                                             <button>Edit</button>
                                         </a>
                                         <button class="delete-btn delete" data-question-id="<%= variant._id %>">
@@ -204,13 +211,13 @@
                             document.addEventListener("click", async (e) => {
                                 if (e.target.classList.contains("delete-btn")) {
                                     const button = e.target;
-                                    const questionId = button.getAttribute("data-question-id");
+                                    const variantId = button.getAttribute("data-question-id");
 
                                     if (!confirm("Are you sure you want to delete this question?")) return;
                                     const loader = document.getElementById("loader");
                                     loader.style.display = "flex"; // show loader
                                     try {
-                                        const res = await fetch(`/tvstation/comment/${questionId}`, {
+                                        const res = await fetch(`/safe-id/safe-id-variant/${variantId}`, {
                                             method: "DELETE",
                                             headers: {
                                                 "Content-Type": "application/json"
@@ -225,8 +232,8 @@
                                         if (result.type === "success") {
                                             showToast(result.message || "Question deleted successfully", "success");
                                             setTimeout(() => {
-                                                location.reload();
-                                            }, 1000); // Reload after 1 second
+                                                window.location.href = "/safe-id/safeids-list";  // Redirect instead of reload
+                                            }, 1000);
 
                                         } else {
                                             showToast(result.message || "Failed to delete the question", "error");
@@ -298,6 +305,16 @@
                                             style="width: 100%; max-width: 280px;">
                                             <option value="red">Red</option>
                                             <option value="white">White</option>
+                                            <option value="SafeID">Safe ID (Red)</option>
+                                            <option value="SafeIDWhite">Safe ID (White)</option>
+                                            <option value="Car">Car ID (Red)</option>
+                                            <option value="CarWhite">Car ID (White)</option>
+                                            <option value="Bike">Bike ID (Red)</option>
+                                            <option value="BikeWhite">Bike ID (White)</option>
+                                            <option value="School">School ID (Red)</option>
+                                            <option value="SchoolWhite">School ID (White)</option>
+                                            <option value="Phone">Phone ID (Red)</option>
+                                            <option value="PhoneWhite">Phone ID (White)</option>
 
                                         </select>
 
@@ -438,9 +455,63 @@
             let imageURL = `${window.location.origin}/images/logo1.jpg`;
             logoImage = `/images/logo1.jpg`
 
-            if (logo == "white") {
-                imageURL = `${window.location.origin}/images/Mc_white_logo.png`;
-                logoImage = `/images/Mc_white_logo.png`
+            // if (logo == "white") {
+            //     imageURL = `${window.location.origin}/images/Mc_white_logo.png`;
+            //     logoImage = `/images/Mc_white_logo.png`
+            // }
+
+            switch (logo) {
+                case "red":
+                    imageURL = `${window.location.origin}/images/logo1.jpg`;
+                    logoImage = `/images/logo1.jpg`
+                    break;
+
+                case "white":
+                    imageURL = `${window.location.origin}/images/Mc_white_logo.png`;
+                    logoImage = `/images/Mc_white_logo.png`
+                    break; 
+                case "SafeID":
+                    imageURL = `${window.location.origin}/images/icons/safeid-mc-icons/SAFE ID CIRCLE.png`;
+                    logoImage = `/images/icons/safeid-mc-icons/SAFE ID CIRCLE.png`
+                    break;
+                case "SafeIDWhite":
+                    imageURL = `${window.location.origin}/images/icons/SAFE ID ICON-.png`;
+                    logoImage = `/images/icons/SAFE ID ICON-.png`
+                    break;
+                case "Car":
+                    imageURL = `${window.location.origin}/images/icons/safeid-mc-icons/CAR ID.png`;
+                    logoImage = `/images/icons/safeid-mc-icons/CAR ID.png`
+                    break;
+                case "CarWhite":
+                    imageURL = `${window.location.origin}/images/icons/car.png`;
+                    logoImage = `/images/icons/car.png`
+                    break;
+                case "Bike":
+                    imageURL = `${window.location.origin}/images/icons/safeid-mc-icons/BIKE ID.png`;
+                    logoImage = `/images/icons/safeid-mc-icons/BIKE ID.png`
+                    break;
+                case "BikeWhite":
+                    imageURL = `${window.location.origin}/images/icons/bike.png`;
+                    logoImage = `/images/icons/bike.png`
+                    break;
+                case "School":
+                    imageURL = `${window.location.origin}/images/icons/safeid-mc-icons/SCHOOL ID.png`;
+                    logoImage = `/images/icons/safeid-mc-icons/SCHOOL ID.png`
+                    break;
+                case "SchoolWhite":
+                    imageURL = `${window.location.origin}/images/icons/school.png`;
+                    logoImage = `/images/icons/school.png`
+                    break;
+                case "Phone":
+                    imageURL = `${window.location.origin}/images/icons/safeid-mc-icons/PHONE ID.png`;
+                    logoImage = `/images/icons/safeid-mc-icons/PHONE ID.png`
+                    break;
+                case "PhoneWhite":
+                    imageURL = `${window.location.origin}/images/icons/phone.png`;
+                    logoImage = `/images/icons/phone.png`
+                    break;
+                default:
+                    break;
             }
 
             try {
@@ -516,7 +587,7 @@
                         cornersSquareOptions: {
                             type: qrData.cornerStyle || "square"
                         },
-                        image: qrData?.logo || `${window.location.origin}/images/logo1.jpg`,
+                        image: qrData?.logo || `${window.location.origin}/images/icons/safeid-mc-icons/SAFE ID CIRCLE.png`,
                         imageOptions: {
                             crossOrigin: "anonymous",
                             margin: 10
@@ -673,6 +744,13 @@
                         container.appendChild(nameP);
                     }
 
+                    // console.log(qrData.logo);
+                    let logoToUse = qrData?.logo || `${window.location.origin}/images/icons/safeid-mc-icons/SAFE ID CIRCLE.png`;
+
+                    if (qrData.logo == "/images/logo1.jpg") {
+                        logoToUse = `${window.location.origin}/images/icons/safeid-mc-icons/SAFE ID CIRCLE.png`;
+                    }
+
                     // Create QRCodeStyling instance
                     const qrCode = new QRCodeStyling({
                         width: 3000,
@@ -702,7 +780,7 @@
                         cornersSquareOptions: {
                             type: qrData.cornerStyle || "square"
                         },
-                        image: qrData?.logo || `${window.location.origin}/images/logo1.jpg`,
+                        image: logoToUse,
                         imageOptions: {
                             crossOrigin: "anonymous",
                             margin: 10

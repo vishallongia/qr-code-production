@@ -25,7 +25,9 @@
         <% } else { %>
             <div class="quiz-container">
                 <nav class="breadcrumbs">
-                    <a href="/tvstation/channels">Projects</a>
+                    <a href="/tvstation/broadcasters/list">Broadcasters</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels?broadcasterId=<%= channel.broadcasterId %>">Projects</a>
                     <span>&rsaquo;</span>
                     <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                     <span>&rsaquo;</span>
@@ -43,7 +45,7 @@
                 <h2>Event Editor</h2>
                 <form id="questions-form">
                     <div id="questions-wrapper"></div>
-                    <button type="submit" class="quiz-btn-submit">Save Applause Event</button>
+                    <button type="submit" class="quiz-btn-submit">Save</button>
                 </form>
             </div>
 
@@ -139,17 +141,16 @@
 
                         <div>
                             <div class="quiz-form-group">
-                                <label>Name of The Episode</label>
-                                <input type="text" name="question" placeholder="Name of The Episode" />
+                                <label>Name of The Event</label>
+                                <input type="text" name="question" placeholder="Name of The Event" />
                             </div>
                             <div class="quiz-form-group">
-                                <label>Description of The Episode</label>
-                                <input type="text" name="questionDescription"
-                                    placeholder="Description of The Episode" />
+                                <label>Description of The Event</label>
+                                <input type="text" name="questionDescription" placeholder="Description of The Event" />
                             </div>
 
                             <div class="quiz-form-group">
-                                <label>Upload Image (Preview) of The Episode</label>
+                                <label>Upload Image (Preview) of The Event</label>
                                 <label class="quiz-file-label">
                                     <span class="quiz-file-label-text">Choose File</span>
                                     <input type="file" class="quiz-questionImage quiz-hidden-file" accept="image/*" />
@@ -158,7 +159,7 @@
                             </div>
 
                             <div class="quiz-form-group">
-                                <label>Link of The Episode</label>
+                                <label>Link of The Event</label>
                                 <input type="url" name="questionImageLink" placeholder="https://example.com" />
                             </div>
                         </div>

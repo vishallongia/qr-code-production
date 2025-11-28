@@ -18,6 +18,12 @@
             top: 12px;
 
         }
+
+        .uq-logo-title,
+        .uq-logo-text {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
     </style>
 </head>
 
@@ -188,7 +194,7 @@
     <input type="hidden" name="sessionId" value="<%= sessionId %>">
     <div class="uq-header">
         <div class="uq-logo" onclick="window.location.href='/'">Magic <img class="event-icon"
-                    src="\images\icons\events-icons\VOTE-.png" alt=""></div>
+                src="\images\icons\events-icons\VOTE-.png" alt=""></div>
         <div class="uq-coins" id="walletCoins" onclick="window.location.href='/magic-coin-wallet'">
             🪙 Magic Coins: <%= availableCoins || "N/A" %>
         </div>
@@ -281,6 +287,12 @@
                                                             <% } }); %>
                 </div>
                 <!-- Question Header -->
+                <div class="uq-question-text" style="font-size: 1.2rem; margin-bottom: 0; display: block;">
+                    <%= currentQuestion.questionTitle %>
+                </div>
+                <div class="uq-question-text" style="font-size: 1.2rem; margin-bottom: 0; display: block;">
+                    <%= currentQuestion.questionDescription %>
+                </div>
                 <div class="uq-question-header">
                     <% if (currentQuestion.questionLogo) { %>
                         <% if (currentQuestion.questionImageLink) { %>

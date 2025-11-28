@@ -12,6 +12,11 @@ const tvChannelSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    broadcasterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Broadcaster",
+      required: true,
+    },
     isRunning: {
       type: Boolean,
       default: true,

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Broadcasters List</title>
+    <link rel="stylesheet" href="/css/sales.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+    <style>
+        .header-div {
+            display: flex;
+            align-items: center;
+            /* vertically center if needed */
+            justify-content: space-between;
+            /* h2 left, img right */
+            width: 100%;
+        }
+
+        .header-div h2 {
+            margin: 0;
+        }
+
+        .header-div img {
+            margin: 0 auto;
+            width: 100px;
+            height: auto;
+
+            /* center image if needed */
+        }
+    </style>
+</head>
+
+<body style="padding: 0">
+    <!-- Add / Edit Show Popup -->
+    <div id="popup-add-edit-show" class="popup-overlay" style="display: none;">
+        <div class="popup-content" style="position: relative; max-width: 500px; width: 90%;">
+            <span id="close-popup-show"
+                style="position: absolute; top: 10px; right: 15px; font-size: 25px; cursor: pointer;">&times;</span>
+            <h2 id="show-popup-header" style="text-align: center; margin-bottom: 20px;">Add New Broadcaster</h2>
+
+            <form id="add-edit-show-form" enctype="multipart/form-data">
+                <input type="hidden" name="showId" id="show-id" value="">
+                <input type="hidden" name="removeLogo" id="remove-show-logo-flag" value="false">
+
+
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="text" id="show-name" name="name" placeholder="Broadcaster Name" required />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px; display: none;">
+                    <input type="text" id="session-logo-title" name="logoTitle" placeholder="Logo Title (optional)">
+                </div>
+
+                <!-- Description -->
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <textarea id="session-description" name="description" placeholder="Broadcaster Description" rows="3"
+                        style="resize: vertical;"></textarea>
+                </div>
+
+                <!-- Link -->
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="url" id="session-link" name="link" placeholder="Optional Link">
+                </div>
+                <!-- Logo Upload -->
+                <div class="form-group" style="margin-bottom: 20px; position: relative;">
+                    <input type="file" id="show-logo" name="logo" accept="image/*" style="display: none;">
+                    <label for="show-logo" class="stylish-file-label" id="show-logo-label">Choose Logo</label>
+
+                    <div id="show-logo-preview-container" style="margin-top: 10px; display: none; position: relative;">
+                        <span id="clear-show-logo-btn" class="clear-logo-btn"
+                            title="Remove selected image">&times;</span>
+                        <img id="show-logo-preview" src="" alt="Logo Preview"
+                            style="max-width: 100%; max-height: 150px; border-radius: 10px;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="text-align: center;">
+                    <button type="submit" class="btn" id="submit-add-edit-show">Save Broadcaster</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <div class="modern-list-container">
+
+        <div class="header-div">
+            <h2>Your Broadcasters</h2>
+            <img src="\images\icons\SYNERGY ICON.png" alt="App Icon">
+        </div>
+        <div style="display: flex; justify-content: end;">
+            <button id="add-channel-btn" class="btn primary" style="margin-bottom: 16px;">
+                + Add a New Broadcaster
+            </button>
+        </div>
+
+        <% const pageNum=Number(currentPage); const invalidPage=isNaN(pageNum) || pageNum> totalPages || pageNum < 1; %>
+
+                <% if (invalidPage && totalPages> 0) { %>
+                    <%- include('../components/404') %>
+                        <% } else if (broadcasters && broadcasters.length> 0) { %>
+
+                            <!-- Total Count Display -->
+                            <p><strong>Your Broadcaster in Total:</strong>
+                                <%= totalBroadcasters %>
+                            </p>
+
+                            <div class="list-wrapper">
+                                <div class="list-header">
+                                    <span>Your Broadcaster Logos</span>
+                                    <span>Title of Your Broadcasters</span>
+                                    <span>Go</span>
+                                    <span>Edit</span>
+                                    <span>Delete</span>
+                                </div>
+
+                                <ul class="user-list">
+                                    <% broadcasters.forEach(broadcaster=> {
+                                        const logoUrl = broadcaster.logo ? broadcaster.logo : '/images/no-image.png';
+                                        %>
+
+                                        <li class="user-item">
+                                            <span>
+                                                <% if(broadcaster.logo && broadcaster.link) { %>
+                                                    <a>
+                                                        <img src="<%= logoUrl %>"
+                                                            alt="<%= broadcaster.broadcasterName %>"
+                                                            class="channel-logo"
+                                                            onclick="OpenEditFromImg('<%= broadcaster._id %>')">
+                                                    </a>
+                                                    <% } else { %>
+                                                        <img src="<%= logoUrl %>"
+                                                            alt="<%= broadcaster.broadcasterName %>"
+                                                            class="channel-logo"
+                                                            onclick="OpenEditFromImg('<%= broadcaster._id %>')">
+                                                        <% } %>
+                                            </span>
+                                            <span>
+                                                <%= broadcaster.broadcasterName %>
+                                            </span>
+
+                                            <span>
+                                                <button class="btn go-btn"
+                                                    onclick="location.href='/tvstation/channels?broadcasterId=<%= broadcaster._id %>'">
+                                                    Go to Projects
+                                                </button>
+                                            </span>
+
+                                            <span>
+                                                <button class="btn edit-btn" data-id="<%= broadcaster._id %>"
+                                                    data-logo-title="<%= broadcaster.logoTitle %>"
+                                                    data-description="<%= broadcaster.description %>"
+                                                    data-link="<%= broadcaster.link %>"
+                                                    data-logo-url="<%= broadcaster.logo %>">Edit This
+                                                    Broadcaster</button>
+                                            </span>
+
+                                            <span>
+                                                <button class="btn delete-btn" data-id="<%= broadcaster._id %>">Delete
+                                                    This
+                                                    Broadcaster</button>
+
+                                            </span>
+                                        </li>
+
+                                        <% }) %>
+                                </ul>
+                            </div>
+
+                            <!-- Pagination Controls -->
+                            <div class="pagination-container">
+                                <% if (pageNum> 1) { %>
+                                    <a href="?page=<%= pageNum - 1 %>" class="pagination-btn prev-btn">Prev</a>
+                                    <% } %>
+
+                                        <% for (let i=1; i <=totalPages; i++) { %>
+                                            <% if (i===pageNum) { %>
+                                                <span class="pagination-btn active-page">
+                                                    <%= i %>
+                                                </span>
+                                                <% } else { %>
+                                                    <a href="?page=<%= i %>" class="pagination-btn">
+                                                        <%= i %>
+                                                    </a>
+                                                    <% } %>
+                                                        <% } %>
+
+                                                            <% if (pageNum < totalPages) { %>
+                                                                <a href="?page=<%= pageNum + 1 %>"
+                                                                    class="pagination-btn next-btn">Next</a>
+                                                                <% } %>
+                            </div>
+
+                            <% } else { %>
+                                <p class="no-data-message">No Broadcasters found.</p>
+                                <% } %>
+    </div>
+
+</body>
+
+<script src="/js/broadcaster.js"></script>
+
+
+
+</html>

@@ -18,7 +18,9 @@
             <% } else { %>
 
                 <nav class="breadcrumbs">
-                    <a href="/tvstation/channels">Projects</a>
+                    <a href="/tvstation/broadcasters/list">Broadcasters</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels?broadcasterId=<%= channel.broadcasterId %>">Projects</a>
                     <span>&rsaquo;</span>
                     <a href="/tvstation/channels/<%= channelId %>/sessions">Episodes</a>
                     <span>&rsaquo;</span>

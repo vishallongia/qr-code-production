@@ -14,7 +14,8 @@ const PUBLIC_PLAY_ROUTES = [
   "comment-response",
   "product-response",
   "brand-play",
-  "brand-response"
+  "brand-response",
+  "play"
   // add more like "reaction-play", "buzzer-play" later
 ];
 
@@ -63,7 +64,7 @@ const authMiddleware = async (req, res, next) => {
       }
 
       if (req.path === "/" && user.role === "affiliate") {
-        return res.redirect("/sales");
+        return res.redirect("/magiccode");
       }
 
       // If the user is authenticated and requests the "/" path (SSR), redirect to "/magiccode"

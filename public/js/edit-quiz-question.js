@@ -374,5 +374,40 @@ function setupMediaProfileToggles() {
   }
 }
 
+document.addEventListener("click", async (e) => {
+  if (e.target && e.target.id === "unlinkBtn") {
+    if (!confirm("Are you sure you want to unlink the Magic Code?")) return;
+
+    const loader = document.getElementById("loader");
+    loader.style.display = "flex";
+    const sessionId = e.target.getAttribute("data-question-id");
+
+    try {
+      const res = await fetch(
+        `/tvstation/unlink-magic-code?sessionId=${sessionId}&type=quiz`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const data = await res.json();
+
+      if (res.ok && data.type === "success") {
+        showToast("Magic Code unlinked successfully", "success");
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      } else {
+        showToast(data.message || "Failed to unlink", "error");
+      }
+    } catch (err) {
+      console.error("Unlink failed", err);
+      showToast("Server error while unlinking Magic Code", "error");
+    } finally {
+      loader.style.display = "none";
+    }
+  }
+});
+
 // Call it on page load to attach click listeners only
 document.addEventListener("DOMContentLoaded", setupMediaProfileToggles);

@@ -1089,6 +1089,7 @@ router.get(
         error: "Access denied",
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
 
@@ -1105,6 +1106,7 @@ router.get(
         error: "Session not found",
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
 
@@ -1212,6 +1214,7 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     } catch (error) {
       console.error("Error fetching applause responses:", error);
@@ -1225,6 +1228,7 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
   }

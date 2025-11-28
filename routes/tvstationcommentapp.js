@@ -1,5 +1,6 @@
 const fs = require("fs");
-const path = require("path");const express = require("express");
+const path = require("path");
+const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 require("dotenv").config();
@@ -16,7 +17,6 @@ const QRCodeData = require("../models/QRCODEDATA"); // adjust path as needed
 const QRScanLog = require("../models/QRScanLog"); // Adjust path if needed
 const Session = require("../models/Session"); // adjust path if needed
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
-
 
 router.get(
   "/channels/:channelId/session/:sessionId/comment",
@@ -361,7 +361,7 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
-        session : null
+        session: null,
       });
     }
 
@@ -952,6 +952,7 @@ router.get(
         sessionId,
         channelId,
         qrScanCount: 0,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
 
@@ -969,6 +970,7 @@ router.get(
         sessionId,
         channelId,
         qrScanCount: 0,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
 
@@ -1081,6 +1083,7 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     } catch (error) {
       console.error("Error fetching comment responses:", error);
@@ -1095,6 +1098,7 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
   }

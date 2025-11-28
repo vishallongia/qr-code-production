@@ -45,6 +45,8 @@
             <form id="add-edit-show-form" enctype="multipart/form-data">
                 <input type="hidden" name="showId" id="show-id" value="">
                 <input type="hidden" name="removeLogo" id="remove-show-logo-flag" value="false">
+                <input type="hidden" name="broadcasterId" id="broadcasterId" value="<%= broadcasterId %>">
+                
 
 
 
@@ -52,7 +54,7 @@
                     <input type="text" id="show-name" name="name" placeholder="Project Name" required />
                 </div>
 
-                <div class="form-group" style="margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 20px; display: none;">
                     <input type="text" id="session-logo-title" name="logoTitle" placeholder="Logo Title (optional)">
                 </div>
 
@@ -92,7 +94,7 @@
 
         <div class="header-div">
             <h2>Your Projects</h2>
-            <img src="\images\Magic Media logo bold.png" alt="App Icon">
+            <img src="\images\icons\SYNERGY ICON.png" alt="App Icon">
         </div>
         <div style="display: flex; justify-content: end;">
             <button id="add-channel-btn" class="btn primary" style="margin-bottom: 16px;">

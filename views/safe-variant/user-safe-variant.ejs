@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Magic Comments</title>
+    <title>Magic Safe ID Variant</title>
     <link rel="stylesheet" href="/css/user-quiz.css" />
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -57,6 +57,19 @@
             top: 12px;
 
         }
+
+        .uq-question-image {
+
+            background: #18024b;
+            margin-top: 5px;
+        }
+
+        .PhoneNum {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #48474e;
+            text-decoration: none;
+        }
     </style>
 </head>
 
@@ -68,7 +81,7 @@
     <input type="hidden" name="variantId" value="<%= variant._id %>">
     <div class="uq-header">
         <div class="uq-logo" onclick="window.location.href='/'">Magic <img class="event-icon"
-                src="\images\icons\events-icons\COMMENTS (2).png" alt=""></div>
+                src="<%= variant.questionImage %>" alt=""></div>
         <div class="uq-coins" id="walletCoins" onclick="window.location.href='/magic-coin-wallet'">
             🪙 Magic Coins: <%= availableCoins || "N/A" %>
         </div>
@@ -112,6 +125,9 @@
                 <input type="hidden" name="index" value="<%= index %>">
 
                 <div class="uq-question-header">
+                    <div class="uq-question-text" style="font-size: 1.2rem; font-weight: 500;  display: none;">
+                        <%= variant.safeId.safeId %>
+                    </div>
 
                     <% const profileData=variant.safeId; %>
 
@@ -119,7 +135,7 @@
                             profileData.description)) { %>
 
                             <% if (profileData.logoTitle) { %>
-                                <h4 class="uq-logo-title" style="font-size: 1.4rem; font-weight: 600;">
+                                <h4 class="uq-logo-title" style="font-size: 1.4rem; font-weight: 600; display: none;">
                                     <%= profileData.logoTitle %>
                                 </h4>
                                 <% } %>
@@ -191,31 +207,65 @@
                             </span>
                         </div>
 
-                          <div style="text-align: center;margin-bottom: 0.7rem; ">
+                        <div style="text-align: center;margin-bottom: 0.7rem; ">
                             <span style="font-weight: normal;">
                                 <%= variant.questionMessage %>
                             </span>
                         </div>
 
-                          <div style="text-align: center;margin-bottom: 0.5rem; ">
+                        <div style="text-align: center;margin-bottom: 0.5rem; ">
                             <span style="font-weight: normal;">
-                                <%= variant.generalPhoneNumber %>
+                                
+                                <% if (variant.generalPhoneNumber) { %>
+                                    General Phone Number
+
+                                    <div>
+                                         <a class="PhoneNum" href="tel:<%= variant.generalPhoneNumber %>">
+                                        <%= variant.generalPhoneNumber %>
+                                    </a>
+                                    </div>
+                                   
+                                    <% } %>
                             </span>
                         </div>
 
-                          <div style="text-align: center;margin-bottom: 0.5rem; ">
+                        <div style="text-align: center;margin-bottom: 0.5rem; ">
                             <span style="font-weight: normal;">
-                                <%= variant.emergencyPhoneNumber %>
+
+                                
+                                <% if (variant.emergencyPhoneNumber) { %>
+                                    Emergency Phone Number
+                                    
+                                    <div>
+                                    <a class="PhoneNum" href="tel:<%= variant.emergencyPhoneNumber %>">
+                                        <%= variant.emergencyPhoneNumber %>
+                                    </a>
+                                    </div>
+                                    
+                                    <% } %>
+
+
                             </span>
                         </div>
 
-                          <div style="text-align: center;margin-bottom: 0.5rem; ">
+                        <div style="text-align: center;margin-bottom: 0.5rem; ">
                             <span style="font-weight: normal;">
-                                <%= variant.otherPhoneNumber %>
+
+                                <% if (variant.otherPhoneNumber) { %>
+                                    Other Phone Number
+
+                                    <div>
+                                        <a class="PhoneNum" href="tel:<%= variant.otherPhoneNumber %>">
+                                        <%= variant.otherPhoneNumber %>
+                                    </a>
+                                    </div>
+                                    
+                                    <% } %>
+
                             </span>
                         </div>
 
-                     
+
 
                         <!-- Options -->
                         <div class="uq-options">
@@ -245,19 +295,26 @@
                                                     </span>
                                         </div>
                                         <% if (opt.image) { %>
-                                            <img class="uq-option-image-large" src="<%= opt.image %>"
-                                                alt="Option Image" />
-                                            <% } %>
+                                            <% if (opt.link) { %>
+                                                <a href="<%= opt.link %>" target="_blank">
+                                                    <img class="uq-option-image-large" src="<%= opt.image %>"
+                                                        alt="Option Image" />
+                                                </a>
+                                                <% } else { %>
+                                                    <img class="uq-option-image-large" src="<%= opt.image %>"
+                                                        alt="Option Image" />
+                                                    <% } %>
+                                                        <% } %>
 
-                                                <span class="" style="font-weight: normal;">
-                                                    <%= opt.description %>
-                                                </span>
+                                                            <span class="" style="font-weight: normal;">
+                                                                <%= opt.description %>
+                                                            </span>
                                     </label>
                                 </div>
                                 <% }) %>
                         </div>
 
-                             <div style="text-align: center;margin-bottom: 0.5rem; ">
+                        <div style="text-align: center;margin-bottom: 0.5rem; ">
                             <span style="font-weight: normal;">
                                 <%= variant.email %>
                             </span>

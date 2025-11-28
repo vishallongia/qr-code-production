@@ -24,6 +24,7 @@ const {
   cleanupUploadedFiles,
   deleteFileIfExists,
 } = require("../middleware/multerQuizUploader");
+const { type } = require("os");
 
 router.post(
   "/create",
@@ -55,6 +56,54 @@ router.post(
         description: description?.trim() || "",
         link: link?.trim() || null,
       });
+
+      // 2️⃣ Base variant object (reused 1:1)
+      const base = {
+        safeId: newSafeId._id,
+        questionDescription: "",
+        questionMessage: "",
+        questionImage: null,
+        options: [
+          {
+            text: "",
+            description: "",
+            image: null,
+            link: null,
+          },
+        ],
+        logo: "",
+        logoTitle: "",
+        logoDescription: "",
+        logoLink: "",
+        showSafeIdProfile: false,
+        generalPhoneNumber: "",
+        emergencyPhoneNumber: "",
+        otherPhoneNumber: "",
+        email: null,
+      };
+
+      // 3️⃣ No .map — manually construct the array (fastest)
+      const variants = [
+        { ...base, question: "Car", questionImage: "/images/icons/car.png" },
+        {
+          ...base,
+          question: "Bike",
+          questionImage: "/images/icons/bike.png",
+        },
+        {
+          ...base,
+          question: "School",
+          questionImage: "/images/icons/school.png",
+        },
+        {
+          ...base,
+          question: "Phone",
+          questionImage: "/images/icons/phone.png",
+        },
+      ];
+
+      // 4️⃣ Insert all at once
+      await SafeIdVariant.insertMany(variants);
 
       return res.status(201).json({
         message: "SafeId created successfully.",
@@ -131,43 +180,6 @@ router.post(
   }
 );
 
-router.delete("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user?._id;
-
-    // ✅ Find SafeId first
-    const safeIdDoc = await SafeId.findById(id);
-    if (!safeIdDoc) {
-      return res
-        .status(404)
-        .json({ message: "SafeId not found", type: "error" });
-    }
-
-    // 🔐 Check if SafeId belongs to the current user
-    if (!safeIdDoc.createdBy.equals(userId)) {
-      return res.status(403).json({
-        message: "You are not authorized to delete this SafeId",
-        type: "error",
-      });
-    }
-
-    // ✅ Cascading delete
-    await cascadeDelete("safeId", id);
-
-    return res.status(200).json({
-      message: "SafeId deleted successfully",
-      type: "success",
-    });
-  } catch (err) {
-    console.error("Error deleting SafeId:", err);
-    return res.status(500).json({
-      message: "Failed to delete SafeId",
-      type: "error",
-    });
-  }
-});
-
 router.get("/safeids-list", async (req, res) => {
   try {
     const userId = req.user._id;
@@ -233,6 +245,72 @@ router.get("/safeids-list", async (req, res) => {
       user: req.user,
       hasMore: false,
     });
+  }
+});
+
+// ===================================================
+router.delete("/:id", async (req, res) => {
+  try {
+    const safeId = await SafeId.findById(req.params.id);
+
+    if (!safeId) {
+      return res.status(404).json({ error: "SafeId not found" });
+    }
+
+    // 1️⃣ Delete SafeId main logo (always delete)
+    if (safeId.logo) {
+      deleteFileIfExists(safeId.logo);
+    }
+
+    // 2️⃣ Fetch all variants under this SafeId
+    const variants = await SafeIdVariant.find({ safeId: safeId._id });
+
+    const staticImages = ["car.png", "bike.png", "school.png", "phone.png"];
+
+    // 3️⃣ Remove all file-based images used in variants
+    for (const variant of variants) {
+      // Delete question image
+      if (variant.questionImage) {
+        const fileName = variant.questionImage.split("/").pop(); // get only filename
+
+        if (!staticImages.includes(fileName)) {
+          deleteFileIfExists(variant.questionImage);
+        } else {
+          console.log("Skipping static image:", fileName);
+        }
+      }
+
+      // Delete option images — EXCEPT comment-logos
+      if (variant.options?.length) {
+        for (const opt of variant.options) {
+          if (opt.image) {
+            // Skip static assets
+            if (!opt.image.includes("/chat-logos/")) {
+              deleteFileIfExists(opt.image);
+            } else {
+              console.log(
+                "Skipping deletion of static option icon:",
+                opt.image
+              );
+            }
+          }
+        }
+      }
+    }
+
+    // 4️⃣ Remove all variants
+    await SafeIdVariant.deleteMany({ safeId: safeId._id });
+
+    // 5️⃣ Remove the SafeId record
+    await SafeId.findByIdAndDelete(safeId._id);
+
+    res.json({
+      message: "SafeId and all related variants deleted successfully",
+      type: "success",
+    });
+  } catch (err) {
+    console.error("Deletion error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -692,7 +770,7 @@ router.post(
         // CASE 3: Uses predefined logo
         else if (
           opt.selectedLogoSrc &&
-          opt.selectedLogoSrc.startsWith("/comment-logos/")
+          opt.selectedLogoSrc.startsWith("/chat-logos/")
         ) {
           if (oldImage && oldImage.startsWith("/questions-image/"))
             deleteFileIfExists(oldImage);
@@ -1220,7 +1298,6 @@ router.post("/safe-variant/unlink-magic-code", async (req, res) => {
   }
 });
 
-
 router.get("/safe/variant/:variantId/play", async (req, res) => {
   try {
     const { variantId } = req.params;
@@ -1262,10 +1339,9 @@ router.get("/safe/variant/:variantId/play", async (req, res) => {
     }
 
     // Pagination (future-proof if multiple variants per SafeId)
-    const index =
-      req.query.index !== undefined ? parseInt(req.query.index) : 0;
+    const index = req.query.index !== undefined ? parseInt(req.query.index) : 0;
 
-    // Currently only ONE question per variant  
+    // Currently only ONE question per variant
     const questions = [variant];
     const currentQuestion = questions[index] || null;
     const total = questions.length;
@@ -1310,6 +1386,76 @@ router.get("/safe/variant/:variantId/play", async (req, res) => {
       safeIdUser: null,
     });
   }
+});
+
+router.delete("/safe-id-variant/:variantId", async (req, res) => {
+  try {
+    const variant = await SafeIdVariant.findById(req.params.variantId);
+
+    if (!variant) {
+      return res.status(404).json({ error: "Variant not found" });
+    }
+
+    // Static images that must NOT be deleted
+    const staticImages = ["car.png", "bike.png", "school.png", "phone.png"];
+
+    // 1️⃣ Delete question image (only if not static)
+    if (variant.questionImage) {
+      const fileName = variant.questionImage.split("/").pop();
+
+      if (!staticImages.includes(fileName)) {
+        deleteFileIfExists(variant.questionImage);
+      } else {
+        console.log("Skipping static question image:", fileName);
+      }
+    }
+
+    // 2️⃣ Delete all option images (exclude comment-logos)
+    if (variant.options?.length) {
+      for (const opt of variant.options) {
+        if (opt.image) {
+          if (!opt.image.includes("/chat-logos/")) {
+            deleteFileIfExists(opt.image);
+          } else {
+            console.log("Skipping deletion of static option icon:", opt.image);
+          }
+        }
+      }
+    }
+
+    // 3️⃣ Delete variant from database
+    await SafeIdVariant.findByIdAndDelete(variant._id);
+
+    res.json({
+      message: "SafeIdVariant deleted successfully.",
+      type: "success",
+    });
+  } catch (err) {
+    console.error("Variant deletion error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ✅ API to return list of chat logos
+router.get("/chat-logos", (req, res) => {
+  const dir = path.join(__dirname, "..", "chat-logos");
+
+  fs.readdir(dir, (err, files) => {
+    if (err) {
+      console.error("Error reading chat-logos folder:", err);
+      return res.status(500).json({ error: "Unable to load logos" });
+    }
+
+    // Filter only image files
+    const imageFiles = files.filter((file) =>
+      /\.(png|jpg|jpeg|gif|svg)$/i.test(file)
+    );
+
+    // Build public URLs
+    const urls = imageFiles.map((file) => `/chat-logos/${file}`);
+
+    res.json(urls);
+  });
 });
 
 module.exports = router;

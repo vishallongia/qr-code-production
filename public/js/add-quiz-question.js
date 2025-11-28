@@ -243,34 +243,33 @@ function setupMediaProfileToggles(block) {
   const toggles = block.querySelectorAll('input[name="logoMediaProfile[]"]');
   const logoParentContainer = block.querySelector("#logoParentContainer");
 
-function updateCustomVisibility() {
-  const customToggle = block.querySelector(
-    'input[name="logoMediaProfile[]"][value="custom"]'
-  );
-  const editBroadcaster = block.querySelector("#edit-broadcaster");
+  function updateCustomVisibility() {
+    const customToggle = block.querySelector(
+      'input[name="logoMediaProfile[]"][value="custom"]'
+    );
+    const editBroadcaster = block.querySelector("#edit-broadcaster");
 
-  // 🟢 Toggle container when custom checkbox changes
-  const updateVisibility = () => {
-    logoParentContainer.style.display = customToggle?.checked
-      ? "block"
-      : "none";
-  };
-
-  customToggle?.addEventListener("change", updateVisibility);
-
-  // 🟢 Toggle container when edit-broadcaster is clicked
-  editBroadcaster?.addEventListener("click", () => {
-    logoParentContainer.style.display =
-      logoParentContainer.style.display === "none" ||
-      logoParentContainer.style.display === ""
+    // 🟢 Toggle container when custom checkbox changes
+    const updateVisibility = () => {
+      logoParentContainer.style.display = customToggle?.checked
         ? "block"
         : "none";
-  });
+    };
 
-  // 🟢 Set initial state on load
-  updateVisibility();
-}
+    customToggle?.addEventListener("change", updateVisibility);
 
+    // 🟢 Toggle container when edit-broadcaster is clicked
+    editBroadcaster?.addEventListener("click", () => {
+      logoParentContainer.style.display =
+        logoParentContainer.style.display === "none" ||
+        logoParentContainer.style.display === ""
+          ? "block"
+          : "none";
+    });
+
+    // 🟢 Set initial state on load
+    updateVisibility();
+  }
 
   toggles.forEach((toggle) => {
     toggle.addEventListener("change", () => {
@@ -440,6 +439,16 @@ document
       "question",
       block.querySelector('input[name="question"]').value.trim()
     );
+    formData.append(
+      "questionTitle",
+      block.querySelector('input[name="questionTitle"]').value.trim()
+    );
+
+    formData.append(
+      "questionDescription",
+      block.querySelector('input[name="questionDescription"]').value.trim()
+    );
+
     formData.append(
       "magicCoinDeducted",
       block.querySelector('input[name="magicCoinDeducted"]').value

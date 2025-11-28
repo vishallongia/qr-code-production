@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Safe Id Event</title>
+    <title>Add Safe ID Variant</title>
     <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
     <link rel="stylesheet" href="/css/add-quiz-question.css" />
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
@@ -26,14 +26,14 @@
         <% } else { %>
             <div class="quiz-container">
                 <div style="text-align: center;">
-                    <img class="event-icon" src="\images\icons\events-icons\COMMENTS%20(2).png" alt="">
+                    <img class="event-icon" src="/images/icons/SAFE ID ICON-.png" alt="">
                 </div>
 
-                <h2>Event Editor</h2>
+                <h2>Safe ID Creator</h2>
                 <form id="questions-form">
                     <input type="hidden" name="safeId" id="safeId" value="<%= safeId || "" %>" />
                     <div id="questions-wrapper" data-channel-id="" data-session-id="">></div>
-                    <button type="submit" class="quiz-btn-submit">Save Safe Id Event</button>
+                    <button type="submit" class="quiz-btn-submit">Save Safe ID Variant</button>
                 </form>
             </div>
 
@@ -42,32 +42,34 @@
             <template id="question-template">
                 <div class="quiz-question-wrapper">
                     <div class="quiz-question-header">
-                        <span class="quiz-question-title">Safe Id Event</span>
+                        <span class="quiz-question-title">Safe ID Variant</span>
                         <div class="quiz-question-actions">
                             <button type="button" class="quiz-btn-collapse" style="display: none;">Collapse</button>
                             <button type="button" style="display: none;" class="quiz-btn-delete">Delete</button>
                         </div>
                     </div>
-                    <div class="quiz-question-block">
+                    <div class="quiz-question-block" >
                         <div class="quiz-form-group">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:none; justify-content:space-between; align-items:center;">
                                 <label>Toggle What to Show on Front End Header</label>
                                 <button type="submit" class="quiz-btn-collapse">
                                     Save Front End Header
                                 </button>
                             </div>
-                            <div class="quiz-media-profile-toggles">
+                            <div class="quiz-media-profile-toggles" style="display: none;">
                                 <div class="quiz-toggle-wrapper">
                                     <div class="quiz-toggle-wrapper">
                                         <label class="quiz-toggle-label">Safe ID Profile</label>
                                         <label class="quiz-toggle-switch">
-                                            <input type="checkbox" name="logoMediaProfile[]" value="safeId" />
+                                            <input type="checkbox" name="showSafeIdProfile" value="safeId" />
                                             <span class="quiz-toggle-slider"></span>
                                         </label>
+                                        <button type="button" class="quiz-btn-submit"
+                                        style="margin:2px 0px; padding: 4px 8px;" id="edit-broadcaster" onclick="window.open('/safe-id/safeids-list?id=<%= safeId %>', '_blank')">Edit</button>
                                     </div>
                                 </div>
                             </div>
-                            <div id="logoParentContainer">
+                            <div id="logoParentContainer" style="display: none;">
                                 <div class="quiz-form-group">
                                     <label>Name of Your Channel </label>
                                     <input type="text" name="logoTitle" placeholder="Enter logo title" />
@@ -97,13 +99,13 @@
 
                             <div>
                                 <div class="quiz-form-group">
-                                    <label>Safe ID Event Name</label>
-                                    <input type="text" name="question" placeholder="Safe ID Event Name" />
+                                    <label>Item Name (Where Your Safe ID is Placed)</label>
+                                    <input type="text" name="question" placeholder="Item Name (Where Your Safe ID is Placed)" />
                                 </div>
 
 
                                 <div class="quiz-form-group">
-                                    <label>Upload Image (Preview) of Your Event</label>
+                                    <label>Item Image</label>
                                     <label class="quiz-file-label">
                                         <span class="quiz-file-label-text">Choose File</span>
                                         <input type="file" class="quiz-questionImage quiz-hidden-file"
@@ -113,29 +115,29 @@
                                 </div>
 
                                 <div class="quiz-form-group">
-                                    <label>Description</label>
-                                    <input type="text" name="questionDescription" placeholder="Description" />
+                                    <label>Description of Your Item </label>
+                                    <input type="text" name="questionDescription" placeholder="Description of Your Item " />
                                 </div>
                                 <div class="quiz-form-group">
-                                    <label>Message</label>
+                                    <label style="font-weight: bold;">Add a Message to Your Safe ID</label>
                                     <input type="text" name="questionMessage" placeholder="Enter Your Message" />
                                 </div>
                             </div>
 
                             <!-- ⭐ NEW CONTACT DETAILS SECTION ⭐ -->
                             <div class="quiz-form-group">
-                                <label>General Phone Number</label>
-                                <input type="tel" name="generalPhoneNumber" placeholder="+91 57555 or any number" />
+                                <label>1. General Phone Number</label>
+                                <input type="tel" name="generalPhoneNumber" placeholder="+" />
                             </div>
 
                             <div class="quiz-form-group">
-                                <label>Emergency Phone Number</label>
-                                <input type="tel" name="emergencyPhoneNumber" placeholder="+91 57555 or any number" />
+                                <label>2. Phone Number</label>
+                                <input type="tel" name="emergencyPhoneNumber" placeholder="+" />
                             </div>
 
                             <div class="quiz-form-group">
-                                <label>Other Phone Number</label>
-                                <input type="tel" name="otherPhoneNumber" placeholder="+91 57555 or any number" />
+                                <label>3. Other Phone Number</label>
+                                <input type="tel" name="otherPhoneNumber" placeholder="+" />
                             </div>
 
                             <!-- ⭐ END CONTACT DETAILS ⭐ -->
@@ -152,7 +154,7 @@
                             <div class="quiz-option-wrapper">
                                 <div class="quiz-option-blocks quiz-options-grid"></div>
                                 <div class="quiz-option-controls">
-                                    <button type="button" class="quiz-btn-add-option">+ Add Option</button>
+                                    <button type="button" class="quiz-btn-add-option">+ Add Chat</button>
                                 </div>
                             </div>
                             <div class="quiz-form-group">

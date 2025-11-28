@@ -39,7 +39,7 @@
                 <!-- Logo Title -->
                 <div class="form-group" style="margin: 15px 0;">
                     <input type="text" id="safeId-logo-title" name="logoTitle" class="number-input"
-                        placeholder="Logo Title (optional)" />
+                        placeholder="Logo Title (optional)" style="display: none;" />
                 </div>
 
                 <!-- Description -->
@@ -57,7 +57,7 @@
                 <div class="form-group" style="position: relative;">
                     <input type="file" id="safeId-logo" name="logo" accept="image/*" style="display:none;">
                     <label for="safeId-logo" class="stylish-file-label" id="safeId-logo-label">
-                        Choose Logo
+                        Add Image
                     </label>
 
                     <!-- Preview -->
@@ -95,7 +95,7 @@
                 <div class="quiz-admin-header">
                     <h1>Safe IDs
                     </h1>
-                    <div class="quiz-admin-controls">
+                    <div class="quiz-admin-controls" style="display: none;">
                         <button class="btn" id="create-safeId-btn">+ Create New Safe ID</button>
                     </div>
                 </div>
@@ -109,7 +109,7 @@
                                 <div class="quiz-admin-question-header">
 
                                     <!-- Logo -->
-                                    <div class="session-logo-wrapper">
+                                    <div class="session-logo-wrapper" style="display: none;">
                                         <% const hasLogo=s.logo; %>
                                             <% const imageSrc=hasLogo ? s.logo : '/images/no-image.png' ; %>
 
@@ -125,7 +125,7 @@
                                     </div>
 
                                     <!-- Info -->
-                                    <div class="session-details">
+                                    <div class="session-details" style="display: none;">
                                         <div class="quiz-admin-question-text">
                                             <%= s.safeId %>
                                         </div>
@@ -147,7 +147,7 @@
                                 </div>
 
                                 <!-- Actions -->
-                                <div class="quiz-admin-actions">
+                                <div class="quiz-admin-actions" style="display: none;">
                                     <button class="edit-safeId-btn" data-id="<%= s._id %>" data-name="<%= s.safeId %>"
                                         data-logo-title="<%= s.logoTitle %>" data-description="<%= s.description %>"
                                         data-link="<%= s.link %>" data-logo-url="<%= s.logo || '' %>">
@@ -158,7 +158,7 @@
                                         Delete Safe ID
                                     </button>
                                 </div>
-                                <button class="btn" style="margin-top: 15px;" data-id="<%= s._id %>"
+                                <button class="btn" style="margin-top: 15px; display: none;" data-id="<%= s._id %>"
                                     onclick="window.open('/safe-id/safe-variant/create?safeId=<%= s._id %>', '_blank')">
                                     + Create Safe Variant
                                 </button>
@@ -166,42 +166,59 @@
                                 <!-- Safe Variants Section -->
                                 <% if (variantsMap[s._id] && variantsMap[s._id].length> 0) { %>
                                     <div style="margin-top: 10px;">
-                                        <strong>Safe Variants:</strong>
-                                        <div style="margin-top: 8px;">
+                                        <!-- <strong>Safe ID Variant:</strong> -->
+                                        <div style="margin-top: 8px; display: flex; align-items: center;">
                                             <% variantsMap[s._id].forEach((v, index)=> { %>
                                                 <button class="btn"
                                                     onclick="window.open('/safe-id/variant/<%= v._id %>', '_blank')"
-                                                    style="margin: 4px; padding: 6px 12px;">
-                                                    <%= v.question && v.question.trim() !=="" ? v.question : ("Variant " + (index + 1)) 
-                    %>
-                </button>
+                                                    style="margin: 4px; padding: 6px 12px; display: flex; flex-direction: column; align-items: center;">
+
+                                                    <img style="width: 50px; height: 50px;"
+                                                        src="<%= v.questionImage ? v.questionImage : '/images/no-image.png' %>"
+                                                        alt="">
+
+                                                    <!-- <span>
+                                                        <%= v.question && v.question.trim() !=="" ? v.question :
+                                                            ("Variant " + (index + 1)) %>
+    </span> -->
+
+</button>
+
             <% }) %>
+                                                <button class=" btn" style="margin-top: 15px;" data-id="<%= s._id %>"
+                                                           onclick="window.open('/safe-id/safe-variant/create?safeId=<%= s._id %>', '_blank')">
+                                                    <img style="width: 50px; height: auto; display: inline-block;"
+                                                        src="/images/icons/SAFE ID ICON-.png"
+                                                        alt="">
+                                                        <div>+ Add</div>
+                                                           
+                                               </button>
         </div>
-    </div>
-<% } %>
-
-
-                            </div>
-                            <% }) %>
-                                <% } else { %>
-                                    <p style=" padding:1rem;">No Safe IDs available.</p>
-                                                        <% } %>
-
                                         </div>
+                                        <% } %>
 
-                                        <% if (hasMore) { %>
-                                            <div class="quiz-admin-load" id="loadMoreContainer">
-                                                <button id="loadMoreBtn">Load More</button>
-                                                <div id="loadingText"
-                                                    style="display:none; text-align:center; margin-top:10px; font-weight:500;">
-                                                    Loading...
-                                                </div>
-                                            </div>
-                                            <% } %>
-
-                                                <% } %>
 
                                     </div>
+                                    <% }) %>
+                                        <% } else { %>
+                                            <p style=" padding:1rem;">No Safe IDs available.</p>
+                                            <% } %>
+
+                            </div>
+
+                            <% if (hasMore) { %>
+                                <div class="quiz-admin-load" id="loadMoreContainer">
+                                    <button id="loadMoreBtn">Load More</button>
+                                    <div id="loadingText"
+                                        style="display:none; text-align:center; margin-top:10px; font-weight:500;">
+                                        Loading...
+                                    </div>
+                                </div>
+                                <% } %>
+
+                                    <% } %>
+
+                </div>
 
 </body>
 

@@ -23,7 +23,9 @@
         <% } else { %>
             <div class="quiz-container">
                 <nav class="breadcrumbs">
-                    <a href="/tvstation/channels">Projects</a>
+                    <a href="/tvstation/broadcasters/list">Broadcasters</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels?broadcasterId=<%= channel.broadcasterId %>">Projects</a>
                     <span>&rsaquo;</span>
                     <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                     <span>&rsaquo;</span>
@@ -33,7 +35,7 @@
                     <span>&rsaquo;</span>
                     <span class="active">Create a New Voting Event</span>
                 </nav>
-                
+
                 <div style="text-align: center;">
                     <img class="event-icon" src="\images\icons\events-icons\VOTE-.png" alt="">
                 </div>
@@ -57,7 +59,7 @@
                         </div>
                     </div>
                     <div class="quiz-form-group">
-                                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
                             <label>Toggle What to Show on Front End Header</label>
                             <button type="submit" class="quiz-btn-collapse">
                                 Save Front End Header
@@ -80,7 +82,8 @@
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
                                 <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
-                                    id="edit-project" onclick="window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')" >Edit</button>
+                                    id="edit-project"
+                                    onclick="window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')">Edit</button>
                             </div>
                             <div class="quiz-toggle-wrapper">
                                 <label class="quiz-toggle-label">Episode</label>
@@ -89,7 +92,8 @@
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
                                 <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
-                                    id="edit-episode" onclick="window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')">Edit</button>
+                                    id="edit-episode"
+                                    onclick="window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')">Edit</button>
                             </div>
                             <div class="quiz-toggle-wrapper" style="display: none;">
                                 <label class="quiz-toggle-label">Custom</label>
@@ -126,22 +130,33 @@
                             <hr />
                         </div>
                         <div style="display: block;">
-                        <div class="quiz-form-group">
-                            <label>Question</label>
-                            <input type="text" name="question" placeholder="Enter your question"  />
-                        </div>
-                        <div class="quiz-form-group">
-                            <label>Question Image (optional)</label>
-                            <label class="quiz-file-label">
-                                <span class="quiz-file-label-text">Choose File</span>
-                                <input type="file" class="quiz-questionImage quiz-hidden-file" accept="image/*" />
-                            </label>
-                            <img class="preview-img quiz-questionImagePreview" style="display: none;" />
-                        </div>
-                        <div class="quiz-form-group">
-                            <label>Question Image Link (optional)</label>
-                            <input type="url" name="questionImageLink" placeholder="https://example.com" />
-                        </div>
+                            <div class="quiz-form-group">
+                                <label>Question</label>
+                                <input type="text" name="question" placeholder="Enter your question" />
+                            </div>
+                            <div class="quiz-form-group">
+                                <label>Question Title (optional)</label>
+                                <input type="text" name="questionTitle" placeholder="Enter question title" />
+                            </div>
+
+                            <!-- ✅ NEW: Question Description -->
+                            <div class="quiz-form-group">
+                                <label>Question Description (optional)</label>
+                                <input type="text" name="questionDescription"
+                                    placeholder="Enter question description" />
+                            </div>
+                            <div class="quiz-form-group">
+                                <label>Question Image (optional)</label>
+                                <label class="quiz-file-label">
+                                    <span class="quiz-file-label-text">Choose File</span>
+                                    <input type="file" class="quiz-questionImage quiz-hidden-file" accept="image/*" />
+                                </label>
+                                <img class="preview-img quiz-questionImagePreview" style="display: none;" />
+                            </div>
+                            <div class="quiz-form-group">
+                                <label>Question Image Link (optional)</label>
+                                <input type="url" name="questionImageLink" placeholder="https://example.com" />
+                            </div>
                         </div>
                         <div class="quiz-option-wrapper">
                             <div class="quiz-option-blocks quiz-options-grid"></div>

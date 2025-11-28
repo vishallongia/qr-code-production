@@ -16,10 +16,34 @@ const Portfolio = require("../models/Portfolios");
 const PortfolioResponse = require("../models/PortfolioResponse");
 const Brand = require("../models/Brand");
 const BrandResponse = require("../models/BrandResponse");
+const Broadcaster = require("../models/Broadcaster");
 
 const { deleteFileIfExists } = require("../middleware/multerQuizUploader");
 async function cascadeDelete(type, id) {
   switch (type) {
+    /* ---------------------------------------------------------
+     * 🟩 TOP-LEVEL: BROADCASTER DELETE (ADDED WITHOUT CHANGING OTHERS)
+     * --------------------------------------------------------- */
+    case "broadcaster":
+      try {
+        const broadcaster = await Broadcaster.findById(id);
+        if (!broadcaster) return;
+
+        // Delete broadcaster logo if exists
+        deleteFileIfExists(broadcaster.logo);
+
+        // 🔥 Delete all channels under this broadcaster
+        const channels = await Channel.find({ broadcasterId: id });
+        for (const channel of channels) {
+          await cascadeDelete("channel", channel._id);
+        }
+
+        // Finally delete broadcaster
+        await Broadcaster.deleteOne({ _id: id });
+      } catch (err) {
+        console.error(`Error deleting broadcaster ${id}:`, err);
+      }
+      break;
     case "channel":
       try {
         const channel = await Channel.findById(id);
@@ -353,11 +377,7 @@ async function cascadeDelete(type, id) {
         console.error(`Error deleting product question ${id}:`, err);
       }
       break;
-
-
   }
-
-
 }
 
 module.exports = { cascadeDelete };

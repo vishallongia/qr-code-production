@@ -43,7 +43,9 @@
         <% } else { %>
             <div class="quiz-container">
                 <nav class="breadcrumbs">
-                    <a href="/tvstation/channels">Projects</a>
+                    <a href="/tvstation/broadcasters/list">Broadcasters</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels?broadcasterId=<%= channel.broadcasterId %>">Projects</a>
                     <span>&rsaquo;</span>
                     <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                     <span>&rsaquo;</span>
@@ -79,12 +81,12 @@
                     </div>
                     <div class="quiz-question-block">
                         <div class="quiz-form-group">
-                                                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <label>Toggle What to Show on Front End Header</label>
-                            <button type="submit" class="quiz-btn-collapse">
-                                Save Front End Header
-                            </button>
-                        </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label>Toggle What to Show on Front End Header</label>
+                                <button type="submit" class="quiz-btn-collapse">
+                                    Save Front End Header
+                                </button>
+                            </div>
                             <div class="quiz-media-profile-toggles">
                                 <div class="quiz-toggle-wrapper">
                                     <label class="quiz-toggle-label">Broadcaster</label>
@@ -103,7 +105,8 @@
                                         <span class="quiz-toggle-slider"></span>
                                     </label>
                                     <button type="button" class="quiz-btn-submit"
-                                        style="margin:2px 0px; padding: 4px 8px;" id="edit-project" onclick="window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')" >Edit</button>
+                                        style="margin:2px 0px; padding: 4px 8px;" id="edit-project"
+                                        onclick="window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')">Edit</button>
                                 </div>
 
                                 <div class="quiz-toggle-wrapper">
@@ -113,7 +116,8 @@
                                         <span class="quiz-toggle-slider"></span>
                                     </label>
                                     <button type="button" class="quiz-btn-submit"
-                                        style="margin:2px 0px; padding: 4px 8px;" id="edit-episode" onclick="window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')">Edit</button>
+                                        style="margin:2px 0px; padding: 4px 8px;" id="edit-episode"
+                                        onclick="window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')">Edit</button>
                                 </div>
 
                                 <div class="quiz-toggle-wrapper" style="display: none;">
@@ -155,8 +159,7 @@
                         <div style="display: block;">
                             <div class="quiz-form-group">
                                 <label>Name of Your Event</label>
-                                <input type="text" name="question" placeholder="Name of Your Event"
-                                    />
+                                <input type="text" name="question" placeholder="Name of Your Event" />
                             </div>
 
                             <div class="quiz-form-group">

@@ -177,7 +177,7 @@
 }
 
 .uq-option-image-large {
-    width: 100%;
+    /* width: 100%; */
     object-fit: contain;
     /* Using contain to better fit images */
     border-radius: var(--uq-radius);

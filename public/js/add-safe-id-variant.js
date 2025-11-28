@@ -112,24 +112,24 @@ async function generateOptionBlock(block, index) {
 
   // Label
   const label = document.createElement("label");
-  label.innerText = `Chat`;
+  label.innerText = `Add Messenger App `;
 
   // Option text
   const inputText = document.createElement("input");
   inputText.type = "text";
-  inputText.placeholder = "Name of Your Respective Chat Section (Optional)";
+  inputText.placeholder = "Name of the App";
 
   // Description
   const inputDesc = document.createElement("input");
   inputDesc.type = "text";
-  inputDesc.placeholder = "Enter the Description";
+  inputDesc.placeholder = "Description";
   inputDesc.className = "quiz-option-description";
 
   // Option link
   const inputLink = document.createElement("input");
   inputLink.type = "text";
   inputLink.placeholder =
-    "Link of the Chat of Your Selected Social Media Channel";
+    "Link";
   inputLink.className = "quiz-option-link";
 
   // File
@@ -411,6 +411,7 @@ document
         showToast(result.message || "Question saved successfully!", "success");
         setTimeout(() => {
           window.location.reload();
+          window.location.href = `/safe-id/safe-variant/edit?safeVariantId=${result.data._id}`;
         }, 1000);
 
         // const { channelId, sessionId, _id } = result.data; // ✅ Extract
@@ -442,7 +443,7 @@ async function fetchCommentLogos() {
   }
 
   try {
-    const res = await fetch("/tvstation/comment/comment-logos");
+    const res = await fetch("/safe-id/chat-logos");
     cachedLogos = await res.json();
     logosFetched = true;
     return cachedLogos;

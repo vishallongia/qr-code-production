@@ -40,7 +40,9 @@
         </div>
         <% } else { %>
             <nav class="breadcrumbs">
-                <a href="/tvstation/channels">Projects</a>
+                <a href="/tvstation/broadcasters/list">Broadcasters</a>
+                <span>&rsaquo;</span>
+                <a href="/tvstation/channels?broadcasterId=<%= channel.broadcasterId %>">Projects</a>
                 <span>&rsaquo;</span>
                 <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                 <span>&rsaquo;</span>
@@ -241,14 +243,14 @@
 
 
                     // --- Main drawWinner function ---
-                    async function drawWinner(mode, userId = null,responseId = null) { // optional userId for pre-selected winner
+                    async function drawWinner(mode, userId = null, responseId = null) { // optional userId for pre-selected winner
                         if (!mode) return;
                         loader.style.display = "flex"; // show loader
 
                         try {
                             const bodyData = { type: "voting", mode };
-                            if (userId) bodyData.userId = userId; 
-                            if (responseId) bodyData.responseId = responseId; 
+                            if (userId) bodyData.userId = userId;
+                            if (responseId) bodyData.responseId = responseId;
 
                             const res = await fetch(
                                 `/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting/draw`,

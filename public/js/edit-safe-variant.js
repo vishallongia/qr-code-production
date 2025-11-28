@@ -7,7 +7,7 @@ async function fetchCommentLogos() {
   if (logosFetched) return cachedLogos;
 
   try {
-    const res = await fetch("/tvstation/comment/comment-logos");
+    const res = await fetch("/safe-id/chat-logos");
     cachedLogos = await res.json();
     logosFetched = true;
   } catch (err) {
@@ -284,11 +284,11 @@ function addOptionBlock(text = "", imageUrl = "", description = "", link = "") {
   const index = document.querySelectorAll(".quiz-option-block").length;
   block.innerHTML = `
     <div class="quiz-option-inner">
-      <label>Chat</label>
+      <label>Add Messenger App </label>
 
-      <input type="text" name="optionTexts[]" value="${text}" placeholder="Name of Your Respective Chat Section (Optional)" />
-      <input type="text" name="optionDescriptions[]" value="${description}" placeholder="Enter Description" />
-      <input type="url" name="optionLinks[]" value="${link}" placeholder="Link of the Chat of Your Selected Social Media Channel" />
+      <input type="text" name="optionTexts[]" value="${text}" placeholder="Name of the App" />
+      <input type="text" name="optionDescriptions[]" value="${description}" placeholder="Description" />
+      <input type="url" name="optionLinks[]" value="${link}" placeholder="Link" />
 
       <div class="quiz-logo-and-preview-wrapper" style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
       <img class="quiz-selected-logo-preview" style="display:none; max-width:150px; margin-top:6px;" />
@@ -725,5 +725,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   } finally {
     loader.style.display = "none";
+  }
+});
+
+document.addEventListener("click", async (e) => {
+  if (e.target && e.target.id === "unlinkBtn") {
+
+    if (!confirm("Are you sure you want to unlink the Magic Code?")) return;
+
+    const loader = document.getElementById("loader");
+    loader.style.display = "flex";
+    const variantId = e.target.getAttribute("data-question-id");
+
+    try {
+      const res = await fetch(
+        `/safe-id/safe-variant/unlink-magic-code?variantId=${variantId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const data = await res.json();
+
+      if (res.ok && data.type === "success") {
+        showToast("Magic Code unlinked successfully", "success");
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      } else {
+        showToast(data.message || "Failed to unlink", "error");
+      }
+    } catch (err) {
+      console.error("Unlink failed", err);
+      showToast("Server error while unlinking Magic Code", "error");
+    } finally {
+      loader.style.display = "none";
+    }
   }
 });

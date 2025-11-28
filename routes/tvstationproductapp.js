@@ -361,7 +361,7 @@ router.get(
         channel: null,
         question: null,
         user: req.user,
-        session : null
+        session: null,
       });
     }
 
@@ -952,6 +952,7 @@ router.get(
         sessionId,
         channelId,
         qrScanCount: 0,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
 
@@ -969,6 +970,7 @@ router.get(
         sessionId,
         channelId,
         qrScanCount: 0,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
 
@@ -1081,6 +1083,7 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     } catch (error) {
       console.error("Error fetching product responses:", error);
@@ -1095,6 +1098,7 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
   }

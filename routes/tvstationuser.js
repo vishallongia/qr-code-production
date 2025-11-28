@@ -37,12 +37,68 @@ const { addUploadPath } = require("../utils/selectUploadDestination");
 const { cascadeDelete } = require("../utils/cascadeDelete"); // adjust path
 const SendEmail = require("../Messages/SendEmail");
 const { session } = require("passport");
+const Broadcaster = require("../models/Broadcaster");
 
 // GET /channels - paginated list
 router.get("/channels", async (req, res) => {
   try {
-    // Filter channels created by the logged-in user
-    const filter = { createdBy: req.user._id };
+    const broadcasterId = req.query.broadcasterId;
+
+    // 1️⃣ Check if broadcasterId provided
+    if (!broadcasterId) {
+      return res.status(400).render("dashboardnew", {
+        message: "Broadcaster ID is required",
+        type: "error",
+        activeSection: "channel",
+        channels: [],
+        currentPage: 1,
+        totalPages: 0,
+        totalChannels: 0,
+        user: req.user,
+        broadcasterId,
+      });
+    }
+
+    // 2️⃣ Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(broadcasterId)) {
+      return res.status(400).render("dashboardnew", {
+        message: "Invalid Broadcaster ID",
+        type: "error",
+        activeSection: "channel",
+        channels: [],
+        currentPage: 1,
+        totalPages: 0,
+        totalChannels: 0,
+        user: req.user,
+        broadcasterId,
+      });
+    }
+
+    // 3️⃣ Check if broadcaster exists AND belongs to current user
+    const broadcaster = await Broadcaster.findOne({
+      _id: broadcasterId,
+      createdBy: req.user._id,
+    }).lean();
+
+    if (!broadcaster) {
+      return res.status(404).render("dashboardnew", {
+        message: "Broadcaster not found or unauthorized access",
+        type: "error",
+        activeSection: "channel",
+        channels: [],
+        currentPage: 1,
+        totalPages: 0,
+        totalChannels: 0,
+        user: req.user,
+        broadcasterId,
+      });
+    }
+
+    // Existing pagination + channel listing logic (unchanged)
+    const filter = {
+      createdBy: req.user._id,
+      broadcasterId: broadcasterId,
+    };
     const currentPage = parseInt(req.query.page) || 1;
     const recordsPerPage = Number(process.env.USER_PER_PAGE) || 10;
     const skip = (currentPage - 1) * recordsPerPage;
@@ -63,6 +119,7 @@ router.get("/channels", async (req, res) => {
       totalPages,
       totalChannels,
       user: req.user,
+      broadcasterId,
     });
   } catch (error) {
     console.error("Error fetching channels:", error);
@@ -75,6 +132,7 @@ router.get("/channels", async (req, res) => {
       totalPages: 0,
       totalChannels: 0,
       user: null,
+      broadcasterId,
     });
   }
 });
@@ -86,7 +144,39 @@ router.post(
   async (req, res) => {
     try {
       const user = req.user;
-      const { name, description, link, logoTitle } = req.body;
+      const { name, description, link, logoTitle, broadcasterId } = req.body;
+
+      // ✅ 1. Broadcaster ID - REQUIRED
+      if (!broadcasterId) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(400).json({
+          message: "Broadcaster ID is required",
+          type: "error",
+        });
+      }
+
+      // ✅ 2. Broadcaster ID - VALID MONGO ID?
+      if (!mongoose.Types.ObjectId.isValid(broadcasterId)) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(400).json({
+          message: "Invalid Broadcaster ID format",
+          type: "error",
+        });
+      }
+
+      // ✅ 3. Broadcaster - EXISTS + BELONGS TO USER?
+      const broadcaster = await Broadcaster.findOne({
+        _id: broadcasterId,
+        createdBy: user._id,
+      }).lean();
+
+      if (!broadcaster) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(404).json({
+          message: "Broadcaster not found or unauthorized",
+          type: "error",
+        });
+      }
 
       if (!name || typeof name !== "string" || !name.trim()) {
         cleanupUploadedFiles(req.files, "uploads");
@@ -124,6 +214,7 @@ router.post(
         description: description?.trim() || "",
         link: link?.trim() || "",
         logoTitle: logoTitle?.trim() || "",
+        broadcasterId,
       });
 
       await newChannel.save();
@@ -329,6 +420,31 @@ router.put(
           type: "error",
         });
       }
+
+      // ✅ NEW: VALIDATE BROADCASTER OF THIS CHANNEL
+      const broadcasterId = channel.broadcasterId;
+
+      if (!broadcasterId || !mongoose.Types.ObjectId.isValid(broadcasterId)) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(400).json({
+          message: "Invalid or missing broadcaster ID for this channel",
+          type: "error",
+        });
+      }
+
+      const broadcaster = await Broadcaster.findOne({
+        _id: broadcasterId,
+        createdBy: user._id,
+      });
+
+      if (!broadcaster) {
+        cleanupUploadedFiles(req.files, "uploads");
+        return res.status(404).json({
+          message: "Broadcaster not found or unauthorized",
+          type: "error",
+        });
+      }
+      // ✅ BROADCASTER VALIDATION END
 
       // Duplicate name check
       const duplicate = await Channel.findOne({
@@ -818,6 +934,8 @@ router.post(
         digitalRewardName,
         digitalRewardDescription,
         digitalRewardLink,
+        questionTitle,
+        questionDescription,
       } = req.body;
 
       // ✅ Validate ObjectId format
@@ -980,6 +1098,8 @@ router.post(
         channelId,
         sessionId,
         question: question.trim(),
+        questionTitle: questionTitle?.trim() || "",
+        questionDescription: questionDescription?.trim() || "",
         options: formattedOptions,
         correctAnswerIndex: parseInt(correctAnswerIndex),
         questionImage: questionImagePath
@@ -1066,6 +1186,8 @@ router.post(
         digitalRewardName,
         digitalRewardDescription,
         digitalRewardLink,
+        questionTitle,
+        questionDescription,
       } = req.body;
 
       if (
@@ -1310,6 +1432,9 @@ router.post(
       quiz.magicCoinDeducted = magicCoinDeducted;
       quiz.showLogoSection =
         showLogoSection === "true" || showLogoSection === true;
+
+      quiz.questionTitle = questionTitle?.trim() || "";
+      quiz.questionDescription = questionDescription?.trim() || "";
 
       // ✅ Reward fields
       if (mode === "jackpot") {
@@ -2286,6 +2411,7 @@ router.get(
         error: "Access denied",
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
 
@@ -2302,6 +2428,7 @@ router.get(
         error: "Session not found",
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
 
@@ -2439,6 +2566,7 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     } catch (error) {
       console.error("Error fetching quiz responses:", error);
@@ -2452,11 +2580,11 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
   }
 );
-
 
 // POST /api/channel/:channelId/session/:sessionId/qr
 router.post("/channel/:channelId/session/:sessionId/qr", async (req, res) => {
@@ -3220,6 +3348,8 @@ router.post(
         digitalRewardName,
         digitalRewardDescription,
         digitalRewardLink,
+        questionTitle,
+        questionDescription,
       } = req.body;
 
       // ✅ Validate ObjectId
@@ -3323,6 +3453,8 @@ router.post(
         channelId,
         sessionId,
         question: question.trim(),
+        questionTitle: questionTitle?.trim() || "",
+        questionDescription: questionDescription?.trim() || "",
         options: formattedOptions,
         questionImage: questionImagePath
           ? `/questions-image/${questionImagePath}`
@@ -3496,6 +3628,8 @@ router.post(
         digitalRewardName,
         digitalRewardDescription,
         digitalRewardLink,
+        questionTitle,
+        questionDescription,
       } = req.body;
       // ✅ Validate IDs
       if (
@@ -3716,6 +3850,8 @@ router.post(
       votingQuestion.digitalCoinDeducted = dCoin;
       votingQuestion.mode = mode;
       votingQuestion.magicCoinDeducted = magicCoinDeducted;
+      votingQuestion.questionTitle = questionTitle?.trim() || "";
+      votingQuestion.questionDescription = questionDescription?.trim() || "";
 
       // ✅ Reward fields
       if (mode === "jackpot") {
@@ -3868,6 +4004,7 @@ router.get(
         error: "Access denied",
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
 
@@ -3884,6 +4021,7 @@ router.get(
         error: "Session not found",
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
     // Step 3: Find first vote question for this session and get linkedQRCode
@@ -4018,6 +4156,7 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     } catch (error) {
       console.error("Error fetching quiz responses:", error);
@@ -4031,6 +4170,7 @@ router.get(
         user: req.user,
         sessionId,
         channelId,
+        broadcasterId: channel.broadcasterId || null,
       });
     }
   }
@@ -5532,7 +5672,7 @@ router.get("/:sessionId/apps", async (req, res) => {
         : null,
       commentQuestion: comment
         ? {
-            name: "Comment",
+            name: "Comments",
             ...comment.toObject(),
             link: makeLink("comment", "comment-play"),
           }
@@ -5547,14 +5687,14 @@ router.get("/:sessionId/apps", async (req, res) => {
 
       brandQuestion: brand
         ? {
-            name: "Brand",
+            name: "Brands",
             ...brand.toObject(),
             link: makeLink("brand", "brand-play"),
           }
         : null,
       productQuestion: product
         ? {
-            name: "Product",
+            name: "Products",
             ...product.toObject(),
             link: makeLink("product", "product-play"),
           }

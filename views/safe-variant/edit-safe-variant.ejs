@@ -9,6 +9,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
     <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png">
+
+    <style>
+        .preview-img {
+
+    background: #18024b;
+}
+    </style>
 </head>
 
 <body>
@@ -23,10 +30,10 @@
         <% } else { %>
             <div class="quiz-container">
                 <div style="text-align: center;">
-                    <img class="event-icon" src="\images\icons\events-icons\COMMENTS%20(2).png" alt="">
+                    <img class="event-icon" src="<%= safeVariant.questionImage %>" alt="">
                 </div>
 
-                <h2>Event Editor</h2>
+                <h2>Safe ID Creator</h2>
                 <form id="edit-question-form" enctype="multipart/form-data">
                     <input type="hidden" name="safeVariantId" value="<%= safeVariant._id %>" />
                     <input type="hidden" name="safeId" value="<%= safeId %>" />
@@ -36,19 +43,38 @@
 
                     <div class="quiz-question-actions">
                         <button type="button" class="quiz-btn-collapse"
-                            onclick="window.open('/tvstation/comment/channels/', '_blank')">
-                            Open Event
+                            onclick="window.open('/safe-id/safe/variant/<%= safeVariant._id %>/play?lang=en', '_blank')">
+                            Show Me the Frontend
                         </button>
+                        <button type="button" class="quiz-btn-collapse"
+                            onclick="window.open('/authenticateqr?type=safe-id-variant&linked=true&variantId=<%= safeVariant._id %>&sessionId=true', '_blank')">
+                            Send to a Magic Code
+                        </button>
+                        <button type="button" class="quiz-btn-collapse"
+                            onclick="window.open('/dashboard?type=safe-id-variant&linked=true&variantId=<%= safeVariant._id %>&sessionId=true', '_blank')">
+                            Send to New Magic Code
+                        </button>
+                        <% if (safeVariant.linkedQRCode) { %>
+                            <button type="button" class="quiz-btn-collapse" data-question-id="<%= safeVariant._id %>"
+                                id="unlinkBtn">
+                                Unsend
+                            </button>
+                            <% } %>
+                                <button type="button" class="quiz-btn-collapse"
+                                    onclick="window.open('/safe-id/variant/<%= safeVariant._id %>', '_blank')">
+                                    Show the Magic Code of this Event
+                                </button>
+
                     </div>
 
                     <div class="quiz-form-group">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:none; justify-content:space-between; align-items:center;">
                             <label>Toggle What to Show on Front End Header</label>
                             <button type="submit" class="quiz-btn-collapse">
                                 Save Front End Header
                             </button>
                         </div>
-                        <div class="quiz-media-profile-toggles">
+                        <div class="quiz-media-profile-toggles" style="display: none;">
                             <div class="quiz-toggle-wrapper">
                                 <label class="quiz-toggle-label">Safe ID Profile</label>
                                 <label class="quiz-toggle-switch">
@@ -56,6 +82,9 @@
                                         <%=safeVariant.showSafeIdProfile ? 'checked' : '' %> />
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
+                                <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
+                                    id="edit-broadcaster"
+                                    onclick="window.open('/safe-id/safeids-list?id=<%= safeId %>', '_blank')">Edit</button>
                             </div>
                         </div>
 
@@ -100,12 +129,12 @@
 
                     <div>
                         <div class="quiz-form-group">
-                            <label>Safe ID Event Name</label>
-                            <input type="text" name="question" placeholder="Safe ID Event Name"
+                            <label>Item Name (Where Your Safe ID is Placed)</label>
+                            <input type="text" name="question" placeholder="Item Name (Where Your Safe ID is Placed)"
                                 value="<%= safeVariant.question || '' %>" />
                         </div>
                         <div class="quiz-form-group">
-                            <label>Upload Image (Preview) of Your Event</label>
+                            <label>Item Image</label>
                             <label class="quiz-file-label">
                                 <span class="quiz-file-label-text">
                                     <%= safeVariant.questionImage ? safeVariant.questionImage.split('/').pop()
@@ -121,37 +150,37 @@
                                     <% } %>
                         </div>
                         <div class="quiz-form-group">
-                            <label>Description</label>
+                            <label>Description of Your Item </label>
                             <input type="text" name="questionDescription"
-                                value="<%= safeVariant.questionDescription || '' %>" placeholder="Description" />
+                                value="<%= safeVariant.questionDescription || '' %>" placeholder="Description of Your Item " />
                         </div>
 
 
 
                         <div class="quiz-form-group">
-                            <label>Message</label>
+                            <label  style="font-weight: bold;">Add a Message to Your Safe ID</label>
                             <input type="text" name="questionMessage" value="<%= safeVariant.questionMessage || '' %>"
-                                placeholder="Enter Your Message" />
+                                placeholder="Add a Message to Your Safe ID" />
                         </div>
                     </div>
 
                     <!-- ⭐ NEW CONTACT DETAILS SECTION ⭐ -->
                     <!-- ⭐ NEW CONTACT DETAILS SECTION ⭐ -->
                     <div class="quiz-form-group">
-                        <label>General Phone Number</label>
-                        <input type="tel" name="generalPhoneNumber" placeholder="+91 57555 or any number"
+                        <label>1. General Phone Number</label>
+                        <input type="tel" name="generalPhoneNumber" placeholder="+"
                             value="<%= safeVariant.generalPhoneNumber || '' %>" />
                     </div>
 
                     <div class="quiz-form-group">
-                        <label>Emergency Phone Number</label>
-                        <input type="tel" name="emergencyPhoneNumber" placeholder="+91 57555 or any number"
+                        <label>2. Emergency Phone Number</label>
+                        <input type="tel" name="emergencyPhoneNumber" placeholder="+"
                             value="<%= safeVariant.emergencyPhoneNumber || '' %>" />
                     </div>
 
                     <div class="quiz-form-group">
-                        <label>Other Phone Number</label>
-                        <input type="tel" name="otherPhoneNumber" placeholder="+91 57555 or any number"
+                        <label>3. Other Phone Number</label>
+                        <input type="tel" name="otherPhoneNumber" placeholder="+"
                             value="<%= safeVariant.otherPhoneNumber || '' %>" />
                     </div>
                     <!-- ⭐ END CONTACT DETAILS ⭐ -->
@@ -164,17 +193,17 @@
                         <div id="option-blocks" class="quiz-option-blocks quiz-options-grid">
                             <% safeVariant.options.forEach((opt, index)=> { %>
                                 <div class="quiz-option-block" data-option-id="<%= opt._id %>">
-                                    <label>Chat</label>
+                                    <label>Add Messenger App </label>
 
 
 
                                     <!-- Option text fields -->
                                     <input type="text" name="optionTexts[]" value="<%= opt.text %>"
-                                        placeholder="Name of Your Respective Chat Section (Optional)" />
+                                        placeholder="Name of the App" />
                                     <input type="text" name="optionDescriptions[]" value="<%= opt.description || '' %>"
-                                        placeholder="Enter Description" />
+                                        placeholder="Description" />
                                     <input type="url" name="optionLinks[]" value="<%= opt.link || '' %>"
-                                        placeholder="Link of the Chat of Your Selected Social Media Channel" />
+                                        placeholder="Link" />
 
                                     <!-- ✅ Selected logo/image preview -->
                                     <% if (opt.selectedLogoSrc) { %>
@@ -213,7 +242,7 @@
                         </div>
                         <div class="quiz-option-controls">
                             <button type="button" id="btn-add-option" class="quiz-btn-add-option">+ Add
-                                Option</button>
+                                Chat</button>
                         </div>
                         <div class="quiz-form-group">
                             <label>Email</label>

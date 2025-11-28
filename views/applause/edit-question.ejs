@@ -22,7 +22,9 @@
         <% } else { %>
             <div class="quiz-container">
                 <nav class="breadcrumbs">
-                    <a href="/tvstation/channels">Projects</a>
+                    <a href="/tvstation/broadcasters/list">Broadcasters</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels?broadcasterId=<%= channel.broadcasterId %>">Projects</a>
                     <span>&rsaquo;</span>
                     <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                     <span>&rsaquo;</span>
@@ -48,7 +50,7 @@
                     <div class="quiz-question-actions">
                         <button type="button" class="quiz-btn-collapse"
                             onclick="window.open('/tvstation/applause/channels/<%= channel._id %>/session/<%= sessionId %>/applause-play', '_blank')">
-                            Open Event
+                            Show Me the Frontend
                         </button>
                     </div>
 
@@ -150,19 +152,20 @@
 
                     <div>
                         <div class="quiz-form-group">
-                            <label>Name of The Episode</label>
-                            <input type="text" name="question" placeholder="Name of The Episode" value="<%= question.question || '' %>" />
+                            <label>Name of The Event</label>
+                            <input type="text" name="question" placeholder="Name of The Event"
+                                value="<%= question.question || '' %>" />
                         </div>
 
                         <div class="quiz-form-group">
-                            <label>Description of The Episode</label>
+                            <label>Description of The Event</label>
                             <input type="text" name="questionDescription"
                                 value="<%= question.questionDescription || '' %>"
-                                placeholder="Description of The Episode" />
+                                placeholder="Description of The Event" />
                         </div>
 
                         <div class="quiz-form-group">
-                            <label>Upload Image (Preview) of The Episode</label>
+                            <label>Upload Image (Preview) of The Event</label>
                             <label class="quiz-file-label">
                                 <span class="quiz-file-label-text">
                                     <%= question.questionImage ? question.questionImage.split('/').pop() : 'Choose File'
@@ -178,7 +181,7 @@
                         </div>
 
                         <div class="quiz-form-group">
-                            <label>Link of The Episode</label>
+                            <label>Link of The Event</label>
                             <input type="url" name="questionImageLink"
                                 value="<%= question.questionImageLink || '' %>" />
                         </div>
@@ -232,7 +235,7 @@
                                 Option</button>
                         </div>
                     </div>
-                    <button type="submit" class="quiz-btn-submit">Edit Your Applause Event</button>
+                    <button type="submit" class="quiz-btn-submit">Save</button>
                 </form>
             </div>
             <% } %>

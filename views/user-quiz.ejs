@@ -296,6 +296,12 @@
                                                             <% } }); %>
                 </div>
                 <!-- Question Header -->
+                  <div class="uq-question-text" style="font-size: 1.2rem; margin-bottom: 0; display: block;">
+                            <%= currentQuestion.questionTitle %>
+                        </div>
+                        <div class="uq-question-text" style="font-size: 1.2rem; margin-bottom: 0; display: block;">
+                            <%= currentQuestion.questionDescription %>
+                        </div>
                 <div class="uq-question-header">
                     <% if (currentQuestion.questionLogo) { %>
                         <% if (currentQuestion.questionImageLink) { %>
@@ -309,6 +315,10 @@
                                 <% } %>
                                     <% } %>
                 </div>
+
+                <div class="uq-question-text" style="font-size: 1.2rem; margin-bottom: 0; display: block;">
+                            <%= currentQuestion.question %>
+                        </div>
 
                 <!-- Move Question Image BELOW the text -->
                 <% if (currentQuestion.questionImage) { %>
@@ -324,9 +334,7 @@
                                 <% } %>
                     </div>
                     <% } %>
-                        <div class="uq-question-text" style="font-size: 1.4rem; font-weight: bold; display: block;">
-                            <%= currentQuestion.question %>
-                        </div>
+                        
                         <!-- Options -->
                         <div class="uq-options">
                             <% currentQuestion.options.forEach((opt, i)=> { %>

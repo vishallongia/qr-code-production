@@ -22,7 +22,9 @@
         <% } else { %>
             <div class="quiz-container">
                 <nav class="breadcrumbs">
-                    <a href="/tvstation/channels">Projects</a>
+                    <a href="/tvstation/broadcasters/list">Broadcasters</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels?broadcasterId=<%= channel.broadcasterId %>">Projects</a>
                     <span>&rsaquo;</span>
                     <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                     <span>&rsaquo;</span>
@@ -48,17 +50,36 @@
                     <div class="quiz-question-actions">
                         <button type="button" class="quiz-btn-collapse"
                             onclick="window.open('/tvstation/channels/<%= channel._id %>/session/<%= sessionId %>/voting-play', '_blank')">
-                            Open Event
+                            Show Me the Frontend
                         </button>
+                        <button type="button" class="quiz-btn-collapse" data-question-id="<%= question._id %>"
+                            onclick="window.location.href='/authenticateqr?sessionId=<%= sessionId %>&channelId=<%= channel._id %>&type=voting&linked=true'">
+                            Send to a Magic Code
+                        </button>
+                        <button type="button" class="quiz-btn-collapse" data-question-id="<%= question._id %>"
+                            onclick="window.location.href='/dashboard?sessionId=<%= sessionId %>&channelId=<%= channel._id %>&type=voting&linked=true'">
+                            Send to New Magic Code
+                        </button>
+                        <% if (question.linkedQRCode) { %>
+                            <button type="button" class="quiz-btn-collapse" data-question-id="<%= sessionId %>"
+                                id="unlinkBtn">
+                                Unsend
+                            </button>
+                            <% } %>
+                                <button type="button" class="quiz-btn-collapse" data-question-id="<%= question._id %>"
+                                    onclick="window.location.href='/tvstation/channels/<%= channel._id %>/session/<%= session._id %>/voting'">
+                                    Show the Magic Code of this Event
+                                </button>
                     </div>
 
 
                     <div class="quiz-form-group">
-                                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
                             <label>Toggle What to Show on Front End Header</label>
                             <button type="submit" class="quiz-btn-collapse">
                                 Save Front End Header
                             </button>
+
                         </div>
                         <div class="quiz-media-profile-toggles">
                             <% ['broadcaster', 'project' , 'episode' , 'custom' ].forEach(profile=> { %>
@@ -127,6 +148,18 @@
                             <label>Voting Question</label>
                             <input type="text" name="question" value="<%= question.question || '' %>"
                                 placeholder="Enter voting question" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Question Title (optional)</label>
+                            <input type="text" name="questionTitle" placeholder="Enter question title"
+                                value="<%= question.questionTitle || '' %>" />
+                        </div>
+
+                        <div class="quiz-form-group">
+                            <label>Question Description (optional)</label>
+                            <input type="text" name="questionDescription" placeholder="Enter question description"
+                                value="<%= question.questionDescription || '' %>" />
                         </div>
 
                         <div class="quiz-form-group">
@@ -302,16 +335,16 @@
 
 <script>
 
-    window.onload = function() {
-        document.getElementById('edit-project').addEventListener('click', function() {
-    window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')
-    // your code here
-});
+    window.onload = function () {
+        document.getElementById('edit-project').addEventListener('click', function () {
+            window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')
+            // your code here
+        });
 
-document.getElementById('edit-episode').addEventListener('click', function() {
-    window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')
-    // your code here
-});
+        document.getElementById('edit-episode').addEventListener('click', function () {
+            window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')
+            // your code here
+        });
     }
 
 </script>

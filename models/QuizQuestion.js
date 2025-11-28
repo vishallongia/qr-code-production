@@ -46,6 +46,14 @@ const quizQuestionSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    questionTitle: {
+      type: String,
+      default: "",
+    },
+    questionDescription: {
+      type: String,
+      default: "",
+    },
     questionImage: {
       type: String, // Optional image URL or path
       default: null,

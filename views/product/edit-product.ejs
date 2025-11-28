@@ -23,7 +23,9 @@
         <% } else { %>
             <div class="quiz-container">
                 <nav class="breadcrumbs">
-                    <a href="/tvstation/channels">Projects</a>
+                    <a href="/tvstation/broadcasters/list">Broadcasters</a>
+                    <span>&rsaquo;</span>
+                    <a href="/tvstation/channels?broadcasterId=<%= channel.broadcasterId %>">Projects</a>
                     <span>&rsaquo;</span>
                     <a href="/tvstation/channels/<%= channel._id %>/sessions">Episodes</a>
                     <span>&rsaquo;</span>
@@ -50,12 +52,12 @@
                     <div class="quiz-question-actions">
                         <button type="button" class="quiz-btn-collapse"
                             onclick="window.open('/tvstation/product/channels/<%= channel._id %>/session/<%= sessionId %>/product-play', '_blank')">
-                            Open Event
+                            Show Me the Frontend
                         </button>
                     </div>
 
                     <div class="quiz-form-group">
-                                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
                             <label>Toggle What to Show on Front End Header</label>
                             <button type="submit" class="quiz-btn-collapse">
                                 Save Front End Header
@@ -83,7 +85,8 @@
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
                                 <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
-                                    id="edit-project" onclick="window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')" >Edit</button>
+                                    id="edit-project"
+                                    onclick="window.open('/tvstation/channels/?id=<%= channel._id %>', '_blank')">Edit</button>
                             </div>
 
                             <div class="quiz-toggle-wrapper">
@@ -95,7 +98,8 @@
                                     <span class="quiz-toggle-slider"></span>
                                 </label>
                                 <button type="button" class="quiz-btn-submit" style="margin:2px 0px; padding: 4px 8px;"
-                                    id="edit-episode" onclick="window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')">Edit</button>
+                                    id="edit-episode"
+                                    onclick="window.open('/tvstation/channels/<%= channel._id %>/sessions/?id=<%= sessionId %>', '_blank')">Edit</button>
                             </div>
 
                             <div class="quiz-toggle-wrapper" style="display: none;">
@@ -222,8 +226,7 @@
                                                     <!-- File upload -->
                                                     <label class="quiz-file-label">
                                                         <span class="quiz-file-label-text">
-                                                            <%= opt.image ? opt.image.split('/').pop() : 'Add Image'
-                                                                %>
+                                                            <%= opt.image ? opt.image.split('/').pop() : 'Add Image' %>
                                                         </span>
                                                         <input type="file" class="quiz-hidden-file option-image-input"
                                                             name="optionImages" accept="image/*" />
